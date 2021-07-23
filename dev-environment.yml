@@ -1,0 +1,5 @@
+name: japiter-dev
+channels:
+    - conda-forge
+dependencies:
+    - pip
