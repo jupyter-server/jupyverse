@@ -67,10 +67,9 @@ class KernelServer:
                 send_message(msg, self.shell_channel, self.key)
 
     async def listen_channel(self, channel_name, websocket):
-        if channel_name == "shell":
-            channel = self.shell_channel
-        elif channel_name == "iopub":
-            channel = self.iopub_channel
+        channel = {"shell": self.shell_channel, "iopub": self.iopub_channel}[
+            channel_name
+        ]
         while True:
             msg = await receive_message(channel)
             msg["channel"] = channel_name
