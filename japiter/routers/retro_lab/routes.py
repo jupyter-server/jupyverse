@@ -3,34 +3,11 @@ import json
 import pathlib
 import pkgutil
 
-from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-router = APIRouter()
+from japiter import JAPIRouter
 
-
-def init(self):
-    router.app = self
-    self.app.mount(
-        "/static/retro", StaticFiles(directory=retrolab_dir / "static"), name="static"
-    )
-    self.app.mount(
-        "/lab/extensions/@retrolab/lab-extension/static",
-        StaticFiles(directory=retrolab_dir / "labextension" / "static"),
-        name="labextension/static",
-    )
-    self.app.mount(
-        "/lab/api/themes",
-        StaticFiles(directory=prefix_dir / "share" / "jupyter" / "lab" / "themes"),
-        name="themes",
-    )
-    self.app.include_router(router)
-
-
-retrolab_package = pkgutil.get_loader("retrolab")
-retrolab_dir = pathlib.Path(retrolab_package.path).parent
-prefix_dir = pathlib.Path(sys.prefix)
 
 INDEX_HTML = """\
 <!DOCTYPE html>
@@ -61,23 +38,61 @@ INDEX_HTML = """\
 """
 
 
+class RetroLabRouter(JAPIRouter):
+    def init(self, japiter):
+        self.japiter = japiter
+        self.kernelspecs = {}
+        self.sessions = {}
+        self.kernels = {}
+
+        retrolab_package = pkgutil.get_loader("retrolab")
+        self.retrolab_dir = pathlib.Path(retrolab_package.path).parent
+        self.prefix_dir = pathlib.Path(sys.prefix)
+
+        self.japiter.app.mount(
+            "/static/retro",
+            StaticFiles(directory=self.retrolab_dir / "static"),
+            name="static",
+        )
+        self.japiter.app.mount(
+            "/lab/extensions/@retrolab/lab-extension/static",
+            StaticFiles(directory=self.retrolab_dir / "labextension" / "static"),
+            name="labextension/static",
+        )
+        self.japiter.app.mount(
+            "/lab/api/themes",
+            StaticFiles(
+                directory=self.prefix_dir / "share" / "jupyter" / "lab" / "themes"
+            ),
+            name="themes",
+        )
+        self.japiter.app.include_router(router)
+
+
+router = RetroLabRouter()
+
+
 @router.get("/")
 async def _():
     return RedirectResponse(
-        f"http://{router.app.host}:{router.app.port}/retro/notebooks/Untitled.ipynb"
+        f"http://{router.japiter.host}:{router.japiter.port}/retro/notebooks/Untitled.ipynb"
     )
 
 
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
 async def _():
-    for path in (retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
+    for path in (router.retrolab_dir / "labextension" / "static").glob(
+        "remoteEntry.*.js"
+    ):
         load = f"static/{path.name}"
         break
 
     page_config = {
         "appName": "RetroLab",
         "appNamespace": "retro",
-        "appSettingsDir": str(prefix_dir / "share" / "jupyter" / "lab" / "settings"),
+        "appSettingsDir": str(
+            router.prefix_dir / "share" / "jupyter" / "lab" / "settings"
+        ),
         "appUrl": "/lab",
         "appVersion": "0.2.2",
         "baseUrl": "/",
@@ -104,21 +119,22 @@ async def _():
         "fullTranslationsApiUrl": "/lab/api/translations",
         "fullTreeUrl": "/lab/tree",
         "fullWorkspacesApiUrl": "/lab/api/workspaces",
-        "labextensionsPath": [str(prefix_dir / "share" / "jupyter" / "labextensions")],
+        "labextensionsPath": [
+            str(router.prefix_dir / "share" / "jupyter" / "labextensions")
+        ],
         "labextensionsUrl": "/lab/extensions",
         "licensesUrl": "/lab/api/licenses",
         "listingsUrl": "/lab/api/listings",
         "mathjaxConfig": "TeX-AMS-MML_HTMLorMML-full,Safe",
         "retroLogo": False,
         "retroPage": "notebooks",
-        "schemasDir": str(prefix_dir / "share" / "jupyter" / "lab" / "schemas"),
+        "schemasDir": str(router.prefix_dir / "share" / "jupyter" / "lab" / "schemas"),
         "settingsUrl": "/lab/api/settings",
-        "staticDir": str(retrolab_dir / "static"),
-        "templatesDir": str(retrolab_dir / "templates"),
+        "staticDir": str(router.retrolab_dir / "static"),
+        "templatesDir": str(router.retrolab_dir / "templates"),
         "terminalsAvailable": True,
-        "themesDir": str(prefix_dir / "share" / "jupyter" / "lab" / "themes"),
+        "themesDir": str(router.prefix_dir / "share" / "jupyter" / "lab" / "themes"),
         "themesUrl": "/lab/api/themes",
-        "token": "da22bb3e14a99c95ee64e6692234a11648e48b6fdee45e86",
         "translationsApiUrl": "/lab/api/translations",
         "treeUrl": "/lab/tree",
         "workspacesApiUrl": "/lab/api/workspaces",
@@ -126,46 +142,6 @@ async def _():
     }
     index = INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
     return index
-
-
-@router.get("/api/kernelspecs")
-async def _():
-    return {
-        "default": "python3",
-        "kernelspecs": {
-            "python3": {
-                "name": "python3",
-                "spec": {
-                    "argv": [
-                        "python",
-                        "-m",
-                        "ipykernel_launcher",
-                        "-f",
-                        "{connection_file}",
-                    ],
-                    "env": {},
-                    "display_name": "Python 3 (ipykernel)",
-                    "language": "python",
-                    "interrupt_mode": "signal",
-                    "metadata": {"debugger": True},
-                },
-                "resources": {
-                    "logo-64x64": "/kernelspecs/python3/logo-64x64.png",
-                    "logo-32x32": "/kernelspecs/python3/logo-32x32.png",
-                },
-            }
-        },
-    }
-
-
-@router.get("/api/kernels")
-async def _():
-    return []
-
-
-@router.get("/api/sessions")
-async def _():
-    return []
 
 
 @router.get("/api/terminals")
@@ -176,7 +152,7 @@ async def _():
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
 async def _(name0, name1):
     with open(
-        prefix_dir
+        router.prefix_dir
         / "share"
         / "jupyter"
         / "lab"
@@ -224,7 +200,7 @@ async def _(name):
 async def _():
     settings = []
     for path in (
-        prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
+        router.prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
     ).glob("*/*.json"):
         with open(path) as f:
             schema = json.load(f)
@@ -240,3 +216,8 @@ async def _():
         }
         settings.append(setting)
     return {"settings": settings}
+
+
+def init(japiter):
+    router.init(japiter)
+    return router

@@ -16,6 +16,8 @@ setup(
         "aiofiles",
         "typer",
         "uvicorn",
+        "websockets",
+        "kernel_server",
     ],
     extras_require={
         "test": [
