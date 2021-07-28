@@ -11,19 +11,24 @@ from kernel_server import KernelServer  # type: ignore
 
 from .models import Session
 
-from japiter import JAPIRouter
+from jupyverse import JAPIRouter
+
+
+def init(jupyverse):
+    router.init(jupyverse)
+    return router
 
 
 class KernelRouter(JAPIRouter):
-    def init(self, japiter):
-        self.japiter = japiter
+    def init(self, jupyverse):
+        self.jupyverse = jupyverse
         self.kernelspecs = {}
         self.sessions = {}
         self.kernels = {}
 
         self.prefix_dir = pathlib.Path(sys.prefix)
 
-        self.japiter.app.include_router(router)
+        self.jupyverse.app.include_router(router)
 
 
 router = KernelRouter()
@@ -126,8 +131,3 @@ async def websocket_endpoint(websocket: WebSocket, kernel_id, session_id):
     await websocket.accept()
     kernel_server = router.kernels[kernel_id]["server"]
     await kernel_server.serve(websocket)
-
-
-def init(japiter):
-    router.init(japiter)
-    return router

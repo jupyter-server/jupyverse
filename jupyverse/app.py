@@ -4,7 +4,7 @@ from fastapi import FastAPI
 import uvicorn  # type: ignore
 
 
-class Japiter:
+class Jupyverse:
     def __init__(self, host: str = "127.0.0.1", port: int = 8000, routers: str = ""):
         self.host = host
         self.port = port

@@ -1,12 +1,18 @@
+from pathlib import Path
 from setuptools import setup, find_packages
 
+here = Path(__file__).parent
+version_ns = {}
+with open(here / "jupyverse" / "_version.py") as f:
+    exec(f.read(), {}, version_ns)
+
 setup(
-    name="japiter",
-    version="0.0.1",
-    url="https://github.com/davidbrochart/japiter.git",
+    name="jupyverse",
+    version=version_ns["__version__"],
+    url="https://github.com/davidbrochart/jupyverse.git",
     author="David Brochart",
     author_email="david.brochart@gmail.com",
-    description="A web framework for building Jupyter APIs",
+    description="A web server for Jupyter, based on FastAPI",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -27,7 +33,7 @@ setup(
         ],
     },
     entry_points={
-        "console_scripts": ["japiter = japiter.japiter:cli"],
+        "console_scripts": ["jupyverse = jupyverse.jupyverse:cli"],
     },
     classifiers=(
         "Programming Language :: Python :: 3",

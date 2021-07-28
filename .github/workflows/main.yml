@@ -27,19 +27,19 @@ jobs:
     - name: Setup conda
       uses: conda-incubator/setup-miniconda@v2
       with:
-        activate-environment: japiter-dev
+        activate-environment: jupyverse-dev
         environment-file: dev-environment.yml
         python-version: ${{ matrix.python-version }}
         mamba-version: "*"
         auto-activate-base: false
         channels: conda-forge
 
-    - name: Install japiter
+    - name: Install jupyverse
       run: |
         pip install -e .[test]
 
     - name: Check style
       run: |
-        black --check japiter
-        flake8 --max-line-length 100 japiter
-        mypy japiter
+        black --check jupyverse
+        flake8 --max-line-length 100 jupyverse
+        mypy jupyverse

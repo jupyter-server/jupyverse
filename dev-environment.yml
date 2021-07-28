@@ -1,4 +1,4 @@
-name: japiter-dev
+name: jupyverse-dev
 channels:
     - conda-forge
 dependencies:

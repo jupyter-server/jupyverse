@@ -6,40 +6,40 @@ import pkgutil
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from japiter import JAPIRouter
+from jupyverse import JAPIRouter
 
 
-def init(japiter):
-    router.init(japiter)
+def init(jupyverse):
+    router.init(jupyverse)
     return router
 
 
 class RetroLabRouter(JAPIRouter):
-    def init(self, japiter):
-        self.japiter = japiter
+    def init(self, jupyverse):
+        self.jupyverse = jupyverse
 
         retrolab_package = pkgutil.get_loader("retrolab")
         self.retrolab_dir = pathlib.Path(retrolab_package.path).parent
         self.prefix_dir = pathlib.Path(sys.prefix)
 
-        self.japiter.app.mount(
+        self.jupyverse.app.mount(
             "/static/retro",
             StaticFiles(directory=self.retrolab_dir / "static"),
             name="static",
         )
-        self.japiter.app.mount(
+        self.jupyverse.app.mount(
             "/lab/extensions/@retrolab/lab-extension/static",
             StaticFiles(directory=self.retrolab_dir / "labextension" / "static"),
             name="labextension/static",
         )
-        self.japiter.app.mount(
+        self.jupyverse.app.mount(
             "/lab/api/themes",
             StaticFiles(
                 directory=self.prefix_dir / "share" / "jupyter" / "lab" / "themes"
             ),
             name="themes",
         )
-        self.japiter.app.include_router(router)
+        self.jupyverse.app.include_router(router)
 
 
 router = RetroLabRouter()

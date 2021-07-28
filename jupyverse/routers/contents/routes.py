@@ -6,20 +6,20 @@ from typing import Optional, List, Dict, Union, cast
 
 from starlette.requests import Request
 
-from japiter import JAPIRouter
+from jupyverse import JAPIRouter
 
 from .models import Content, SaveContent, Checkpoint
 
 
-def init(japiter):
-    router.init(japiter)
+def init(jupyverse):
+    router.init(jupyverse)
     return router
 
 
 class ContentsRouter(JAPIRouter):
-    def init(self, japiter):
-        self.japiter = japiter
-        self.japiter.app.include_router(router)
+    def init(self, jupyverse):
+        self.jupyverse = jupyverse
+        self.jupyverse.app.include_router(router)
 
 
 router = ContentsRouter()

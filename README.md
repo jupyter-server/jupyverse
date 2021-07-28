@@ -1,21 +1,19 @@
-# japiter: Jupyter API builder
+# jupyverse
 
-A web framework for building Jupyter APIs, based on FastAPI.
+A web server for Jupyter, based on FastAPI.
 
 ## Install
 
-Clone this repository and:
+For now, the only supported JupyterLab distribution is
+[retrolab](https://github.com/jupyterlab/retrolab), so it must also be installed.
 
 ```bash
-pip install -e .
+pip install jupyverse retrolab
 ```
-
-For now, the only supported JupyterLab distribution is
-[retrolab](https://github.com/jupyterlab/retrolab), so you must install it.
 
 ## Usage
 
 ```bash
-japiter
+jupyverse
 # then open a browser at http://127.0.0.1:8000
 ```
