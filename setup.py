@@ -23,6 +23,7 @@ setup(
         "test": [
             "flake8",
             "black",
+            "mypy",
         ],
     },
     entry_points={

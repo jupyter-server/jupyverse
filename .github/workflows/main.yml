@@ -42,3 +42,4 @@ jobs:
       run: |
         black --check japiter
         flake8 --max-line-length 100 japiter
+        mypy japiter

@@ -1,7 +1,7 @@
 import importlib
 
 from fastapi import FastAPI
-import uvicorn
+import uvicorn  # type: ignore
 
 
 class Japiter:
@@ -10,7 +10,8 @@ class Japiter:
         self.port = port
         self.app = FastAPI()
         self.routers = [
-            importlib.import_module(router).init(self) for router in routers.split(",")
+            importlib.import_module(router).init(self)  # type: ignore
+            for router in routers.split(",")
         ]
 
         uvicorn.run(self.app, host=host, port=port)

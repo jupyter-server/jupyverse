@@ -7,7 +7,7 @@ from fastapi import WebSocket
 from fastapi.responses import FileResponse
 from starlette.requests import Request
 
-from kernel_server import KernelServer
+from kernel_server import KernelServer  # type: ignore
 
 from .models import Session
 
@@ -30,7 +30,7 @@ router = KernelRouter()
 
 
 @router.get("/api/kernelspecs")
-async def _():
+async def get_kernelspecs():
     for path in (router.prefix_dir / "share" / "jupyter" / "kernels").glob(
         "*/kernel.json"
     ):
@@ -47,14 +47,14 @@ async def _():
 
 
 @router.get("/kernelspecs/{kernel_name}/{file_name}")
-async def _(kernel_name, file_name):
+async def get_kernelspec(kernel_name, file_name):
     return FileResponse(
         router.prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name
     )
 
 
 @router.get("/api/kernels")
-async def _():
+async def get_kernels():
     return [
         {
             "id": kernel_id,
@@ -68,12 +68,16 @@ async def _():
 
 
 @router.patch("/api/sessions/{session_id}")
-async def _(session_id):
+async def get_session(request: Request):
+    rename_session = await request.json()
+    session_id = rename_session.pop("id")
+    for key, value in rename_session.items():
+        router.sessions[session_id][key] = value
     return Session(**router.sessions[session_id])
 
 
 @router.get("/api/sessions")
-async def _():
+async def get_sessions():
     return list(router.sessions.values())
 
 
@@ -82,7 +86,7 @@ async def _():
     status_code=201,
     response_model=Session,
 )
-async def _(request: Request):
+async def create_session(request: Request):
     create_session = await request.json()
     kernel_name = create_session["kernel"]["name"]
     kernel_server = KernelServer(

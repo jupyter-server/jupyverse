@@ -10,9 +10,10 @@ cli = typer.Typer()
 def serve(
     host: str = "127.0.0.1",
     port: int = 8000,
-    routers: str = "",
+    routers: str = "japiter.routers.retro_lab,"
+    "japiter.routers.contents,"
+    "japiter.routers.kernels",
 ):
-    print(routers)
     Japiter(host, port, routers)
 
 

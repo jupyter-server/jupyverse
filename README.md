@@ -16,8 +16,6 @@ For now, the only supported JupyterLab distribution is
 ## Usage
 
 ```bash
-japiter --routers=japiter.routers.retro_lab,japiter.routers.kernels
+japiter
 # then open a browser at http://127.0.0.1:8000
 ```
-
-This will open a `Untitled.ipynb` notebook in the current directory.
