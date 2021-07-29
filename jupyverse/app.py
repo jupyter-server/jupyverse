@@ -28,7 +28,8 @@ class Jupyverse:
                 target=launch_browser, args=(host, port), daemon=True
             ).start()
 
-        uvicorn.run(self.app, host=host, port=port)
+    def run(self):
+        uvicorn.run(self.app, host=self.host, port=self.port)
 
 
 def launch_browser(host: str, port: int):

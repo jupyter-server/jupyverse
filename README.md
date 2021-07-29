@@ -13,7 +13,11 @@ pip install jupyverse retrolab
 
 ## Usage
 
+Just enter in a terminal:
+
 ```bash
 jupyverse
-# then open a browser at http://127.0.0.1:8000
 ```
+
+This will open a browser at http://127.0.0.1:8000 by default, landing on the tree view of RetroLab.
+For other options, see ``jupyverse --help``.

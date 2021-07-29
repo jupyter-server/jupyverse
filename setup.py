@@ -30,6 +30,9 @@ setup(
             "flake8",
             "black",
             "mypy",
+            "pytest",
+            "requests",
+            "retrolab",
         ],
     },
     entry_points={

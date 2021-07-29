@@ -23,5 +23,5 @@ class Content(BaseModel):
     format: Optional[str]
     mimetype: Optional[str]
     size: Optional[int]
-    writable: str
+    writable: bool
     type: str
