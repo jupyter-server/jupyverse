@@ -16,7 +16,7 @@ def serve(
     "jupyverse.routers.contents,"
     "jupyverse.routers.kernels",
 ):
-    Jupyverse(host, port, open_browser, routers)
+    Jupyverse(host, port, open_browser, routers).run()
 
 
 if __name__ == "__main__":

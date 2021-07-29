@@ -43,3 +43,7 @@ jobs:
         black --check jupyverse
         flake8 --max-line-length 100 jupyverse
         mypy jupyverse
+
+    - name: Run tests
+      run: |
+        pytest jupyverse/tests

@@ -2,7 +2,9 @@ import sys
 import json
 import pathlib
 import pkgutil
+from http import HTTPStatus
 
+from fastapi import Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -87,6 +89,15 @@ async def get_setting(name0, name1):
         "last_modified": None,
         "created": None,
     }
+
+
+@router.put(
+    "/lab/api/settings/@jupyterlab/{name0}:{name1}",
+    status_code=204,
+)
+async def change_setting(name0, name1):
+    # TODO
+    return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/api/settings")

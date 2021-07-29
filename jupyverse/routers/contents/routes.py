@@ -1,3 +1,4 @@
+import os
 import json
 import shutil
 from pathlib import Path
@@ -132,10 +133,10 @@ def get_file_size(path: Path) -> Optional[int]:
 def is_file_writable(path: Path) -> bool:
     if path.exists():
         if path.is_dir():
+            # FIXME
             return True
         else:
-            with open(path, "a") as f:
-                return f.writable()
+            return os.access(path, os.W_OK)
     return False
 
 
