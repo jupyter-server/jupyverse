@@ -21,6 +21,7 @@ class Jupyverse:
         self.routers = [
             importlib.import_module(router).init(self)  # type: ignore
             for router in routers.split(",")
+            if router
         ]
 
         if open_browser:

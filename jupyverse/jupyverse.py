@@ -14,7 +14,8 @@ def serve(
     open_browser: Optional[bool] = True,
     routers: str = "jupyverse.routers.retro_lab,"
     "jupyverse.routers.contents,"
-    "jupyverse.routers.kernels",
+    "jupyverse.routers.kernels,"
+    "jupyverse.routers.nbconvert,",
 ):
     Jupyverse(host, port, open_browser, routers).run()
 
