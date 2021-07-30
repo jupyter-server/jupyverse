@@ -111,7 +111,7 @@ async def create_checkpoint(path):
         # FIXME: return error code?
         return []
     mtime = get_file_modification_time(dst_path)
-    return [Checkpoint(**{"id": "checkpoint", "last_modified": mtime})]
+    return Checkpoint(**{"id": "checkpoint", "last_modified": mtime})
 
 
 def get_file_modification_time(path: Path):

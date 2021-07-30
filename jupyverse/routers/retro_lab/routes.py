@@ -1,4 +1,3 @@
-import sys
 import json
 import pathlib
 import pkgutil
@@ -22,7 +21,6 @@ class RetroLabRouter(JAPIRouter):
 
         retrolab_package = pkgutil.get_loader("retrolab")
         self.retrolab_dir = pathlib.Path(retrolab_package.path).parent
-        self.prefix_dir = pathlib.Path(sys.prefix)
 
         self.jupyverse.app.mount(
             "/static/retro",
@@ -81,7 +79,7 @@ async def get_setting(name0, name1):
     ) as f:
         schema = json.load(f)
     return {
-        "id": f"@jupyterlab/{name0}:plugin",
+        "id": f"@jupyterlab/{name0}:{name1}",
         "schema": schema,
         "version": "3.1.0-rc.1",
         "raw": "{}",
