@@ -1,10 +1,10 @@
 import os
 import asyncio
 import signal
-from typing import Dict, Any, cast
+from typing import List, Dict, Any, cast
 
 from .connect import write_connection_file, launch_kernel, connect_channel
-from .message import date_to_str, receive_message, send_message
+from .message import receive_message, send_message
 
 
 class KernelServer:
@@ -27,6 +27,9 @@ class KernelServer:
         self.msg_cnt = 0
         self.execute_requests: Dict[str, Any] = {}
         self.stopped = asyncio.Event()
+        self.connected_to_kernel = False
+        self.channel_tasks: List[asyncio.Task] = []
+        self.sessions: Dict[str, Any] = {}
 
     async def start(self) -> None:
         self.kernel_process = await launch_kernel(
@@ -44,12 +47,15 @@ class KernelServer:
             task.cancel()
         self.stopped.set()
 
-    async def serve(self, websocket):
-        self.channel_tasks = [
-            asyncio.create_task(self.listen_web(websocket)),
-            asyncio.create_task(self.listen_channel("shell", websocket)),
-            asyncio.create_task(self.listen_channel("iopub", websocket)),
-        ]
+    async def serve(self, websocket, session_id):
+        self.sessions[session_id] = websocket
+        if not self.connected_to_kernel:
+            self.channel_tasks += [
+                asyncio.create_task(self.listen_channel("shell")),
+                asyncio.create_task(self.listen_channel("iopub")),
+            ]
+            self.connected_to_kernel = True
+        self.channel_tasks += [asyncio.create_task(self.listen_web(websocket))]
         await self.stopped.wait()
 
     async def listen_web(self, websocket):
@@ -66,13 +72,13 @@ class KernelServer:
                 }
                 send_message(msg, self.shell_channel, self.key)
 
-    async def listen_channel(self, channel_name, websocket):
+    async def listen_channel(self, channel_name):
         channel = {"shell": self.shell_channel, "iopub": self.iopub_channel}[
             channel_name
         ]
         while True:
             msg = await receive_message(channel)
             msg["channel"] = channel_name
-            msg["header"] = date_to_str(msg["header"])
-            msg["parent_header"] = date_to_str(msg["parent_header"])
+            session = msg["parent_header"]["session"]
+            websocket = self.sessions[session]
             await websocket.send_json(msg)
