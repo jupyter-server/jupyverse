@@ -1,5 +1,6 @@
 from pathlib import Path
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 here = Path(__file__).parent
 version_ns = {}
@@ -17,26 +18,12 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(),
     python_requires=">=3.7",
-    install_requires=[
-        "fastapi",
-        "aiofiles",
-        "typer",
-        "uvicorn",
-        "websockets",
-        "kernel_server",
-    ],
+    install_requires=["fps", "fastapi"],
     extras_require={
-        "test": [
-            "flake8",
-            "black",
-            "mypy",
-            "pytest",
-            "requests",
-            "retrolab",
-        ],
+        "test": ["flake8", "black", "mypy", "pytest", "requests"],
     },
     entry_points={
-        "console_scripts": ["jupyverse = jupyverse.jupyverse:cli"],
+        "console_scripts": ["jupyverse = fps.cli:app"],
     },
     classifiers=(
         "Programming Language :: Python :: 3",

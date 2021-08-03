@@ -1,0 +1,5 @@
+[fps]
+open_browser = true
+
+[JupyterLab]
+collaborative = true
