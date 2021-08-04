@@ -63,12 +63,12 @@ async def get_kernels():
     return [
         {
             "id": kernel_id,
-            "name": v["name"],
+            "name": kernel["name"],
             "last_activity": "2021-07-27T09:50:07.217545Z",
             "execution_state": "idle",
             "connections": 0,
         }
-        for kernel_id, v in router.kernels.items()
+        for kernel_id, kernel in router.kernels.items()
     ]
 
 
@@ -130,4 +130,4 @@ async def create_session(request: Request):
 async def websocket_endpoint(websocket: WebSocket, kernel_id, session_id):
     await websocket.accept()
     kernel_server = router.kernels[kernel_id]["server"]
-    await kernel_server.serve(websocket)
+    await kernel_server.serve(websocket, session_id)

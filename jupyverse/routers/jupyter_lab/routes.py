@@ -4,10 +4,10 @@ import pkgutil
 from http import HTTPStatus
 
 from fastapi import Response
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-import retrolab  # type: ignore
+import jupyterlab  # type: ignore
 
 from jupyverse import JAPIRouter
 
@@ -17,7 +17,7 @@ def init(jupyverse):
     return router
 
 
-class RetroLabRouter(JAPIRouter):
+class JupyterLabRouter(JAPIRouter):
     def init(self, jupyverse):
         self.jupyverse = jupyverse
 
@@ -25,14 +25,11 @@ class RetroLabRouter(JAPIRouter):
         self.retrolab_dir = pathlib.Path(retrolab_package.path).parent
 
         self.jupyverse.app.mount(
-            "/static/retro",
-            StaticFiles(directory=self.retrolab_dir / "static"),
+            "/static/lab",
+            StaticFiles(
+                directory=self.prefix_dir / "share" / "jupyter" / "lab" / "static"
+            ),
             name="static",
-        )
-        self.jupyverse.app.mount(
-            "/lab/extensions/@retrolab/lab-extension/static",
-            StaticFiles(directory=self.retrolab_dir / "labextension" / "static"),
-            name="labextension/static",
         )
         self.jupyverse.app.mount(
             "/lab/api/themes",
@@ -44,17 +41,73 @@ class RetroLabRouter(JAPIRouter):
         self.jupyverse.app.include_router(router)
 
 
-router = RetroLabRouter()
+router = JupyterLabRouter()
 
 
-@router.get("/")
-async def get_root():
-    return RedirectResponse("/retro/tree")
-
-
-@router.get("/retro/tree", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def get_tree():
-    return get_index("Tree", "tree")
+    for path in (router.prefix_dir / "share" / "jupyter" / "lab" / "static").glob(
+        "main.*.js"
+    ):
+        main_id = path.name.split(".")[1]
+        break
+    base_url = "/"
+    full_static_url = "/static/lab"
+    page_config = {
+        "appName": "JupyterLab",
+        "appNamespace": "lab",
+        "appUrl": "/lab",
+        "appVersion": jupyterlab.__version__,
+        "baseUrl": base_url,
+        "cacheFiles": False,
+        "disabledExtensions": [],
+        "exposeAppInBrowser": False,
+        "extraLabextensionsPath": [],
+        "federated_extensions": [],
+        "fullAppUrl": "/lab",
+        "fullLabextensionsUrl": "/lab/extensions",
+        "fullLicensesUrl": "/lab/api/licenses",
+        "fullListingsUrl": "/lab/api/listings",
+        "fullMathjaxUrl": "/static/notebook/components/MathJax/MathJax.js",
+        "fullSettingsUrl": "/lab/api/settings",
+        "fullStaticUrl": full_static_url,
+        "fullThemesUrl": "/lab/api/themes",
+        "fullTranslationsApiUrl": "/lab/api/translations",
+        "fullTreeUrl": "/lab/tree",
+        "fullWorkspacesApiUrl": "/lab/api/workspaces",
+        "ignorePlugins": [],
+        # "labextensionsPath": [
+        #    str(router.prefix_dir / "share" / "jupyter" / "labextensions")
+        # ],
+        "labextensionsUrl": "/lab/extensions",
+        "licensesUrl": "/lab/api/licenses",
+        "listingsUrl": "/lab/api/listings",
+        "mathjaxConfig": "TeX-AMS-MML_HTMLorMML-full,Safe",
+        "mode": "multiple-document",
+        "notebookVersion": "[1, 9, 0]",
+        "quitButton": True,
+        "settingsUrl": "/lab/api/settings",
+        "store_id": 0,
+        "terminalsAvailable": True,
+        "schemasDir": str(router.prefix_dir / "share" / "jupyter" / "lab" / "schemas"),
+        "terminalsAvailable": True,
+        "themesDir": str(router.prefix_dir / "share" / "jupyter" / "lab" / "themes"),
+        "themesUrl": "/lab/api/themes",
+        "token": "4e2804532de366abc81e32ab0c6bf68a73716fafbdbb2098",
+        "translationsApiUrl": "/lab/api/translations",
+        "treePath": "",
+        "workspace": "default",
+        "treeUrl": "/lab/tree",
+        "workspacesApiUrl": "/lab/api/workspaces",
+        "wsUrl": "",
+    }
+    index = (
+        INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
+        .replace("BASE_URL", base_url)
+        .replace("FULL_STATIC_URL", full_static_url)
+        .replace("MAIN_ID", main_id)
+    )
+    return index
 
 
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
@@ -65,6 +118,16 @@ async def get_notebook(name: str):
 @router.get("/api/terminals")
 async def get_terminals():
     return []
+
+
+@router.get("/lab/api/translations")
+async def get_translations():
+    return {}
+
+
+@router.get("/lab/api/translations/{language}")
+async def get_translation(language):
+    return {}
 
 
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
@@ -136,7 +199,7 @@ def get_index(doc_name, retro_page):
             router.prefix_dir / "share" / "jupyter" / "lab" / "settings"
         ),
         "appUrl": "/lab",
-        "appVersion": retrolab.__version__,
+        "appVersion": "0.2.2",
         "baseUrl": "/",
         "cacheFiles": True,
         "disabledExtensions": [],
@@ -189,29 +252,33 @@ def get_index(doc_name, retro_page):
 
 
 INDEX_HTML = """\
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RetroLab - DOC_NAME</title>
-  <link rel="icon" type="image/x-icon" href="/static/favicons/favicon-notebook.ico" class="favicon">
-</head>
-<body>
-  <script id="jupyter-config-data" type="application/json">
-    PAGE_CONFIG
-  </script>
-  <script src="/static/retro/bundle.js" main="index"></script>
-  <script type="text/javascript">
-    /* Remove token from URL. */
-    (function () {
-      var parsedUrl = new URL(window.location.href);
-      if (parsedUrl.searchParams.get('token')) {
-        parsedUrl.searchParams.delete('token');
-        window.history.replaceState({ }, '', parsedUrl.href);
-      }
-    })();
-  </script>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>JupyterLab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script id="jupyter-config-data" type="application/json">PAGE_CONFIG</script>
+<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"
+></script></head><body><script>/* Remove token from URL. */
+  (function () {
+    var location = window.location;
+    var search = location.search;
+
+    // If there is no query string, bail.
+    if (search.length <= 1) {
+      return;
+    }
+
+    // Rebuild the query string without the `token`.
+    var query = '?' + search.slice(1).split('&')
+      .filter(function (param) { return param.split('=')[0] !== 'token'; })
+      .join('&');
+
+    // Rebuild the URL with the new query string.
+    var url = location.origin + location.pathname +
+      (query !== '?' ? query : '') + location.hash;
+
+    if (url === location.href) {
+      return;
+    }
+
+    window.history.replaceState({ }, '', url);
+  })();</script></body></html>
 """

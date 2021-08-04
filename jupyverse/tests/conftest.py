@@ -11,6 +11,6 @@ def client():
         open_browser=False,
         routers="jupyverse.routers.retro_lab,"
         "jupyverse.routers.contents,"
-        "jupyverse.routers.kernels",
+        "jupyverse.routers.kernels,",
     )
     return TestClient(jupyverse.app)
