@@ -1,8 +1,6 @@
 import importlib
 import webbrowser
 import threading
-from typing import Optional
-
 from fastapi import FastAPI
 import uvicorn  # type: ignore
 
@@ -12,7 +10,8 @@ class Jupyverse:
         self,
         host: str = "127.0.0.1",
         port: int = 8000,
-        open_browser: Optional[bool] = True,
+        open_browser: bool = True,
+        collaborative: bool = False,
         frontend: str = "jupyter_lab",
         routers: str = "",
     ):
@@ -21,6 +20,7 @@ class Jupyverse:
 
         self.host = host
         self.port = port
+        self.collaborative = collaborative
         self.app = FastAPI()
         self.routers = [
             importlib.import_module(router).init(self)  # type: ignore
