@@ -13,8 +13,12 @@ class Jupyverse:
         host: str = "127.0.0.1",
         port: int = 8000,
         open_browser: Optional[bool] = True,
+        frontend: str = "jupyter_lab",
         routers: str = "",
     ):
+        if frontend:
+            routers += f"jupyverse.routers.{frontend},"
+
         self.host = host
         self.port = port
         self.app = FastAPI()
