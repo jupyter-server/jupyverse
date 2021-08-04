@@ -1,5 +1,4 @@
 import typer
-from typing import Optional
 
 from .app import Jupyverse
 
@@ -11,13 +10,15 @@ cli = typer.Typer()
 def serve(
     host: str = "127.0.0.1",
     port: int = 8000,
-    open_browser: Optional[bool] = True,
+    open_browser: bool = True,
+    collaborative: bool = False,
     frontend: str = "jupyter_lab",
     routers: str = "jupyverse.routers.contents,"
     "jupyverse.routers.kernels,"
-    "jupyverse.routers.nbconvert,",
+    "jupyverse.routers.nbconvert,"
+    "jupyverse.routers.yjs,",
 ):
-    Jupyverse(host, port, open_browser, frontend, routers).run()
+    Jupyverse(host, port, open_browser, collaborative, frontend, routers).run()
 
 
 if __name__ == "__main__":
