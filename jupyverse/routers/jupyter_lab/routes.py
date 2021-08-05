@@ -1,4 +1,5 @@
 import json
+from glob import glob
 from http import HTTPStatus
 
 from fastapi import Response
@@ -161,6 +162,37 @@ INDEX_HTML = """\
 
 
 def get_index(workspace, collaborative):
+    federated_extensions = []
+    for path in glob(
+        str(
+            router.prefix_dir
+            / "share"
+            / "jupyter"
+            / "labextensions"
+            / "**"
+            / "package.json"
+        ),
+        recursive=True,
+    ):
+        print(path)
+        with open(path) as f:
+            package = json.load(f)
+        name = package["name"]
+        extension = package["jupyterlab"]["_build"]
+        extension["name"] = name
+        federated_extensions.append(extension)
+        router.jupyverse.app.mount(
+            f"/lab/extensions/{name}",
+            StaticFiles(
+                directory=router.prefix_dir
+                / "share"
+                / "jupyter"
+                / "labextensions"
+                / name
+            ),
+            name="labextensions",
+        )
+
     for path in (router.prefix_dir / "share" / "jupyter" / "lab" / "static").glob(
         "main.*.js"
     ):
@@ -179,7 +211,7 @@ def get_index(workspace, collaborative):
         "disabledExtensions": [],
         "exposeAppInBrowser": False,
         "extraLabextensionsPath": [],
-        "federated_extensions": [],
+        "federated_extensions": federated_extensions,
         "fullAppUrl": "/lab",
         "fullLabextensionsUrl": "/lab/extensions",
         "fullLicensesUrl": "/lab/api/licenses",
