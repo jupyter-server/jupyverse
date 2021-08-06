@@ -37,13 +37,17 @@ jobs:
     - name: Install jupyverse
       run: |
         pip install -e .[test]
+        pip install -e ./plugins/contents
 
     - name: Check style
       run: |
         black --check jupyverse
-        flake8 --max-line-length 100 jupyverse
+        flake8 jupyverse
         mypy jupyverse
+        mypy plugins/contents
+        mypy plugins/kernels
+        mypy plugins/retrolab
 
     - name: Run tests
       run: |
-        pytest jupyverse/tests
+        pytest ./tests
