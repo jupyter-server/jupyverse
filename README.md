@@ -1,14 +1,22 @@
 # jupyverse
 
-A web server for Jupyter, based on FastAPI.
+An [FPS](https://github.com/adriendelsalle/fps) plugin implementing a Jupyter server.
 
 ## Install
 
-For now, the only supported JupyterLab distribution is
-[retrolab](https://github.com/jupyterlab/retrolab), so it must also be installed.
+Clone this repository and install the needed plugins:
 
 ```bash
-pip install jupyverse retrolab
+pip install -e .
+pip install -e plugins/auth
+pip install -e plugins/contents
+pip install -e plugins/kernels
+pip install -e plugins/nbconvert
+pip install -e plugins/yjs
+pip install -e plugins/jupyterlab
+
+# if you want RetroLab instead of JupyterLab:
+# pip install -e plugins/retrolab
 ```
 
 ## Usage
@@ -19,5 +27,5 @@ Just enter in a terminal:
 jupyverse
 ```
 
-This will open a browser at http://127.0.0.1:8000 by default, landing on the tree view of RetroLab.
+This will open a browser at http://127.0.0.1:8000 by default, and load the JupyterLab front-end.
 For other options, see ``jupyverse --help``.
