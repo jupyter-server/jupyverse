@@ -1,43 +1,20 @@
-import os
-import json
-from typing import Dict, Any
-
-import httpx  # type: ignore
-from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
-
-from fastapi.responses import RedirectResponse
+from typing import Any, Dict
 
 import fps  # type: ignore
+import httpx  # type: ignore
 from fastapi import APIRouter
+from fastapi.responses import RedirectResponse
+from fps.config import Config
+from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 
-# Create 'jupyterlab-auth/config.json' file with the following secrets:
-# "client_id": ""
-# "client_secret": ""
-# "redirect_uri": ""
-
-CLIENT_ID = ""
-CLIENT_SECRET = ""
-REDIRECT_URI = ""
-
-USERS: Dict[str, Any] = {}
-CURRENT_USER = None
-
-config_file = os.path.join(os.path.dirname(__file__), "config.json")
-if os.path.exists(config_file):
-    with open(config_file) as f:
-        conf = json.load(f)
-        CLIENT_ID = conf["client_id"]
-        CLIENT_SECRET = conf["client_secret"]
-        REDIRECT_URI = conf["redirect_uri"]
-        CLIENT = GitHubOAuth2(CLIENT_ID, CLIENT_SECRET)
-
-
-def init(jupyverse):
-    router.init(jupyverse)
-    return router
-
+from .config import AuthConfig
 
 router = APIRouter()
+config = Config(AuthConfig)
+
+CLIENT = GitHubOAuth2(config.client_id, config.client_secret)
+USERS: Dict[str, Any] = {}
+CURRENT_USER = None
 
 
 @router.get("/auth/users")
@@ -54,12 +31,12 @@ async def get_user():
 async def login(code: str = ""):
     if not code:
         authorization_url = await CLIENT.get_authorization_url(
-            REDIRECT_URI,
+            config.redirect_uri,
             scope=["read:user"],
         )
         return RedirectResponse(authorization_url)
 
-    access_token = await CLIENT.get_access_token(code, REDIRECT_URI)
+    access_token = await CLIENT.get_access_token(code, config.redirect_uri)
     async with httpx.AsyncClient() as client:
         r = await client.get(
             "https://api.github.com/user",
