@@ -4,7 +4,7 @@ import fps  # type: ignore
 import httpx  # type: ignore
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
-from fps.config import Config
+from fps.config import Config  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 
 from .config import AuthConfig
