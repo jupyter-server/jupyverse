@@ -4,15 +4,13 @@ from pathlib import Path
 import nbconvert  # type: ignore
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
-from fps.hooks import register_router
+from fps.hooks import register_router  # type: ignore
 
 router = APIRouter()
 
 
 @router.get("/api/nbconvert")
 async def get_nbconvert_formats():
-    if nbconvert is None:
-        return {}
     return {
         name: {
             "output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype

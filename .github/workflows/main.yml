@@ -41,12 +41,16 @@ jobs:
 
     - name: Check style
       run: |
-        black --check jupyverse
-        flake8 jupyverse
+        black --check jupyverse plugins tests
+        flake8 jupyverse plugins tests
         mypy jupyverse
         mypy plugins/contents
         mypy plugins/kernels
         mypy plugins/retrolab
+        mypy plugins/auth
+        mypy plugins/jupyterlab
+        mypy plugins/nbconvert
+        mypy plugins/yjs
 
     - name: Run tests
       run: |

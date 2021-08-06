@@ -46,12 +46,12 @@ async def get_kernels():
     return [
         {
             "id": kernel_id,
-            "name": v["name"],
+            "name": kernel["name"],
             "last_activity": "2021-07-27T09:50:07.217545Z",
             "execution_state": "idle",
             "connections": 0,
         }
-        for kernel_id, v in kernels.items()
+        for kernel_id, kernel in kernels.items()
     ]
 
 

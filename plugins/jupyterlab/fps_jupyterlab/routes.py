@@ -8,8 +8,8 @@ import jupyterlab  # type: ignore
 from fastapi import APIRouter, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fps.config import Config
-from fps.hooks import register_router
+from fps.config import Config  # type: ignore
+from fps.hooks import register_router  # type: ignore
 
 from .config import JupyterLabConfig
 
@@ -28,6 +28,30 @@ router.mount(
     StaticFiles(directory=prefix_dir / "share" / "jupyter" / "lab" / "themes"),
     name="themes",
 )
+
+federated_extensions = []
+for path in glob(
+    str(prefix_dir / "share" / "jupyter" / "labextensions" / "**" / "package.json"),
+    recursive=True,
+):
+    with open(path) as f:
+        package = json.load(f)
+    name = package["name"]
+    extension = package["jupyterlab"]["_build"]
+    extension["name"] = name
+    federated_extensions.append(extension)
+    router.mount(
+        f"/lab/extensions/{name}/static",
+        StaticFiles(
+            directory=prefix_dir
+            / "share"
+            / "jupyter"
+            / "labextensions"
+            / name
+            / "static"
+        ),
+        name=name,
+    )
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -152,25 +176,6 @@ INDEX_HTML = """\
 
 
 def get_index(workspace, collaborative):
-    federated_extensions = []
-    for path in glob(
-        str(prefix_dir / "share" / "jupyter" / "labextensions" / "**" / "package.json"),
-        recursive=True,
-    ):
-        with open(path) as f:
-            package = json.load(f)
-        name = package["name"]
-        extension = package["jupyterlab"]["_build"]
-        extension["name"] = name
-        federated_extensions.append(extension)
-        router.mount(
-            f"/lab/extensions/{name}",
-            StaticFiles(
-                directory=prefix_dir / "share" / "jupyter" / "labextensions" / name
-            ),
-            name="labextensions",
-        )
-
     for path in (prefix_dir / "share" / "jupyter" / "lab" / "static").glob("main.*.js"):
         main_id = path.name.split(".")[1]
         break
