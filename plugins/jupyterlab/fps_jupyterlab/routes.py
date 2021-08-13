@@ -6,8 +6,9 @@ from http import HTTPStatus
 
 import jupyterlab  # type: ignore
 from fastapi import APIRouter, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.requests import Request  # type: ignore
 from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
@@ -53,17 +54,68 @@ for path in glob(
         name=name,
     )
 
+WORKSPACE = {
+    "data": {
+        "layout-restorer:data": {
+            "main": {
+                "dock": {"type": "tab-area", "currentIndex": 0, "widgets": []},
+                "current": "",
+            },
+            "down": {"size": 0, "widgets": []},
+            "left": {
+                "collapsed": False,
+                "current": "filebrowser",
+                "widgets": [
+                    "filebrowser",
+                    "running-sessions",
+                    "@jupyterlab/toc:plugin",
+                    "extensionmanager.main-view",
+                ],
+            },
+            "right": {"collapsed": True, "widgets": []},
+            "relativeSizes": [0.22859744990892533, 0.7714025500910747, 0],
+        },
+        "@jupyterlab/docprovider:yprovider:user": "undefined,#4BA749",
+    },
+    "metadata": {
+        "id": "default",
+        "last_modified": "2021-08-10T10:47:58.741703+00:00",
+        "created": "2021-08-10T10:47:58.741703+00:00",
+    },
+}
 
-@router.get("/", response_class=HTMLResponse)
-async def get_tree():
-    return get_index("default", config.collaborative)
+
+@router.get("/")
+async def get_root():
+    return RedirectResponse("/lab")
+
+
+@router.get("/lab")
+async def get_lab():
+    return HTMLResponse(get_index("default", config.collaborative))
+
+
+@router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
+async def get_listings():
+    return {
+        "blocked_extensions_uris": [],
+        "allowed_extensions_uris": [],
+        "blocked_extensions": [],
+        "allowed_extensions": [],
+    }
+
+
+@router.get("/lab/api/workspaces/{name}")
+async def get_workspace_data(name):
+    return WORKSPACE
 
 
 @router.put(
-    "/lab/api/workspaces/default",
+    "/lab/api/workspaces/{name}",
     status_code=204,
 )
-async def create_workspace():
+async def set_workspace(request: Request):
+    WORKSPACE.update(await request.json())
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
