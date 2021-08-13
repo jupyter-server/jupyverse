@@ -17,6 +17,7 @@ class User(models.BaseUser, models.BaseOAuthAccountMixin):
     username: Optional[str] = None
     color: Optional[str] = None
     avatar: Optional[str] = None
+    logged_in: bool = False
 
 
 class UserCreate(models.BaseUserCreate):
@@ -48,6 +49,7 @@ class UserTable(Base, SQLAlchemyBaseUserTable):
     username = Column(String(length=32), nullable=True)
     color = Column(String(length=32), nullable=True)
     avatar = Column(String(length=32), nullable=True)
+    logged_in = Column(Boolean, default=False, nullable=False)
 
 
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTable, Base):
