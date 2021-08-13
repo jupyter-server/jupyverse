@@ -4,27 +4,38 @@ import fps  # type: ignore
 from fps.config import Config  # type: ignore
 from fastapi_users.authentication import CookieAuthentication
 from fastapi import APIRouter
-from .config import AuthConfig
-from .models import user_db, User, UserCreate, UserUpdate, UserDB
-
 from fastapi_users import FastAPIUsers
-
 from starlette.requests import Request
-
 from fastapi import status
+from sqlalchemy.orm import sessionmaker  # type: ignore
+
+from .config import AuthConfig
+from .models import user_db, engine, UserTable, User, UserCreate, UserUpdate, UserDB
 
 
-class AutoRedirectCookieAuthentication(CookieAuthentication):
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+class LoginCookieAuthentication(CookieAuthentication):
     async def get_login_response(self, user, response):
         await super().get_login_response(user, response)
+        # set user as logged in
+        user.logged_in = True
+        await user_db.update(user)
+        # auto redirect
         response.status_code = status.HTTP_302_FOUND
-        response.headers["Location"] = "http://127.0.0.1:8000/lab"
+        response.headers["Location"] = "/lab"
+
+    async def get_logout_response(self, user, response):
+        await super().get_logout_response(user, response)
+        # set user as logged out
+        user.logged_in = False
+        await user_db.update(user)
 
 
 SECRET = "SECRET"
-cookie_authentication = AutoRedirectCookieAuthentication(
-    secret=SECRET, lifetime_seconds=3600
-)
+cookie_authentication = LoginCookieAuthentication(secret=SECRET, lifetime_seconds=3600)
 
 auth_backends = [cookie_authentication]
 
@@ -69,6 +80,13 @@ register_router = users.get_register_router(on_after_register)  # type: ignore
 users_router = users.get_users_router()
 
 router = APIRouter()
+
+
+@router.get("/auth/users")
+async def get_users():
+    users = session.query(UserTable).all()
+    return [user for user in users if user.logged_in]
+
 
 r_auth = fps.hooks.register_router(auth_router)
 r_register = fps.hooks.register_router(register_router)
