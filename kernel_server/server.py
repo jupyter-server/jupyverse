@@ -4,7 +4,7 @@ import signal
 from typing import List, Dict, Any, cast
 
 from .connect import write_connection_file, launch_kernel, connect_channel
-from .message import receive_message, send_message
+from .message import receive_message, send_message, create_message
 
 
 class KernelServer:
@@ -14,6 +14,7 @@ class KernelServer:
         connection_file: str = "",
         capture_kernel_output: bool = True,
     ) -> None:
+        self.last_activity = None
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
         if not self.kernelspec_path:
@@ -48,6 +49,7 @@ class KernelServer:
         self.stopped.set()
 
     async def serve(self, websocket, session_id):
+        await self._wait_for_ready(session_id)
         self.sessions[session_id] = websocket
         if not self.connected_to_kernel:
             self.channel_tasks += [
@@ -78,7 +80,26 @@ class KernelServer:
         ]
         while True:
             msg = await receive_message(channel)
-            msg["channel"] = channel_name
-            session = msg["parent_header"]["session"]
-            websocket = self.sessions[session]
-            await websocket.send_json(msg)
+            if "parent_header" in msg:
+                msg["channel"] = channel_name
+                session = msg["parent_header"]["session"]
+                websocket = self.sessions[session]
+                await websocket.send_json(msg)
+            if ("content" in msg) and ("execution_state" in msg["content"]):
+                self.last_activity = {
+                    "date": msg["header"]["date"],
+                    "execution_state": msg["content"]["execution_state"],
+                }
+
+    async def _wait_for_ready(self, session_id):
+        while True:
+            msg = create_message("kernel_info_request", session_id=session_id)
+            send_message(msg, self.shell_channel, self.key)
+            msg = await receive_message(self.shell_channel)
+            if msg["msg_type"] == "kernel_info_reply":
+                msg = await receive_message(self.iopub_channel, 0.2)
+                if msg is None:
+                    # IOPub not connected, start over
+                    pass
+                else:
+                    break
