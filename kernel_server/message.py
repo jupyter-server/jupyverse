@@ -1,6 +1,8 @@
 import hmac
 import hashlib
-from typing import List, Dict, Tuple, Any, Optional
+from datetime import datetime, timezone
+from uuid import uuid4
+from typing import List, Dict, Tuple, Any, Optional, cast
 
 from zmq.sugar.socket import Socket
 from zmq.utils import jsonapi
@@ -16,7 +18,7 @@ def pack(obj: Dict[str, Any]) -> bytes:
 
 
 def unpack(s: bytes) -> Dict[str, Any]:
-    return jsonapi.loads(s)
+    return cast(Dict[str, Any], jsonapi.loads(s))
 
 
 def sign(msg_list: List[bytes], key: str) -> bytes:
@@ -61,7 +63,53 @@ def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
     sock.send_multipart(to_send, copy=True)
 
 
-async def receive_message(sock: Socket) -> Optional[Dict[str, Any]]:
-    msg_list = await sock.recv_multipart()
-    idents, msg_list = feed_identities(msg_list)
-    return deserialize(msg_list)
+async def receive_message(
+    sock: Socket, timeout: float = float("inf")
+) -> Optional[Dict[str, Any]]:
+    timeout *= 1000  # in ms
+    ready = await sock.poll(timeout)
+    if ready:
+        msg_list = await sock.recv_multipart()
+        idents, msg_list = feed_identities(msg_list)
+        return deserialize(msg_list)
+    return None
+
+
+def utcnow() -> datetime:
+    return datetime.utcnow().replace(tzinfo=timezone.utc)
+
+
+def create_message_header(
+    msg_type: str, session_id: str, msg_id: str
+) -> Dict[str, Any]:
+    if not session_id:
+        session_id = uuid4().hex
+    if not msg_id:
+        msg_id = uuid4().hex
+    header = {
+        "date": utcnow().isoformat().replace("+00:00", "Z"),
+        "msg_id": msg_id,
+        "msg_type": msg_type,
+        "session": session_id,
+        "username": "",
+        "version": protocol_version,
+    }
+    return header
+
+
+def create_message(
+    msg_type: str,
+    content: Dict = {},
+    session_id: str = "",
+    msg_id: str = "",
+) -> Dict[str, Any]:
+    header = create_message_header(msg_type, session_id, msg_id)
+    msg = {
+        "header": header,
+        "msg_id": header["msg_id"],
+        "msg_type": header["msg_type"],
+        "parent_header": {},
+        "content": content,
+        "metadata": {},
+    }
+    return msg
