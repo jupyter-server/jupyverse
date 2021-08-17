@@ -49,9 +49,9 @@ class KernelServer:
         self.stopped.set()
 
     async def serve(self, websocket, session_id):
-        await self._wait_for_ready(session_id)
         self.sessions[session_id] = websocket
         if not self.connected_to_kernel:
+            await self._wait_for_ready(session_id)
             self.channel_tasks += [
                 asyncio.create_task(self.listen_channel("shell")),
                 asyncio.create_task(self.listen_channel("iopub")),
