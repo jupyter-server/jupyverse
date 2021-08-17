@@ -2,9 +2,10 @@ import json
 import pathlib
 import sys
 import uuid
+from http import HTTPStatus
 
 import fps  # type: ignore
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, Response, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from kernel_server import KernelServer  # type: ignore
 from starlette.requests import Request  # type: ignore
@@ -43,20 +44,32 @@ async def get_kernelspec(kernel_name, file_name):
 
 @router.get("/api/kernels")
 async def get_kernels():
-    return [
-        {
-            "id": kernel_id,
-            "name": kernel["name"],
-            "last_activity": "2021-07-27T09:50:07.217545Z",
-            "execution_state": "idle",
-            "connections": 0,
-        }
-        for kernel_id, kernel in kernels.items()
-    ]
+    results = []
+    for kernel_id, kernel in kernels.items():
+        results.append(
+            {
+                "id": kernel_id,
+                "name": kernel["name"],
+                "connections": kernel["server"].connections,
+                "last_activity": kernel["server"].last_activity["date"],
+                "execution_state": kernel["server"].last_activity["execution_state"],
+            }
+        )
+    return results
+
+
+@router.delete("/api/sessions/{session_id}", status_code=204)
+async def delete_session(session_id: str):
+    kernel_id = sessions[session_id]["kernel"]["id"]
+    kernel_server = kernels[kernel_id]["server"]
+    await kernel_server.stop()
+    del kernels[kernel_id]
+    del sessions[session_id]
+    return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.patch("/api/sessions/{session_id}")
-async def get_session(request: Request):
+async def rename_session(request: Request):
     rename_session = await request.json()
     session_id = rename_session.pop("id")
     for key, value in rename_session.items():
@@ -66,6 +79,13 @@ async def get_session(request: Request):
 
 @router.get("/api/sessions")
 async def get_sessions():
+    for session in sessions.values():
+        kernel_id = session["kernel"]["id"]
+        kernel_server = kernels[kernel_id]["server"]
+        session["kernel"]["last_activity"] = kernel_server.last_activity["date"]
+        session["kernel"]["execution_state"] = kernel_server.last_activity[
+            "execution_state"
+        ]
     return list(sessions.values())
 
 
@@ -80,7 +100,8 @@ async def create_session(request: Request):
     kernel_server = KernelServer(
         kernelspec_path=str(
             prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
-        )
+        ),
+        WebSocketDisconnect=WebSocketDisconnect,
     )
     kernel_id = str(uuid.uuid4())
     kernels[kernel_id] = {"name": kernel_name, "server": kernel_server}
@@ -94,9 +115,9 @@ async def create_session(request: Request):
         "kernel": {
             "id": kernel_id,
             "name": create_session["kernel"]["name"],
-            "last_activity": "2021-07-23T15:01:36.393348Z",
-            "execution_state": "starting",
-            "connections": 0,
+            "connections": kernel_server.connections,
+            "last_activity": kernel_server.last_activity["date"],
+            "execution_state": kernel_server.last_activity["execution_state"],
         },
         "notebook": {"path": create_session["path"], "name": create_session["name"]},
     }
@@ -104,11 +125,27 @@ async def create_session(request: Request):
     return Session(**session)
 
 
+@router.post("/api/kernels/{kernel_id}/restart")
+async def restart_kernel(kernel_id):
+    if kernel_id in kernels:
+        kernel = kernels[kernel_id]
+        await kernel["server"].restart()
+        result = {
+            "id": kernel_id,
+            "name": kernel["name"],
+            "connections": kernel["server"].connections,
+            "last_activity": kernel["server"].last_activity["date"],
+            "execution_state": kernel["server"].last_activity["execution_state"],
+        }
+        return result
+
+
 @router.websocket("/api/kernels/{kernel_id}/channels")
 async def websocket_endpoint(websocket: WebSocket, kernel_id, session_id):
     await websocket.accept()
-    kernel_server = kernels[kernel_id]["server"]
-    await kernel_server.serve(websocket, session_id)
+    if kernel_id in kernels:
+        kernel_server = kernels[kernel_id]["server"]
+        await kernel_server.serve(websocket, session_id)
 
 
 r = fps.hooks.register_router(router)
