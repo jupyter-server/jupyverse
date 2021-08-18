@@ -13,7 +13,7 @@ router = APIRouter()
 async def websocket_endpoint(websocket: WebSocket, name: str):
     await websocket.accept()
     socket = YjsEchoWebSocket(websocket)
-    await socket.open()
+    await socket.open(name)
 
 
 # The y-protocol defines messages types that just need to be propagated to all other peers.
@@ -52,11 +52,10 @@ class YjsEchoWebSocket:
     def __init__(self, websocket):
         self.websocket = websocket
 
-    async def open(self):
-        # asyncio.create_task(self.listen())
+    async def open(self, guid):
         # print("[YJSEchoWS]: open", guid)
         cls = self.__class__
-        self.room_id = str(uuid.uuid4())
+        self.room_id = guid
         self.id = str(uuid.uuid4())
         room = cls.rooms.get(self.room_id)
         if room is None:
@@ -66,7 +65,6 @@ class YjsEchoWebSocket:
         # Send SyncStep1 message (based on y-protocols)
         await self.websocket.send_bytes(bytes([0, 0, 1, 0]))
 
-        # async def listen(self):
         try:
             while True:
                 message = await self.websocket.receive_bytes()
