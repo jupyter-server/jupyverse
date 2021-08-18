@@ -1,6 +1,7 @@
 import os
 import asyncio
 import signal
+from datetime import datetime
 from typing import List, Dict, Any, cast
 
 from .connect import write_connection_file, launch_kernel, connect_channel
@@ -13,8 +14,9 @@ class KernelServer:
         kernelspec_path: str = "",
         connection_file: str = "",
         capture_kernel_output: bool = True,
+        WebSocketDisconnect=Exception,
     ) -> None:
-        self.last_activity = None
+        self.WebSocketDisconnect = WebSocketDisconnect
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
         if not self.kernelspec_path:
@@ -27,17 +29,30 @@ class KernelServer:
         self.key = cast(str, self.connection_cfg["key"])
         self.msg_cnt = 0
         self.execute_requests: Dict[str, Any] = {}
-        self.stopped = asyncio.Event()
-        self.connected_to_kernel = False
         self.channel_tasks: List[asyncio.Task] = []
         self.sessions: Dict[str, Any] = {}
 
+    @property
+    def connections(self) -> int:
+        return len(self.sessions)
+
     async def start(self) -> None:
+        self.last_activity = {
+            "date": datetime.utcnow().isoformat() + "Z",
+            "execution_state": "starting",
+        }
         self.kernel_process = await launch_kernel(
             self.kernelspec_path, self.connection_file_path, self.capture_kernel_output
         )
         self.shell_channel = connect_channel("shell", self.connection_cfg)
+        self.control_channel = connect_channel("control", self.connection_cfg)
         self.iopub_channel = connect_channel("iopub", self.connection_cfg)
+        await self._wait_for_ready()
+        self.channel_tasks += [
+            asyncio.create_task(self.listen_shell()),
+            asyncio.create_task(self.listen_control()),
+            asyncio.create_task(self.listen_iopub()),
+        ]
 
     async def stop(self) -> None:
         self.kernel_process.send_signal(signal.SIGINT)
@@ -46,24 +61,40 @@ class KernelServer:
         os.remove(self.connection_file_path)
         for task in self.channel_tasks:
             task.cancel()
-        self.stopped.set()
+        self.channel_tasks = []
+
+    async def restart(self) -> None:
+        self.last_activity = {
+            "date": datetime.utcnow().isoformat() + "Z",
+            "execution_state": "starting",
+        }
+        for task in self.channel_tasks:
+            task.cancel()
+        self.channel_tasks = []
+        msg = create_message("shutdown_request", content={"restart": True})
+        send_message(msg, self.control_channel, self.key)
+        while True:
+            msg2 = await receive_message(self.control_channel)
+            assert msg2 is not None
+            if msg2["msg_type"] == "shutdown_reply" and msg2["content"]["restart"]:
+                break
+        await self._wait_for_ready()
+        self.channel_tasks += [
+            asyncio.create_task(self.listen_shell()),
+            asyncio.create_task(self.listen_control()),
+            asyncio.create_task(self.listen_iopub()),
+        ]
 
     async def serve(self, websocket, session_id):
         self.sessions[session_id] = websocket
-        if not self.connected_to_kernel:
-            await self._wait_for_ready(session_id)
-            self.channel_tasks += [
-                asyncio.create_task(self.listen_channel("shell")),
-                asyncio.create_task(self.listen_channel("iopub")),
-            ]
-            self.connected_to_kernel = True
-        self.channel_tasks += [asyncio.create_task(self.listen_web(websocket))]
-        await self.stopped.wait()
+        await self.listen_web(websocket)
+        del self.sessions[session_id]
 
     async def listen_web(self, websocket):
-        while True:
-            msg = await websocket.receive_json()
-            if msg["channel"] == "shell":
+        try:
+            while True:
+                msg = await websocket.receive_json()
+                channel = msg["channel"]
                 msg = {
                     "header": msg["header"],
                     "msg_id": msg["header"]["msg_id"],
@@ -72,31 +103,49 @@ class KernelServer:
                     "content": msg["content"],
                     "metadata": msg["metadata"],
                 }
-                send_message(msg, self.shell_channel, self.key)
+                if channel == "shell":
+                    send_message(msg, self.shell_channel, self.key)
+                elif channel == "control":
+                    send_message(msg, self.control_channel, self.key)
+        except self.WebSocketDisconnect:
+            pass
 
-    async def listen_channel(self, channel_name):
-        channel = {"shell": self.shell_channel, "iopub": self.iopub_channel}[
-            channel_name
-        ]
+    async def listen_shell(self):
         while True:
-            msg = await receive_message(channel)
-            if "parent_header" in msg:
-                msg["channel"] = channel_name
-                session = msg["parent_header"]["session"]
+            msg = await receive_message(self.shell_channel)
+            msg["channel"] = "shell"
+            session = msg["parent_header"]["session"]
+            if session in self.sessions:
                 websocket = self.sessions[session]
                 await websocket.send_json(msg)
-            if ("content" in msg) and ("execution_state" in msg["content"]):
+
+    async def listen_control(self):
+        while True:
+            msg = await receive_message(self.control_channel)
+            msg["channel"] = "control"
+            session = msg["parent_header"]["session"]
+            if session in self.sessions:
+                websocket = self.sessions[session]
+                await websocket.send_json(msg)
+
+    async def listen_iopub(self):
+        while True:
+            msg = await receive_message(self.iopub_channel)
+            msg["channel"] = "iopub"
+            for websocket in self.sessions.values():
+                await websocket.send_json(msg)
+            if "content" in msg and "execution_state" in msg["content"]:
                 self.last_activity = {
                     "date": msg["header"]["date"],
                     "execution_state": msg["content"]["execution_state"],
                 }
 
-    async def _wait_for_ready(self, session_id):
+    async def _wait_for_ready(self):
         while True:
-            msg = create_message("kernel_info_request", session_id=session_id)
+            msg = create_message("kernel_info_request")
             send_message(msg, self.shell_channel, self.key)
-            msg = await receive_message(self.shell_channel)
-            if msg["msg_type"] == "kernel_info_reply":
+            msg = await receive_message(self.shell_channel, 0.2)
+            if msg is not None and msg["msg_type"] == "kernel_info_reply":
                 msg = await receive_message(self.iopub_channel, 0.2)
                 if msg is None:
                     # IOPub not connected, start over
