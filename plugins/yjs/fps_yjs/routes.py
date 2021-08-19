@@ -9,8 +9,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 router = APIRouter()
 
 
-@router.websocket("/api/yjs/notebook:{name}")
-async def websocket_endpoint(websocket: WebSocket, name: str):
+@router.websocket("/api/yjs/{type}:{name}")
+async def websocket_endpoint(websocket: WebSocket, type: str, name: str):
     await websocket.accept()
     socket = YjsEchoWebSocket(websocket)
     await socket.open(name)
