@@ -3,6 +3,7 @@ import pathlib
 import sys
 from glob import glob
 from http import HTTPStatus
+from typing import Dict, Any
 
 import jupyterlab  # type: ignore
 from fastapi import APIRouter, Response
@@ -84,6 +85,8 @@ WORKSPACE = {
     },
 }
 
+SETTINGS: Dict[str, Any] = {}
+
 
 @router.get("/")
 async def get_root():
@@ -142,6 +145,10 @@ async def get_translation(language):
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
 async def get_setting(name0, name1):
     with open(
+        prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
+    ) as f:
+        package = json.load(f)
+    with open(
         prefix_dir
         / "share"
         / "jupyter"
@@ -152,23 +159,26 @@ async def get_setting(name0, name1):
         / f"{name1}.json"
     ) as f:
         schema = json.load(f)
-    return {
+    result = {
         "id": f"@jupyterlab/{name0}:{name1}",
         "schema": schema,
-        "version": "3.1.0-rc.1",
+        "version": package["version"],
         "raw": "{}",
         "settings": {},
         "last_modified": None,
         "created": None,
     }
+    if f"{name0}:{name1}" in SETTINGS:
+        result.update(SETTINGS[f"{name0}:{name1}"])
+    return result
 
 
 @router.put(
     "/lab/api/settings/@jupyterlab/{name0}:{name1}",
     status_code=204,
 )
-async def change_setting(name0, name1):
-    # TODO
+async def change_setting(request: Request, name0, name1):
+    SETTINGS[f"{name0}:{name1}"] = await request.json()
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
