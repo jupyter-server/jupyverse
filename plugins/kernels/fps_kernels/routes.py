@@ -20,6 +20,12 @@ kernels: dict = {}
 prefix_dir: pathlib.Path = pathlib.Path(sys.prefix)
 
 
+@router.on_event("shutdown")
+async def stop_kernels():
+    for kernel in kernels.values():
+        await kernel["server"].stop()
+
+
 @router.get("/api/kernelspecs")
 async def get_kernelspecs():
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
