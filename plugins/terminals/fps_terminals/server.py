@@ -21,10 +21,12 @@ def open_terminal(command="bash", columns=80, lines=24):
 
 
 class TerminalServer:
-    async def serve(self, websocket):
-        self.websocket = websocket
+    def __init__(self):
         self.fd = open_terminal()
         self.p_out = os.fdopen(self.fd, "w+b", 0)
+
+    async def serve(self, websocket):
+        self.websocket = websocket
         self.event = asyncio.Event()
         self.loop = asyncio.get_event_loop()
 
@@ -50,7 +52,6 @@ class TerminalServer:
                     winsize = struct.pack("HH", msg[1], msg[2])
                     fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
         except WebSocketDisconnect:
-            os.close(self.fd)
             task.cancel()
 
     async def send_data(self):
@@ -61,3 +62,6 @@ class TerminalServer:
                 await self.websocket.send_json(["disconnect", 1])
             else:
                 await self.websocket.send_json(["stdout", self.data_or_disconnect])
+
+    def quit(self):
+        os.close(self.fd)
