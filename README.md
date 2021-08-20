@@ -4,6 +4,12 @@ An [FPS](https://github.com/adriendelsalle/fps) plugin implementing a Jupyter se
 
 ## Install
 
+```bash
+pip install jupyverse
+```
+
+## Development install
+
 Clone this repository and install the needed plugins:
 
 ```bash
