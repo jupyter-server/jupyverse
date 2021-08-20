@@ -127,11 +127,6 @@ async def get_workspace(name):
     return get_index(name, config.collaborative)
 
 
-@router.get("/api/terminals")
-async def get_terminals():
-    return []
-
-
 @router.get("/lab/api/translations")
 async def get_translations():
     return {}
@@ -276,7 +271,6 @@ def get_index(workspace, collaborative):
         "quitButton": True,
         "settingsUrl": "/lab/api/settings",
         "store_id": 0,
-        "terminalsAvailable": True,
         "schemasDir": str(prefix_dir / "share" / "jupyter" / "lab" / "schemas"),
         "terminalsAvailable": True,
         "themesDir": str(prefix_dir / "share" / "jupyter" / "lab" / "themes"),

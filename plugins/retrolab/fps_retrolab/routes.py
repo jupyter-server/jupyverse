@@ -47,11 +47,6 @@ async def get_notebook(name: str):
     return get_index(name, "notebook")
 
 
-@router.get("/api/terminals")
-async def get_terminals():
-    return []
-
-
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
 async def get_setting(name0, name1):
     with open(

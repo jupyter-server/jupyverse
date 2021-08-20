@@ -10,7 +10,16 @@ from fastapi import status
 from sqlalchemy.orm import sessionmaker  # type: ignore
 
 from .config import AuthConfig
-from .models import user_db, engine, UserTable, User, UserCreate, UserUpdate, UserDB
+from .models import (
+    user_db,
+    engine,
+    UserTable,
+    User,
+    UserCreate,
+    UserUpdate,
+    UserDB,
+    database,
+)
 
 
 Session = sessionmaker(bind=engine)
@@ -86,6 +95,16 @@ router = APIRouter()
 async def get_users():
     users = session.query(UserTable).all()
     return [user for user in users if user.logged_in]
+
+
+@router.on_event("startup")
+async def startup():
+    await database.connect()
+
+
+@router.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
 
 
 r_auth = fps.hooks.register_router(auth_router)
