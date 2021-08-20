@@ -1,4 +1,3 @@
-import asyncio
 from typing import Optional
 
 import databases
@@ -65,19 +64,3 @@ Base.metadata.create_all(engine)
 users = UserTable.__table__
 oauth_accounts = OAuthAccount.__table__
 user_db = SQLAlchemyUserDatabase(UserDB, database, users, oauth_accounts)
-
-
-async def connect_db():
-    await database.connect()
-
-
-asyncio.create_task(connect_db())
-
-# @app.on_event("startup")
-# async def startup():
-#    await database.connect()
-#
-#
-# @app.on_event("shutdown")
-# async def shutdown():
-#    await database.disconnect()

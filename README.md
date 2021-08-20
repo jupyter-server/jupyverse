@@ -11,6 +11,7 @@ pip install -e .
 pip install -e plugins/auth
 pip install -e plugins/contents
 pip install -e plugins/kernels
+pip install -e plugins/terminals
 pip install -e plugins/nbconvert
 pip install -e plugins/yjs
 pip install -e plugins/jupyterlab
