@@ -1,10 +1,10 @@
 from typing import Optional
 
-import databases
+import databases  # type: ignore
 import sqlalchemy  # type: ignore
-from fastapi_users import models
-from fastapi_users.db import SQLAlchemyBaseUserTable, SQLAlchemyUserDatabase
-from fastapi_users.db import SQLAlchemyBaseOAuthAccountTable
+from fastapi_users import models  # type: ignore
+from fastapi_users.db import SQLAlchemyBaseUserTable, SQLAlchemyUserDatabase  # type: ignore
+from fastapi_users.db import SQLAlchemyBaseOAuthAccountTable  # type: ignore
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
 from sqlalchemy import Boolean, String, Column
 

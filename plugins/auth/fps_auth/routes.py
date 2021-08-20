@@ -2,9 +2,9 @@ import httpx  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 import fps  # type: ignore
 from fps.config import Config  # type: ignore
-from fastapi_users.authentication import CookieAuthentication
+from fastapi_users.authentication import CookieAuthentication  # type: ignore
 from fastapi import APIRouter
-from fastapi_users import FastAPIUsers
+from fastapi_users import FastAPIUsers  # type: ignore
 from starlette.requests import Request
 from fastapi import status
 from sqlalchemy.orm import sessionmaker  # type: ignore

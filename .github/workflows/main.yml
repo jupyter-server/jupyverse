@@ -36,8 +36,9 @@ jobs:
 
     - name: Install jupyverse
       run: |
-        pip install -e .[test]
+        pip install -e . --no-deps
         pip install -e ./plugins/contents
+        pip install flake8 black mypy pytest requests
 
     - name: Check style
       run: |
@@ -51,6 +52,7 @@ jobs:
         mypy plugins/jupyterlab
         mypy plugins/nbconvert
         mypy plugins/yjs
+        mypy plugins/terminals
 
     - name: Run tests
       run: |
