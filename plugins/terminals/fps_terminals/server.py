@@ -24,9 +24,11 @@ class TerminalServer:
     def __init__(self):
         self.fd = open_terminal()
         self.p_out = os.fdopen(self.fd, "w+b", 0)
+        self.websockets = []
 
     async def serve(self, websocket):
         self.websocket = websocket
+        self.websockets.append(websocket)
         self.event = asyncio.Event()
         self.loop = asyncio.get_event_loop()
 
@@ -61,7 +63,10 @@ class TerminalServer:
             if self.data_or_disconnect is None:
                 await self.websocket.send_json(["disconnect", 1])
             else:
-                await self.websocket.send_json(["stdout", self.data_or_disconnect])
+                for websocket in self.websockets:
+                    await websocket.send_json(["stdout", self.data_or_disconnect])
 
-    def quit(self):
-        os.close(self.fd)
+    def quit(self, websocket):
+        self.websockets.remove(websocket)
+        if not self.websockets:
+            os.close(self.fd)
