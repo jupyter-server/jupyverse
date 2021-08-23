@@ -44,7 +44,7 @@ async def terminal_ws(websocket: WebSocket, name):
     await websocket.accept()
     await TERMINALS[name]["server"].serve(websocket)
     if name in TERMINALS:
-        TERMINALS[name]["server"].quit()
+        TERMINALS[name]["server"].quit(websocket)
         del TERMINALS[name]
 
 
