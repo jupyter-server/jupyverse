@@ -18,6 +18,7 @@ setup(
     install_requires=[
         "pyzmq",
         "websockets",
+        "fastapi",
     ],
     extras_require={
         "test": [
