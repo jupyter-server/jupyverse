@@ -2,7 +2,9 @@ import os
 import asyncio
 import signal
 from datetime import datetime
-from typing import List, Dict, Any, cast
+from typing import List, Dict, cast
+
+from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 
 from .connect import write_connection_file, launch_kernel, connect_channel
 from .message import receive_message, send_message, create_message
@@ -14,9 +16,7 @@ class KernelServer:
         kernelspec_path: str = "",
         connection_file: str = "",
         capture_kernel_output: bool = True,
-        WebSocketDisconnect=Exception,
     ) -> None:
-        self.WebSocketDisconnect = WebSocketDisconnect
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
         if not self.kernelspec_path:
@@ -27,10 +27,8 @@ class KernelServer:
             connection_file
         )
         self.key = cast(str, self.connection_cfg["key"])
-        self.msg_cnt = 0
-        self.execute_requests: Dict[str, Any] = {}
         self.channel_tasks: List[asyncio.Task] = []
-        self.sessions: Dict[str, Any] = {}
+        self.sessions: Dict[str, WebSocket] = {}
 
     @property
     def connections(self) -> int:
@@ -85,12 +83,12 @@ class KernelServer:
             asyncio.create_task(self.listen_iopub()),
         ]
 
-    async def serve(self, websocket, session_id):
+    async def serve(self, websocket: WebSocket, session_id: str):
         self.sessions[session_id] = websocket
         await self.listen_web(websocket)
         del self.sessions[session_id]
 
-    async def listen_web(self, websocket):
+    async def listen_web(self, websocket: WebSocket):
         try:
             while True:
                 msg = await websocket.receive_json()
@@ -107,7 +105,7 @@ class KernelServer:
                     send_message(msg, self.shell_channel, self.key)
                 elif channel == "control":
                     send_message(msg, self.control_channel, self.key)
-        except self.WebSocketDisconnect:
+        except WebSocketDisconnect:
             pass
 
     async def listen_shell(self):
