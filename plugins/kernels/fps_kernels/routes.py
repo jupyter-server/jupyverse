@@ -5,7 +5,7 @@ import uuid
 from http import HTTPStatus
 
 import fps  # type: ignore
-from fastapi import APIRouter, WebSocket, Response, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, Response
 from fastapi.responses import FileResponse
 from kernel_server import KernelServer  # type: ignore
 from starlette.requests import Request  # type: ignore
@@ -107,7 +107,6 @@ async def create_session(request: Request):
         kernelspec_path=str(
             prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
         ),
-        WebSocketDisconnect=WebSocketDisconnect,
     )
     kernel_id = str(uuid.uuid4())
     kernels[kernel_id] = {"name": kernel_name, "server": kernel_server}
