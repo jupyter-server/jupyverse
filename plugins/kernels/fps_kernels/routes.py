@@ -5,10 +5,18 @@ import uuid
 from http import HTTPStatus
 
 import fps  # type: ignore
-from fastapi import APIRouter, WebSocket, Response
+from fastapi import APIRouter, WebSocket, Response, status
 from fastapi.responses import FileResponse
 from kernel_server import KernelServer  # type: ignore
 from starlette.requests import Request  # type: ignore
+
+try:
+    from fps_auth.routes import cookie_authentication  # type: ignore
+    from fps_auth.models import user_db  # type: ignore
+
+    auth_enabled = True
+except Exception:
+    auth_enabled = False
 
 from .models import Session
 
@@ -147,10 +155,21 @@ async def restart_kernel(kernel_id):
 
 @router.websocket("/api/kernels/{kernel_id}/channels")
 async def websocket_endpoint(websocket: WebSocket, kernel_id, session_id):
-    await websocket.accept()
-    if kernel_id in kernels:
-        kernel_server = kernels[kernel_id]["server"]
-        await kernel_server.serve(websocket, session_id)
+    accept_websocket = False
+    if auth_enabled:
+        cookie = websocket._cookies["fastapiusersauth"]
+        user = await cookie_authentication(cookie, user_db)
+        if user and user.is_active:
+            accept_websocket = True
+    else:
+        accept_websocket = True
+    if accept_websocket:
+        await websocket.accept()
+        if kernel_id in kernels:
+            kernel_server = kernels[kernel_id]["server"]
+            await kernel_server.serve(websocket, session_id)
+    else:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
 
 r = fps.hooks.register_router(router)
