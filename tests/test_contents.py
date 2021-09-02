@@ -48,7 +48,7 @@ def test_tree(client, tmp_path):
         path=str(dname),
         format="json",
     )
-    response = client.get("/api/contents?content=1")
+    response = client.get("/api/contents", params={"content": 1})
     actual = response.json()
     # ignore modification and creation times
     clear_content_values(actual, keys=["created", "last_modified"])

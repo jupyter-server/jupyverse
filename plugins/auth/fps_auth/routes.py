@@ -1,6 +1,6 @@
 import httpx  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
-import fps  # type: ignore
+from fps.hooks import register_router  # type: ignore
 from fps.config import Config  # type: ignore
 from fastapi_users.authentication import CookieAuthentication  # type: ignore
 from fastapi import APIRouter
@@ -43,8 +43,12 @@ class LoginCookieAuthentication(CookieAuthentication):
         await user_db.update(user)
 
 
+auth_config = Config(AuthConfig)
+
 SECRET = "SECRET"
-cookie_authentication = LoginCookieAuthentication(secret=SECRET, lifetime_seconds=3600)
+cookie_authentication = LoginCookieAuthentication(
+    cookie_secure=auth_config.cookie_secure, secret=SECRET, lifetime_seconds=3600
+)
 
 auth_backends = [cookie_authentication]
 
@@ -57,9 +61,8 @@ users = FastAPIUsers(
     UserDB,
 )
 
-config = Config(AuthConfig)
 github_oauth_client = GitHubOAuth2(
-    config.client_id, config.client_secret.get_secret_value()
+    auth_config.client_id, auth_config.client_secret.get_secret_value()
 )
 
 
@@ -85,7 +88,7 @@ github_oauth_router = users.get_oauth_router(
     github_oauth_client, SECRET, after_register=on_after_github_register  # type: ignore
 )
 auth_router = users.get_auth_router(cookie_authentication)
-register_router = users.get_register_router(on_after_register)  # type: ignore
+user_register_router = users.get_register_router(on_after_register)  # type: ignore
 users_router = users.get_users_router()
 
 router = APIRouter()
@@ -107,8 +110,8 @@ async def shutdown():
     await database.disconnect()
 
 
-r_auth = fps.hooks.register_router(auth_router)
-r_register = fps.hooks.register_router(register_router)
-r_users = fps.hooks.register_router(users_router, prefix="/auth/users")
-r_github = fps.hooks.register_router(github_oauth_router, prefix="/auth/github")
-r = fps.hooks.register_router(router)
+r_auth = register_router(auth_router)
+r_register = register_router(user_register_router)
+r_users = register_router(users_router, prefix="/auth/users")
+r_github = register_router(github_oauth_router, prefix="/auth/github")
+r = register_router(router)

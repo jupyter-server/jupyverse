@@ -6,18 +6,23 @@ from http import HTTPStatus
 from typing import Dict, Any
 
 import jupyterlab  # type: ignore
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
+from fps_auth.routes import users  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_auth.config import AuthConfig  # type: ignore
+
 from .config import JupyterLabConfig
 
 router = APIRouter()
 prefix_dir: pathlib.Path = pathlib.Path(sys.prefix)
-config = Config(JupyterLabConfig)
+jlab_config = Config(JupyterLabConfig)
+auth_config = Config(AuthConfig)
 
 router.mount(
     "/static/lab",
@@ -95,11 +100,13 @@ async def get_root():
 
 @router.get("/lab")
 async def get_lab():
-    return HTMLResponse(get_index("default", config.collaborative))
+    return HTMLResponse(get_index("default", jlab_config.collaborative))
 
 
 @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
-async def get_listings():
+async def get_listings(
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return {
         "blocked_extensions_uris": [],
         "allowed_extensions_uris": [],
@@ -109,7 +116,9 @@ async def get_listings():
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(name):
+async def get_workspace_data(
+    name, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
+):
     return WORKSPACE
 
 
@@ -117,28 +126,42 @@ async def get_workspace_data(name):
     "/lab/api/workspaces/{name}",
     status_code=204,
 )
-async def set_workspace(request: Request):
+async def set_workspace(
+    request: Request,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     WORKSPACE.update(await request.json())
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
-async def get_workspace(name):
-    return get_index(name, config.collaborative)
+async def get_workspace(
+    name, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
+):
+    return get_index(name, jlab_config.collaborative)
 
 
 @router.get("/lab/api/translations")
-async def get_translations():
+async def get_translations(
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return {}
 
 
 @router.get("/lab/api/translations/{language}")
-async def get_translation(language):
+async def get_translation(
+    language,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return {}
 
 
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
-async def get_setting(name0, name1):
+async def get_setting(
+    name0,
+    name1,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
     ) as f:
@@ -172,13 +195,20 @@ async def get_setting(name0, name1):
     "/lab/api/settings/@jupyterlab/{name0}:{name1}",
     status_code=204,
 )
-async def change_setting(request: Request, name0, name1):
+async def change_setting(
+    request: Request,
+    name0,
+    name1,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     SETTINGS[f"{name0}:{name1}"] = await request.json()
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/api/settings")
-async def get_settings():
+async def get_settings(
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"

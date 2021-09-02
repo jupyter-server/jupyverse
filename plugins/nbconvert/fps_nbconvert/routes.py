@@ -2,15 +2,23 @@ import tempfile
 from pathlib import Path
 
 import nbconvert  # type: ignore
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
+from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
+from fps_auth.routes import users  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_auth.config import AuthConfig  # type: ignore
+
 router = APIRouter()
+auth_config = Config(AuthConfig)
 
 
 @router.get("/api/nbconvert")
-async def get_nbconvert_formats():
+async def get_nbconvert_formats(
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return {
         name: {
             "output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype
@@ -20,7 +28,12 @@ async def get_nbconvert_formats():
 
 
 @router.get("/nbconvert/{format}/{path}")
-async def get_nbconvert_document(format: str, path: str, download: bool):
+async def get_nbconvert_document(
+    format: str,
+    path: str,
+    download: bool,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     exporter = nbconvert.exporters.get_exporter(format)
     if download:
         media_type = "application/octet-stream"
