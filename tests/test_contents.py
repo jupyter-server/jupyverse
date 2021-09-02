@@ -4,7 +4,7 @@ from pathlib import Path
 from utils import clear_content_values, create_content, sort_content_by_name
 
 
-def test_tree(client, tmp_path):
+def test_tree(client, authenticated_user, tmp_path):
     os.chdir(tmp_path)
     dname = Path(".")
     expected = []
