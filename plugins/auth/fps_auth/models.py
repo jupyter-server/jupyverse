@@ -1,3 +1,5 @@
+import sys
+from pathlib import Path
 from typing import Optional
 
 import databases  # type: ignore
@@ -33,8 +35,11 @@ class UserDB(User, models.BaseUserDB):
     pass
 
 
-DATABASE_URL = "sqlite:///./test.db"
-# DATABASE_URL = "sqlite:///:memory:"
+# FIXME: where do we want the DB?
+userdb_dir = Path(sys.prefix) / "share" / "jupyter" / "jupyverse"
+userdb_dir.mkdir(parents=True, exist_ok=True)
+userdb_path = str(userdb_dir / "user.db")
+DATABASE_URL = "sqlite:///" + userdb_path
 
 database = databases.Database(DATABASE_URL)
 

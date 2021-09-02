@@ -4,6 +4,6 @@ setup(
     name="fps_terminals",
     version="0.0.1",
     packages=find_packages(),
-    install_requires=["fps"],
+    install_requires=["fps", "fps-auth"],
     entry_points={"fps_router": ["fps-terminals = fps_terminals.routes"]},
 )

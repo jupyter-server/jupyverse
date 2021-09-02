@@ -7,6 +7,10 @@ class AuthConfig(PluginModel):
     client_id: str = ""
     client_secret: SecretStr = SecretStr("")
     redirect_uri: str = ""
+    disable_auth: bool = False
+    cookie_secure: bool = (
+        False  # FIXME: should default to True, and set to False for tests
+    )
 
 
 c = register_config(AuthConfig)

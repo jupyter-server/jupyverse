@@ -4,7 +4,7 @@ from pathlib import Path
 from utils import clear_content_values, create_content, sort_content_by_name
 
 
-def test_tree(client, tmp_path):
+def test_tree(client, authenticated_user, tmp_path):
     os.chdir(tmp_path)
     dname = Path(".")
     expected = []
@@ -48,7 +48,7 @@ def test_tree(client, tmp_path):
         path=str(dname),
         format="json",
     )
-    response = client.get("/api/contents?content=1")
+    response = client.get("/api/contents", params={"content": 1})
     actual = response.json()
     # ignore modification and creation times
     clear_content_values(actual, keys=["created", "last_modified"])

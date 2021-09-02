@@ -5,20 +5,29 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
-import fps  # type: ignore
-from fastapi import APIRouter
+from fps.config import Config  # type: ignore
+from fps.hooks import register_router  # type: ignore
+from fastapi import APIRouter, Depends
 from starlette.requests import Request  # type: ignore
+
+from fps_auth.routes import users  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_auth.config import AuthConfig  # type: ignore
 
 from .models import Checkpoint, Content, SaveContent
 
 router = APIRouter()
+auth_config = Config(AuthConfig)
 
 
 @router.post(
     "/api/contents",
     status_code=201,
 )
-async def create_content(request: Request):
+async def create_content(
+    request: Request,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     create_content = await request.json()
     path = Path(create_content["path"])
     if create_content["type"] == "notebook":
@@ -45,17 +54,27 @@ async def create_content(request: Request):
 
 
 @router.get("/api/contents")
-async def get_root_content(content: int):
+async def get_root_content(
+    content: int,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return Content(**get_path_content(Path(""), bool(content)))
 
 
 @router.get("/api/contents/{path}")
-async def get_content(path: str, content: int):
+async def get_content(
+    path: str,
+    content: int,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return Content(**get_path_content(Path(path), bool(content)))
 
 
 @router.put("/api/contents/{path}")
-async def save_content(request: Request):
+async def save_content(
+    request: Request,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     save_content = SaveContent(**(await request.json()))
     try:
         with open(save_content.path, "w") as f:
@@ -72,7 +91,9 @@ async def save_content(request: Request):
 
 
 @router.get("/api/contents/{path}/checkpoints")
-async def get_checkpoint(path):
+async def get_checkpoint(
+    path, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
+):
     src_path = Path(path)
     dst_path = (
         Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -87,7 +108,9 @@ async def get_checkpoint(path):
     "/api/contents/{path}/checkpoints",
     status_code=201,
 )
-async def create_checkpoint(path):
+async def create_checkpoint(
+    path, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
+):
     src_path = Path(path)
     dst_path = (
         Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -195,4 +218,4 @@ def get_available_path(path: Path):
             return available_path
 
 
-r = fps.hooks.register_router(router)
+r = register_router(router)

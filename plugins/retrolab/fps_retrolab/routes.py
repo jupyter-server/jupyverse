@@ -3,13 +3,19 @@ import pathlib
 import sys
 from http import HTTPStatus
 
-import fps  # type: ignore
+from fps.config import Config  # type: ignore
+from fps.hooks import register_router  # type: ignore
 import retrolab  # type: ignore
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from fps_auth.routes import users  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_auth.config import AuthConfig  # type: ignore
+
 router = APIRouter()
+auth_config = Config(AuthConfig)
 retrolab_dir = pathlib.Path(retrolab.__file__).parent
 prefix_dir = pathlib.Path(sys.prefix)
 
@@ -43,12 +49,19 @@ async def get_tree():
 
 
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
-async def get_notebook(name: str):
+async def get_notebook(
+    name: str,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     return get_index(name, "notebook")
 
 
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
-async def get_setting(name0, name1):
+async def get_setting(
+    name0,
+    name1,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     with open(
         prefix_dir
         / "share"
@@ -75,13 +88,19 @@ async def get_setting(name0, name1):
     "/lab/api/settings/@jupyterlab/{name0}:{name1}",
     status_code=204,
 )
-async def change_setting(name0, name1):
+async def change_setting(
+    name0,
+    name1,
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     # TODO
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/api/settings")
-async def get_settings():
+async def get_settings(
+    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+):
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
@@ -191,4 +210,4 @@ INDEX_HTML = """\
 </html>
 """
 
-r = fps.hooks.register_router(router)
+r = register_router(router)

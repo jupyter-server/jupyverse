@@ -3,17 +3,34 @@ import uuid
 from enum import IntEnum
 from typing import Dict
 
-import fps  # type: ignore
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fps.config import Config  # type: ignore
+from fps.hooks import register_router  # type: ignore
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
+
+from fps_auth.routes import cookie_authentication  # type: ignore
+from fps_auth.models import user_db  # type: ignore
+from fps_auth.config import AuthConfig  # type: ignore
 
 router = APIRouter()
+auth_config = Config(AuthConfig)
 
 
 @router.websocket("/api/yjs/{type}:{name}")
 async def websocket_endpoint(websocket: WebSocket, type: str, name: str):
-    await websocket.accept()
-    socket = YjsEchoWebSocket(websocket)
-    await socket.open(name)
+    accept_websocket = False
+    if auth_config.disable_auth:
+        accept_websocket = True
+    else:
+        cookie = websocket._cookies["fastapiusersauth"]
+        user = await cookie_authentication(cookie, user_db)
+        if user:
+            accept_websocket = True
+    if accept_websocket:
+        await websocket.accept()
+        socket = YjsEchoWebSocket(websocket)
+        await socket.open(name)
+    else:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
 
 # The y-protocol defines messages types that just need to be propagated to all other peers.
@@ -120,4 +137,4 @@ class YjsEchoWebSocket:
                 # print("[YJSEchoWS]: close room " + self.room_id)
 
 
-r = fps.hooks.register_router(router)
+r = register_router(router)
