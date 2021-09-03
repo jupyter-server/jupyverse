@@ -9,6 +9,11 @@ from fastapi_users.db import SQLAlchemyBaseUserTable, SQLAlchemyUserDatabase  # 
 from fastapi_users.db import SQLAlchemyBaseOAuthAccountTable  # type: ignore
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
 from sqlalchemy import Boolean, String, Column
+from fps.config import Config  # type: ignore
+
+from .config import AuthConfig
+
+auth_config = Config(AuthConfig)
 
 
 class User(models.BaseUser, models.BaseOAuthAccountMixin):
@@ -38,8 +43,11 @@ class UserDB(User, models.BaseUserDB):
 # FIXME: where do we want the DB?
 userdb_dir = Path(sys.prefix) / "share" / "jupyter" / "jupyverse"
 userdb_dir.mkdir(parents=True, exist_ok=True)
-userdb_path = str(userdb_dir / "user.db")
-DATABASE_URL = "sqlite:///" + userdb_path
+userdb_path = userdb_dir / "user.db"
+if auth_config.clear_db and userdb_path.is_file():
+    userdb_path.unlink()
+
+DATABASE_URL = f"sqlite:///{userdb_path}"
 
 database = databases.Database(DATABASE_URL)
 
