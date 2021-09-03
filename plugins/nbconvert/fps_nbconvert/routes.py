@@ -16,9 +16,7 @@ auth_config = Config(AuthConfig)
 
 
 @router.get("/api/nbconvert")
-async def get_nbconvert_formats(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_nbconvert_formats():
     return {
         name: {
             "output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype

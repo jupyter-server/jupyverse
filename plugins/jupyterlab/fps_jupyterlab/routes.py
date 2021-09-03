@@ -104,9 +104,7 @@ async def get_lab():
 
 
 @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
-async def get_listings(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_listings():
     return {
         "blocked_extensions_uris": [],
         "allowed_extensions_uris": [],
@@ -116,9 +114,7 @@ async def get_listings(
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(
-    name, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
-):
+async def get_workspace_data():
     return WORKSPACE
 
 
@@ -142,16 +138,13 @@ async def get_workspace(
 
 
 @router.get("/lab/api/translations")
-async def get_translations(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_translations():
     return {}
 
 
 @router.get("/lab/api/translations/{language}")
 async def get_translation(
     language,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
 ):
     return {}
 
@@ -160,7 +153,6 @@ async def get_translation(
 async def get_setting(
     name0,
     name1,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
 ):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
@@ -206,9 +198,7 @@ async def change_setting(
 
 
 @router.get("/lab/api/settings")
-async def get_settings(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_settings():
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"

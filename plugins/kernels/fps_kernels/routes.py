@@ -33,9 +33,7 @@ async def stop_kernels():
 
 
 @router.get("/api/kernelspecs")
-async def get_kernelspecs(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_kernelspecs():
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
         with open(path) as f:
             spec = json.load(f)
@@ -53,7 +51,6 @@ async def get_kernelspecs(
 async def get_kernelspec(
     kernel_name,
     file_name,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
 ):
     return FileResponse(
         prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name
@@ -61,9 +58,7 @@ async def get_kernelspec(
 
 
 @router.get("/api/kernels")
-async def get_kernels(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_kernels():
     results = []
     for kernel_id, kernel in kernels.items():
         results.append(
@@ -104,9 +99,7 @@ async def rename_session(
 
 
 @router.get("/api/sessions")
-async def get_sessions(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_sessions():
     for session in sessions.values():
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]

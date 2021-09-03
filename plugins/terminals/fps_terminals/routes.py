@@ -20,9 +20,7 @@ TERMINALS: Dict[str, Dict[str, Any]] = {}
 
 
 @router.get("/api/terminals")
-async def get_terminals(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
-):
+async def get_terminals():
     return [terminal["info"] for terminal in TERMINALS.values()]
 
 
