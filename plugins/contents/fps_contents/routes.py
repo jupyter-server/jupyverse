@@ -80,7 +80,14 @@ async def save_content(
         with open(save_content.path, "w") as f:
             if save_content.format == "json":
                 dict_content = cast(Dict, save_content.content)
-                json.dump(dict_content, f)
+                if save_content.type == "notebook":
+                    # see https://github.com/jupyterlab/jupyterlab/issues/11005
+                    if (
+                        "metadata" in dict_content
+                        and "orig_nbformat" in dict_content["metadata"]
+                    ):
+                        del dict_content["metadata"]["orig_nbformat"]
+                    json.dump(dict_content, f, indent=2)
             else:
                 str_content = cast(str, save_content.content)
                 f.write(str_content)
