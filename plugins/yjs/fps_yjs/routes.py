@@ -20,7 +20,7 @@ async def websocket_endpoint(websocket: WebSocket, type: str, name: str):
     accept_websocket = False
     if auth_config.disable_auth:
         accept_websocket = True
-    else:
+    elif "fastapiusersauth" in websocket._cookies:
         cookie = websocket._cookies["fastapiusersauth"]
         user = await cookie_authentication(cookie, user_db)
         if user:

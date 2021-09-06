@@ -3,7 +3,6 @@ import pathlib
 import sys
 from glob import glob
 from http import HTTPStatus
-from typing import Dict, Any
 
 import jupyterlab  # type: ignore
 from fastapi import APIRouter, Response, Depends
@@ -13,7 +12,7 @@ from starlette.requests import Request  # type: ignore
 from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
-from fps_auth.routes import users  # type: ignore
+from fps_auth.routes import users, user_db  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
@@ -60,38 +59,6 @@ for path in glob(
         name=name,
     )
 
-WORKSPACE = {
-    "data": {
-        "layout-restorer:data": {
-            "main": {
-                "dock": {"type": "tab-area", "currentIndex": 0, "widgets": []},
-                "current": "",
-            },
-            "down": {"size": 0, "widgets": []},
-            "left": {
-                "collapsed": False,
-                "current": "filebrowser",
-                "widgets": [
-                    "filebrowser",
-                    "running-sessions",
-                    "@jupyterlab/toc:plugin",
-                    "extensionmanager.main-view",
-                ],
-            },
-            "right": {"collapsed": True, "widgets": []},
-            "relativeSizes": [0.22859744990892533, 0.7714025500910747, 0],
-        },
-        "@jupyterlab/docprovider:yprovider:user": "undefined,#4BA749",
-    },
-    "metadata": {
-        "id": "default",
-        "last_modified": "2021-08-10T10:47:58.741703+00:00",
-        "created": "2021-08-10T10:47:58.741703+00:00",
-    },
-}
-
-SETTINGS: Dict[str, Any] = {}
-
 
 @router.get("/")
 async def get_root():
@@ -114,8 +81,10 @@ async def get_listings():
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data():
-    return WORKSPACE
+async def get_workspace_data(user: User = Depends(users.current_user(optional=True))):
+    if user is None:
+        return {}
+    return json.loads(user.workspace)
 
 
 @router.put(
@@ -126,7 +95,8 @@ async def set_workspace(
     request: Request,
     user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
 ):
-    WORKSPACE.update(await request.json())
+    user.workspace = await request.body()
+    await user_db.update(user)
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
@@ -153,6 +123,7 @@ async def get_translation(
 async def get_setting(
     name0,
     name1,
+    user: User = Depends(users.current_user(optional=True)),
 ):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
@@ -169,8 +140,9 @@ async def get_setting(
         / f"{name1}.json"
     ) as f:
         schema = json.load(f)
+    key = f"{name0}:{name1}"
     result = {
-        "id": f"@jupyterlab/{name0}:{name1}",
+        "id": f"@jupyterlab/{key}",
         "schema": schema,
         "version": package["version"],
         "raw": "{}",
@@ -178,8 +150,10 @@ async def get_setting(
         "last_modified": None,
         "created": None,
     }
-    if f"{name0}:{name1}" in SETTINGS:
-        result.update(SETTINGS[f"{name0}:{name1}"])
+    if user and user.settings:
+        settings = json.loads(user.settings)
+        if key in settings:
+            result.update(settings[key])
     return result
 
 
@@ -193,28 +167,45 @@ async def change_setting(
     name1,
     user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
 ):
-    SETTINGS[f"{name0}:{name1}"] = await request.json()
+    if user and user.settings:
+        settings = json.loads(user.settings)
+    else:
+        settings = {}
+    settings[f"{name0}:{name1}"] = await request.json()
+    user.settings = json.dumps(settings)
+    await user_db.update(user)
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/api/settings")
-async def get_settings():
+async def get_settings(user: User = Depends(users.current_user(optional=True))):
+    with open(
+        prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
+    ) as f:
+        package = json.load(f)
+    if user and user.settings:
+        user_settings = json.loads(user.settings)
+    else:
+        user_settings = {}
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
     ).glob("*/*.json"):
         with open(path) as f:
             schema = json.load(f)
+        key = f"{path.parent.name}:{path.stem}"
         setting = {
-            "id": f"@jupyterlab/{path.parent.name}:{path.stem}",
+            "id": f"@jupyterlab/{key}",
             "schema": schema,
-            "version": "3.1.0-rc.1",
+            "version": package["version"],
             "raw": "{}",
             "settings": {},
             "warning": None,
             "last_modified": None,
             "created": None,
         }
+        if key in user_settings:
+            setting.update(user_settings[key])
         settings.append(setting)
     return {"settings": settings}
 
