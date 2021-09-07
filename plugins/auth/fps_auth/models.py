@@ -1,4 +1,4 @@
-import sys
+import secrets
 from pathlib import Path
 from typing import Optional
 
@@ -42,12 +42,23 @@ class UserDB(User, models.BaseUserDB):
     pass
 
 
-# FIXME: where do we want the DB?
-userdb_dir = Path(sys.prefix) / "share" / "jupyter" / "jupyverse"
-userdb_dir.mkdir(parents=True, exist_ok=True)
-userdb_path = userdb_dir / "user.db"
-if auth_config.clear_db and userdb_path.is_file():
-    userdb_path.unlink()
+jupyter_dir = Path.home() / ".local" / "share" / "jupyter"
+jupyter_dir.mkdir(parents=True, exist_ok=True)
+secret_path = jupyter_dir / "jupyverse_secret"
+userdb_path = jupyter_dir / "jupyverse_users.db"
+
+if auth_config.clear_users:
+    if userdb_path.is_file():
+        userdb_path.unlink()
+    if secret_path.is_file():
+        secret_path.unlink()
+
+if not secret_path.is_file():
+    with open(secret_path, "w") as f:
+        f.write(secrets.token_hex(32))
+
+with open(secret_path) as f:
+    secret = f.read()
 
 DATABASE_URL = f"sqlite:///{userdb_path}"
 

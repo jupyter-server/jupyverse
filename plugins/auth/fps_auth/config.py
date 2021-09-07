@@ -11,7 +11,7 @@ class AuthConfig(PluginModel):
     cookie_secure: bool = (
         False  # FIXME: should default to True, and set to False for tests
     )
-    clear_db: bool = False
+    clear_users: bool = False
 
 
 c = register_config(AuthConfig)

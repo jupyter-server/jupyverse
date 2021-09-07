@@ -19,6 +19,7 @@ from .models import (
     UserUpdate,
     UserDB,
     database,
+    secret,
 )
 
 
@@ -45,9 +46,8 @@ class LoginCookieAuthentication(CookieAuthentication):
 
 auth_config = Config(AuthConfig)
 
-SECRET = "SECRET"
 cookie_authentication = LoginCookieAuthentication(
-    cookie_secure=auth_config.cookie_secure, secret=SECRET, lifetime_seconds=3600
+    cookie_secure=auth_config.cookie_secure, secret=secret
 )
 
 auth_backends = [cookie_authentication]
@@ -85,7 +85,7 @@ async def on_after_github_register(user: UserDB, request: Request):
 
 
 github_oauth_router = users.get_oauth_router(
-    github_oauth_client, SECRET, after_register=on_after_github_register  # type: ignore
+    github_oauth_client, secret, after_register=on_after_github_register  # type: ignore
 )
 auth_router = users.get_auth_router(cookie_authentication)
 user_register_router = users.get_register_router(on_after_register)  # type: ignore
