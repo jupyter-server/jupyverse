@@ -131,7 +131,10 @@ class KernelServer:
             msg = await receive_message(self.iopub_channel)
             msg["channel"] = "iopub"
             for websocket in self.sessions.values():
-                await websocket.send_json(msg)
+                try:
+                    await websocket.send_json(msg)
+                except Exception:
+                    pass
             if "content" in msg and "execution_state" in msg["content"]:
                 self.last_activity = {
                     "date": msg["header"]["date"],
