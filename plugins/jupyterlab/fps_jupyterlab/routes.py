@@ -82,9 +82,9 @@ async def get_listings():
 
 @router.get("/lab/api/workspaces/{name}")
 async def get_workspace_data(user: User = Depends(users.current_user(optional=True))):
-    if user is None:
-        return {}
-    return json.loads(user.workspace)
+    if user and user.workspace:
+        return json.loads(user.workspace)
+    return {}
 
 
 @router.put(
