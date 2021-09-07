@@ -1,12 +1,13 @@
 import json
-import pathlib
+from pathlib import Path
 import sys
 from glob import glob
 from http import HTTPStatus
 
 import jupyterlab  # type: ignore
+import jupyverse  # type: ignore
 from fastapi import APIRouter, Response, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 from fps.config import Config  # type: ignore
@@ -19,7 +20,7 @@ from fps_auth.config import AuthConfig  # type: ignore
 from .config import JupyterLabConfig
 
 router = APIRouter()
-prefix_dir: pathlib.Path = pathlib.Path(sys.prefix)
+prefix_dir: Path = Path(sys.prefix)
 jlab_config = Config(JupyterLabConfig)
 auth_config = Config(AuthConfig)
 
@@ -68,6 +69,18 @@ async def get_root():
 @router.get("/lab")
 async def get_lab():
     return HTMLResponse(get_index("default", jlab_config.collaborative))
+
+
+@router.get("/favicon.ico")
+async def get_favicon():
+    return FileResponse(Path(jupyverse.__file__).parent / "static" / "favicon.ico")
+
+
+@router.get("/static/notebook/components/MathJax/{rest_of_path:path}")
+async def get_mathjax(rest_of_path):
+    return RedirectResponse(
+        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/" + rest_of_path
+    )
 
 
 @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
@@ -119,28 +132,33 @@ async def get_translation(
     return {}
 
 
-@router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
+@router.get("/lab/api/settings/{name0}/{name1}:{name2}")
 async def get_setting(
     name0,
     name1,
+    name2,
     user: User = Depends(users.current_user(optional=True)),
 ):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
     ) as f:
         package = json.load(f)
+    if name0 == "@jupyterlab":
+        lab_or_extensions = Path("lab")
+    else:
+        lab_or_extensions = Path("labextensions") / name0 / name1
     with open(
         prefix_dir
         / "share"
         / "jupyter"
-        / "lab"
+        / lab_or_extensions
         / "schemas"
-        / "@jupyterlab"
         / name0
-        / f"{name1}.json"
+        / name1
+        / f"{name2}.json"
     ) as f:
         schema = json.load(f)
-    key = f"{name0}:{name1}"
+    key = f"{name1}:{name2}"
     result = {
         "id": f"@jupyterlab/{key}",
         "schema": schema,
