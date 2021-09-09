@@ -71,6 +71,11 @@ async def get_lab():
     return HTMLResponse(get_index("default", jlab_config.collaborative))
 
 
+@router.get("/lab/tree/{path:path}")
+async def load_workspace(path):
+    return HTMLResponse(get_index("default", jlab_config.collaborative))
+
+
 @router.get("/favicon.ico")
 async def get_favicon():
     return FileResponse(Path(jupyverse.__file__).parent / "static" / "favicon.ico")
