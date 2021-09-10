@@ -112,7 +112,7 @@ async def save_content(
 
 
 @router.post(
-    "/api/contents/{path}/checkpoints",
+    "/api/contents/{path:path}/checkpoints",
     status_code=201,
 )
 async def create_checkpoint(
