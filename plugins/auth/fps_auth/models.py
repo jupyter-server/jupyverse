@@ -2,6 +2,7 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
+from pydantic import BaseModel
 import databases  # type: ignore
 import sqlalchemy  # type: ignore
 from fastapi_users import models  # type: ignore
@@ -16,7 +17,7 @@ from .config import AuthConfig
 auth_config = Config(AuthConfig)
 
 
-class User(models.BaseUser, models.BaseOAuthAccountMixin):
+class JupyterUser(BaseModel):
     initialized: bool = False
     anonymous: bool = True
     name: Optional[str] = None
@@ -28,13 +29,17 @@ class User(models.BaseUser, models.BaseOAuthAccountMixin):
     settings: Optional[str] = None
 
 
+class User(models.BaseUser, models.BaseOAuthAccountMixin, JupyterUser):
+    pass
+
+
 class UserCreate(models.BaseUserCreate):
     name: Optional[str] = None
     username: Optional[str] = None
     color: Optional[str] = None
 
 
-class UserUpdate(User, models.BaseUserUpdate):
+class UserUpdate(models.BaseUserUpdate, JupyterUser):
     pass
 
 

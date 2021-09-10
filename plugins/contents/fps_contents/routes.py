@@ -61,7 +61,21 @@ async def get_root_content(
     return Content(**get_path_content(Path(""), bool(content)))
 
 
-@router.get("/api/contents/{path}")
+@router.get("/api/contents/{path:path}/checkpoints")
+async def get_checkpoint(
+    path, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
+):
+    src_path = Path(path)
+    dst_path = (
+        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+    )
+    if not dst_path.exists():
+        return []
+    mtime = get_file_modification_time(dst_path)
+    return [Checkpoint(**{"id": "checkpoint", "last_modified": mtime})]
+
+
+@router.get("/api/contents/{path:path}")
 async def get_content(
     path: str,
     content: int,
@@ -70,7 +84,7 @@ async def get_content(
     return Content(**get_path_content(Path(path), bool(content)))
 
 
-@router.put("/api/contents/{path}")
+@router.put("/api/contents/{path:path}")
 async def save_content(
     request: Request,
     user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
@@ -95,20 +109,6 @@ async def save_content(
         # FIXME: return error code?
         pass
     return Content(**get_path_content(Path(save_content.path), False))
-
-
-@router.get("/api/contents/{path}/checkpoints")
-async def get_checkpoint(
-    path, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
-):
-    src_path = Path(path)
-    dst_path = (
-        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-    )
-    if not dst_path.exists():
-        return []
-    mtime = get_file_modification_time(dst_path)
-    return [Checkpoint(**{"id": "checkpoint", "last_modified": mtime})]
 
 
 @router.post(
@@ -163,7 +163,7 @@ def get_path_content(path: Path, get_content: bool):
     if get_content:
         if path.is_dir():
             content = [
-                get_path_content(path / subpath, get_content=False)
+                get_path_content(subpath, get_content=False)
                 for subpath in path.iterdir()
                 if not subpath.name.startswith(".")
             ]
