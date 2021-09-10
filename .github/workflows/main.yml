@@ -40,7 +40,6 @@ jobs:
         pip install -e ./plugins/contents
         pip install -e ./plugins/auth
         pip install -e ./plugins/kernels
-        pip install git+https://github.com/adriendelsalle/fps --force-reinstall
         pip install pluggy==1.0.0.dev0 --force-reinstall
         pip install flake8 black mypy pytest requests
 

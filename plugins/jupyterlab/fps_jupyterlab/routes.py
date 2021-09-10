@@ -68,12 +68,16 @@ async def get_root():
 
 @router.get("/lab")
 async def get_lab():
-    return HTMLResponse(get_index("default", jlab_config.collaborative))
+    return HTMLResponse(
+        get_index("default", jlab_config.collaborative, jlab_config.base_url)
+    )
 
 
 @router.get("/lab/tree/{path:path}")
 async def load_workspace(path):
-    return HTMLResponse(get_index("default", jlab_config.collaborative))
+    return HTMLResponse(
+        get_index("default", jlab_config.collaborative, jlab_config.base_url)
+    )
 
 
 @router.get("/favicon.ico")
@@ -122,7 +126,7 @@ async def set_workspace(
 async def get_workspace(
     name, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
 ):
-    return get_index(name, jlab_config.collaborative)
+    return get_index(name, jlab_config.collaborative, jlab_config.base_url)
 
 
 @router.get("/lab/api/translations")
@@ -266,12 +270,11 @@ INDEX_HTML = """\
 """
 
 
-def get_index(workspace, collaborative):
+def get_index(workspace, collaborative, base_url="/"):
     for path in (prefix_dir / "share" / "jupyter" / "lab" / "static").glob("main.*.js"):
         main_id = path.name.split(".")[1]
         break
-    base_url = "/"
-    full_static_url = "/static/lab"
+    full_static_url = f"{base_url}static/lab"
     page_config = {
         "appName": "JupyterLab",
         "appNamespace": "lab",
@@ -319,7 +322,6 @@ def get_index(workspace, collaborative):
     }
     index = (
         INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
-        .replace("BASE_URL", base_url)
         .replace("FULL_STATIC_URL", full_static_url)
         .replace("MAIN_ID", main_id)
     )

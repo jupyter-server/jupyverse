@@ -1,3 +1,7 @@
+[![Build Status](https://github.com/davidbrochart/jupyverse/workflows/CI/badge.svg)](https://github.com/davidbrochart/jupyverse/actions)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/davidbrochart/jupyverse/HEAD?filepath=examples%2Fjupyverse.ipynb)
+
 # jupyverse
 
 A set of [FPS](https://github.com/adriendelsalle/fps) plugins implementing a Jupyter server.

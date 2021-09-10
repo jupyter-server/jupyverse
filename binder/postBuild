@@ -1,0 +1,14 @@
+#!/bin/bash
+
+python -m pip install -e .[jupyterlab]
+python -m pip install -e plugins/jupyterlab
+python -m pip install -e plugins/contents
+python -m pip install -e plugins/kernels
+python -m pip install -e plugins/terminals
+python -m pip install -e plugins/nbconvert
+python -m pip install -e plugins/yjs
+python -m pip install -e plugins/auth
+
+jupyter serverextension enable --sys-prefix jupyter_server_proxy
+
+jupyter labextension enable jupyverse-auth
