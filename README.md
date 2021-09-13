@@ -31,22 +31,43 @@ pip install -e plugins/auth
 # you should also install the latest FPS:
 pip install git+https://github.com/adriendelsalle/fps
 
-# you must also have the JLab frontend extension for authentication:
-pip install git+https://github.com/davidbrochart/jupyverse-auth
-
 # if you want RetroLab instead of JupyterLab:
-# pip install -e .[retrolab]
+# pip install -e .[retrolab] --no-deps
 # pip install -e plugins/retrolab
 # ...
 ```
 
 ## Usage
 
-Just enter in a terminal:
+## Without authentication
 
 ```bash
-jupyverse
+jupyverse --open-browser --authenticator.disable_auth=true
 ```
 
 This will open a browser at http://127.0.0.1:8000 by default, and load the JupyterLab front-end.
-For other options, see ``jupyverse --help``.
+You have full access to the API, without restriction.
+
+## With authentication
+
+```bash
+jupyverse --open-browser
+```
+
+We provide a JupyterLab frontend for authentication, that you can install with:
+
+```bash
+pip install git+https://github.com/davidbrochart/jupyverse-auth
+```
+
+You can currently authenticate as an anonymous user, or
+[using a GitHub account](https://github.com/davidbrochart/jupyverse-auth#authentication-with-github).
+
+## With collaborative editing
+
+```bash
+jupyverse --open-browser --JupyterLab.collaborative=true
+```
+
+This is especially interesting if you are authenticated, since your will appear as the identity
+you chose for authentication.
