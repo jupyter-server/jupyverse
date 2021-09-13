@@ -103,8 +103,10 @@ async def get_listings():
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: User = Depends(current_user())):
-    return json.loads(user.workspace)
+async def get_workspace_data(user: User = Depends(current_user(optional=True))):
+    if user:
+        return json.loads(user.workspace)
+    return {}
 
 
 @router.put(
@@ -142,7 +144,7 @@ async def get_setting(
     name0,
     name1,
     name2,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user(optional=True)),
 ):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
@@ -173,9 +175,10 @@ async def get_setting(
         "last_modified": None,
         "created": None,
     }
-    settings = json.loads(user.settings)
-    if key in settings:
-        result.update(settings[key])
+    if user:
+        settings = json.loads(user.settings)
+        if key in settings:
+            result.update(settings[key])
     return result
 
 
@@ -197,12 +200,15 @@ async def change_setting(
 
 
 @router.get("/lab/api/settings")
-async def get_settings(user: User = Depends(current_user())):
+async def get_settings(user: User = Depends(current_user(optional=True))):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
     ) as f:
         package = json.load(f)
-    user_settings = json.loads(user.settings)
+    if user:
+        user_settings = json.loads(user.settings)
+    else:
+        user_settings = {}
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
