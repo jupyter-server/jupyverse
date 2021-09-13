@@ -13,7 +13,7 @@ from starlette.requests import Request  # type: ignore
 from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
-from fps_auth.routes import users, user_db  # type: ignore
+from fps_auth.routes import current_user, user_db  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
@@ -67,7 +67,7 @@ async def get_root():
 
 
 @router.get("/lab")
-async def get_lab():
+async def get_lab(user: User = Depends(current_user())):
     return HTMLResponse(
         get_index("default", jlab_config.collaborative, jlab_config.base_url)
     )
@@ -103,10 +103,8 @@ async def get_listings():
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: User = Depends(users.current_user(optional=True))):
-    if user and user.workspace:
-        return json.loads(user.workspace)
-    return {}
+async def get_workspace_data(user: User = Depends(current_user())):
+    return json.loads(user.workspace)
 
 
 @router.put(
@@ -115,7 +113,7 @@ async def get_workspace_data(user: User = Depends(users.current_user(optional=Tr
 )
 async def set_workspace(
     request: Request,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     user.workspace = await request.body()
     await user_db.update(user)
@@ -123,9 +121,7 @@ async def set_workspace(
 
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
-async def get_workspace(
-    name, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
-):
+async def get_workspace(name, user: User = Depends(current_user())):
     return get_index(name, jlab_config.collaborative, jlab_config.base_url)
 
 
@@ -146,7 +142,7 @@ async def get_setting(
     name0,
     name1,
     name2,
-    user: User = Depends(users.current_user(optional=True)),
+    user: User = Depends(current_user()),
 ):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
@@ -177,10 +173,9 @@ async def get_setting(
         "last_modified": None,
         "created": None,
     }
-    if user and user.settings:
-        settings = json.loads(user.settings)
-        if key in settings:
-            result.update(settings[key])
+    settings = json.loads(user.settings)
+    if key in settings:
+        result.update(settings[key])
     return result
 
 
@@ -192,12 +187,9 @@ async def change_setting(
     request: Request,
     name0,
     name1,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
-    if user and user.settings:
-        settings = json.loads(user.settings)
-    else:
-        settings = {}
+    settings = json.loads(user.settings)
     settings[f"{name0}:{name1}"] = await request.json()
     user.settings = json.dumps(settings)
     await user_db.update(user)
@@ -205,15 +197,12 @@ async def change_setting(
 
 
 @router.get("/lab/api/settings")
-async def get_settings(user: User = Depends(users.current_user(optional=True))):
+async def get_settings(user: User = Depends(current_user())):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
     ) as f:
         package = json.load(f)
-    if user and user.settings:
-        user_settings = json.loads(user.settings)
-    else:
-        user_settings = {}
+    user_settings = json.loads(user.settings)
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"

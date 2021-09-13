@@ -25,8 +25,8 @@ class JupyterUser(BaseModel):
     color: Optional[str] = None
     avatar: Optional[str] = None
     logged_in: bool = False
-    workspace: Optional[str] = None
-    settings: Optional[str] = None
+    workspace: str = "{}"
+    settings: str = "{}"
 
 
 class User(models.BaseUser, models.BaseOAuthAccountMixin, JupyterUser):
@@ -80,8 +80,8 @@ class UserTable(Base, SQLAlchemyBaseUserTable):
     color = Column(String(length=32), nullable=True)
     avatar = Column(String(length=32), nullable=True)
     logged_in = Column(Boolean, default=False, nullable=False)
-    workspace = Column(Text(), nullable=True)
-    settings = Column(Text(), nullable=True)
+    workspace = Column(Text(), nullable=False)
+    settings = Column(Text(), nullable=False)
 
 
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTable, Base):

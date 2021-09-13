@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
-from fps_auth.routes import users  # type: ignore
+from fps_auth.routes import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
@@ -30,7 +30,7 @@ async def get_nbconvert_document(
     format: str,
     path: str,
     download: bool,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     exporter = nbconvert.exporters.get_exporter(format)
     if download:

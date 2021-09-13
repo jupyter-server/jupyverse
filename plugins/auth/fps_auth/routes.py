@@ -110,6 +110,24 @@ async def shutdown():
     await database.disconnect()
 
 
+async def get_unauthenticated_user():
+    email = "unauthenticated_user@foo.com"
+    user = await user_db.get_by_email(email)
+    if user is None:
+        user = UserDB(
+            id="d4ded46b-a4df-4b51-8d83-ae19010272a7", email=email, hashed_password=""
+        )
+        await user_db.create(user)
+    return user
+
+
+def current_user():
+    if auth_config.disable_auth:
+        return get_unauthenticated_user
+    else:
+        return users.current_user()
+
+
 r_auth = register_router(auth_router)
 r_register = register_router(user_register_router)
 r_users = register_router(users_router, prefix="/auth/users")

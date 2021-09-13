@@ -10,7 +10,7 @@ from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, Depends
 from starlette.requests import Request  # type: ignore
 
-from fps_auth.routes import users  # type: ignore
+from fps_auth.routes import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
@@ -26,7 +26,7 @@ auth_config = Config(AuthConfig)
 )
 async def create_content(
     request: Request,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     create_content = await request.json()
     path = Path(create_content["path"])
@@ -56,15 +56,13 @@ async def create_content(
 @router.get("/api/contents")
 async def get_root_content(
     content: int,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     return Content(**get_path_content(Path(""), bool(content)))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
-async def get_checkpoint(
-    path, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
-):
+async def get_checkpoint(path, user: User = Depends(current_user())):
     src_path = Path(path)
     dst_path = (
         Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -79,7 +77,7 @@ async def get_checkpoint(
 async def get_content(
     path: str,
     content: int,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     return Content(**get_path_content(Path(path), bool(content)))
 
@@ -87,7 +85,7 @@ async def get_content(
 @router.put("/api/contents/{path:path}")
 async def save_content(
     request: Request,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     save_content = SaveContent(**(await request.json()))
     try:
@@ -115,9 +113,7 @@ async def save_content(
     "/api/contents/{path:path}/checkpoints",
     status_code=201,
 )
-async def create_checkpoint(
-    path, user: User = Depends(users.current_user(optional=auth_config.disable_auth))
-):
+async def create_checkpoint(path, user: User = Depends(current_user())):
     src_path = Path(path)
     dst_path = (
         Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"

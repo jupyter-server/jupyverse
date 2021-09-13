@@ -10,7 +10,7 @@ from fastapi import APIRouter, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from fps_auth.routes import users  # type: ignore
+from fps_auth.routes import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
@@ -51,7 +51,7 @@ async def get_tree():
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
 async def get_notebook(
     name: str,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     return get_index(name, "notebook")
 
@@ -60,7 +60,7 @@ async def get_notebook(
 async def get_setting(
     name0,
     name1,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     with open(
         prefix_dir
@@ -91,7 +91,7 @@ async def get_setting(
 async def change_setting(
     name0,
     name1,
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     # TODO
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
@@ -99,7 +99,7 @@ async def change_setting(
 
 @router.get("/lab/api/settings")
 async def get_settings(
-    user: User = Depends(users.current_user(optional=auth_config.disable_auth)),
+    user: User = Depends(current_user()),
 ):
     settings = []
     for path in (
