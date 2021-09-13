@@ -121,11 +121,11 @@ async def get_unauthenticated_user():
     return user
 
 
-def current_user():
+def current_user(optional: bool = False):
     if auth_config.disable_auth:
         return get_unauthenticated_user
     else:
-        return users.current_user()
+        return users.current_user(optional=optional)
 
 
 r_auth = register_router(auth_router)

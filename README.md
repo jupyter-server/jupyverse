@@ -19,7 +19,7 @@ Note: at this stage of development, it is preferable to install from sources (se
 Clone this repository and install the needed plugins:
 
 ```bash
-pip install -e .[jupyterlab]
+pip install -e .[jupyterlab] --no-deps
 pip install -e plugins/jupyterlab
 pip install -e plugins/contents
 pip install -e plugins/kernels

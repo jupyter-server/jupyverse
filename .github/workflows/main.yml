@@ -36,10 +36,10 @@ jobs:
 
     - name: Install jupyverse
       run: |
-        pip install -e . --no-deps
-        pip install -e ./plugins/contents
-        pip install -e ./plugins/auth
-        pip install -e ./plugins/kernels
+        pip install . --no-deps
+        pip install ./plugins/contents
+        pip install ./plugins/auth
+        pip install ./plugins/kernels
         pip install flake8 black mypy pytest requests
 
     - name: Check style
