@@ -1,5 +1,0 @@
-name: kernel_server-dev
-channels:
-    - conda-forge
-dependencies:
-    - pip
