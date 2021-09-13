@@ -8,13 +8,13 @@ from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, WebSocket, Response, Depends, status
 from fastapi.responses import FileResponse
-from kernel_server import KernelServer  # type: ignore
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.routes import cookie_authentication, users  # type: ignore
 from fps_auth.models import User, user_db  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
+from .kernel_server.server import KernelServer  # type: ignore
 from .models import Session
 
 router = APIRouter()

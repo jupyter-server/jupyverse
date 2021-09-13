@@ -6,8 +6,8 @@ from typing import List, Dict, cast
 
 from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 
-from .connect import write_connection_file, launch_kernel, connect_channel
-from .message import receive_message, send_message, create_message
+from .connect import write_connection_file, launch_kernel, connect_channel  # type: ignore
+from .message import receive_message, send_message, create_message  # type: ignore
 
 
 class KernelServer:

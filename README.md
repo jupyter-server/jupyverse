@@ -30,7 +30,6 @@ pip install -e plugins/auth
 
 # you should also install the latest FPS:
 pip install git+https://github.com/adriendelsalle/fps
-pip install pluggy==1.0.0.dev0 --force-reinstall
 
 # you must also have the JLab frontend extension for authentication:
 pip install git+https://github.com/davidbrochart/jupyverse-auth
