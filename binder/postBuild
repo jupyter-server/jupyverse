@@ -10,5 +10,3 @@ python -m pip install -e plugins/yjs
 python -m pip install -e plugins/auth
 
 jupyter serverextension enable --sys-prefix jupyter_server_proxy
-
-jupyter labextension enable jupyverse-auth
