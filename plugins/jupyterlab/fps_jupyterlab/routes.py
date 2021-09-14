@@ -3,7 +3,9 @@ from pathlib import Path
 import sys
 from glob import glob
 from http import HTTPStatus
+from typing import Optional
 
+from pydantic import UUID4
 import jupyterlab  # type: ignore
 import jupyverse  # type: ignore
 from fastapi import APIRouter, Response, Depends, status
@@ -67,15 +69,16 @@ for path in glob(
 
 
 @router.get("/")
-async def get_root(response: Response, token=""):
+async def get_root(response: Response, token: Optional[UUID4] = None):
     if token and auth_config.mode == "token":
         user = await user_db.get(token)
-        await super(
-            LoginCookieAuthentication, cookie_authentication
-        ).get_login_response(user, response)
+        if user:
+            await super(
+                LoginCookieAuthentication, cookie_authentication
+            ).get_login_response(user, response)
     # auto redirect
     response.status_code = status.HTTP_302_FOUND
-    response.headers["Location"] = "/lab"
+    response.headers["Location"] = jlab_config.base_url + "lab"
 
 
 @router.get("/lab")
