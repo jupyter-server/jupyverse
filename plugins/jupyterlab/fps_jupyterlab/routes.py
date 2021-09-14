@@ -6,14 +6,19 @@ from http import HTTPStatus
 
 import jupyterlab  # type: ignore
 import jupyverse  # type: ignore
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, Depends, status
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
-from fps_auth.routes import current_user, user_db  # type: ignore
+from fps_auth.routes import (  # type: ignore
+    current_user,
+    user_db,
+    cookie_authentication,
+    LoginCookieAuthentication,
+)
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import AuthConfig  # type: ignore
 
@@ -62,8 +67,15 @@ for path in glob(
 
 
 @router.get("/")
-async def get_root():
-    return RedirectResponse("/lab")
+async def get_root(response: Response, token=""):
+    if token and auth_config.mode == "token":
+        user = await user_db.get(token)
+        await super(
+            LoginCookieAuthentication, cookie_authentication
+        ).get_login_response(user, response)
+    # auto redirect
+    response.status_code = status.HTTP_302_FOUND
+    response.headers["Location"] = "/lab"
 
 
 @router.get("/lab")

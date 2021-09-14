@@ -42,19 +42,28 @@ pip install git+https://github.com/adriendelsalle/fps
 ## Without authentication
 
 ```bash
-jupyverse --open-browser --authenticator.disable_auth=true
+jupyverse --open-browser --authenticator.mode=noauth
 ```
 
 This will open a browser at http://127.0.0.1:8000 by default, and load the JupyterLab front-end.
 You have full access to the API, without restriction.
 
-## With authentication
+## With token authentication
 
 ```bash
-jupyverse --open-browser
+jupyverse --open-browser --authenticator.mode=token
 ```
 
-We provide a JupyterLab frontend for authentication, that you can install with:
+This is the default mode, and it corresponds to
+[Jupyter Server's token-based authentication](https://jupyter-server.readthedocs.io/en/latest/operators/security.html#security-in-the-jupyter-server).
+
+## With user authentication
+
+```bash
+jupyverse --open-browser --authenticator.mode=user
+```
+
+We provide a JupyterLab extension for authentication, that you can install with:
 
 ```bash
 pip install git+https://github.com/davidbrochart/jupyverse-auth
@@ -69,5 +78,5 @@ You can currently authenticate as an anonymous user, or
 jupyverse --open-browser --JupyterLab.collaborative=true
 ```
 
-This is especially interesting if you are authenticated, since your will appear as the identity
-you chose for authentication.
+This is especially interesting if you are "user-authenticated", since your will appear as the
+identity you chose for authentication.

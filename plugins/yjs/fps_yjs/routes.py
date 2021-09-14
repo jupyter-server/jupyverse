@@ -28,7 +28,7 @@ fastapi.utils.get_path_param_names.__code__ = get_path_param_names.__code__
 @router.websocket("/api/yjs/{type}:{path:path}")
 async def websocket_endpoint(websocket: WebSocket, type, path):
     accept_websocket = False
-    if auth_config.disable_auth:
+    if auth_config.mode == "noauth":
         accept_websocket = True
     elif "fastapiusersauth" in websocket._cookies:
         cookie = websocket._cookies["fastapiusersauth"]

@@ -53,7 +53,7 @@ async def delete_terminal(
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(websocket: WebSocket, name):
     accept_websocket = False
-    if auth_config.disable_auth:
+    if auth_config.mode == "noauth":
         accept_websocket = True
     else:
         cookie = websocket._cookies["fastapiusersauth"]
