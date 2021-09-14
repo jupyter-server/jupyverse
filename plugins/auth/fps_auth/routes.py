@@ -1,9 +1,11 @@
+from uuid import uuid4
+
 import httpx  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from fps.hooks import register_router  # type: ignore
-from fps.config import Config  # type: ignore
+from fps.config import Config, FPSConfig  # type: ignore
 from fastapi_users.authentication import CookieAuthentication  # type: ignore
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi_users import FastAPIUsers  # type: ignore
 from starlette.requests import Request
 from fastapi import status
@@ -44,6 +46,7 @@ class LoginCookieAuthentication(CookieAuthentication):
         await user_db.update(user)
 
 
+fps_config = Config(FPSConfig)
 auth_config = Config(AuthConfig)
 
 cookie_authentication = LoginCookieAuthentication(
@@ -94,38 +97,61 @@ users_router = users.get_users_router()
 router = APIRouter()
 
 
-@router.get("/auth/users")
-async def get_users():
-    users = session.query(UserTable).all()
-    return [user for user in users if user.logged_in]
-
-
 @router.on_event("startup")
 async def startup():
     await database.connect()
+    if auth_config.mode == "noauth":
+        await create_noauth_user()
+    elif auth_config.mode == "token":
+        await create_token_user(str(uuid4()))
 
 
 @router.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
+    if auth_config.mode == "token":
+        global token_user
+        await user_db.delete(token_user)
 
 
-async def get_unauthenticated_user():
-    email = "unauthenticated_user@foo.com"
-    user = await user_db.get_by_email(email)
+noauth_email = "noauth_user@jupyter.com"
+
+
+async def get_noauth_user():
+    return await user_db.get_by_email(noauth_email)
+
+
+async def create_noauth_user():
+    user = await user_db.get_by_email(noauth_email)
     if user is None:
         user = UserDB(
-            id="d4ded46b-a4df-4b51-8d83-ae19010272a7", email=email, hashed_password=""
+            id="d4ded46b-a4df-4b51-8d83-ae19010272a7",
+            email=noauth_email,
+            hashed_password="",
         )
         await user_db.create(user)
-    return user
+
+
+async def create_token_user(user_token):
+    global token_user
+    print("To access the server, copy and paste this URL:")
+    print(f"{fps_config.host}:{fps_config.port}/?token={user_token}")
+    token_email = f"{user_token}_user@jupyter.com"
+    token_user = UserDB(id=user_token, email=token_email, hashed_password="")
+    await user_db.create(token_user)
 
 
 def current_user(optional: bool = False):
-    if auth_config.disable_auth:
-        return get_unauthenticated_user
+    if auth_config.mode == "noauth":
+        return get_noauth_user
     else:
         return users.current_user(optional=optional)
+
+
+@router.get("/auth/users")
+async def get_users(user: User = Depends(current_user())):
+    users = session.query(UserTable).all()
+    return [user for user in users if user.logged_in]
 
 
 r_auth = register_router(auth_router)

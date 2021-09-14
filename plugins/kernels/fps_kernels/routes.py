@@ -169,7 +169,7 @@ async def restart_kernel(
 @router.websocket("/api/kernels/{kernel_id}/channels")
 async def kernel_channels(websocket: WebSocket, kernel_id, session_id):
     accept_websocket = False
-    if auth_config.disable_auth:
+    if auth_config.mode == "noauth":
         accept_websocket = True
     else:
         cookie = websocket._cookies["fastapiusersauth"]
