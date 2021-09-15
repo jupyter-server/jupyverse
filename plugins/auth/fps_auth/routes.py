@@ -3,7 +3,7 @@ from uuid import uuid4
 import httpx  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from fps.hooks import register_router  # type: ignore
-from fps.config import Config, FPSConfig  # type: ignore
+from fps.config import get_config, FPSConfig  # type: ignore
 from fastapi_users.authentication import CookieAuthentication  # type: ignore
 from fastapi import APIRouter, Depends
 from fastapi_users import FastAPIUsers  # type: ignore
@@ -28,6 +28,9 @@ from .models import (
 Session = sessionmaker(bind=engine)
 session = Session()
 
+fps_config = get_config(FPSConfig)
+auth_config = get_config(AuthConfig)
+
 
 class LoginCookieAuthentication(CookieAuthentication):
     async def get_login_response(self, user, response):
@@ -45,9 +48,6 @@ class LoginCookieAuthentication(CookieAuthentication):
         user.logged_in = False
         await user_db.update(user)
 
-
-fps_config = Config(FPSConfig)
-auth_config = Config(AuthConfig)
 
 cookie_authentication = LoginCookieAuthentication(
     cookie_secure=auth_config.cookie_secure, secret=secret

@@ -3,7 +3,6 @@ import pathlib
 import sys
 from http import HTTPStatus
 
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 import retrolab  # type: ignore
 from fastapi import APIRouter, Response, Depends
@@ -12,10 +11,8 @@ from fastapi.staticfiles import StaticFiles
 
 from fps_auth.routes import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
 
 router = APIRouter()
-auth_config = Config(AuthConfig)
 retrolab_dir = pathlib.Path(retrolab.__file__).parent
 prefix_dir = pathlib.Path(sys.prefix)
 

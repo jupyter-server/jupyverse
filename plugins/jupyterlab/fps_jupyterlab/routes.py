@@ -12,7 +12,6 @@ from fastapi import APIRouter, Response, Depends, status
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
 from fps_auth.routes import (  # type: ignore
@@ -22,14 +21,12 @@ from fps_auth.routes import (  # type: ignore
     LoginCookieAuthentication,
 )
 from fps_auth.models import User  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
 
-from .config import JupyterLabConfig
+from .config import get_jlab_config
 
 router = APIRouter()
 prefix_dir: Path = Path(sys.prefix)
-jlab_config = Config(JupyterLabConfig)
-auth_config = Config(AuthConfig)
 
 router.mount(
     "/static/lab",
@@ -69,7 +66,13 @@ for path in glob(
 
 
 @router.get("/")
-async def get_root(response: Response, token: Optional[UUID4] = None):
+async def get_root(
+    response: Response,
+    token: Optional[UUID4] = None,
+    auth_config=Depends(get_auth_config),
+    jlab_config=Depends(get_jlab_config),
+):
+    print(f"{auth_config=}")
     if token and auth_config.mode == "token":
         user = await user_db.get(token)
         if user:
@@ -82,14 +85,16 @@ async def get_root(response: Response, token: Optional[UUID4] = None):
 
 
 @router.get("/lab")
-async def get_lab(user: User = Depends(current_user())):
+async def get_lab(
+    user: User = Depends(current_user()), jlab_config=Depends(get_jlab_config)
+):
     return HTMLResponse(
         get_index("default", jlab_config.collaborative, jlab_config.base_url)
     )
 
 
 @router.get("/lab/tree/{path:path}")
-async def load_workspace(path):
+async def load_workspace(path, jlab_config=Depends(get_jlab_config)):
     return HTMLResponse(
         get_index("default", jlab_config.collaborative, jlab_config.base_url)
     )
@@ -138,7 +143,9 @@ async def set_workspace(
 
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
-async def get_workspace(name, user: User = Depends(current_user())):
+async def get_workspace(
+    name, user: User = Depends(current_user()), jlab_config=Depends(get_jlab_config)
+):
     return get_index(name, jlab_config.collaborative, jlab_config.base_url)
 
 

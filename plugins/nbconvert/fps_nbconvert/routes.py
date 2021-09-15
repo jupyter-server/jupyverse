@@ -4,15 +4,12 @@ from pathlib import Path
 import nbconvert  # type: ignore
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
 from fps_auth.routes import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
 
 router = APIRouter()
-auth_config = Config(AuthConfig)
 
 
 @router.get("/api/nbconvert")
