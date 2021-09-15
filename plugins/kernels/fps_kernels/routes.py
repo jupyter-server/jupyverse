@@ -4,7 +4,6 @@ import sys
 import uuid
 from http import HTTPStatus
 
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, WebSocket, Response, Depends, status
 from fastapi.responses import FileResponse
@@ -12,13 +11,12 @@ from starlette.requests import Request  # type: ignore
 
 from fps_auth.routes import cookie_authentication, current_user  # type: ignore
 from fps_auth.models import User, user_db  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
 
 from .kernel_server.server import KernelServer  # type: ignore
 from .models import Session
 
 router = APIRouter()
-auth_config = Config(AuthConfig)
 
 kernelspecs: dict = {}
 sessions: dict = {}
@@ -167,7 +165,9 @@ async def restart_kernel(
 
 
 @router.websocket("/api/kernels/{kernel_id}/channels")
-async def kernel_channels(websocket: WebSocket, kernel_id, session_id):
+async def kernel_channels(
+    websocket: WebSocket, kernel_id, session_id, auth_config=Depends(get_auth_config)
+):
     accept_websocket = False
     if auth_config.mode == "noauth":
         accept_websocket = True

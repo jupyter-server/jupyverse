@@ -5,19 +5,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, Depends
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.routes import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
 
 from .models import Checkpoint, Content, SaveContent
 
 router = APIRouter()
-auth_config = Config(AuthConfig)
 
 
 @router.post(

@@ -2,19 +2,17 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Dict, Any
 
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, WebSocket, Response, Depends, status
 
 from fps_auth.routes import cookie_authentication, current_user  # type: ignore
 from fps_auth.models import User, user_db  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
 
 from .models import Terminal
 from .server import TerminalServer
 
 router = APIRouter()
-auth_config = Config(AuthConfig)
 
 TERMINALS: Dict[str, Dict[str, Any]] = {}
 
@@ -51,7 +49,9 @@ async def delete_terminal(
 
 
 @router.websocket("/terminals/websocket/{name}")
-async def terminal_websocket(websocket: WebSocket, name):
+async def terminal_websocket(
+    websocket: WebSocket, name, auth_config=Depends(get_auth_config)
+):
     accept_websocket = False
     if auth_config.mode == "noauth":
         accept_websocket = True

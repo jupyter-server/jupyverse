@@ -4,17 +4,15 @@ import uuid
 from enum import IntEnum
 from typing import Dict, Set
 
-from fps.config import Config  # type: ignore
 from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, status
 import fastapi
 
 from fps_auth.routes import cookie_authentication  # type: ignore
 from fps_auth.models import user_db  # type: ignore
-from fps_auth.config import AuthConfig  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
 
 router = APIRouter()
-auth_config = Config(AuthConfig)
 
 
 def get_path_param_names(path: str) -> Set[str]:
@@ -26,7 +24,9 @@ fastapi.utils.get_path_param_names.__code__ = get_path_param_names.__code__
 
 
 @router.websocket("/api/yjs/{type}:{path:path}")
-async def websocket_endpoint(websocket: WebSocket, type, path):
+async def websocket_endpoint(
+    websocket: WebSocket, type, path, auth_config=Depends(get_auth_config)
+):
     accept_websocket = False
     if auth_config.mode == "noauth":
         accept_websocket = True
