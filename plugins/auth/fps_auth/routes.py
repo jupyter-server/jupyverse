@@ -5,13 +5,12 @@ from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.config import get_config, FPSConfig  # type: ignore
 from fastapi_users.authentication import CookieAuthentication  # type: ignore
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_users import FastAPIUsers  # type: ignore
 from starlette.requests import Request
-from fastapi import status
 from sqlalchemy.orm import sessionmaker  # type: ignore
 
-from .config import AuthConfig
+from .config import get_auth_config
 from .models import (
     user_db,
     engine,
@@ -29,7 +28,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 fps_config = get_config(FPSConfig)
-auth_config = get_config(AuthConfig)
+auth_config = get_auth_config()
 
 
 class LoginCookieAuthentication(CookieAuthentication):
@@ -142,10 +141,19 @@ async def create_token_user(user_token):
 
 
 def current_user(optional: bool = False):
-    if auth_config.mode == "noauth":
-        return get_noauth_user
-    else:
-        return users.current_user(optional=optional)
+    async def _(
+        auth_config=Depends(get_auth_config),
+        user: User = Depends(users.current_user(optional=True)),
+    ):
+        if auth_config.mode == "noauth":
+            return get_noauth_user
+        elif user is None and not optional:
+            # FIXME: could be 403
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return user
+
+    return _
 
 
 @router.get("/auth/users")
