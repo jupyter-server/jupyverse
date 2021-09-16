@@ -6,6 +6,9 @@
 
 A set of [FPS](https://github.com/adriendelsalle/fps) plugins implementing a Jupyter server.
 
+WARNING: jupyverse is experimental and should not be used in place of
+[jupyter-server](https://github.com/jupyter-server/jupyter_server), which is the official Jupyter server.
+
 ## Install
 
 ```bash
