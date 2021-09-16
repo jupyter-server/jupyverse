@@ -25,6 +25,13 @@ def test_root_auth(auth_mode, client):
     assert response.status_code == expected
 
 
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+def test_no_auth(auth_mode, client, app):
+    with TestClient(app) as client:
+        response = client.get("/lab/api/settings")
+    assert response.status_code == 200
+
+
 @pytest.mark.parametrize("auth_mode", ("token",))
 def test_token_auth(auth_mode, client, app):
     with TestClient(app) as client:
