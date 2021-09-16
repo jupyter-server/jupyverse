@@ -4,12 +4,13 @@
 
 # jupyverse
 
+**jupyverse is experimental and should not be used in place of
+[jupyter-server](https://github.com/jupyter-server/jupyter_server), which is the official Jupyter server.**
+
 A set of [FPS](https://github.com/adriendelsalle/fps) plugins implementing a Jupyter server.
 
-## WARNING
 
-jupyverse is experimental and should not be used in place of
-[jupyter-server](https://github.com/jupyter-server/jupyter_server), which is the official Jupyter server.
+## Motivation for Experimental Server
 
 For the motivations behind this project, please refer to this issue in the
 [Jupyter server team compass](https://github.com/jupyter-server/team-compass/issues/11).
