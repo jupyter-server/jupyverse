@@ -40,6 +40,7 @@ jobs:
         pip install ./plugins/contents
         pip install ./plugins/auth
         pip install ./plugins/kernels
+        pip install ./plugins/jupyterlab
         pip install flake8 black mypy pytest requests
 
     - name: Check style

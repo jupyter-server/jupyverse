@@ -1,13 +1,8 @@
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
-from fps.main import app
 
-
-@pytest.fixture()
-def client():
-    return TestClient(app)
+pytest_plugins = ("fps.testing.fixtures",)  # "fps_auth.fixtures")
 
 
 @pytest.fixture()

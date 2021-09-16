@@ -72,7 +72,6 @@ async def get_root(
     auth_config=Depends(get_auth_config),
     jlab_config=Depends(get_jlab_config),
 ):
-    print(f"{auth_config=}")
     if token and auth_config.mode == "token":
         user = await user_db.get(token)
         if user:
