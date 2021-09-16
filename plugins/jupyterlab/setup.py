@@ -2,7 +2,7 @@ from setuptools import setup, find_packages  # type: ignore
 
 setup(
     name="fps_jupyterlab",
-    version="0.0.3",
+    version="0.0.4",
     packages=find_packages(),
     install_requires=["fps", "jupyterlab", "fps-contents", "fps-kernels", "fps-auth"],
     entry_points={
