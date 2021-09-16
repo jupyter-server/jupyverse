@@ -95,6 +95,20 @@ users_router = users.get_users_router()
 
 router = APIRouter()
 
+TOKEN_USER = None
+USER_TOKEN = None
+noauth_email = "noauth_user@jupyter.com"
+
+
+def set_user_token(user_token):
+    global USER_TOKEN
+    USER_TOKEN = user_token
+    print(f"{USER_TOKEN=}")
+
+
+def get_user_token():
+    return USER_TOKEN
+
 
 @router.on_event("startup")
 async def startup():
@@ -102,18 +116,16 @@ async def startup():
     if auth_config.mode == "noauth":
         await create_noauth_user()
     elif auth_config.mode == "token":
-        await create_token_user(str(uuid4()))
+        set_user_token(str(uuid4()))
+        await create_token_user()
 
 
 @router.on_event("shutdown")
 async def shutdown():
+    global TOKEN_USER
     await database.disconnect()
     if auth_config.mode == "token":
-        global token_user
-        await user_db.delete(token_user)
-
-
-noauth_email = "noauth_user@jupyter.com"
+        await user_db.delete(TOKEN_USER)
 
 
 async def get_noauth_user():
@@ -131,13 +143,13 @@ async def create_noauth_user():
         await user_db.create(user)
 
 
-async def create_token_user(user_token):
-    global token_user
+async def create_token_user():
+    global TOKEN_USER
     print("To access the server, copy and paste this URL:")
-    print(f"{fps_config.host}:{fps_config.port}/?token={user_token}")
-    token_email = f"{user_token}_user@jupyter.com"
-    token_user = UserDB(id=user_token, email=token_email, hashed_password="")
-    await user_db.create(token_user)
+    print(f"{fps_config.host}:{fps_config.port}/?token={USER_TOKEN}")
+    token_email = f"{USER_TOKEN}_user@jupyter.com"
+    TOKEN_USER = UserDB(id=USER_TOKEN, email=token_email, hashed_password="")
+    await user_db.create(TOKEN_USER)
 
 
 def current_user(optional: bool = False):
