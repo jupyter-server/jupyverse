@@ -103,7 +103,6 @@ noauth_email = "noauth_user@jupyter.com"
 def set_user_token(user_token):
     global USER_TOKEN
     USER_TOKEN = user_token
-    print(f"{USER_TOKEN=}")
 
 
 def get_user_token():
@@ -126,10 +125,6 @@ async def shutdown():
     await database.disconnect()
     if auth_config.mode == "token":
         await user_db.delete(TOKEN_USER)
-
-
-async def get_noauth_user():
-    return await user_db.get_by_email(noauth_email)
 
 
 async def create_noauth_user():
@@ -158,7 +153,7 @@ def current_user(optional: bool = False):
         user: User = Depends(users.current_user(optional=True)),
     ):
         if auth_config.mode == "noauth":
-            return get_noauth_user
+            return await user_db.get_by_email(noauth_email)
         elif user is None and not optional:
             # FIXME: could be 403
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
