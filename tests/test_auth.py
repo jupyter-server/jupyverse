@@ -1,6 +1,11 @@
 import pytest
+from fastapi.testclient import TestClient
+from fps_auth.routes import get_user_token
 
-pytest_plugins = ("fps_auth.fixtures",)
+pytest_plugins = (
+    "fps.testing.fixtures",
+    "fps_auth.fixtures",
+)
 
 
 def test_kernel_channels(client, authenticated_user):
@@ -18,3 +23,12 @@ def test_root_auth(auth_mode, client):
     if auth_mode == "noauth":
         expected = 200
     assert response.status_code == expected
+
+
+@pytest.mark.parametrize("auth_mode", ("token",))
+def test_token_auth(auth_mode, client, app):
+    with TestClient(app) as client:
+        user_token = get_user_token()
+        response = client.get(f"/?token={user_token}")
+    assert user_token is not None
+    assert response.status_code == 200
