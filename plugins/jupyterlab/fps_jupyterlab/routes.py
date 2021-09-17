@@ -3,8 +3,10 @@ from pathlib import Path
 import sys
 from glob import glob
 from http import HTTPStatus
+import pkg_resources  # type: ignore
 from typing import Optional
 
+from babel import Locale  # type: ignore
 from pydantic import UUID4
 import jupyterlab  # type: ignore
 import jupyverse  # type: ignore
@@ -27,6 +29,7 @@ from .config import get_jlab_config
 
 router = APIRouter()
 prefix_dir: Path = Path(sys.prefix)
+LOCALE = "en"
 
 router.mount(
     "/static/lab",
@@ -150,14 +153,44 @@ async def get_workspace(
 
 @router.get("/lab/api/translations")
 async def get_translations():
-    return {}
+    locale = Locale.parse("en")
+    data = {
+        "en": {
+            "displayName": locale.get_display_name(LOCALE).capitalize(),
+            "nativeName": locale.get_display_name().capitalize(),
+        }
+    }
+    for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
+        locale = Locale.parse(ep.name)
+        data[ep.name] = {
+            "displayName": locale.get_display_name(LOCALE).capitalize(),
+            "nativeName": locale.get_display_name().capitalize(),
+        }
+    return {"data": data, "message": ""}
 
 
 @router.get("/lab/api/translations/{language}")
 async def get_translation(
     language,
 ):
-    return {}
+    global LOCALE
+    if language == "en":
+        LOCALE = language
+        return {}
+    for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
+        if ep.name == language:
+            break
+    else:
+        return {"data": {}, "message": f"Language pack '{language}' not installed!"}
+    LOCALE = language
+    package = ep.load()
+    data = {}
+    for path in (
+        Path(package.__file__).parent / "locale" / "fr_FR" / "LC_MESSAGES"
+    ).glob("*.json"):
+        with open(path) as f:
+            data.update({path.stem: json.load(f)})
+    return {"data": data, "message": ""}
 
 
 @router.get("/lab/api/settings/{name0}/{name1}:{name2}")
