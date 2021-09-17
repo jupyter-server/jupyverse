@@ -7,7 +7,7 @@
 **jupyverse is experimental and should not be used in place of
 [jupyter-server](https://github.com/jupyter-server/jupyter_server), which is the official Jupyter server.**
 
-A set of [FPS](https://github.com/adriendelsalle/fps) plugins implementing a Jupyter server.
+A set of [FPS](https://github.com/jupyter-server/fps) plugins implementing a Jupyter server.
 
 
 ## Motivation for Experimental Server
@@ -38,7 +38,7 @@ pip install -e plugins/yjs
 pip install -e plugins/auth
 
 # you should also install the latest FPS:
-pip install git+https://github.com/adriendelsalle/fps
+pip install git+https://github.com/jupyter-server/fps
 
 # if you want RetroLab instead of JupyterLab:
 # pip install -e .[retrolab] --no-deps
