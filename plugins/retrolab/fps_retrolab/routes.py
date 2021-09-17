@@ -50,7 +50,7 @@ async def get_notebook(
     name: str,
     user: User = Depends(current_user()),
 ):
-    return get_index(name, "notebook")
+    return get_index(name, "notebooks")
 
 
 @router.get("/retro/consoles/{name}", response_class=HTMLResponse)
