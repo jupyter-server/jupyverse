@@ -6,8 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "fps",
-        "fastapi-users[sqlalchemy]>=7.0.0",
-        "httpx-oauth",
+        "fastapi-users[sqlalchemy,oauth]==8",
         "aiosqlite",
     ],
     entry_points={

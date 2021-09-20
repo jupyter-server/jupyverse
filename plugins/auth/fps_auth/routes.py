@@ -1,4 +1,5 @@
 from uuid import uuid4
+from typing import Optional
 
 import httpx  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
@@ -6,21 +7,17 @@ from fps.hooks import register_router  # type: ignore
 from fps.config import get_config, FPSConfig  # type: ignore
 from fastapi_users.authentication import CookieAuthentication  # type: ignore
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi_users import FastAPIUsers  # type: ignore
+from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
 from starlette.requests import Request
 from sqlalchemy.orm import sessionmaker  # type: ignore
 
 from .config import get_auth_config
+from .db import get_user_db, user_db, secret, database, engine, UserTable
 from .models import (
-    user_db,
-    engine,
-    UserTable,
     User,
     UserCreate,
     UserUpdate,
     UserDB,
-    database,
-    secret,
 )
 
 
@@ -29,6 +26,29 @@ session = Session()
 
 fps_config = get_config(FPSConfig)
 auth_config = get_auth_config()
+
+
+class UserManager(BaseUserManager[UserCreate, UserDB]):
+    user_db_model = UserDB
+
+    async def on_after_register(self, user: UserDB, request: Optional[Request] = None):
+        user.initialized = True
+        for oauth_account in user.oauth_accounts:
+            print(oauth_account)
+            if oauth_account.oauth_name == "github":
+                r = httpx.get(
+                    f"https://api.github.com/user/{oauth_account.account_id}"
+                ).json()
+                user.anonymous = False
+                user.username = r["login"]
+                user.name = r["name"]
+                user.color = None
+                user.avatar = r["avatar_url"]
+        await self.user_db.update(user)
+
+
+def get_user_manager(user_db=Depends(get_user_db)):
+    yield UserManager(user_db)
 
 
 class LoginCookieAuthentication(CookieAuthentication):
@@ -55,7 +75,7 @@ cookie_authentication = LoginCookieAuthentication(
 auth_backends = [cookie_authentication]
 
 users = FastAPIUsers(
-    user_db,
+    get_user_manager,
     auth_backends,
     User,
     UserCreate,
@@ -68,29 +88,11 @@ github_oauth_client = GitHubOAuth2(
 )
 
 
-async def on_after_register(user: UserDB, request):
-    user.initialized = True
-    await user_db.update(user)
-
-
-async def on_after_github_register(user: UserDB, request: Request):
-    r = httpx.get(
-        f"https://api.github.com/user/{user.oauth_accounts[0].account_id}"
-    ).json()
-    user.initialized = True
-    user.anonymous = False
-    user.username = r["login"]
-    user.name = r["name"]
-    user.color = None
-    user.avatar = r["avatar_url"]
-    await user_db.update(user)
-
-
 github_oauth_router = users.get_oauth_router(
-    github_oauth_client, secret, after_register=on_after_github_register  # type: ignore
+    github_oauth_client, secret  # type: ignore
 )
 auth_router = users.get_auth_router(cookie_authentication)
-user_register_router = users.get_register_router(on_after_register)  # type: ignore
+user_register_router = users.get_register_router()  # type: ignore
 users_router = users.get_users_router()
 
 router = APIRouter()

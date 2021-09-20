@@ -10,7 +10,8 @@ from fastapi.responses import FileResponse
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.routes import cookie_authentication, current_user  # type: ignore
-from fps_auth.models import User, user_db  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_auth.db import user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 from .kernel_server.server import KernelServer  # type: ignore

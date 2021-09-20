@@ -9,7 +9,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, status
 import fastapi
 
 from fps_auth.routes import cookie_authentication  # type: ignore
-from fps_auth.models import user_db  # type: ignore
+from fps_auth.db import user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 router = APIRouter()
