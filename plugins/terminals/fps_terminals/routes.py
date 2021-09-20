@@ -6,7 +6,8 @@ from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, WebSocket, Response, Depends, status
 
 from fps_auth.routes import cookie_authentication, current_user  # type: ignore
-from fps_auth.models import User, user_db  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_auth.db import user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 from .models import Terminal
