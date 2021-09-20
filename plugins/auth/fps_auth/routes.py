@@ -52,20 +52,20 @@ def get_user_manager(user_db=Depends(get_user_db)):
 
 
 class LoginCookieAuthentication(CookieAuthentication):
-    async def get_login_response(self, user, response):
-        await super().get_login_response(user, response)
+    async def get_login_response(self, user, response, user_manager):
+        await super().get_login_response(user, response, user_manager)
         # set user as logged in
         user.logged_in = True
-        await user_db.update(user)
+        await user_manager.user_db.update(user)
         # auto redirect
         response.status_code = status.HTTP_302_FOUND
         response.headers["Location"] = "/lab"
 
-    async def get_logout_response(self, user, response):
-        await super().get_logout_response(user, response)
+    async def get_logout_response(self, user, response, user_manager):
+        await super().get_logout_response(user, response, user_manager)
         # set user as logged out
         user.logged_in = False
-        await user_db.update(user)
+        await user_manager.user_db.update(user)
 
 
 cookie_authentication = LoginCookieAuthentication(
@@ -153,6 +153,7 @@ def current_user(optional: bool = False):
     async def _(
         auth_config=Depends(get_auth_config),
         user: User = Depends(users.current_user(optional=True)),
+        user_db=Depends(get_user_db),
     ):
         if auth_config.mode == "noauth":
             return await user_db.get_by_email(noauth_email)

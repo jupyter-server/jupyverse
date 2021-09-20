@@ -16,11 +16,12 @@ from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 from fps.hooks import register_router  # type: ignore
 
+from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.routes import (  # type: ignore
     current_user,
-    user_db,
     cookie_authentication,
     LoginCookieAuthentication,
+    get_user_manager,
 )
 from fps_auth.models import User  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
@@ -74,13 +75,15 @@ async def get_root(
     token: Optional[UUID4] = None,
     auth_config=Depends(get_auth_config),
     jlab_config=Depends(get_jlab_config),
+    user_db=Depends(get_user_db),
+    user_manager=Depends(get_user_manager),
 ):
     if token and auth_config.mode == "token":
         user = await user_db.get(token)
         if user:
             await super(
                 LoginCookieAuthentication, cookie_authentication
-            ).get_login_response(user, response)
+            ).get_login_response(user, response, user_manager)
     # auto redirect
     response.status_code = status.HTTP_302_FOUND
     response.headers["Location"] = jlab_config.base_url + "lab"
@@ -138,6 +141,7 @@ async def get_workspace_data(user: User = Depends(current_user(optional=True))):
 async def set_workspace(
     request: Request,
     user: User = Depends(current_user()),
+    user_db=Depends(get_user_db),
 ):
     user.workspace = await request.body()
     await user_db.update(user)
@@ -245,6 +249,7 @@ async def change_setting(
     name0,
     name1,
     user: User = Depends(current_user()),
+    user_db=Depends(get_user_db),
 ):
     settings = json.loads(user.settings)
     settings[f"{name0}:{name1}"] = await request.json()

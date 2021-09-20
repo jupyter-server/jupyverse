@@ -7,7 +7,7 @@ from fastapi import APIRouter, WebSocket, Response, Depends, status
 
 from fps_auth.routes import cookie_authentication, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_auth.db import user_db  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 from .models import Terminal
@@ -51,7 +51,10 @@ async def delete_terminal(
 
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(
-    websocket: WebSocket, name, auth_config=Depends(get_auth_config)
+    websocket: WebSocket,
+    name,
+    auth_config=Depends(get_auth_config),
+    user_db=Depends(get_user_db),
 ):
     accept_websocket = False
     if auth_config.mode == "noauth":

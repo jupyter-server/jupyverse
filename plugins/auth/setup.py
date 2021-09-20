@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "fps",
-        "fastapi-users[sqlalchemy,oauth]==8",
+        "fastapi-users[sqlalchemy,oauth]>=8.1.0",
     ],
     entry_points={
         "fps_router": ["fps-auth = fps_auth.routes"],

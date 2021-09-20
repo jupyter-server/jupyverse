@@ -9,7 +9,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, status
 import fastapi
 
 from fps_auth.routes import cookie_authentication  # type: ignore
-from fps_auth.db import user_db  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 router = APIRouter()
@@ -25,7 +25,11 @@ fastapi.utils.get_path_param_names.__code__ = get_path_param_names.__code__
 
 @router.websocket("/api/yjs/{type}:{path:path}")
 async def websocket_endpoint(
-    websocket: WebSocket, type, path, auth_config=Depends(get_auth_config)
+    websocket: WebSocket,
+    type,
+    path,
+    auth_config=Depends(get_auth_config),
+    user_db=Depends(get_user_db),
 ):
     accept_websocket = False
     if auth_config.mode == "noauth":
