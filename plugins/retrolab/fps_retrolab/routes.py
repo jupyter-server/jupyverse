@@ -50,7 +50,23 @@ async def get_notebook(
     name: str,
     user: User = Depends(current_user()),
 ):
-    return get_index(name, "notebook")
+    return get_index(name, "notebooks")
+
+
+@router.get("/retro/consoles/{name}", response_class=HTMLResponse)
+async def get_console(
+    name: str,
+    user: User = Depends(current_user()),
+):
+    return get_index(name, "consoles")
+
+
+@router.get("/retro/terminals/{name}", response_class=HTMLResponse)
+async def get_terminal(
+    name: str,
+    user: User = Depends(current_user()),
+):
+    return get_index(name, "terminals")
 
 
 @router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
