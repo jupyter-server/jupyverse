@@ -7,7 +7,6 @@ setup(
     install_requires=[
         "fps",
         "fastapi-users[sqlalchemy,oauth]==8",
-        "aiosqlite",
     ],
     entry_points={
         "fps_router": ["fps-auth = fps_auth.routes"],

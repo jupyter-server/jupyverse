@@ -7,8 +7,7 @@ setup(
     install_requires=[
         "fps",
         "jupyterlab",
-        "fps-contents",
-        "fps-kernels",
+        "aiofiles",
         "fps-auth",
         "babel",
     ],
