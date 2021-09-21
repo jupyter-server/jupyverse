@@ -9,7 +9,7 @@ from fastapi import APIRouter, WebSocket, Response, Depends, status
 from fastapi.responses import FileResponse
 from starlette.requests import Request  # type: ignore
 
-from fps_auth.routes import cookie_authentication, current_user  # type: ignore
+from fps_auth.backends import cookie_authentication, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
@@ -75,7 +75,7 @@ async def get_kernels():
 @router.delete("/api/sessions/{session_id}", status_code=204)
 async def delete_session(
     session_id: str,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     kernel_id = sessions[session_id]["kernel"]["id"]
     kernel_server = kernels[kernel_id]["server"]
@@ -88,7 +88,7 @@ async def delete_session(
 @router.patch("/api/sessions/{session_id}")
 async def rename_session(
     request: Request,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     rename_session = await request.json()
     session_id = rename_session.pop("id")
@@ -116,7 +116,7 @@ async def get_sessions():
 )
 async def create_session(
     request: Request,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     create_session = await request.json()
     kernel_name = create_session["kernel"]["name"]
@@ -150,7 +150,7 @@ async def create_session(
 @router.post("/api/kernels/{kernel_id}/restart")
 async def restart_kernel(
     kernel_id,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     if kernel_id in kernels:
         kernel = kernels[kernel_id]

@@ -1,22 +1,16 @@
 from uuid import uuid4
-from typing import Optional
 
-import httpx  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.config import get_config, FPSConfig  # type: ignore
-from fastapi_users.authentication import CookieAuthentication  # type: ignore
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
-from starlette.requests import Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import sessionmaker  # type: ignore
 
 from .config import get_auth_config
-from .db import get_user_db, user_db, secret, database, engine, UserTable
+from .db import user_db, secret, database, engine, UserTable
+from .backends import users, current_user, cookie_authentication
 from .models import (
     User,
-    UserCreate,
-    UserUpdate,
     UserDB,
 )
 
@@ -27,61 +21,6 @@ session = Session()
 fps_config = get_config(FPSConfig)
 auth_config = get_auth_config()
 
-
-class UserManager(BaseUserManager[UserCreate, UserDB]):
-    user_db_model = UserDB
-
-    async def on_after_register(self, user: UserDB, request: Optional[Request] = None):
-        user.initialized = True
-        for oauth_account in user.oauth_accounts:
-            print(oauth_account)
-            if oauth_account.oauth_name == "github":
-                r = httpx.get(
-                    f"https://api.github.com/user/{oauth_account.account_id}"
-                ).json()
-                user.anonymous = False
-                user.username = r["login"]
-                user.name = r["name"]
-                user.color = None
-                user.avatar = r["avatar_url"]
-        await self.user_db.update(user)
-
-
-def get_user_manager(user_db=Depends(get_user_db)):
-    yield UserManager(user_db)
-
-
-class LoginCookieAuthentication(CookieAuthentication):
-    async def get_login_response(self, user, response, user_manager):
-        await super().get_login_response(user, response, user_manager)
-        # set user as logged in
-        user.logged_in = True
-        await user_manager.user_db.update(user)
-        # auto redirect
-        response.status_code = status.HTTP_302_FOUND
-        response.headers["Location"] = "/lab"
-
-    async def get_logout_response(self, user, response, user_manager):
-        await super().get_logout_response(user, response, user_manager)
-        # set user as logged out
-        user.logged_in = False
-        await user_manager.user_db.update(user)
-
-
-cookie_authentication = LoginCookieAuthentication(
-    cookie_secure=auth_config.cookie_secure, secret=secret
-)
-
-auth_backends = [cookie_authentication]
-
-users = FastAPIUsers(
-    get_user_manager,
-    auth_backends,
-    User,
-    UserCreate,
-    UserUpdate,
-    UserDB,
-)
 
 github_oauth_client = GitHubOAuth2(
     auth_config.client_id, auth_config.client_secret.get_secret_value()
@@ -149,25 +88,8 @@ async def create_token_user():
     await user_db.create(TOKEN_USER)
 
 
-def current_user(optional: bool = False):
-    async def _(
-        auth_config=Depends(get_auth_config),
-        user: User = Depends(users.current_user(optional=True)),
-        user_db=Depends(get_user_db),
-    ):
-        if auth_config.mode == "noauth":
-            return await user_db.get_by_email(noauth_email)
-        elif user is None and not optional:
-            # FIXME: could be 403
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return user
-
-    return _
-
-
 @router.get("/auth/users")
-async def get_users(user: User = Depends(current_user())):
+async def get_users(user: User = Depends(current_user)):
     users = session.query(UserTable).all()
     return [user for user in users if user.logged_in]
 

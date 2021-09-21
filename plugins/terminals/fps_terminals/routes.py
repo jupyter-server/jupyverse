@@ -5,7 +5,7 @@ from typing import Dict, Any
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, WebSocket, Response, Depends, status
 
-from fps_auth.routes import cookie_authentication, current_user  # type: ignore
+from fps_auth.backends import cookie_authentication, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
@@ -25,7 +25,7 @@ async def get_terminals():
 
 @router.post("/api/terminals")
 async def create_terminal(
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     name = str(len(TERMINALS) + 1)
     terminal = Terminal(
@@ -42,7 +42,7 @@ async def create_terminal(
 @router.delete("/api/terminals/{name}", status_code=204)
 async def delete_terminal(
     name: str,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     TERMINALS[name]["server"].quit()
     del TERMINALS[name]
