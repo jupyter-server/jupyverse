@@ -8,7 +8,13 @@ from sqlalchemy.orm import sessionmaker  # type: ignore
 
 from .config import get_auth_config
 from .db import user_db, secret, database, engine, UserTable
-from .backends import users, current_user, cookie_authentication, noauth_email
+from .backends import (
+    users,
+    current_user,
+    cookie_authentication,
+    NOAUTH_USER,
+    NOAUTH_EMAIL,
+)
 from .models import (
     User,
     UserDB,
@@ -68,14 +74,9 @@ async def shutdown():
 
 
 async def create_noauth_user():
-    user = await user_db.get_by_email(noauth_email)
-    if user is None:
-        user = UserDB(
-            id="d4ded46b-a4df-4b51-8d83-ae19010272a7",
-            email=noauth_email,
-            hashed_password="",
-        )
-        await user_db.create(user)
+    noauth_user = await user_db.get_by_email(NOAUTH_EMAIL)
+    if noauth_user is None:
+        await user_db.create(NOAUTH_USER)
 
 
 async def create_token_user():

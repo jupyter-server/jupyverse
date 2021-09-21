@@ -17,6 +17,14 @@ from .config import get_auth_config
 from .db import secret, get_user_db
 
 
+NOAUTH_EMAIL = "noauth_user@jupyter.com"
+NOAUTH_USER = UserDB(
+    id="d4ded46b-a4df-4b51-8d83-ae19010272a7",
+    email=NOAUTH_EMAIL,
+    hashed_password="",
+)
+
+
 class NoAuth(SecurityBase):
     def __call__(self):
         return "noauth"
@@ -29,13 +37,11 @@ class NoAuthAuthentication(BaseAuthentication):
         self.scheme = NoAuth()
 
     async def __call__(self, credentials, user_manager):
-        # always return the user no matter what
-        return self.user
+        noauth_user = await user_manager.user_db.get_by_email(NOAUTH_EMAIL)
+        return noauth_user or self.user
 
 
-noauth_email = "noauth_user@jupyter.com"
-noauth_user = UserDB(email=noauth_email, hashed_password="")
-noauth_authentication = NoAuthAuthentication(noauth_user)
+noauth_authentication = NoAuthAuthentication(NOAUTH_USER)
 
 
 class UserManager(BaseUserManager[UserCreate, UserDB]):
