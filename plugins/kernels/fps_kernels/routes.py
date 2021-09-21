@@ -11,7 +11,7 @@ from starlette.requests import Request  # type: ignore
 
 from fps_auth.routes import cookie_authentication, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_auth.db import user_db  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 from .kernel_server.server import KernelServer  # type: ignore
@@ -167,7 +167,11 @@ async def restart_kernel(
 
 @router.websocket("/api/kernels/{kernel_id}/channels")
 async def kernel_channels(
-    websocket: WebSocket, kernel_id, session_id, auth_config=Depends(get_auth_config)
+    websocket: WebSocket,
+    kernel_id,
+    session_id,
+    auth_config=Depends(get_auth_config),
+    user_db=Depends(get_user_db),
 ):
     accept_websocket = False
     if auth_config.mode == "noauth":
