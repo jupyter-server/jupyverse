@@ -19,7 +19,7 @@ from .db import secret, get_user_db
 
 class NoAuth(SecurityBase):
     def __call__(self):
-        return
+        return "noauth"
 
 
 class NoAuthAuthentication(BaseAuthentication):
