@@ -17,11 +17,16 @@ from .config import get_auth_config
 from .db import secret, get_user_db
 
 
+class NoAuth(SecurityBase):
+    def __call__(self):
+        return
+
+
 class NoAuthAuthentication(BaseAuthentication):
     def __init__(self, user: UserDB, name: str = "noauth"):
         super().__init__(name, logout=False)
         self.user = user
-        self.scheme = SecurityBase
+        self.scheme = NoAuth()
 
     async def __call__(self, credentials, user_manager):
         # always return the user no matter what
@@ -29,9 +34,8 @@ class NoAuthAuthentication(BaseAuthentication):
 
 
 noauth_email = "noauth_user@jupyter.com"
-no_auth_user = UserDB(email=noauth_email, hashed_password="")
-no_auth_authentication = NoAuthAuthentication(no_auth_user)
-auth_config = get_auth_config()
+noauth_user = UserDB(email=noauth_email, hashed_password="")
+noauth_authentication = NoAuthAuthentication(noauth_user)
 
 
 class UserManager(BaseUserManager[UserCreate, UserDB]):
@@ -40,11 +44,13 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
     async def on_after_register(self, user: UserDB, request: Optional[Request] = None):
         user.initialized = True
         for oauth_account in user.oauth_accounts:
-            print(oauth_account)
             if oauth_account.oauth_name == "github":
-                r = httpx.get(
-                    f"https://api.github.com/user/{oauth_account.account_id}"
-                ).json()
+                async with httpx.AsyncClient() as client:
+                    r = (
+                        await client.get(
+                            f"https://api.github.com/user/{oauth_account.account_id}"
+                        )
+                    ).json()
                 user.anonymous = False
                 user.username = r["login"]
                 user.name = r["name"]
@@ -71,7 +77,7 @@ class LoginCookieAuthentication(CookieAuthentication):
 
 
 cookie_authentication = LoginCookieAuthentication(
-    cookie_secure=auth_config.cookie_secure, secret=secret
+    cookie_secure=get_auth_config().cookie_secure, secret=secret
 )
 
 
@@ -79,14 +85,9 @@ def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
 
 
-if auth_config.mode == "noauth":
-    auth_backend = no_auth_authentication
-else:
-    auth_backend = cookie_authentication
-
 users = FastAPIUsers(
     get_user_manager,
-    [auth_backend],
+    [noauth_authentication, cookie_authentication],
     User,
     UserCreate,
     UserUpdate,
@@ -96,7 +97,7 @@ users = FastAPIUsers(
 
 async def get_enabled_backends(auth_config=Depends(get_auth_config)):
     if auth_config.mode == "noauth":
-        return [no_auth_authentication]
+        return [noauth_authentication]
     return [cookie_authentication]
 
 

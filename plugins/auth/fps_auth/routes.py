@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker  # type: ignore
 
 from .config import get_auth_config
 from .db import user_db, secret, database, engine, UserTable
-from .backends import users, current_user, cookie_authentication
+from .backends import users, current_user, cookie_authentication, noauth_email
 from .models import (
     User,
     UserDB,
@@ -38,7 +38,6 @@ router = APIRouter()
 
 TOKEN_USER = None
 USER_TOKEN = None
-noauth_email = "noauth_user@jupyter.com"
 
 
 def set_user_token(user_token):
