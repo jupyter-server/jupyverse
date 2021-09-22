@@ -85,7 +85,9 @@ async def create_noauth_user():
 async def create_token_user():
     global TOKEN_USER
     logger.info("To access the server, copy and paste this URL:")
-    logger.info(f"http://{uvicorn_config.host}:{uvicorn_config.port}/?token={USER_TOKEN}")
+    logger.info(
+        f"http://{uvicorn_config.host}:{uvicorn_config.port}/?token={USER_TOKEN}"
+    )
     token_email = f"{USER_TOKEN}_user@jupyter.com"
     TOKEN_USER = UserDB(id=USER_TOKEN, email=token_email, hashed_password="")
     await user_db.create(TOKEN_USER)
