@@ -1,4 +1,7 @@
 from uuid import uuid4
+import socket
+import subprocess
+import time
 
 import pytest
 
@@ -34,3 +37,29 @@ def authenticated_user(client):
     response = client.get("/auth/users/me")
     assert response.status_code != 401
     return username
+
+
+def get_open_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("", 0))
+    s.listen(1)
+    port = str(s.getsockname()[1])
+    s.close()
+    return port
+
+
+@pytest.fixture()
+def start_jupyverse(auth_mode, clear_users):
+    port = get_open_port()
+    command_list = [
+        "jupyverse",
+        "--no-open-browser",
+        f"--authenticator.mode={auth_mode}",
+        "--authenticator.clear_users=" + str(clear_users).lower(),
+        f"--port={port}",
+    ]
+    p = subprocess.Popen(command_list)
+    url = f"http://127.0.0.1:{port}"
+    time.sleep(3)  # let the server start up
+    yield url
+    p.kill()
