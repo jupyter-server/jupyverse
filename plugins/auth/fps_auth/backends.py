@@ -2,7 +2,6 @@ from typing import Optional
 
 import httpx
 from fastapi import Depends, status
-from fastapi.security.base import SecurityBase
 from fastapi_users.authentication import BaseAuthentication, CookieAuthentication  # type: ignore
 from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
 from starlette.requests import Request
@@ -25,16 +24,11 @@ NOAUTH_USER = UserDB(
 )
 
 
-class NoAuth(SecurityBase):
-    def __call__(self):
-        return "noauth"
-
-
 class NoAuthAuthentication(BaseAuthentication):
     def __init__(self, user: UserDB, name: str = "noauth"):
         super().__init__(name, logout=False)
         self.user = user
-        self.scheme = NoAuth()
+        self.scheme = None  # type: ignore
 
     async def __call__(self, credentials, user_manager):
         noauth_user = await user_manager.user_db.get_by_email(NOAUTH_EMAIL)
