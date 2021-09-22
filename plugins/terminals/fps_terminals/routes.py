@@ -25,7 +25,7 @@ async def get_terminals():
 
 @router.post("/api/terminals")
 async def create_terminal(
-    user: User = Depends(current_user),
+    user: User = Depends(current_user()),
 ):
     name = str(len(TERMINALS) + 1)
     terminal = Terminal(
@@ -42,7 +42,7 @@ async def create_terminal(
 @router.delete("/api/terminals/{name}", status_code=204)
 async def delete_terminal(
     name: str,
-    user: User = Depends(current_user),
+    user: User = Depends(current_user()),
 ):
     TERMINALS[name]["server"].quit()
     del TERMINALS[name]

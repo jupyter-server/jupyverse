@@ -13,6 +13,7 @@ class AuthConfig(PluginModel):
         False  # FIXME: should default to True, and set to False for tests
     )
     clear_users: bool = False
+    login_url: str = "/login_page"
 
 
 def get_auth_config():

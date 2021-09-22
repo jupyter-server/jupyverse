@@ -91,7 +91,7 @@ async def get_root(
 
 @router.get("/lab")
 async def get_lab(
-    user: User = Depends(current_user), jlab_config=Depends(get_jlab_config)
+    user: User = Depends(current_user()), jlab_config=Depends(get_jlab_config)
 ):
     return HTMLResponse(
         get_index("default", jlab_config.collaborative, jlab_config.base_url)
@@ -128,7 +128,7 @@ async def get_listings():
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: User = Depends(current_user)):
+async def get_workspace_data(user: User = Depends(current_user())):
     if user:
         return json.loads(user.workspace)
     return {}
@@ -140,7 +140,7 @@ async def get_workspace_data(user: User = Depends(current_user)):
 )
 async def set_workspace(
     request: Request,
-    user: User = Depends(current_user),
+    user: User = Depends(current_user()),
     user_db=Depends(get_user_db),
 ):
     user.workspace = await request.body()
@@ -150,7 +150,7 @@ async def set_workspace(
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
 async def get_workspace(
-    name, user: User = Depends(current_user), jlab_config=Depends(get_jlab_config)
+    name, user: User = Depends(current_user()), jlab_config=Depends(get_jlab_config)
 ):
     return get_index(name, jlab_config.collaborative, jlab_config.base_url)
 
@@ -202,7 +202,7 @@ async def get_setting(
     name0,
     name1,
     name2,
-    user: User = Depends(current_user),
+    user: User = Depends(current_user()),
 ):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
@@ -248,7 +248,7 @@ async def change_setting(
     request: Request,
     name0,
     name1,
-    user: User = Depends(current_user),
+    user: User = Depends(current_user()),
     user_db=Depends(get_user_db),
 ):
     settings = json.loads(user.settings)
@@ -259,7 +259,7 @@ async def change_setting(
 
 
 @router.get("/lab/api/settings")
-async def get_settings(user: User = Depends(current_user)):
+async def get_settings(user: User = Depends(current_user())):
     with open(
         prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
     ) as f:
