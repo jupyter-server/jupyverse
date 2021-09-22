@@ -37,6 +37,7 @@ jobs:
     - name: Install jupyverse
       run: |
         pip install git+https://github.com/jupyter-server/fps
+        pip install fps-uvicorn
         pip install . --no-deps
         pip install ./plugins/contents
         pip install ./plugins/auth
