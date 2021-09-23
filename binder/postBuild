@@ -1,7 +1,10 @@
 #!/bin/bash
 
+python -m pip install git+https://github.com/jupyter-server/fps
+python -m pip install fps-uvicorn==0.0.2
 python -m pip install .[jupyterlab] --no-deps
 python -m pip install plugins/jupyterlab
+python -m pip install plugins/retrolab
 python -m pip install plugins/contents
 python -m pip install plugins/kernels
 python -m pip install plugins/terminals
