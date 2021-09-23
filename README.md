@@ -84,7 +84,7 @@ You can currently authenticate as an anonymous user, or
 ## With collaborative editing
 
 ```bash
-jupyverse --open-browser --JupyterLab.collaborative=true
+jupyverse --open-browser --JupyterLab.collaborative  # or --RetroLab.collaborative
 ```
 
 This is especially interesting if you are "user-authenticated", since your will appear as the

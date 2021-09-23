@@ -4,6 +4,9 @@ setup(
     name="fps_retrolab",
     version="0.0.4",
     packages=find_packages(),
-    install_requires=["fps", "retrolab", "aiofiles", "fps-auth"],
-    entry_points={"fps_router": ["fps-retrolab = fps_retrolab.routes"]},
+    install_requires=["fps", "retrolab", "aiofiles", "babel", "fps-auth"],
+    entry_points={
+        "fps_router": ["fps-retrolab = fps_retrolab.routes"],
+        "fps_config": ["fps-retrolab = fps_retrolab.config"],
+    },
 )
