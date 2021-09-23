@@ -1,20 +1,33 @@
 import json
-import pathlib
+from pathlib import Path
 import sys
+from glob import glob
 from http import HTTPStatus
+from typing import Optional
 
+from pydantic import UUID4
+from starlette.requests import Request  # type: ignore
 from fps.hooks import register_router  # type: ignore
 import retrolab  # type: ignore
-from fastapi import APIRouter, Response, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Response, Depends, status
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from fps_auth.routes import current_user  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.backends import (  # type: ignore
+    current_user,
+    cookie_authentication,
+    LoginCookieAuthentication,
+    get_user_manager,
+)
 from fps_auth.models import User  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
+
+from .config import get_rlab_config
 
 router = APIRouter()
-retrolab_dir = pathlib.Path(retrolab.__file__).parent
-prefix_dir = pathlib.Path(sys.prefix)
+retrolab_dir = Path(retrolab.__file__).parent
+prefix_dir = Path(sys.prefix)
 
 router.mount(
     "/static/retro",
@@ -34,67 +47,134 @@ router.mount(
     name="themes",
 )
 
+for path1 in (retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
+    load = f"static/{path1.name}"
+    break
+federated_extensions = [
+    {
+        "extension": "./extension",
+        "load": load,
+        "name": "@retrolab/lab-extension",
+        "style": "./style",
+    }
+]
+for path2 in glob(
+    str(prefix_dir / "share" / "jupyter" / "labextensions" / "**" / "package.json"),
+    recursive=True,
+):
+    with open(path2) as f:
+        package = json.load(f)
+    name = package["name"]
+    extension = package["jupyterlab"]["_build"]
+    extension["name"] = name
+    federated_extensions.append(extension)
+    router.mount(
+        f"/lab/extensions/{name}/static",
+        StaticFiles(
+            directory=prefix_dir
+            / "share"
+            / "jupyter"
+            / "labextensions"
+            / name
+            / "static"
+        ),
+        name=name,
+    )
+
 
 @router.get("/")
-async def get_root():
-    return RedirectResponse("/retro/tree")
+async def get_root(
+    response: Response,
+    token: Optional[UUID4] = None,
+    auth_config=Depends(get_auth_config),
+    rlab_config=Depends(get_rlab_config),
+    user_db=Depends(get_user_db),
+    user_manager=Depends(get_user_manager),
+):
+    if token and auth_config.mode == "token":
+        user = await user_db.get(token)
+        if user:
+            await super(
+                LoginCookieAuthentication, cookie_authentication
+            ).get_login_response(user, response, user_manager)
+    # auto redirect
+    response.status_code = status.HTTP_302_FOUND
+    response.headers["Location"] = rlab_config.base_url + "retro/tree"
 
 
 @router.get("/retro/tree", response_class=HTMLResponse)
-async def get_tree():
-    return get_index("Tree", "tree")
+async def get_tree(rlab_config=Depends(get_rlab_config)):
+    return get_index("Tree", "tree", rlab_config.base_url)
 
 
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
 async def get_notebook(
     name: str,
     user: User = Depends(current_user()),
+    rlab_config=Depends(get_rlab_config),
 ):
-    return get_index(name, "notebooks")
+    return get_index(name, "notebooks", rlab_config.base_url)
 
 
 @router.get("/retro/consoles/{name}", response_class=HTMLResponse)
 async def get_console(
     name: str,
     user: User = Depends(current_user()),
+    rlab_config=Depends(get_rlab_config),
 ):
-    return get_index(name, "consoles")
+    return get_index(name, "consoles", rlab_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
 async def get_terminal(
     name: str,
     user: User = Depends(current_user()),
+    rlab_config=Depends(get_rlab_config),
 ):
-    return get_index(name, "terminals")
+    return get_index(name, "terminals", rlab_config.base_url)
 
 
-@router.get("/lab/api/settings/@jupyterlab/{name0}:{name1}")
+@router.get("/lab/api/settings/{name0}/{name1}:{name2}")
 async def get_setting(
     name0,
     name1,
+    name2,
     user: User = Depends(current_user()),
 ):
+    with open(
+        prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
+    ) as f:
+        package = json.load(f)
+    if name0 == "@jupyterlab":
+        lab_or_extensions = Path("lab")
+    else:
+        lab_or_extensions = Path("labextensions") / name0 / name1
     with open(
         prefix_dir
         / "share"
         / "jupyter"
-        / "lab"
+        / lab_or_extensions
         / "schemas"
-        / "@jupyterlab"
         / name0
-        / f"{name1}.json"
+        / name1
+        / f"{name2}.json"
     ) as f:
         schema = json.load(f)
-    return {
-        "id": f"@jupyterlab/{name0}:{name1}",
+    key = f"{name1}:{name2}"
+    result = {
+        "id": f"@jupyterlab/{key}",
         "schema": schema,
-        "version": "3.1.0-rc.1",
+        "version": package["version"],
         "raw": "{}",
         "settings": {},
         "last_modified": None,
         "created": None,
     }
+    if user:
+        settings = json.loads(user.settings)
+        if key in settings:
+            result.update(settings[key])
+    return result
 
 
 @router.put(
@@ -102,73 +182,76 @@ async def get_setting(
     status_code=204,
 )
 async def change_setting(
+    request: Request,
     name0,
     name1,
     user: User = Depends(current_user()),
+    user_db=Depends(get_user_db),
 ):
-    # TODO
+    settings = json.loads(user.settings)
+    settings[f"{name0}:{name1}"] = await request.json()
+    user.settings = json.dumps(settings)
+    await user_db.update(user)
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/api/settings")
-async def get_settings(
-    user: User = Depends(current_user()),
-):
+async def get_settings(user: User = Depends(current_user())):
+    with open(
+        prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
+    ) as f:
+        package = json.load(f)
+    if user:
+        user_settings = json.loads(user.settings)
+    else:
+        user_settings = {}
     settings = []
     for path in (
         prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
     ).glob("*/*.json"):
         with open(path) as f:
             schema = json.load(f)
+        key = f"{path.parent.name}:{path.stem}"
         setting = {
-            "id": f"@jupyterlab/{path.parent.name}:{path.stem}",
+            "id": f"@jupyterlab/{key}",
             "schema": schema,
-            "version": "3.1.0-rc.1",
+            "version": package["version"],
             "raw": "{}",
             "settings": {},
             "warning": None,
             "last_modified": None,
             "created": None,
         }
+        if key in user_settings:
+            setting.update(user_settings[key])
         settings.append(setting)
     return {"settings": settings}
 
 
-def get_index(doc_name, retro_page):
-    for path in (retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
-        load = f"static/{path.name}"
-        break
-
+def get_index(doc_name, retro_page, base_url="/"):
     page_config = {
         "appName": "RetroLab",
         "appNamespace": "retro",
         "appSettingsDir": str(prefix_dir / "share" / "jupyter" / "lab" / "settings"),
         "appUrl": "/lab",
         "appVersion": retrolab.__version__,
-        "baseUrl": "/",
+        "baseUrl": base_url,
         "cacheFiles": True,
         "disabledExtensions": [],
         "extraLabextensionsPath": [],
-        "federated_extensions": [
-            {
-                "extension": "./extension",
-                "load": load,
-                "name": "@retrolab/lab-extension",
-                "style": "./style",
-            }
-        ],
+        "federated_extensions": federated_extensions,
         "frontendUrl": "/retro/",
-        "fullAppUrl": "/lab",
-        "fullLabextensionsUrl": "/lab/extensions",
-        "fullLicensesUrl": "/lab/api/licenses",
-        "fullListingsUrl": "/lab/api/listings",
-        "fullMathjaxUrl": "/static/notebook/components/MathJax/MathJax.js",
-        "fullSettingsUrl": "/lab/api/settings",
-        "fullStaticUrl": "/static/retro",
-        "fullThemesUrl": "/lab/api/themes",
-        "fullTranslationsApiUrl": "/lab/api/translations",
-        "fullTreeUrl": "/lab/tree",
-        "fullWorkspacesApiUrl": "/lab/api/workspaces",
+        "fullAppUrl": f"{base_url}lab",
+        "fullLabextensionsUrl": f"{base_url}lab/extensions",
+        "fullLicensesUrl": f"{base_url}lab/api/licenses",
+        "fullListingsUrl": f"{base_url}lab/api/listings",
+        "fullMathjaxUrl": f"{base_url}static/notebook/components/MathJax/MathJax.js",
+        "fullSettingsUrl": f"{base_url}lab/api/settings",
+        "fullStaticUrl": f"{base_url}static/retro",
+        "fullThemesUrl": f"{base_url}lab/api/themes",
+        "fullTranslationsApiUrl": f"{base_url}lab/api/translations",
+        "fullTreeUrl": f"{base_url}lab/tree",
+        "fullWorkspacesApiUrl": f"{base_url}lab/api/workspaces",
         "labextensionsPath": [str(prefix_dir / "share" / "jupyter" / "labextensions")],
         "labextensionsUrl": "/lab/extensions",
         "licensesUrl": "/lab/api/licenses",
