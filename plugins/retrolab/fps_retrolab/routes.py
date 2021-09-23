@@ -317,8 +317,10 @@ def get_index(doc_name, retro_page, collaborative, base_url="/"):
         "workspacesApiUrl": "/lab/api/workspaces",
         "wsUrl": "",
     }
-    index = INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config)).replace(
-        "DOC_NAME", doc_name
+    index = (
+        INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
+        .replace("DOC_NAME", doc_name)
+        .replace("BASE_URL", base_url)
     )
     return index
 
@@ -337,7 +339,7 @@ INDEX_HTML = """\
   <script id="jupyter-config-data" type="application/json">
     PAGE_CONFIG
   </script>
-  <script src="/static/retro/bundle.js" main="index"></script>
+  <script src="BASE_URLstatic/retro/bundle.js" main="index"></script>
   <script type="text/javascript">
     /* Remove token from URL. */
     (function () {
