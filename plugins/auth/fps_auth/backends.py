@@ -1,10 +1,11 @@
 from typing import Optional
 
 import httpx
-from fastapi import Depends, status
+from fastapi import Depends, HTTPException, status
 from fastapi_users.authentication import BaseAuthentication, CookieAuthentication  # type: ignore
 from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
 from starlette.requests import Request
+from fps.exceptions import RedirectException  # type: ignore
 
 from .models import (
     User,
@@ -101,4 +102,19 @@ async def get_enabled_backends(auth_config=Depends(get_auth_config)):
     return [cookie_authentication]
 
 
-current_user = users.current_user(get_enabled_backends=get_enabled_backends)
+def current_user():
+    async def _(
+        user: User = Depends(
+            users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
+        ),
+        auth_config=Depends(get_auth_config),
+    ):
+        if user is None:
+            if auth_config.login_url:
+                raise RedirectException(auth_config.login_url)
+            else:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return user
+
+    return _

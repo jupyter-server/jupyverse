@@ -94,7 +94,7 @@ async def create_token_user():
 
 
 @router.get("/auth/users")
-async def get_users(user: User = Depends(current_user)):
+async def get_users(user: User = Depends(current_user())):
     users = session.query(UserTable).all()
     return [user for user in users if user.logged_in]
 

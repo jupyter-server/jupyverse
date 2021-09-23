@@ -19,7 +19,7 @@ def test_kernel_channels(client, authenticated_user):
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
 def test_root_auth(auth_mode, client):
     response = client.get("/")
-    expected = 401
+    expected = 404
     if auth_mode == "noauth":
         expected = 200
     assert response.status_code == expected
