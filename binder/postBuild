@@ -1,15 +1,19 @@
 #!/bin/bash
 
-python -m pip install git+https://github.com/jupyter-server/fps
-python -m pip install fps-uvicorn==0.0.2
+mkdir fps \
+    && wget -q https://github.com/jupyter-server/fps/archive/master.tar.gz -O - \
+        | tar xz -C fps --strip-components=1 \
+    && cd fps \
+    && python -m pip install . \
+    && python -m pip install plugins/uvicorn \
+    && cd .. \
+    && rm -rf fps
+
 python -m pip install .[jupyterlab] --no-deps
 python -m pip install plugins/jupyterlab
-python -m pip install plugins/retrolab
 python -m pip install plugins/contents
 python -m pip install plugins/kernels
 python -m pip install plugins/terminals
 python -m pip install plugins/nbconvert
 python -m pip install plugins/yjs
 python -m pip install plugins/auth
-
-jupyter serverextension enable --sys-prefix jupyter_server_proxy

@@ -3,7 +3,5 @@ channels:
   - conda-forge
 dependencies:
   - python =3.9
-  - jupyterlab =3
-  - ipyurl
-  - jupyter-server-proxy >=1.5
+  - jupyter-server-proxy
   - pip
