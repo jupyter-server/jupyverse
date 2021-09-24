@@ -43,6 +43,7 @@ jobs:
         pip install ./plugins/kernels
         pip install ./plugins/lab
         pip install ./plugins/jupyterlab
+        pip install ./plugins/login
         pip install flake8 black mypy pytest pytest-asyncio requests ipykernel
 
     - name: Check style
@@ -59,6 +60,7 @@ jobs:
         mypy plugins/nbconvert/fps_nbconvert
         mypy plugins/yjs/fps_yjs
         mypy plugins/terminals/fps_terminals
+        mypy plugins/login/fps_login
 
     - name: Run tests
       run: |

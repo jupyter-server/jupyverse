@@ -84,7 +84,7 @@
 				method: 'GET',
 				headers: { accept: 'application/json' }
 			};
-			fetch('/auth/github/authorize?authentication_backend=cookie', init)
+			fetch('/auth/github/authorize?authentication_backend=cookie&scopes=user:email', init)
 			.then( async resp => {
 				const data = await resp.json();
 				console.debug("rsp:", data);

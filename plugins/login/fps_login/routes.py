@@ -16,10 +16,12 @@ router.mount(
     name="static",
 )
 
+
 @router.get("/login_page")
 async def api_login():
     logger.warn("LOGIN PAGE REQUESTED")
     logger.warn(prefix_static)
     return FileResponse(prefix_static / "index.html")
+
 
 r = register_router(router)
