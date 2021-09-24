@@ -1,43 +1,37 @@
 from typing import Optional
 
-import httpx
-from fastapi import Depends, HTTPException, status
-from fastapi_users.authentication import BaseAuthentication, CookieAuthentication  # type: ignore
-from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
-from starlette.requests import Request
 from fps.exceptions import RedirectException  # type: ignore
 
-from .models import (
-    User,
-    UserCreate,
-    UserUpdate,
-    UserDB,
-)
+import httpx
+from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
+from fastapi import Depends, Response, HTTPException, status
+
+from fastapi_users.authentication import CookieAuthentication, JWTAuthentication  # type: ignore
+from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
+from starlette.requests import Request
+
 from .config import get_auth_config
 from .db import secret, get_user_db
-
-
-NOAUTH_EMAIL = "noauth_user@jupyter.com"
-NOAUTH_USER = UserDB(
-    id="d4ded46b-a4df-4b51-8d83-ae19010272a7",
-    email=NOAUTH_EMAIL,
-    hashed_password="",
+from .models import (
+    User,
+    UserDB,
+    UserCreate,
+    UserUpdate,
+    UserDB
 )
 
+auth_config = get_auth_config()
 
-class NoAuthAuthentication(BaseAuthentication):
-    def __init__(self, user: UserDB, name: str = "noauth"):
-        super().__init__(name, logout=False)
-        self.user = user
-        self.scheme = None  # type: ignore
+class LoginCookieAuthentication(CookieAuthentication):
+    async def get_login_response(self, user, response, user_manager):
+        await super().get_login_response(user, response, user_manager)
+        # auto redirect
+        response.status_code = status.HTTP_302_FOUND
+        response.headers["Location"] = "/lab"
 
-    async def __call__(self, credentials, user_manager):
-        noauth_user = await user_manager.user_db.get_by_email(NOAUTH_EMAIL)
-        return noauth_user or self.user
-
-
-noauth_authentication = NoAuthAuthentication(NOAUTH_USER)
-
+cookie_authentication = LoginCookieAuthentication(secret=secret, name='cookie')
+jwt_authentication = JWTAuthentication(secret=secret, lifetime_seconds=3600)
+github_authentication = GitHubOAuth2(auth_config.client_id, auth_config.client_secret.get_secret_value())
 
 class UserManager(BaseUserManager[UserCreate, UserDB]):
     user_db_model = UserDB
@@ -53,68 +47,52 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
                         )
                     ).json()
                 user.anonymous = False
+                user.token = ""
                 user.username = r["login"]
                 user.name = r["name"]
                 user.color = None
                 user.avatar = r["avatar_url"]
         await self.user_db.update(user)
 
-
-class LoginCookieAuthentication(CookieAuthentication):
-    async def get_login_response(self, user, response, user_manager):
-        await super().get_login_response(user, response, user_manager)
-        # set user as logged in
-        user.logged_in = True
-        await user_manager.user_db.update(user)
-        # auto redirect
-        response.status_code = status.HTTP_302_FOUND
-        response.headers["Location"] = "/lab"
-
-    async def get_logout_response(self, user, response, user_manager):
-        await super().get_logout_response(user, response, user_manager)
-        # set user as logged out
-        user.logged_in = False
-        await user_manager.user_db.update(user)
-
-
-cookie_authentication = LoginCookieAuthentication(
-    cookie_secure=get_auth_config().cookie_secure, secret=secret
-)
-
-
 def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
 
-
-users = FastAPIUsers(
+fapi_users = FastAPIUsers(
     get_user_manager,
-    [noauth_authentication, cookie_authentication],
+    [cookie_authentication, jwt_authentication],
     User,
     UserCreate,
     UserUpdate,
-    UserDB,
+    UserDB
 )
 
+async def current_user(
+    response: Response,
+    token: Optional[str] = None,
+    user: User = Depends(fapi_users.current_user(optional=True)),
+    user_db = Depends(get_user_db),
+    user_manager = Depends(get_user_manager)
+):
+    active_user = user
 
-async def get_enabled_backends(auth_config=Depends(get_auth_config)):
-    if auth_config.mode == "noauth":
-        return [noauth_authentication]
-    return [cookie_authentication]
+    if active_user :
+        return active_user
+
+    elif auth_config.mode == 'noauth' :
+        active_user = await user_db.get_by_email(auth_config.guest_email)
+    
+    elif auth_config.mode == 'token' :
+        tmp = await user_db.get_by_email(auth_config.guest_email)
+        if tmp.token == token :
+            active_user = tmp
+            await cookie_authentication.get_login_response(tmp, response, user_manager)
 
 
-def current_user():
-    async def _(
-        user: User = Depends(
-            users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
-        ),
-        auth_config=Depends(get_auth_config),
-    ):
-        if user is None:
-            if auth_config.login_url:
-                raise RedirectException(auth_config.login_url)
-            else:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return user
+    if active_user :
+        return active_user
 
-    return _
+    elif auth_config.login_url :
+        raise RedirectException(auth_config.login_url)
+
+    else :
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)

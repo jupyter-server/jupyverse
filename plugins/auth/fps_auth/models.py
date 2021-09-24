@@ -7,6 +7,7 @@ from fastapi_users import models  # type: ignore
 class JupyterUser(BaseModel):
     initialized: bool = False
     anonymous: bool = True
+    token: Optional[str] = None
     name: Optional[str] = None
     username: Optional[str] = None
     color: Optional[str] = None

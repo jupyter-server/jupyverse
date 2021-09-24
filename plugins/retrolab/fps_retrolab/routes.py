@@ -50,7 +50,7 @@ async def get_tree(lab_config=Depends(get_lab_config)):
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
 async def get_notebook(
     name: str,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
 ):
     return get_index(name, "notebooks", lab_config.collaborative, lab_config.base_url)
@@ -68,7 +68,7 @@ async def edit_file(
 @router.get("/retro/consoles/{name}", response_class=HTMLResponse)
 async def get_console(
     name: str,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
 ):
     return get_index(name, "consoles", lab_config.collaborative, lab_config.base_url)
@@ -77,7 +77,7 @@ async def get_console(
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
 async def get_terminal(
     name: str,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
 ):
     return get_index(name, "terminals", lab_config.collaborative, lab_config.base_url)

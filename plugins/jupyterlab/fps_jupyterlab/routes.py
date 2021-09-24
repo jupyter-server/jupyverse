@@ -11,8 +11,8 @@ from fps.hooks import register_router  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_lab.routes import init_router  # type: ignore
 
+from fps_lab.routes import init_router # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 
 router = APIRouter()
@@ -27,7 +27,7 @@ router.mount(
 
 @router.get("/lab")
 async def get_lab(
-    user: User = Depends(current_user()), lab_config=Depends(get_lab_config)
+    user: User = Depends(current_user), lab_config=Depends(get_lab_config)
 ):
     return HTMLResponse(
         get_index("default", lab_config.collaborative, lab_config.base_url)
@@ -42,7 +42,7 @@ async def load_workspace(path, lab_config=Depends(get_lab_config)):
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: User = Depends(current_user())):
+async def get_workspace_data(user: User = Depends(current_user)):
     if user:
         return json.loads(user.workspace)
     return {}
@@ -54,7 +54,7 @@ async def get_workspace_data(user: User = Depends(current_user())):
 )
 async def set_workspace(
     request: Request,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
     user_db=Depends(get_user_db),
 ):
     user.workspace = await request.body()
@@ -64,7 +64,7 @@ async def set_workspace(
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
 async def get_workspace(
-    name, user: User = Depends(current_user()), lab_config=Depends(get_lab_config)
+    name, user: User = Depends(current_user), lab_config=Depends(get_lab_config)
 ):
     return get_index(name, lab_config.collaborative, lab_config.base_url)
 

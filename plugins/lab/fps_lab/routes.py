@@ -14,13 +14,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.backends import (  # type: ignore
-    current_user,
-    cookie_authentication,
-    LoginCookieAuthentication,
-    get_user_manager,
-)
-from fps_auth.models import User  # type: ignore
+from fps_auth.backends import current_user # type: ignore
+from fps_auth.models import User # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 from .config import get_lab_config  # type: ignore
@@ -64,18 +59,9 @@ def init_router(router, redirect_after_root):
     @router.get("/")
     async def get_root(
         response: Response,
-        token: Optional[str] = None,
-        auth_config=Depends(get_auth_config),
         lab_config=Depends(get_lab_config),
-        user_db=Depends(get_user_db),
-        user_manager=Depends(get_user_manager),
+        user=Depends(current_user),
     ):
-        if token and auth_config.mode == "token":
-            user = await user_db.get(token)
-            if user:
-                await super(
-                    LoginCookieAuthentication, cookie_authentication
-                ).get_login_response(user, response, user_manager)
         # auto redirect
         response.status_code = status.HTTP_302_FOUND
         response.headers["Location"] = lab_config.base_url + redirect_after_root
@@ -146,7 +132,7 @@ def init_router(router, redirect_after_root):
         name0,
         name1,
         name2,
-        user: User = Depends(current_user()),
+        user: User = Depends(current_user),
     ):
         with open(
             prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
@@ -191,7 +177,7 @@ def init_router(router, redirect_after_root):
         request: Request,
         name0,
         name1,
-        user: User = Depends(current_user()),
+        user: User = Depends(current_user),
         user_db=Depends(get_user_db),
     ):
         settings = json.loads(user.settings)
@@ -201,7 +187,7 @@ def init_router(router, redirect_after_root):
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     @router.get("/lab/api/settings")
-    async def get_settings(user: User = Depends(current_user())):
+    async def get_settings(user: User = Depends(current_user)):
         with open(
             prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
         ) as f:

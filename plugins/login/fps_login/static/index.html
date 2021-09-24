@@ -42,44 +42,66 @@
   <div id="site">
 		<div id="jupyter-main-app" class="container">
 			<div class="row">
-					<div class="navbar col-sm-8">
-							<div class="navbar-inner">
-									<div class="container">
-											<div class="center-nav">
-												<div class="navbar-form pull-left">
-													<label for="password_input"><strong>Token:</strong></label>
-													<input id="token_input" type="password" name="password" class="form-control">
-													<button id="token_btn" type="submit" class="btn btn-default">Log in</button>
-												</div>
-											</div>
+				<div class="navbar col-sm-8">
+					<div class="navbar-inner">
+						
+						<form action="/auth/login" method="post" autocomplete="on">
+							<div class="container">
+								<div class="center-nav">
+									<div class="navbar-form pull-left">
+										<label for="uname"><strong>Email:</strong></label>
+										<input id="email_input" type="text" placeholder="Enter email" name="username" autocomplete="on" class="form-control" required>
 									</div>
-
-									<div class="container">
-										<div class="center-nav">
-											<div class="navbar-form pull-left">
-												<p>To login in JupyterLab you can use one of the following options:</p>
-												<ul>
-													<li>Click the GitHub button to login using your GitHub account</li>
-													<li>Introduce a login token</li>
-													<li>Or login as an <a id="anonymous_btn" href="#">anonymous</a> user</li>
-												</ul>
-											</div>
-										</div>
 								</div>
 							</div>
+							<div class="container">
+								<div class="center-nav">
+									<div class="navbar-form pull-left">
+										<label for="psw"><strong>Password:</strong></label>
+										<input id="psw_input" type="password" placeholder="Enter Password" name="password" autocomplete="on" class="form-control" required>
+									</div>
+								</div>
+							</div>
+							<div class="container">
+								<div class="center-nav">
+									<div class="navbar-form pull-left">
+										<button id="user_btn" type="submit" class="btn btn-default">Login</button>
+									</div>
+								</div>
+							</div>
+						</form>
+
+						<div class="container">
+								<div class="center-nav">
+									<div class="navbar-form pull-left">
+										<label for="password_input"><strong>Token:</strong></label>
+										<input id="token_input" type="password" name="password" class="form-control">
+										<button id="token_btn" type="submit" class="btn btn-default">Login</button>
+									</div>
+								</div>
+						</div>
+
+						<div class="container">
+							<div class="center-nav">
+								<div class="navbar-form pull-left">
+									<p>To login in JupyterLab you can use one of the following options:</p>
+									<ul>
+										<li>Click the GitHub button to login using your GitHub account</li>
+										<li>Introduce a login token</li>
+										<li>Or login as an <a id="anonymous_btn" href="/lab">anonymous</a> user</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
 					</div>
+				</div>
 			</div>
 		</div>
   </div>
 
   <script type='text/javascript'>
-
-		document.getElementById('anonymous_btn').onclick = () => {
-			console.debug("ANONYMOUS:");
-		};
-
 		document.getElementById('github_btn').onclick = () => {
-			console.debug("GITHUB:", '/auth/github/authorize?authentication_backend=cookie');
 			const init = {
 				method: 'GET',
 				headers: { accept: 'application/json' }
@@ -87,36 +109,15 @@
 			fetch('/auth/github/authorize?authentication_backend=cookie&scopes=user:email', init)
 			.then( async resp => {
 				const data = await resp.json();
-				console.debug("rsp:", data);
+				console.debug("RESPONSE:", data);
 				window.location.href = data.authorization_url;
 			}).catch( e => console.debug(e) );
-			
 		};
 
 		document.getElementById('token_btn').onclick = () => {
 			const token = document.getElementById('token_input').value;
-			console.debug("TOKEN:", location.origin + "/" + token);
-			//location.href = location.origin + "/" + token;
+			window.location.href = location.origin + "/?token=" + token;
 		};
-    
   </script>
 </body>
 </html>
-
-<!--
-	const settings = ServerConnection.makeSettings();
-	const requestUrl = URLExt.join(
-		settings.baseUrl,
-		'/auth/github/authorize?authentication_backend=cookie'
-	);
-	const init: RequestInit = {
-		method: 'GET',
-		headers: { accept: 'application/json' }
-	};
-	ServerConnection.makeRequest(requestUrl, init, settings).then(
-		async resp => {
-			const data = await resp.json();
-			window.location.href = data.authorization_url;
-		}
-	);
--->

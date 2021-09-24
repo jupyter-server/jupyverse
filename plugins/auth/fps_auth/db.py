@@ -45,6 +45,7 @@ Base: DeclarativeMeta = declarative_base()
 class UserTable(Base, SQLAlchemyBaseUserTable):
     initialized = Column(Boolean, default=False, nullable=False)
     anonymous = Column(Boolean, default=False, nullable=False)
+    token = Column(String(length=32), nullable=True)
     name = Column(String(length=32), nullable=True)
     username = Column(String(length=32), nullable=True)
     color = Column(String(length=32), nullable=True)
@@ -70,5 +71,5 @@ oauth_accounts = OAuthAccount.__table__
 user_db = SQLAlchemyUserDatabase(UserDB, database, users, oauth_accounts)
 
 
-def get_user_db():
+def get_user_db() -> SQLAlchemyUserDatabase[UserDB]:
     yield user_db
