@@ -7,7 +7,6 @@ import pkg_resources  # type: ignore
 from typing import Optional
 
 from babel import Locale  # type: ignore
-from pydantic import UUID4
 from starlette.requests import Request  # type: ignore
 from fps.hooks import register_router  # type: ignore
 import retrolab  # type: ignore
@@ -88,7 +87,7 @@ for path2 in glob(
 @router.get("/")
 async def get_root(
     response: Response,
-    token: Optional[UUID4] = None,
+    token: Optional[str] = None,
     auth_config=Depends(get_auth_config),
     rlab_config=Depends(get_rlab_config),
     user_db=Depends(get_user_db),

@@ -7,7 +7,6 @@ import pkg_resources  # type: ignore
 from typing import Optional
 
 from babel import Locale  # type: ignore
-from pydantic import UUID4
 import jupyterlab  # type: ignore
 import jupyverse  # type: ignore
 from fastapi import APIRouter, Response, Depends, status
@@ -72,7 +71,7 @@ for path in glob(
 @router.get("/")
 async def get_root(
     response: Response,
-    token: Optional[UUID4] = None,
+    token: Optional[str] = None,
     auth_config=Depends(get_auth_config),
     jlab_config=Depends(get_jlab_config),
     user_db=Depends(get_user_db),

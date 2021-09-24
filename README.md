@@ -1,6 +1,5 @@
 [![Build Status](https://github.com/jupyter-server/jupyverse/workflows/CI/badge.svg)](https://github.com/jupyter-server/jupyverse/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?filepath=examples%2Fjupyverse.ipynb)
 
 # jupyverse
 
@@ -8,6 +7,10 @@
 [jupyter-server](https://github.com/jupyter-server/jupyter_server), which is the official Jupyter server.**
 
 A set of [FPS](https://github.com/jupyter-server/fps) plugins implementing a Jupyter server.
+
+Try it online:
+- JupyterLab frontend: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?urlpath=jupyverse-jlab)
+- RetroLab frontend: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?urlpath=jupyverse-rlab)
 
 
 ## Motivation for Experimental Server
