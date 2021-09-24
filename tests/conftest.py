@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-pytest_plugins = ("fps.testing.fixtures",)  # "fps_auth.fixtures")
+pytest_plugins = ("fps.testing.fixtures",)
 
 
 @pytest.fixture()

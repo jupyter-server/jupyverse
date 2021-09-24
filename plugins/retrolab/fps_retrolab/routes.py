@@ -1,35 +1,21 @@
 import json
 from pathlib import Path
-import sys
-from glob import glob
-from http import HTTPStatus
-import pkg_resources  # type: ignore
-from typing import Optional
 
-from babel import Locale  # type: ignore
-from starlette.requests import Request  # type: ignore
 from fps.hooks import register_router  # type: ignore
 import retrolab  # type: ignore
-from fastapi import APIRouter, Response, Depends, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.backends import (  # type: ignore
-    current_user,
-    cookie_authentication,
-    LoginCookieAuthentication,
-    get_user_manager,
-)
+from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
-from fps_auth.config import get_auth_config  # type: ignore
 
-from .config import get_rlab_config
+from fps_lab.routes import init_router  # type: ignore
+from fps_lab.config import get_lab_config  # type: ignore
 
-LOCALE = "en"
 router = APIRouter()
+prefix_dir, federated_extensions = init_router(router, "retro/tree")
 retrolab_dir = Path(retrolab.__file__).parent
-prefix_dir = Path(sys.prefix)
 
 router.mount(
     "/static/retro",
@@ -43,233 +29,49 @@ router.mount(
     name="labextension/static",
 )
 
-router.mount(
-    "/lab/api/themes",
-    StaticFiles(directory=prefix_dir / "share" / "jupyter" / "lab" / "themes"),
-    name="themes",
-)
-
-for path1 in (retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
-    load = f"static/{path1.name}"
+for path in (retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
+    load = f"static/{path.name}"
     break
-federated_extensions = [
+retro_federated_extensions = [
     {
         "extension": "./extension",
         "load": load,
         "name": "@retrolab/lab-extension",
         "style": "./style",
     }
-]
-for path2 in glob(
-    str(prefix_dir / "share" / "jupyter" / "labextensions" / "**" / "package.json"),
-    recursive=True,
-):
-    with open(path2) as f:
-        package = json.load(f)
-    name = package["name"]
-    extension = package["jupyterlab"]["_build"]
-    extension["name"] = name
-    federated_extensions.append(extension)
-    router.mount(
-        f"/lab/extensions/{name}/static",
-        StaticFiles(
-            directory=prefix_dir
-            / "share"
-            / "jupyter"
-            / "labextensions"
-            / name
-            / "static"
-        ),
-        name=name,
-    )
-
-
-@router.get("/")
-async def get_root(
-    response: Response,
-    token: Optional[str] = None,
-    auth_config=Depends(get_auth_config),
-    rlab_config=Depends(get_rlab_config),
-    user_db=Depends(get_user_db),
-    user_manager=Depends(get_user_manager),
-):
-    if token and auth_config.mode == "token":
-        user = await user_db.get(token)
-        if user:
-            await super(
-                LoginCookieAuthentication, cookie_authentication
-            ).get_login_response(user, response, user_manager)
-    # auto redirect
-    response.status_code = status.HTTP_302_FOUND
-    response.headers["Location"] = rlab_config.base_url + "retro/tree"
+] + federated_extensions
 
 
 @router.get("/retro/tree", response_class=HTMLResponse)
-async def get_tree(rlab_config=Depends(get_rlab_config)):
-    return get_index("Tree", "tree", rlab_config.collaborative, rlab_config.base_url)
+async def get_tree(lab_config=Depends(get_lab_config)):
+    return get_index("Tree", "tree", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
 async def get_notebook(
     name: str,
     user: User = Depends(current_user()),
-    rlab_config=Depends(get_rlab_config),
+    lab_config=Depends(get_lab_config),
 ):
-    return get_index(name, "notebooks", rlab_config.collaborative, rlab_config.base_url)
+    return get_index(name, "notebooks", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/consoles/{name}", response_class=HTMLResponse)
 async def get_console(
     name: str,
     user: User = Depends(current_user()),
-    rlab_config=Depends(get_rlab_config),
+    lab_config=Depends(get_lab_config),
 ):
-    return get_index(name, "consoles", rlab_config.collaborative, rlab_config.base_url)
+    return get_index(name, "consoles", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
 async def get_terminal(
     name: str,
     user: User = Depends(current_user()),
-    rlab_config=Depends(get_rlab_config),
+    lab_config=Depends(get_lab_config),
 ):
-    return get_index(name, "terminals", rlab_config.collaborative, rlab_config.base_url)
-
-
-@router.get("/lab/api/translations")
-async def get_translations():
-    locale = Locale.parse("en")
-    data = {
-        "en": {
-            "displayName": locale.get_display_name(LOCALE).capitalize(),
-            "nativeName": locale.get_display_name().capitalize(),
-        }
-    }
-    for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
-        locale = Locale.parse(ep.name)
-        data[ep.name] = {
-            "displayName": locale.get_display_name(LOCALE).capitalize(),
-            "nativeName": locale.get_display_name().capitalize(),
-        }
-    return {"data": data, "message": ""}
-
-
-@router.get("/lab/api/translations/{language}")
-async def get_translation(
-    language,
-):
-    global LOCALE
-    if language == "en":
-        LOCALE = language
-        return {}
-    for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
-        if ep.name == language:
-            break
-    else:
-        return {"data": {}, "message": f"Language pack '{language}' not installed!"}
-    LOCALE = language
-    package = ep.load()
-    data = {}
-    for path in (
-        Path(package.__file__).parent / "locale" / "fr_FR" / "LC_MESSAGES"
-    ).glob("*.json"):
-        with open(path) as f:
-            data.update({path.stem: json.load(f)})
-    return {"data": data, "message": ""}
-
-
-@router.get("/lab/api/settings/{name0}/{name1}:{name2}")
-async def get_setting(
-    name0,
-    name1,
-    name2,
-    user: User = Depends(current_user()),
-):
-    with open(
-        prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
-    ) as f:
-        package = json.load(f)
-    if name0 == "@jupyterlab":
-        lab_or_extensions = Path("lab")
-    else:
-        lab_or_extensions = Path("labextensions") / name0 / name1
-    with open(
-        prefix_dir
-        / "share"
-        / "jupyter"
-        / lab_or_extensions
-        / "schemas"
-        / name0
-        / name1
-        / f"{name2}.json"
-    ) as f:
-        schema = json.load(f)
-    key = f"{name1}:{name2}"
-    result = {
-        "id": f"@jupyterlab/{key}",
-        "schema": schema,
-        "version": package["version"],
-        "raw": "{}",
-        "settings": {},
-        "last_modified": None,
-        "created": None,
-    }
-    if user:
-        settings = json.loads(user.settings)
-        if key in settings:
-            result.update(settings[key])
-    return result
-
-
-@router.put(
-    "/lab/api/settings/@jupyterlab/{name0}:{name1}",
-    status_code=204,
-)
-async def change_setting(
-    request: Request,
-    name0,
-    name1,
-    user: User = Depends(current_user()),
-    user_db=Depends(get_user_db),
-):
-    settings = json.loads(user.settings)
-    settings[f"{name0}:{name1}"] = await request.json()
-    user.settings = json.dumps(settings)
-    await user_db.update(user)
-    return Response(status_code=HTTPStatus.NO_CONTENT.value)
-
-
-@router.get("/lab/api/settings")
-async def get_settings(user: User = Depends(current_user())):
-    with open(
-        prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
-    ) as f:
-        package = json.load(f)
-    if user:
-        user_settings = json.loads(user.settings)
-    else:
-        user_settings = {}
-    settings = []
-    for path in (
-        prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
-    ).glob("*/*.json"):
-        with open(path) as f:
-            schema = json.load(f)
-        key = f"{path.parent.name}:{path.stem}"
-        setting = {
-            "id": f"@jupyterlab/{key}",
-            "schema": schema,
-            "version": package["version"],
-            "raw": "{}",
-            "settings": {},
-            "warning": None,
-            "last_modified": None,
-            "created": None,
-        }
-        if key in user_settings:
-            setting.update(user_settings[key])
-        settings.append(setting)
-    return {"settings": settings}
+    return get_index(name, "terminals", lab_config.collaborative, lab_config.base_url)
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):
@@ -284,7 +86,7 @@ def get_index(doc_name, retro_page, collaborative, base_url="/"):
         "collaborative": collaborative,
         "disabledExtensions": [],
         "extraLabextensionsPath": [],
-        "federated_extensions": federated_extensions,
+        "federated_extensions": retro_federated_extensions,
         "frontendUrl": "/retro/",
         "fullAppUrl": f"{base_url}lab",
         "fullLabextensionsUrl": f"{base_url}lab/extensions",
