@@ -11,6 +11,7 @@ mkdir fps \
 
 python -m pip install .[jupyterlab] --no-deps
 python -m pip install plugins/jupyterlab
+python -m pip install plugins/retrolab
 python -m pip install plugins/contents
 python -m pip install plugins/kernels
 python -m pip install plugins/terminals
