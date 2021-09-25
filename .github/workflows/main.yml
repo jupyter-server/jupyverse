@@ -36,12 +36,12 @@ jobs:
 
     - name: Install jupyverse
       run: |
-        pip install git+https://github.com/jupyter-server/fps
-        pip install fps-uvicorn==0.0.2
+        mkdir fps && cd fps && curl -L -O https://github.com/jupyter-server/fps/archive/master.tar.gz && tar zxf master.tar.gz && cd fps-master && pip install . && pip install ./plugins/uvicorn && cd ../.. && rm -rf fps
         pip install . --no-deps
         pip install ./plugins/contents
         pip install ./plugins/auth
         pip install ./plugins/kernels
+        pip install ./plugins/lab
         pip install ./plugins/jupyterlab
         pip install flake8 black mypy pytest requests
 
@@ -53,8 +53,9 @@ jobs:
         mypy plugins/contents
         mypy plugins/kernels
         mypy plugins/retrolab
-        mypy plugins/auth
         mypy plugins/jupyterlab
+        mypy plugins/lab
+        mypy plugins/auth
         mypy plugins/nbconvert
         mypy plugins/yjs
         mypy plugins/terminals

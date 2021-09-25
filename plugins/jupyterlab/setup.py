@@ -7,9 +7,8 @@ setup(
     install_requires=[
         "fps",
         "jupyterlab",
-        "aiofiles",
+        "fps-lab",
         "fps-auth",
-        "babel",
     ],
     entry_points={
         "fps_router": ["fps-jupyterlab = fps_jupyterlab.routes"],
