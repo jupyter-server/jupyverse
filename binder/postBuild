@@ -1,15 +1,9 @@
 #!/bin/bash
 
-mkdir fps \
-    && wget -q https://github.com/jupyter-server/fps/archive/master.tar.gz -O - \
-        | tar xz -C fps --strip-components=1 \
-    && cd fps \
-    && python -m pip install . \
-    && python -m pip install plugins/uvicorn \
-    && cd .. \
-    && rm -rf fps
+mkdir fps && cd fps && curl -L -O https://github.com/jupyter-server/fps/archive/master.tar.gz && tar zxf master.tar.gz && cd fps-master && python -m pip install . && python -m pip install ./plugins/uvicorn && cd ../.. && rm -rf fps
 
-python -m pip install .[jupyterlab] --no-deps
+python -m pip install . --no-deps
+python -m pip install plugins/lab
 python -m pip install plugins/jupyterlab
 python -m pip install plugins/retrolab
 python -m pip install plugins/contents
