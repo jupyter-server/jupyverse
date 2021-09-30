@@ -2,30 +2,44 @@ import os
 import asyncio
 import signal
 from datetime import datetime
-from typing import List, Dict, cast
+from typing import Optional, List, Dict, cast
 
 from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 
-from .connect import write_connection_file, launch_kernel, connect_channel  # type: ignore
+from .connect import (
+    write_connection_file as _write_connection_file,
+    read_connection_file,
+    launch_kernel,
+    connect_channel,
+    cfg_t,
+)  # type: ignore
 from .message import receive_message, send_message, create_message  # type: ignore
+
+
+kernels: dict = {}
 
 
 class KernelServer:
     def __init__(
         self,
         kernelspec_path: str = "",
+        connection_cfg: Optional[cfg_t] = None,
         connection_file: str = "",
+        write_connection_file: bool = True,
         capture_kernel_output: bool = True,
     ) -> None:
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
-        if not self.kernelspec_path:
-            raise RuntimeError(
-                "Could not find a kernel, maybe you forgot to install one?"
+        if write_connection_file:
+            self.connection_file_path, self.connection_cfg = _write_connection_file(
+                connection_file
             )
-        self.connection_file_path, self.connection_cfg = write_connection_file(
-            connection_file
-        )
+        elif connection_file:
+            self.connection_file_path = connection_file
+            self.connection_cfg = read_connection_file(connection_file)
+        else:
+            assert connection_cfg is not None
+            self.connection_cfg = connection_cfg
         self.key = cast(str, self.connection_cfg["key"])
         self.channel_tasks: List[asyncio.Task] = []
         self.sessions: Dict[str, WebSocket] = {}
@@ -35,6 +49,10 @@ class KernelServer:
         return len(self.sessions)
 
     async def start(self) -> None:
+        if not self.kernelspec_path:
+            raise RuntimeError(
+                "Could not find a kernel, maybe you forgot to install one?"
+            )
         self.last_activity = {
             "date": datetime.utcnow().isoformat() + "Z",
             "execution_state": "starting",
