@@ -1,17 +1,3 @@
-from setuptools import setup, find_packages  # type: ignore
+import setuptools  # type: ignore
 
-setup(
-    name="fps_jupyterlab",
-    version="0.0.4",
-    packages=find_packages(),
-    install_requires=[
-        "fps",
-        "jupyterlab",
-        "fps-lab",
-        "fps-auth",
-    ],
-    entry_points={
-        "fps_router": ["fps-jupyterlab = fps_jupyterlab.routes"],
-        "fps_config": ["fps-jupyterlab = fps_jupyterlab.config"],
-    },
-)
+setuptools.setup()

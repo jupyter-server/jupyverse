@@ -31,7 +31,7 @@ Note: at this stage of development, it is preferable to install from sources (se
 Clone this repository and install the needed plugins:
 
 ```bash
-pip install -e .[jupyterlab] --no-deps
+pip install -e . --no-deps
 pip install -e plugins/jupyterlab
 pip install -e plugins/contents
 pip install -e plugins/kernels
@@ -44,7 +44,7 @@ pip install -e plugins/auth
 pip install git+https://github.com/jupyter-server/fps
 
 # if you want RetroLab instead of JupyterLab:
-# pip install -e .[retrolab] --no-deps
+# pip install -e . --no-deps
 # pip install -e plugins/retrolab
 # ...
 ```
@@ -57,7 +57,7 @@ pip install git+https://github.com/jupyter-server/fps
 jupyverse --open-browser --authenticator.mode=noauth
 ```
 
-This will open a browser at http://127.0.0.1:8000 by default, and load the JupyterLab front-end.
+This will open a browser at 127.0.0.1:8000 by default, and load the JupyterLab front-end.
 You have full access to the API, without restriction.
 
 ## With token authentication

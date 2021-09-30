@@ -1,9 +1,3 @@
-from setuptools import setup, find_packages  # type: ignore
+import setuptools  # type: ignore
 
-setup(
-    name="fps_nbconvert",
-    version="0.0.4",
-    packages=find_packages(),
-    install_requires=["fps", "nbconvert", "fps-auth"],
-    entry_points={"fps_router": ["fps-nbconvert = fps_nbconvert.routes"]},
-)
+setuptools.setup()

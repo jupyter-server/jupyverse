@@ -1,9 +1,3 @@
-from setuptools import setup, find_packages  # type: ignore
+import setuptools  # type: ignore
 
-setup(
-    name="fps_yjs",
-    version="0.0.3",
-    packages=find_packages(),
-    install_requires=["fps", "fps-auth"],
-    entry_points={"fps_router": ["fps-yjs = fps_yjs.routes"]},
-)
+setuptools.setup()
