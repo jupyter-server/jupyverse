@@ -14,14 +14,13 @@ from fps_auth.models import User  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
-from .kernel_server.server import KernelServer  # type: ignore
+from .kernel_server.server import KernelServer, kernels  # type: ignore
 from .models import Session
 
 router = APIRouter()
 
 kernelspecs: dict = {}
 sessions: dict = {}
-kernels: dict = {}
 prefix_dir: pathlib.Path = pathlib.Path(sys.prefix)
 
 
@@ -155,6 +154,23 @@ async def restart_kernel(
     if kernel_id in kernels:
         kernel = kernels[kernel_id]
         await kernel["server"].restart()
+        result = {
+            "id": kernel_id,
+            "name": kernel["name"],
+            "connections": kernel["server"].connections,
+            "last_activity": kernel["server"].last_activity["date"],
+            "execution_state": kernel["server"].last_activity["execution_state"],
+        }
+        return result
+
+
+@router.get("/api/kernels/{kernel_id}")
+async def get_kernel(
+    kernel_id,
+    user: User = Depends(current_user()),
+):
+    if kernel_id in kernels:
+        kernel = kernels[kernel_id]
         result = {
             "id": kernel_id,
             "name": kernel["name"],

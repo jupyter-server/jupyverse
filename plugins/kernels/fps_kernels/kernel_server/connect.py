@@ -63,6 +63,13 @@ def write_connection_file(
     return fname, cfg
 
 
+def read_connection_file(fname: str) -> cfg_t:
+    with open(fname, "rt") as f:
+        cfg: cfg_t = json.load(f)
+
+    return cfg
+
+
 async def launch_kernel(
     kernelspec_path: str, connection_file_path: str, capture_output: bool
 ) -> asyncio.subprocess.Process:
