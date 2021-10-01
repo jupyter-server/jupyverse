@@ -50,19 +50,22 @@ class KernelServer:
         ] = None  # when None, all messages are allowed
         # when [], no message is allowed
 
-    def block_messages(self, message_types: Iterable[str]):
+    def block_messages(self, message_types: Iterable[str] = []):
+        # if using blocked messages, discard allowed messages
+        self.allowed_messages = None
         if isinstance(message_types, str):
             message_types = [message_types]
         self.blocked_messages = list(message_types)
-        # if using blocked messages, discard allowed messages
-        self.allowed_messages = None
 
-    def allow_messages(self, message_types: Iterable[str]):
+    def allow_messages(self, message_types: Optional[Iterable[str]] = None):
+        # if using allowed messages, discard blocked messages
+        self.blocked_messages = []
+        if message_types is None:
+            self.allowed_messages = None
+            return
         if isinstance(message_types, str):
             message_types = [message_types]
         self.allowed_messages = list(message_types)
-        # if using allowed messages, discard blocked messages
-        self.blocked_messages = []
 
     @property
     def connections(self) -> int:
@@ -136,6 +139,7 @@ class KernelServer:
                     and msg_type not in self.allowed_messages
                 ):
                     continue
+                channel = msg["channel"]
                 msg = {
                     "header": msg["header"],
                     "msg_id": msg["header"]["msg_id"],
@@ -144,7 +148,6 @@ class KernelServer:
                     "content": msg["content"],
                     "metadata": msg["metadata"],
                 }
-                channel = msg["channel"]
                 if channel == "shell":
                     send_message(msg, self.shell_channel, self.key)
                 elif channel == "control":

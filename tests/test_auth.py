@@ -8,7 +8,15 @@ pytest_plugins = (
 )
 
 
-def test_kernel_channels(client, authenticated_user):
+def test_kernel_channels_unauthenticated(client):
+    with pytest.raises(KeyError):
+        with client.websocket_connect(
+            "/api/kernels/kernel_id_0/channels?session_id=session_id_0",
+        ):
+            pass
+
+
+def test_kernel_channels_authenticated(client, authenticated_user):
     with client.websocket_connect(
         "/api/kernels/kernel_id_0/channels?session_id=session_id_0",
         cookies=client.cookies,
