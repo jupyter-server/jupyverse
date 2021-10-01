@@ -2,10 +2,19 @@ from uuid import uuid4
 import socket
 import subprocess
 import time
+import asyncio
 
 import pytest
 
 pytest_plugins = ("fps.testing.fixtures",)
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Change event_loop fixture to module level."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture()

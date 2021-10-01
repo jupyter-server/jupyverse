@@ -43,7 +43,7 @@ jobs:
         pip install ./plugins/kernels
         pip install ./plugins/lab
         pip install ./plugins/jupyterlab
-        pip install flake8 black mypy pytest requests
+        pip install flake8 black mypy pytest pytest-asyncio requests ipykernel
 
     - name: Check style
       run: |

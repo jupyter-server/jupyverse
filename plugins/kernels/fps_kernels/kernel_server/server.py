@@ -2,7 +2,7 @@ import os
 import asyncio
 import signal
 from datetime import datetime
-from typing import Optional, List, Dict, cast
+from typing import Iterable, Optional, List, Dict, cast
 
 from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 
@@ -43,6 +43,29 @@ class KernelServer:
         self.key = cast(str, self.connection_cfg["key"])
         self.channel_tasks: List[asyncio.Task] = []
         self.sessions: Dict[str, WebSocket] = {}
+        # blocked messages and allowed messages are mutually exclusive
+        self.blocked_messages: List[str] = []
+        self.allowed_messages: Optional[
+            List[str]
+        ] = None  # when None, all messages are allowed
+        # when [], no message is allowed
+
+    def block_messages(self, message_types: Iterable[str] = []):
+        # if using blocked messages, discard allowed messages
+        self.allowed_messages = None
+        if isinstance(message_types, str):
+            message_types = [message_types]
+        self.blocked_messages = list(message_types)
+
+    def allow_messages(self, message_types: Optional[Iterable[str]] = None):
+        # if using allowed messages, discard blocked messages
+        self.blocked_messages = []
+        if message_types is None:
+            self.allowed_messages = None
+            return
+        if isinstance(message_types, str):
+            message_types = [message_types]
+        self.allowed_messages = list(message_types)
 
     @property
     def connections(self) -> int:
@@ -71,10 +94,17 @@ class KernelServer:
         ]
 
     async def stop(self) -> None:
-        self.kernel_process.send_signal(signal.SIGINT)
-        self.kernel_process.kill()
-        await self.kernel_process.wait()
-        os.remove(self.connection_file_path)
+        # FIXME: stop kernel in a better way
+        try:
+            self.kernel_process.send_signal(signal.SIGINT)
+            self.kernel_process.kill()
+            await self.kernel_process.wait()
+        except Exception:
+            pass
+        try:
+            os.remove(self.connection_file_path)
+        except Exception:
+            pass
         for task in self.channel_tasks:
             task.cancel()
         self.channel_tasks = []
@@ -110,6 +140,12 @@ class KernelServer:
         try:
             while True:
                 msg = await websocket.receive_json()
+                msg_type = msg["header"]["msg_type"]
+                if (msg_type in self.blocked_messages) or (
+                    self.allowed_messages is not None
+                    and msg_type not in self.allowed_messages
+                ):
+                    continue
                 channel = msg["channel"]
                 msg = {
                     "header": msg["header"],
