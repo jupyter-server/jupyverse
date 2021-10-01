@@ -2,7 +2,7 @@ import os
 import asyncio
 import signal
 from datetime import datetime
-from typing import Optional, List, Dict, cast
+from typing import Iterable, Optional, List, Dict, cast
 
 from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 
@@ -43,6 +43,26 @@ class KernelServer:
         self.key = cast(str, self.connection_cfg["key"])
         self.channel_tasks: List[asyncio.Task] = []
         self.sessions: Dict[str, WebSocket] = {}
+        # blocked messages and allowed messages are mutually exclusive
+        self.blocked_messages: List[str] = []
+        self.allowed_messages: Optional[
+            List[str]
+        ] = None  # when None, all messages are allowed
+        # when [], no message is allowed
+
+    def block_messages(self, message_types: Iterable[str]):
+        if isinstance(message_types, str):
+            message_types = [message_types]
+        self.blocked_messages = list(message_types)
+        # if using blocked messages, discard allowed messages
+        self.allowed_messages = None
+
+    def allow_messages(self, message_types: Iterable[str]):
+        if isinstance(message_types, str):
+            message_types = [message_types]
+        self.allowed_messages = list(message_types)
+        # if using allowed messages, discard blocked messages
+        self.blocked_messages = []
 
     @property
     def connections(self) -> int:
@@ -110,7 +130,12 @@ class KernelServer:
         try:
             while True:
                 msg = await websocket.receive_json()
-                channel = msg["channel"]
+                msg_type = msg["header"]["msg_type"]
+                if (msg_type in self.blocked_messages) or (
+                    self.allowed_messages is not None
+                    and msg_type not in self.allowed_messages
+                ):
+                    continue
                 msg = {
                     "header": msg["header"],
                     "msg_id": msg["header"]["msg_id"],
@@ -119,6 +144,7 @@ class KernelServer:
                     "content": msg["content"],
                     "metadata": msg["metadata"],
                 }
+                channel = msg["channel"]
                 if channel == "shell":
                     send_message(msg, self.shell_channel, self.key)
                 elif channel == "control":
