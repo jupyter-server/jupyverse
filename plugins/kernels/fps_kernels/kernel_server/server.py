@@ -94,10 +94,17 @@ class KernelServer:
         ]
 
     async def stop(self) -> None:
-        self.kernel_process.send_signal(signal.SIGINT)
-        self.kernel_process.kill()
-        await self.kernel_process.wait()
-        os.remove(self.connection_file_path)
+        # FIXME: stop kernel in a better way
+        try:
+            self.kernel_process.send_signal(signal.SIGINT)
+            self.kernel_process.kill()
+            await self.kernel_process.wait()
+        except Exception:
+            pass
+        try:
+            os.remove(self.connection_file_path)
+        except Exception:
+            pass
         for task in self.channel_tasks:
             task.cancel()
         self.channel_tasks = []
