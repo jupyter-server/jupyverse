@@ -56,6 +56,15 @@ async def get_notebook(
     return get_index(name, "notebooks", lab_config.collaborative, lab_config.base_url)
 
 
+@router.get("/retro/edit/{name}", response_class=HTMLResponse)
+async def edit_file(
+    name: str,
+    user: User = Depends(current_user()),
+    lab_config=Depends(get_lab_config),
+):
+    return get_index(name, "edit", lab_config.collaborative, lab_config.base_url)
+
+
 @router.get("/retro/consoles/{name}", response_class=HTMLResponse)
 async def get_console(
     name: str,
