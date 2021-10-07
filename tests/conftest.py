@@ -21,7 +21,7 @@ def event_loop():
 def authenticated_user(client):
     username = uuid4().hex
     # who am I?
-    response = client.get("/auth/users/me")
+    response = client.get("/auth/user/me")
     if response.status_code != 401:
         response = client.post("/logout")
     # register user
@@ -35,15 +35,15 @@ def authenticated_user(client):
         "username": username,
         "color": "",
     }
-    response = client.post("/register", json=register_body)
+    response = client.post("/auth/register", json=register_body)
     assert response.status_code == 201
     # login with registered user
     login_body = {"username": username + "@example.com", "password": username}
     assert "fastapiusersauth" not in client.cookies
-    response = client.post("/login", data=login_body)
+    response = client.post("/auth/login", data=login_body)
     assert "fastapiusersauth" in client.cookies
     # who am I?
-    response = client.get("/auth/users/me")
+    response = client.get("/auth/user/me")
     assert response.status_code != 401
     return username
 

@@ -4,7 +4,6 @@ import sys
 from glob import glob
 from http import HTTPStatus
 import pkg_resources  # type: ignore
-from typing import Optional
 
 from babel import Locale  # type: ignore
 import jupyverse  # type: ignore
@@ -14,9 +13,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.backends import current_user # type: ignore
-from fps_auth.models import User # type: ignore
-from fps_auth.config import get_auth_config  # type: ignore
+from fps_auth.backends import current_user  # type: ignore
+from fps_auth.models import User  # type: ignore
 
 from .config import get_lab_config  # type: ignore
 

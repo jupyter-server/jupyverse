@@ -167,7 +167,7 @@ async def restart_kernel(
 @router.get("/api/kernels/{kernel_id}")
 async def get_kernel(
     kernel_id,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
 ):
     if kernel_id in kernels:
         kernel = kernels[kernel_id]

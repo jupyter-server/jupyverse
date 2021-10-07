@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from fps_auth.routes import get_user_token
+from fps_auth.config import get_auth_config
 
 pytest_plugins = (
     "fps.testing.fixtures",
@@ -42,7 +42,7 @@ def test_no_auth(auth_mode, client, app):
 @pytest.mark.parametrize("auth_mode", ("token",))
 def test_token_auth(auth_mode, client, app):
     with TestClient(app) as client:
-        user_token = get_user_token()
-        response = client.get(f"/?token={user_token}")
-    assert user_token is not None
+        auth_config = get_auth_config()
+        response = client.get(f"/?token={auth_config.token}")
+    assert auth_config.token is not None
     assert response.status_code == 200

@@ -43,14 +43,12 @@ Base: DeclarativeMeta = declarative_base()
 
 
 class UserTable(Base, SQLAlchemyBaseUserTable):
-    initialized = Column(Boolean, default=False, nullable=False)
-    anonymous = Column(Boolean, default=False, nullable=False)
-    token = Column(String(length=32), nullable=True)
+    anonymous = Column(Boolean, default=True, nullable=False)
+    email = Column(String(length=32), nullable=False, unique=True)
+    username = Column(String(length=32), nullable=True, unique=True)
     name = Column(String(length=32), nullable=True)
-    username = Column(String(length=32), nullable=True)
     color = Column(String(length=32), nullable=True)
     avatar = Column(String(length=32), nullable=True)
-    logged_in = Column(Boolean, default=False, nullable=False)
     workspace = Column(Text(), nullable=False)
     settings = Column(Text(), nullable=False)
 
@@ -71,5 +69,5 @@ oauth_accounts = OAuthAccount.__table__
 user_db = SQLAlchemyUserDatabase(UserDB, database, users, oauth_accounts)
 
 
-def get_user_db() -> SQLAlchemyUserDatabase[UserDB]:
+def get_user_db():
     yield user_db

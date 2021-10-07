@@ -12,7 +12,7 @@ from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 
-from fps_lab.routes import init_router # type: ignore
+from fps_lab.routes import init_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 
 router = APIRouter()

@@ -59,7 +59,7 @@ async def get_notebook(
 @router.get("/retro/edit/{name}", response_class=HTMLResponse)
 async def edit_file(
     name: str,
-    user: User = Depends(current_user()),
+    user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
 ):
     return get_index(name, "edit", lab_config.collaborative, lab_config.base_url)

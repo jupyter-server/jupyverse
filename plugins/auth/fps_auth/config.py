@@ -6,19 +6,18 @@ from fps.config import PluginModel, get_config  # type: ignore
 from fps.hooks import register_config, register_plugin_name  # type: ignore
 
 
-
 class AuthConfig(PluginModel):
     client_id: str = ""
     client_secret: SecretStr = SecretStr("")
     redirect_uri: str = ""
     mode: Literal["noauth", "token", "user"] = "token"
     token = str(uuid4())
-    guest_email = "guest@jupyter.com"
+    global_email = "guest@jupyter.com"
     cookie_secure: bool = (
         False  # FIXME: should default to True, and set to False for tests
     )
     clear_users: bool = False
-    login_url: str = "/login_page"
+    login_url: str = "/login"
 
 
 def get_auth_config():
