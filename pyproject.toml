@@ -17,3 +17,6 @@ src = "jupyverse/__init__.py"
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
+
+[tool.jupyter-releaser.options]
+python_packages = [".", "plugins/auth", "plugins/contents", "plugins/jupyterlab", "plugins/kernels", "plugins/lab", "plugins/login", "plugins/nbconvert", "plugins/retrolab", "plugins/terminals", "plugins/yjs"]
