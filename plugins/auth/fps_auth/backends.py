@@ -105,7 +105,7 @@ async def current_user(
 
     elif not active_user and auth_config.mode == "token":
         global_user = await user_db.get_by_email(auth_config.global_email)
-        if global_user.hashed_password == token:
+        if global_user and global_user.hashed_password == token:
             active_user = await create_guest(user_db)
             await cookie_authentication.get_login_response(
                 active_user, response, user_manager
