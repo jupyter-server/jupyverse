@@ -16,7 +16,7 @@ tag_template = "v{new_version}"
 src = "jupyverse/__init__.py"
 
 [tool.jupyter-releaser]
-skip = ["check-links"]
+skip = ["check-links", "check-manifest"]
 
 [tool.jupyter-releaser.options]
 python_packages = [".", "plugins/auth", "plugins/contents", "plugins/jupyterlab", "plugins/kernels", "plugins/lab", "plugins/nbconvert", "plugins/retrolab", "plugins/terminals", "plugins/yjs"]
