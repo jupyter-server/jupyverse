@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.12
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.11...c109da7a6a9b9801cfecc971893823c213d995aa))
+
+### Merged PRs
+
+- Fix retrolab setup.cfg [#93](https://github.com/jupyter-server/jupyverse/pull/93) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-11&to=2021-10-11&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-11..2021-10-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.11
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/0.0.7...1a3dea5b7d5da42560f52cb50901c257723b78ba))
@@ -45,8 +61,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-09-16&to=2021-10-11&type=c))
 
 [@adriendelsalle](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aadriendelsalle+updated%3A2021-09-16..2021-10-11&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-09-16..2021-10-11&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Afcollonval+updated%3A2021-09-16..2021-10-11&type=Issues) | [@hbcarlos](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ahbcarlos+updated%3A2021-09-16..2021-10-11&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ajtpio+updated%3A2021-09-16..2021-10-11&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2021-09-16..2021-10-11&type=Issues) | [@willingc](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awillingc+updated%3A2021-09-16..2021-10-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.10
 
