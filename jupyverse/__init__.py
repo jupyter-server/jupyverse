@@ -1,1 +1,1 @@
-from ._version import __version__  # noqa
+__version__ = "0.0.7"
