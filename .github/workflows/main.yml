@@ -42,7 +42,6 @@ jobs:
         pip install ./plugins/auth
         pip install ./plugins/contents
         pip install ./plugins/kernels
-        pip install ./plugins/terminals
         pip install ./plugins/nbconvert
         pip install ./plugins/yjs
         pip install ./plugins/lab

@@ -51,7 +51,7 @@ async def startup():
         )
         await user_db.create(global_user)
 
-    if auth_config.mode != "noauth":
+    if auth_config.mode == "token":
         logger.info("")
         logger.info("To access the server, copy and paste this URL:")
         logger.info(
