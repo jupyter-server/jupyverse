@@ -50,15 +50,15 @@ jobs:
         black --check jupyverse plugins tests
         flake8 jupyverse plugins tests
         mypy jupyverse
-        mypy plugins/contents
-        mypy plugins/kernels
-        mypy plugins/retrolab
-        mypy plugins/jupyterlab
-        mypy plugins/lab
-        mypy plugins/auth
-        mypy plugins/nbconvert
-        mypy plugins/yjs
-        mypy plugins/terminals
+        mypy plugins/contents/fps_contents
+        mypy plugins/kernels/fps_kernels
+        mypy plugins/retrolab/fps_retrolab
+        mypy plugins/jupyterlab/fps_jupyterlab
+        mypy plugins/lab/fps_lab
+        mypy plugins/auth/fps_auth
+        mypy plugins/nbconvert/fps_nbconvert
+        mypy plugins/yjs/fps_yjs
+        mypy plugins/terminals/fps_terminals
 
     - name: Run tests
       run: |

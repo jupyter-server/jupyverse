@@ -58,7 +58,7 @@ def get_open_port():
 
 
 @pytest.fixture()
-def start_jupyverse(auth_mode, clear_users):
+def start_jupyverse(auth_mode, clear_users, capfd):
     port = get_open_port()
     command_list = [
         "jupyverse",
@@ -68,7 +68,11 @@ def start_jupyverse(auth_mode, clear_users):
         f"--port={port}",
     ]
     p = subprocess.Popen(command_list)
+    while True:
+        time.sleep(0.5)
+        out, err = capfd.readouterr()
+        if "Application startup complete" in err:
+            break
     url = f"http://127.0.0.1:{port}"
-    time.sleep(3)  # let the server start up
     yield url
     p.kill()
