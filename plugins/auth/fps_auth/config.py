@@ -12,6 +12,7 @@ class AuthConfig(PluginModel):
     redirect_uri: str = ""
     mode: Literal["noauth", "token", "user"] = "token"
     token = str(uuid4())
+    collaborative: bool = False
     global_email = "guest@jupyter.com"
     cookie_secure: bool = (
         False  # FIXME: should default to True, and set to False for tests

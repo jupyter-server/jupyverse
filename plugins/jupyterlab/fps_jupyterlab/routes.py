@@ -11,6 +11,7 @@ from fps.hooks import register_router  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
 
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
@@ -27,17 +28,21 @@ router.mount(
 
 @router.get("/lab")
 async def get_lab(
-    user: User = Depends(current_user), lab_config=Depends(get_lab_config)
+    user: User = Depends(current_user),
+    lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, lab_config.base_url)
+        get_index("default", auth_config.collaborative, lab_config.base_url)
     )
 
 
 @router.get("/lab/tree/{path:path}")
-async def load_workspace(path, lab_config=Depends(get_lab_config)):
+async def load_workspace(
+    path, lab_config=Depends(get_lab_config), auth_config=Depends(get_auth_config)
+):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, lab_config.base_url)
+        get_index("default", auth_config.collaborative, lab_config.base_url)
     )
 
 
@@ -64,9 +69,12 @@ async def set_workspace(
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
 async def get_workspace(
-    name, user: User = Depends(current_user), lab_config=Depends(get_lab_config)
+    name,
+    user: User = Depends(current_user),
+    lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, lab_config.collaborative, lab_config.base_url)
+    return get_index(name, auth_config.collaborative, lab_config.base_url)
 
 
 INDEX_HTML = """\

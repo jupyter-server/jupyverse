@@ -46,8 +46,8 @@ async def startup():
             username=auth_config.global_email,
             hashed_password=auth_config.token,
             is_superuser=True,
-            is_active=False,
-            is_verified=False,
+            is_active=True,
+            is_verified=True,
         )
         await user_db.create(global_user)
 

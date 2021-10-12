@@ -3,7 +3,6 @@ from fps.hooks import register_config, register_plugin_name  # type: ignore
 
 
 class LabConfig(PluginModel):
-    collaborative: bool = False
     base_url: str = "/"
 
 

@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
 
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
@@ -43,8 +44,10 @@ retro_federated_extensions = [
 
 
 @router.get("/retro/tree", response_class=HTMLResponse)
-async def get_tree(lab_config=Depends(get_lab_config)):
-    return get_index("Tree", "tree", lab_config.collaborative, lab_config.base_url)
+async def get_tree(
+    lab_config=Depends(get_lab_config), auth_config=Depends(get_auth_config)
+):
+    return get_index("Tree", "tree", auth_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
@@ -52,8 +55,9 @@ async def get_notebook(
     name: str,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "notebooks", lab_config.collaborative, lab_config.base_url)
+    return get_index(name, "notebooks", auth_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/edit/{name}", response_class=HTMLResponse)
@@ -61,8 +65,9 @@ async def edit_file(
     name: str,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "edit", lab_config.collaborative, lab_config.base_url)
+    return get_index(name, "edit", auth_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/consoles/{name}", response_class=HTMLResponse)
@@ -70,8 +75,9 @@ async def get_console(
     name: str,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "consoles", lab_config.collaborative, lab_config.base_url)
+    return get_index(name, "consoles", auth_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
@@ -79,8 +85,9 @@ async def get_terminal(
     name: str,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "terminals", lab_config.collaborative, lab_config.base_url)
+    return get_index(name, "terminals", auth_config.collaborative, lab_config.base_url)
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):
