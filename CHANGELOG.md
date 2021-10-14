@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.14
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.13...21ecbfd09cc206df8a1ba0582bcb716d71f4221d))
+
+### Merged PRs
+
+- Improve server setup in tests [#98](https://github.com/jupyter-server/jupyverse/pull/98) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-11&to=2021-10-14&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-11..2021-10-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.13
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.12...8561f58f9d75d7e822646a5ac2f47af6f75befcb))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-11&to=2021-10-11&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-11..2021-10-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.12
 
