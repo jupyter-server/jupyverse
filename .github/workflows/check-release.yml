@@ -62,9 +62,9 @@ jobs:
           pip install -e plugins/auth
       - name: Check Release
         if: ${{ matrix.group == 'check_release' }}
-        uses: davidbrochart/jupyter_releaser/.github/actions/check-release@py_multi_package
+        uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check Links
         if: ${{ matrix.group == 'link_check' }}
-        uses: davidbrochart/jupyter_releaser/.github/actions/check-links@py_multi_package
+        uses: jupyter-server/jupyter_releaser/.github/actions/check-links@v1
