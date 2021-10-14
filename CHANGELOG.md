@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.15
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.13...e71ff9e8037e0659db8c904732dd50b9dc302fd8))
+
+### Merged PRs
+
+- Remove reference to my branch in check-release action [#104](https://github.com/jupyter-server/jupyverse/pull/104) ([@davidbrochart](https://github.com/davidbrochart))
+- Improve server setup in tests [#98](https://github.com/jupyter-server/jupyverse/pull/98) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-11&to=2021-10-14&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-11..2021-10-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.14
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.13...21ecbfd09cc206df8a1ba0582bcb716d71f4221d))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-11&to=2021-10-14&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-11..2021-10-14&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.13
 
