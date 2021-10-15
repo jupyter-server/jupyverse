@@ -24,13 +24,14 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 uvicorn_config = get_config(UvicornConfig)
-auth_config = get_auth_config()
 
 router = APIRouter()
 
 
 @router.on_event("startup")
 async def startup():
+    auth_config = get_auth_config()
+
     await database.connect()
     global_user = await user_db.get_by_email(auth_config.global_email)
 

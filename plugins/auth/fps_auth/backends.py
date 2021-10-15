@@ -17,8 +17,6 @@ from .config import get_auth_config
 from .db import secret, get_user_db
 from .models import User, UserDB, UserCreate, UserUpdate
 
-auth_config = get_auth_config()
-
 logger = get_configured_logger("auth")
 
 
@@ -28,7 +26,10 @@ class NoAuthAuthentication(BaseAuthentication):
         self.scheme = None  # type: ignore
 
     async def __call__(self, credentials, user_manager):
-        return await user_manager.user_db.get_by_email(auth_config.global_email)
+        active_user = await user_manager.user_db.get_by_email(
+            get_auth_config().global_email
+        )
+        return active_user
 
 
 class GitHubAuthentication(CookieAuthentication):
@@ -40,11 +41,11 @@ class GitHubAuthentication(CookieAuthentication):
 
 noauth_authentication = NoAuthAuthentication(name="noauth")
 cookie_authentication = CookieAuthentication(
-    secret=secret, cookie_secure=auth_config.cookie_secure, name="cookie"  # type: ignore
+    secret=secret, cookie_secure=get_auth_config().cookie_secure, name="cookie"  # type: ignore
 )
 github_cookie_authentication = GitHubAuthentication(secret=secret, name="github")
 github_authentication = GitHubOAuth2(
-    auth_config.client_id, auth_config.client_secret.get_secret_value()
+    get_auth_config().client_id, get_auth_config().client_secret.get_secret_value()
 )
 
 
@@ -93,7 +94,7 @@ fapi_users = FastAPIUsers(
 )
 
 
-async def create_guest(user_db):
+async def create_guest(user_db, auth_config=Depends(get_auth_config)):
     global_user = await user_db.get_by_email(auth_config.global_email)
     user_id = str(uuid4())
     guest = UserDB(
@@ -119,6 +120,7 @@ async def current_user(
     ),
     user_db=Depends(get_user_db),
     user_manager: UserManager = Depends(get_user_manager),
+    auth_config=Depends(get_auth_config),
 ):
     active_user = user
 

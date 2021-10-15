@@ -31,7 +31,7 @@ Note: at this stage of development, it is preferable to install from sources (se
 Clone this repository and install the needed plugins:
 
 ```bash
-pip install -e .[jupyterlab] --no-deps
+pip install -e . --no-deps
 pip install -e plugins/login
 pip install -e plugins/auth
 pip install -e plugins/contents

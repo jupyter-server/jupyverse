@@ -25,11 +25,17 @@ def test_kernel_channels_authenticated(client, authenticated_user):
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
-def test_root_auth(auth_mode, client):
-    response = client.get("/")
-    expected = 200
+def test_root_auth(auth_mode, client, app):
+    with TestClient(app) as client:
+        response = client.get("/")
+        expected = 200
+        content_type = "text/html; charset=utf-8"
+        if auth_mode in ["token", "user"]:
+            expected = 401
+            content_type = "application/json"
+
     assert response.status_code == expected
-    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    assert response.headers["content-type"] == content_type
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
@@ -44,5 +50,4 @@ def test_token_auth(auth_mode, client, app):
     with TestClient(app) as client:
         auth_config = get_auth_config()
         response = client.get(f"/?token={auth_config.token}")
-    assert auth_config.token is not None
     assert response.status_code == 200
