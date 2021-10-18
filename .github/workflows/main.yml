@@ -38,11 +38,14 @@ jobs:
       run: |
         mkdir fps && cd fps && curl -L -O https://github.com/jupyter-server/fps/archive/master.tar.gz && tar zxf master.tar.gz && cd fps-master && pip install . && pip install ./plugins/uvicorn && cd ../.. && rm -rf fps
         pip install . --no-deps
-        pip install ./plugins/contents
         pip install ./plugins/auth
+        pip install ./plugins/contents
         pip install ./plugins/kernels
+        pip install ./plugins/nbconvert
+        pip install ./plugins/yjs
         pip install ./plugins/lab
         pip install ./plugins/jupyterlab
+        
         pip install flake8 black mypy pytest pytest-asyncio requests ipykernel
 
     - name: Check style
@@ -59,6 +62,7 @@ jobs:
         mypy plugins/nbconvert/fps_nbconvert
         mypy plugins/yjs/fps_yjs
         mypy plugins/terminals/fps_terminals
+        mypy plugins/login/fps_login
 
     - name: Run tests
       run: |

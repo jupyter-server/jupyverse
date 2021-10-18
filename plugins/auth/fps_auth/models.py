@@ -5,13 +5,11 @@ from fastapi_users import models  # type: ignore
 
 
 class JupyterUser(BaseModel):
-    initialized: bool = False
     anonymous: bool = True
+    username: str = ""
     name: Optional[str] = None
-    username: Optional[str] = None
     color: Optional[str] = None
     avatar: Optional[str] = None
-    logged_in: bool = False
     workspace: str = "{}"
     settings: str = "{}"
 
@@ -21,8 +19,9 @@ class User(models.BaseUser, models.BaseOAuthAccountMixin, JupyterUser):
 
 
 class UserCreate(models.BaseUserCreate):
-    name: Optional[str] = None
+    anonymous: bool = True
     username: Optional[str] = None
+    name: Optional[str] = None
     color: Optional[str] = None
 
 

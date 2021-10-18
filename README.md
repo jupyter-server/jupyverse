@@ -32,13 +32,15 @@ Clone this repository and install the needed plugins:
 
 ```bash
 pip install -e . --no-deps
-pip install -e plugins/jupyterlab
+pip install -e plugins/login
+pip install -e plugins/auth
 pip install -e plugins/contents
 pip install -e plugins/kernels
 pip install -e plugins/terminals
+pip install -e plugins/lab
+pip install -e plugins/jupyterlab
 pip install -e plugins/nbconvert
 pip install -e plugins/yjs
-pip install -e plugins/auth
 
 # you should also install the latest FPS:
 pip install git+https://github.com/jupyter-server/fps
@@ -87,7 +89,7 @@ You can currently authenticate as an anonymous user, or
 ## With collaborative editing
 
 ```bash
-jupyverse --open-browser --Lab.collaborative
+jupyverse --open-browser --authenticator.collaborative
 ```
 
 This is especially interesting if you are "user-authenticated", since your will appear as the

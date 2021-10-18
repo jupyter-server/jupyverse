@@ -60,6 +60,7 @@ jobs:
           pip install -e plugins/nbconvert
           pip install -e plugins/yjs
           pip install -e plugins/auth
+          pip install -e plugins/login
       - name: Check Release
         if: ${{ matrix.group == 'check_release' }}
         uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v1
