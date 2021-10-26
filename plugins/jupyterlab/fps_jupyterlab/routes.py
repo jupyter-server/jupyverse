@@ -15,6 +15,7 @@ from fps_auth.config import get_auth_config  # type: ignore
 
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_lab.utils import get_federated_extensions
 
 router = APIRouter()
 prefix_dir, federated_extensions = init_router(router, "lab")
@@ -81,8 +82,8 @@ INDEX_HTML = """\
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><
-title>JupyterLab</title>
+<meta charset="utf-8">
+<title>JupyterLab</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script id="jupyter-config-data" type="application/json">PAGE_CONFIG</script>
 <script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.VENDOR_ID.js"></script>
@@ -129,6 +130,9 @@ def get_index(workspace, collaborative, base_url="/"):
         break
     
     full_static_url = f"{base_url}static/lab"
+    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
+    federated_extensions, disabled_extension = get_federated_extensions(extensions_dir)
+
     page_config = {
         "appName": "JupyterLab",
         "appNamespace": "lab",
@@ -137,7 +141,7 @@ def get_index(workspace, collaborative, base_url="/"):
         "baseUrl": base_url,
         "cacheFiles": False,
         "collaborative": collaborative,
-        "disabledExtensions": [],
+        "disabledExtensions": disabled_extension,
         "exposeAppInBrowser": False,
         "extraLabextensionsPath": [],
         "federated_extensions": federated_extensions,

@@ -17,33 +17,23 @@ from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 
 from .config import get_lab_config  # type: ignore
+from .utils import get_federated_extensions
 
 
 def init_router(router, redirect_after_root):
     prefix_dir: Path = Path(sys.prefix)
     LOCALE = "en"
 
-    federated_extensions = []
+    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
+    federated_extensions, _ = get_federated_extensions(extensions_dir)
 
-    for path in glob(
-        str(prefix_dir / "share" / "jupyter" / "labextensions" / "**" / "package.json"),
-        recursive=True,
-    ):
-        with open(path) as f:
-            package = json.load(f)
-        name = package["name"]
-        extension = package["jupyterlab"]["_build"]
-        extension["name"] = name
-        federated_extensions.append(extension)
+    for ext in federated_extensions:
+        print(ext)
+        name = ext["name"]
         router.mount(
             f"/lab/extensions/{name}/static",
             StaticFiles(
-                directory=prefix_dir
-                / "share"
-                / "jupyter"
-                / "labextensions"
-                / name
-                / "static"
+                directory=prefix_dir / "share" / "jupyter" / "labextensions" / name  / "static"
             ),
             name=name,
         )
