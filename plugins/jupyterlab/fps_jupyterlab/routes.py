@@ -78,11 +78,18 @@ async def get_workspace(
 
 
 INDEX_HTML = """\
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>JupyterLab</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><
+title>JupyterLab</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script id="jupyter-config-data" type="application/json">PAGE_CONFIG</script>
-<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"
-></script></head><body><script>/* Remove token from URL. */
+<script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.VENDOR_ID.js"></script>
+<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"></script>
+</head>
+<body>
+<script>/* Remove token from URL. */
   (function () {
     var location = window.location;
     var search = location.search;
@@ -106,7 +113,10 @@ INDEX_HTML = """\
     }
 
     window.history.replaceState({ }, '', url);
-  })();</script></body></html>
+  })();
+</script>
+</body>
+</html>
 """
 
 
@@ -114,6 +124,10 @@ def get_index(workspace, collaborative, base_url="/"):
     for path in (prefix_dir / "share" / "jupyter" / "lab" / "static").glob("main.*.js"):
         main_id = path.name.split(".")[1]
         break
+    for path in (prefix_dir / "share" / "jupyter" / "lab" / "static").glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
+        vendor_id = path.name.split(".")[1]
+        break
+    
     full_static_url = f"{base_url}static/lab"
     page_config = {
         "appName": "JupyterLab",
@@ -164,6 +178,7 @@ def get_index(workspace, collaborative, base_url="/"):
         INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
         .replace("FULL_STATIC_URL", full_static_url)
         .replace("MAIN_ID", main_id)
+        .replace("VENDOR_ID", vendor_id)
     )
     return index
 
