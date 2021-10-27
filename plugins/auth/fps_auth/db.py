@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi_users.db import SQLAlchemyBaseUserTable, SQLAlchemyUserDatabase  # type: ignore
 from fastapi_users.db import SQLAlchemyBaseOAuthAccountTable  # type: ignore
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
-from sqlalchemy import Boolean, String, Text, Column  # type: ignore
+from sqlalchemy import Boolean, String, Text, Enum, Column  # type: ignore
 import sqlalchemy  # type: ignore
 import databases  # type: ignore
 from fps.config import get_config  # type: ignore
@@ -12,6 +12,7 @@ from fps.config import get_config  # type: ignore
 from .config import AuthConfig
 from .models import (
     UserDB,
+    Role
 )
 
 auth_config = get_config(AuthConfig)
@@ -43,14 +44,16 @@ Base: DeclarativeMeta = declarative_base()
 
 
 class UserTable(Base, SQLAlchemyBaseUserTable):
-    anonymous = Column(Boolean, default=True, nullable=False)
+    username = Column(String(length=32), nullable=False, unique=True)
     email = Column(String(length=32), nullable=False, unique=True)
-    username = Column(String(length=32), nullable=True, unique=True)
+    role = Column(Enum(Role), nullable=False)
+    anonymous = Column(Boolean, nullable=False)
+    connected = Column(Boolean, nullable=False)
     name = Column(String(length=32), nullable=True)
     color = Column(String(length=32), nullable=True)
-    avatar = Column(String(length=32), nullable=True)
-    workspace = Column(Text(), nullable=False)
-    settings = Column(Text(), nullable=False)
+    avatar_url = Column(String(length=32), nullable=True)
+    workspace = Column(Text(), nullable=True)
+    settings = Column(Text(), nullable=True)
 
 
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTable, Base):

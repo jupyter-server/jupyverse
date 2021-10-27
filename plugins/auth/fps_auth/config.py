@@ -13,7 +13,7 @@ class AuthConfig(PluginModel):
     mode: Literal["noauth", "token", "user"] = "token"
     token: str = str(uuid4())
     collaborative: bool = False
-    global_email: str = "guest@jupyter.com"
+    global_email: str = "jovyan@jupyter.com"
     cookie_secure: bool = (
         False  # FIXME: should default to True, and set to False for tests
     )

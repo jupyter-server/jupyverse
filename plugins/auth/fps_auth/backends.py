@@ -15,7 +15,7 @@ from fps.logging import get_configured_logger  # type: ignore
 
 from .config import get_auth_config
 from .db import secret, get_user_db
-from .models import User, UserDB, UserCreate, UserUpdate
+from .models import User, UserDB, UserCreate, UserUpdate, Role
 
 logger = get_configured_logger("auth")
 
@@ -25,7 +25,7 @@ class NoAuthAuthentication(BaseAuthentication):
         super().__init__(name, logout=False)
         self.scheme = None  # type: ignore
 
-    async def __call__(self, credentials, user_manager):
+    async def __call__(self, credentials, user_manager: UserManager):
         active_user = await user_manager.user_db.get_by_email(
             get_auth_config().global_email
         )
@@ -52,6 +52,11 @@ github_authentication = GitHubOAuth2(
 class UserManager(BaseUserManager[UserCreate, UserDB]):
     user_db_model = UserDB
 
+    async def on_after_request_verify(self, user: UserDB, token: str, request: Optional[Request] = None):
+        super().on_after_request_verify(user, token, request)
+        user.connected = True
+        await self.user_db.update(user)
+
     async def on_after_register(self, user: UserDB, request: Optional[Request] = None):
         for oauth_account in user.oauth_accounts:
             if oauth_account.oauth_name == "github":
@@ -61,14 +66,12 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
                             f"https://api.github.com/user/{oauth_account.account_id}"
                         )
                     ).json()
-
-                user.anonymous = False
+                
                 user.username = r["login"]
+                user.anonymous = False
                 user.name = r["name"]
-                user.color = None
-                user.avatar = r["avatar_url"]
-                user.workspace = "{}"
-                user.settings = "{}"
+                user.avatar_url = r["avatar_url"]
+                user.is_verified = True
 
         await self.user_db.update(user)
 
@@ -81,12 +84,12 @@ async def get_enabled_backends(auth_config=Depends(get_auth_config)):
     if auth_config.mode == "noauth" and not auth_config.collaborative:
         return [noauth_authentication, github_cookie_authentication]
     else:
-        return [cookie_authentication, github_cookie_authentication]
+        return [github_cookie_authentication, cookie_authentication]
 
 
 fapi_users = FastAPIUsers(
     get_user_manager,
-    [noauth_authentication, cookie_authentication, github_cookie_authentication],
+    [github_cookie_authentication, noauth_authentication, cookie_authentication],
     User,
     UserCreate,
     UserUpdate,
@@ -99,12 +102,20 @@ async def create_guest(user_db, auth_config):
     user_id = str(uuid4())
     guest = UserDB(
         id=user_id,
-        anonymous=True,
-        email=f"{user_id}@jupyter.com",
         username=f"{user_id}@jupyter.com",
-        hashed_password="",
+        email=f"{user_id}@jupyter.com",
+        role=Role.READ,
+        anonymous=True,
+        connected=False,
+        name=None,
+        color=None,
+        avatar_url=None,
         workspace=global_user.workspace,
         settings=global_user.settings,
+        hashed_password="",
+        is_superuser=False,
+        is_active=True,
+        is_verified=False,
     )
     await user_db.create(guest)
     return guest
