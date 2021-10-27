@@ -16,7 +16,7 @@ from .backends import (
     cookie_authentication,
     github_authentication,
 )
-from .models import User, UserDB
+from .models import User, UserDB, Role
 
 logger = get_configured_logger("auth")
 
@@ -42,13 +42,18 @@ async def startup():
     else:
         global_user = UserDB(
             id=uuid4(),
-            anonymous=True,
+            username="jovyan",
             email=auth_config.global_email,
-            username=auth_config.global_email,
+            role=Role.ADMIN,
+            anonymous=False,
+            connected=False,
+            name="jovyan",
+            color=None,
+            avatar_url=None,
             hashed_password=auth_config.token,
             is_superuser=True,
             is_active=True,
-            is_verified=True,
+            is_verified=True
         )
         await user_db.create(global_user)
 
@@ -66,10 +71,23 @@ async def shutdown():
     await database.disconnect()
 
 
-@router.get("/auth/users")
+@router.get("/auth/collaborators")
 async def get_users(user: User = Depends(current_user)):
-    users = await session.query(UserTable).all()
-    return [user for user in users if user.is_active]
+    # TODO: create a db request that returns non critical info
+    users = session.query(UserTable).filter(UserTable.id != user.id).all()
+    resp = []
+    for user in users:
+        resp.append({
+            "id": user.id,
+            "username": user.username,
+            "anonymous": user.anonymous,
+            "name": user.name,
+            "color": user.color,
+            "role": user.role,
+            "email": user.email,
+            "avatar_url": user.avatar_url
+        })
+    return resp
 
 
 # Cookie based auth login and logout

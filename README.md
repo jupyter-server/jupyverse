@@ -31,15 +31,15 @@ Note: at this stage of development, it is preferable to install from sources (se
 Clone this repository and install the needed plugins:
 
 ```bash
-pip install -e . --no-deps
-pip install -e plugins/login
-pip install -e plugins/auth
-pip install -e plugins/contents
-pip install -e plugins/kernels
-pip install -e plugins/terminals
-pip install -e plugins/lab
-pip install -e plugins/jupyterlab
-pip install -e plugins/nbconvert
+pip install -e . --no-deps && \
+pip install -e plugins/login && \
+pip install -e plugins/auth && \
+pip install -e plugins/contents && \
+pip install -e plugins/kernels && \
+pip install -e plugins/terminals && \
+pip install -e plugins/lab && \
+pip install -e plugins/jupyterlab && \
+pip install -e plugins/nbconvert && \
 pip install -e plugins/yjs
 
 # you should also install the latest FPS:
