@@ -72,5 +72,5 @@ oauth_accounts = OAuthAccount.__table__
 user_db = SQLAlchemyUserDatabase(UserDB, database, users, oauth_accounts)
 
 
-def get_user_db():
+def get_user_db() -> SQLAlchemyUserDatabase:
     yield user_db

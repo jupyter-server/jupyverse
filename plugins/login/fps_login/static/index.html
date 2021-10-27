@@ -86,10 +86,17 @@
 				window.location.href = data.authorization_url;
 			}).catch( e => console.debug(e) );
 		};
+		
+		const input = document.getElementById('token_input');
+		input.addEventListener("keyup", (event) => {
+			if (event.keyCode === 13) {
+				event.preventDefault();
+				window.location.href = location.origin + "/?token=" + input.value;
+			}
+		});
 
 		document.getElementById('token_btn').onclick = () => {
-			const token = document.getElementById('token_input').value;
-			window.location.href = location.origin + "/?token=" + token;
+			window.location.href = location.origin + "/?token=" + input.value;
 		};
   </script>
 </body>

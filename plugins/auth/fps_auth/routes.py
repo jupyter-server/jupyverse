@@ -71,23 +71,22 @@ async def shutdown():
     await database.disconnect()
 
 
-@router.get("/auth/users")
+@router.get("/auth/collaborators")
 async def get_users(user: User = Depends(current_user)):
     # TODO: create a db request that returns non critical info
-    users = session.query(UserTable).all()
+    users = session.query(UserTable).filter(UserTable.id != user.id).all()
     resp = []
     for user in users:
-        if user.connected and not user.is_superuser:
-            resp.append({
-                "id": user.id,
-                "username": user.username,
-                "anonymous": user.anonymous,
-                "name": user.name,
-                "color": user.color,
-                "role": user.role,
-                "email": user.email,
-                "avatar_url": user.avatar_url
-            })
+        resp.append({
+            "id": user.id,
+            "username": user.username,
+            "anonymous": user.anonymous,
+            "name": user.name,
+            "color": user.color,
+            "role": user.role,
+            "email": user.email,
+            "avatar_url": user.avatar_url
+        })
     return resp
 
 

@@ -12,7 +12,6 @@ class Role(Enum):
     WRITE = 3
     RUN = 4
 
-
 class JupyterUser(BaseModel):
     username: str = f"{uuid4()}@jupyter.com"
     email: str = f"{uuid4()}@jupyter.com"
