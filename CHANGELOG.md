@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.17
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.16...27c9bb97b8a71ca6f645cf2db54181340dc75b49))
+
+### Merged PRs
+
+- Support binary buffers [#110](https://github.com/jupyter-server/jupyverse/pull/110) ([@davidbrochart](https://github.com/davidbrochart))
+- Add login plugin to Jupyter Releaser Python packages [#108](https://github.com/jupyter-server/jupyverse/pull/108) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-18&to=2021-11-03&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-18..2021-11-03&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.16
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.15...b03b1423ecc31e674d2299a8bf97f6f65443ccf0))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-14&to=2021-10-18&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-14..2021-10-18&type=Issues) | [@hbcarlos](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ahbcarlos+updated%3A2021-10-14..2021-10-18&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2021-10-14..2021-10-18&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.15
 
