@@ -1,5 +1,7 @@
 import hmac
 import hashlib
+import json
+import struct
 from datetime import datetime, timezone
 from uuid import uuid4
 from typing import List, Dict, Tuple, Any, Optional, cast
@@ -11,6 +13,21 @@ protocol_version_info = (5, 3)
 protocol_version = "%i.%i" % protocol_version_info
 
 DELIM = b"<IDS|MSG>"
+
+
+def get_binary(msg: Dict[str, Any]) -> Optional[bytes]:
+    if not msg["buffers"]:
+        return None
+    buffers = msg.pop("buffers")
+    bmsg = json.dumps(msg).encode("utf8")
+    buffers.insert(0, bmsg)
+    n = len(buffers)
+    offsets = [4 * (n + 1)]
+    for b in buffers[:-1]:
+        offsets.append(offsets[-1] + len(b))
+    header = struct.pack("!" + "I" * (n + 1), n, *offsets)
+    buffers.insert(0, header)
+    return b"".join(buffers)
 
 
 def pack(obj: Dict[str, Any]) -> bytes:

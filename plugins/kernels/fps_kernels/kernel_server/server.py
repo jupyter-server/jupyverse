@@ -13,7 +13,7 @@ from .connect import (
     connect_channel,
     cfg_t,
 )  # type: ignore
-from .message import receive_message, send_message, create_message  # type: ignore
+from .message import receive_message, send_message, create_message, get_binary  # type: ignore
 
 
 kernels: dict = {}
@@ -169,7 +169,11 @@ class KernelServer:
             session = msg["parent_header"]["session"]
             if session in self.sessions:
                 websocket = self.sessions[session]
-                await websocket.send_json(msg)
+                bmsg = get_binary(msg)
+                if bmsg is None:
+                    await websocket.send_json(msg)
+                else:
+                    await websocket.send_bytes(bmsg)
 
     async def listen_control(self):
         while True:
@@ -178,7 +182,11 @@ class KernelServer:
             session = msg["parent_header"]["session"]
             if session in self.sessions:
                 websocket = self.sessions[session]
-                await websocket.send_json(msg)
+                bmsg = get_binary(msg)
+                if bmsg is None:
+                    await websocket.send_json(msg)
+                else:
+                    await websocket.send_bytes(bmsg)
 
     async def listen_iopub(self):
         while True:
@@ -186,7 +194,11 @@ class KernelServer:
             msg["channel"] = "iopub"
             for websocket in self.sessions.values():
                 try:
-                    await websocket.send_json(msg)
+                    bmsg = get_binary(msg)
+                    if bmsg is None:
+                        await websocket.send_json(msg)
+                    else:
+                        await websocket.send_bytes(bmsg)
                 except Exception:
                     pass
             if "content" in msg and "execution_state" in msg["content"]:
