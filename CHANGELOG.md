@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.18
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.17...872da1507741e8be75961e8844ed9c7f92ae658d))
+
+### Merged PRs
+
+- Fix binary buffers [#112](https://github.com/jupyter-server/jupyverse/pull/112) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-11-03&to=2021-11-04&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-11-03..2021-11-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.17
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.16...27c9bb97b8a71ca6f645cf2db54181340dc75b49))
@@ -16,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-10-18&to=2021-11-03&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-10-18..2021-11-03&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.16
 
