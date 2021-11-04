@@ -1,10 +1,12 @@
 import os
+import json
 import asyncio
 import signal
 from datetime import datetime
 from typing import Iterable, Optional, List, Dict, cast
 
 from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
+from starlette.websockets import WebSocketState
 
 from .connect import (
     write_connection_file as _write_connection_file,
@@ -13,7 +15,13 @@ from .connect import (
     connect_channel,
     cfg_t,
 )  # type: ignore
-from .message import receive_message, send_message, create_message, get_binary  # type: ignore
+from .message import (
+    receive_message,
+    send_message,
+    create_message,
+    to_binary,
+    from_binary,
+)  # type: ignore
 
 
 kernels: dict = {}
@@ -139,22 +147,14 @@ class KernelServer:
     async def listen_web(self, websocket: WebSocket):
         try:
             while True:
-                msg = await websocket.receive_json()
+                msg = await receive_json_or_bytes(websocket)
                 msg_type = msg["header"]["msg_type"]
                 if (msg_type in self.blocked_messages) or (
                     self.allowed_messages is not None
                     and msg_type not in self.allowed_messages
                 ):
                     continue
-                channel = msg["channel"]
-                msg = {
-                    "header": msg["header"],
-                    "msg_id": msg["header"]["msg_id"],
-                    "msg_type": msg["header"]["msg_type"],
-                    "parent_header": msg["parent_header"],
-                    "content": msg["content"],
-                    "metadata": msg["metadata"],
-                }
+                channel = msg.pop("channel")
                 if channel == "shell":
                     send_message(msg, self.shell_channel, self.key)
                 elif channel == "control":
@@ -169,11 +169,7 @@ class KernelServer:
             session = msg["parent_header"]["session"]
             if session in self.sessions:
                 websocket = self.sessions[session]
-                bmsg = get_binary(msg)
-                if bmsg is None:
-                    await websocket.send_json(msg)
-                else:
-                    await websocket.send_bytes(bmsg)
+                await send_json_or_bytes(websocket, msg)
 
     async def listen_control(self):
         while True:
@@ -182,11 +178,7 @@ class KernelServer:
             session = msg["parent_header"]["session"]
             if session in self.sessions:
                 websocket = self.sessions[session]
-                bmsg = get_binary(msg)
-                if bmsg is None:
-                    await websocket.send_json(msg)
-                else:
-                    await websocket.send_bytes(bmsg)
+                await send_json_or_bytes(websocket, msg)
 
     async def listen_iopub(self):
         while True:
@@ -194,11 +186,7 @@ class KernelServer:
             msg["channel"] = "iopub"
             for websocket in self.sessions.values():
                 try:
-                    bmsg = get_binary(msg)
-                    if bmsg is None:
-                        await websocket.send_json(msg)
-                    else:
-                        await websocket.send_bytes(bmsg)
+                    await send_json_or_bytes(websocket, msg)
                 except Exception:
                     pass
             if "content" in msg and "execution_state" in msg["content"]:
@@ -219,3 +207,23 @@ class KernelServer:
                     pass
                 else:
                     break
+
+
+async def receive_json_or_bytes(websocket):
+    assert websocket.application_state == WebSocketState.CONNECTED
+    message = await websocket.receive()
+    websocket._raise_on_disconnect(message)
+    if "text" in message:
+        return json.loads(message["text"])
+    msg = from_binary(message["bytes"])
+    return msg
+
+
+async def send_json_or_bytes(websocket, msg):
+    if "traceback" in msg["content"]:
+        print("\n".join(msg["content"]["traceback"]))
+    bmsg = to_binary(msg)
+    if bmsg is None:
+        await websocket.send_json(msg)
+    else:
+        await websocket.send_bytes(bmsg)
