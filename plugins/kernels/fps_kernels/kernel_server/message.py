@@ -15,7 +15,7 @@ protocol_version = "%i.%i" % protocol_version_info
 DELIM = b"<IDS|MSG>"
 
 
-def get_binary(msg: Dict[str, Any]) -> Optional[bytes]:
+def to_binary(msg: Dict[str, Any]) -> Optional[bytes]:
     if not msg["buffers"]:
         return None
     buffers = msg.pop("buffers")
@@ -28,6 +28,18 @@ def get_binary(msg: Dict[str, Any]) -> Optional[bytes]:
     header = struct.pack("!" + "I" * (n + 1), n, *offsets)
     buffers.insert(0, header)
     return b"".join(buffers)
+
+
+def from_binary(bmsg: bytes) -> Dict[str, Any]:
+    n = struct.unpack("!i", bmsg[:4])[0]
+    offsets = list(struct.unpack("!" + "I" * n, bmsg[4 : 4 * (n + 1)]))  # noqa
+    offsets.append(None)
+    buffers = []
+    for start, stop in zip(offsets[:-1], offsets[1:]):
+        buffers.append(bmsg[start:stop])
+    msg = json.loads(buffers[0].decode("utf8"))
+    msg["buffers"] = buffers[1:]
+    return msg
 
 
 def pack(obj: Dict[str, Any]) -> bytes:
@@ -53,7 +65,7 @@ def serialize(msg: Dict[str, Any], key: str) -> List[bytes]:
         pack(msg["metadata"]),
         pack(msg.get("content", {})),
     ]
-    to_send = [DELIM, sign(message, key)] + message
+    to_send = [DELIM, sign(message, key)] + message + msg.get("buffers", [])
     return to_send
 
 
@@ -76,8 +88,7 @@ def feed_identities(msg_list: List[bytes]) -> Tuple[List[bytes], List[bytes]]:
 
 
 def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
-    to_send = serialize(msg, key)
-    sock.send_multipart(to_send, copy=True)
+    sock.send_multipart(serialize(msg, key), copy=True)
 
 
 async def receive_message(
@@ -128,5 +139,6 @@ def create_message(
         "parent_header": {},
         "content": content,
         "metadata": {},
+        "buffers": [],
     }
     return msg
