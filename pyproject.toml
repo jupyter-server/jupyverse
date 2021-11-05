@@ -19,4 +19,4 @@ src = "jupyverse/__init__.py"
 skip = ["check-links", "check-manifest"]
 
 [tool.jupyter-releaser.options]
-python_packages = [".", "plugins/auth", "plugins/contents", "plugins/jupyterlab", "plugins/kernels", "plugins/lab", "plugins/nbconvert", "plugins/retrolab", "plugins/terminals", "plugins/yjs", "plugins/login"]
+python_packages = [(".", "jupyverse"), ("plugins/auth", "fps-auth"), ("plugins/contents", "fps-contents"), ("plugins/jupyterlab", "fps-jupyterlab"), ("plugins/kernels", "fps-kernels"), ("plugins/lab", "fps-lab"), ("plugins/nbconvert", "fps-nbconvert"), ("plugins/retrolab", "fps-retrolab"), ("plugins/terminals", "fps-terminals"), ("plugins/yjs", "fps-yjs"), ("plugins/login", "fps-login")]
