@@ -94,7 +94,7 @@ fapi_users = FastAPIUsers(
 )
 
 
-async def create_guest(user_db, auth_config=Depends(get_auth_config)):
+async def create_guest(user_db, auth_config):
     global_user = await user_db.get_by_email(auth_config.global_email)
     user_id = str(uuid4())
     guest = UserDB(
@@ -126,7 +126,7 @@ async def current_user(
 
     if auth_config.collaborative:
         if not active_user and auth_config.mode == "noauth":
-            active_user = await create_guest(user_db)
+            active_user = await create_guest(user_db, auth_config)
             await cookie_authentication.get_login_response(
                 active_user, response, user_manager
             )
@@ -134,7 +134,7 @@ async def current_user(
         elif not active_user and auth_config.mode == "token":
             global_user = await user_db.get_by_email(auth_config.global_email)
             if global_user and global_user.hashed_password == token:
-                active_user = await create_guest(user_db)
+                active_user = await create_guest(user_db, auth_config)
                 await cookie_authentication.get_login_response(
                     active_user, response, user_manager
                 )
