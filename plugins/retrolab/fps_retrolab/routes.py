@@ -13,6 +13,7 @@ from fps_auth.config import get_auth_config  # type: ignore
 
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_lab.utils import get_federated_extensions  # type: ignore
 
 router = APIRouter()
 prefix_dir, federated_extensions = init_router(router, "retro/tree")
@@ -40,7 +41,7 @@ retro_federated_extensions = [
         "name": "@retrolab/lab-extension",
         "style": "./style",
     }
-] + federated_extensions
+]
 
 
 @router.get("/retro/tree", response_class=HTMLResponse)
@@ -91,6 +92,8 @@ async def get_terminal(
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):
+    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
+    federated_extensions, disabled_extension = get_federated_extensions(extensions_dir)
     page_config = {
         "appName": "RetroLab",
         "appNamespace": "retro",
@@ -100,9 +103,9 @@ def get_index(doc_name, retro_page, collaborative, base_url="/"):
         "baseUrl": base_url,
         "cacheFiles": True,
         "collaborative": collaborative,
-        "disabledExtensions": [],
+        "disabledExtensions": disabled_extension,
         "extraLabextensionsPath": [],
-        "federated_extensions": retro_federated_extensions,
+        "federated_extensions": retro_federated_extensions + federated_extensions,
         "frontendUrl": "/retro/",
         "fullAppUrl": f"{base_url}lab",
         "fullLabextensionsUrl": f"{base_url}lab/extensions",

@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from http import HTTPStatus
 
 import jupyterlab  # type: ignore
@@ -15,13 +16,23 @@ from fps_auth.config import get_auth_config  # type: ignore
 
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_lab.utils import get_federated_extensions  # type: ignore
+
+from .config import get_jlab_config
 
 router = APIRouter()
 prefix_dir, federated_extensions = init_router(router, "lab")
+jupyterlab_dir = Path(jupyterlab.__file__).parent.parent
+
+config = get_jlab_config()
+if config.dev_mode:
+    static_lab_dir = jupyterlab_dir / "dev_mode" / "static"
+else:
+    static_lab_dir = prefix_dir / "share" / "jupyter" / "lab" / "static"
 
 router.mount(
     "/static/lab",
-    StaticFiles(directory=prefix_dir / "share" / "jupyter" / "lab" / "static"),
+    StaticFiles(directory=static_lab_dir),
     name="static",
 )
 
@@ -81,8 +92,9 @@ INDEX_HTML = """\
 <!doctype html><html lang="en"><head><meta charset="utf-8"><title>JupyterLab</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script id="jupyter-config-data" type="application/json">PAGE_CONFIG</script>
-<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"
-></script></head><body><script>/* Remove token from URL. */
+VENDORS_NODE_MODULES
+<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"></script>
+</head><body><script>/* Remove token from URL. */
   (function () {
     var location = window.location;
     var search = location.search;
@@ -111,10 +123,19 @@ INDEX_HTML = """\
 
 
 def get_index(workspace, collaborative, base_url="/"):
-    for path in (prefix_dir / "share" / "jupyter" / "lab" / "static").glob("main.*.js"):
+    for path in (static_lab_dir).glob("main.*.js"):
         main_id = path.name.split(".")[1]
         break
+    vendor_id = None
+    for path in (static_lab_dir).glob(
+        "vendors-node_modules_whatwg-fetch_fetch_js.*.js"
+    ):
+        vendor_id = path.name.split(".")[1]
+        break
     full_static_url = f"{base_url}static/lab"
+    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
+    federated_extensions, disabled_extension = get_federated_extensions(extensions_dir)
+
     page_config = {
         "appName": "JupyterLab",
         "appNamespace": "lab",
@@ -123,7 +144,7 @@ def get_index(workspace, collaborative, base_url="/"):
         "baseUrl": base_url,
         "cacheFiles": False,
         "collaborative": collaborative,
-        "disabledExtensions": [],
+        "disabledExtensions": disabled_extension,
         "exposeAppInBrowser": False,
         "extraLabextensionsPath": [],
         "federated_extensions": federated_extensions,
@@ -165,6 +186,14 @@ def get_index(workspace, collaborative, base_url="/"):
         .replace("FULL_STATIC_URL", full_static_url)
         .replace("MAIN_ID", main_id)
     )
+    if vendor_id:
+        index = index.replace(
+            "VENDORS_NODE_MODULES",
+            '<script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.'
+            f'{vendor_id}.js"></script>',
+        )
+    else:
+        index = index.replace("VENDORS_NODE_MODULES", "")
     return index
 
 
