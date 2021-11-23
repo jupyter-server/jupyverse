@@ -3,7 +3,7 @@ from fps.hooks import register_config, register_plugin_name  # type: ignore
 
 
 class JupyterLabConfig(PluginModel):
-    pass
+    dev_mode: bool = False
 
 
 def get_jlab_config():
