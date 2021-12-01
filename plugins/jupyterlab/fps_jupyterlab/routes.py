@@ -44,7 +44,9 @@ async def get_lab(
     auth_config=Depends(get_auth_config),
 ):
     return HTMLResponse(
-        get_index("default", auth_config.collaborative, lab_config.base_url)
+        get_index(
+            "default", auth_config.collaborative, config.dev_mode, lab_config.base_url
+        )
     )
 
 
@@ -53,7 +55,9 @@ async def load_workspace(
     path, lab_config=Depends(get_lab_config), auth_config=Depends(get_auth_config)
 ):
     return HTMLResponse(
-        get_index("default", auth_config.collaborative, lab_config.base_url)
+        get_index(
+            "default", auth_config.collaborative, config.dev_mode, lab_config.base_url
+        )
     )
 
 
@@ -85,7 +89,9 @@ async def get_workspace(
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, auth_config.collaborative, lab_config.base_url)
+    return get_index(
+        name, auth_config.collaborative, config.dev_mode, lab_config.base_url
+    )
 
 
 INDEX_HTML = """\
@@ -122,7 +128,7 @@ VENDORS_NODE_MODULES
 """
 
 
-def get_index(workspace, collaborative, base_url="/"):
+def get_index(workspace, collaborative, dev_mode, base_url="/"):
     for path in (static_lab_dir).glob("main.*.js"):
         main_id = path.name.split(".")[1]
         break
@@ -144,6 +150,7 @@ def get_index(workspace, collaborative, base_url="/"):
         "baseUrl": base_url,
         "cacheFiles": False,
         "collaborative": collaborative,
+        "devMode": dev_mode,
         "disabledExtensions": disabled_extension,
         "exposeAppInBrowser": False,
         "extraLabextensionsPath": [],
