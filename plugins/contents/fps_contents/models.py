@@ -19,7 +19,7 @@ class Content(BaseModel):
     name: str
     path: str
     last_modified: Optional[str]
-    created: str
+    created: Optional[str]
     content: Optional[Union[str, List[Dict]]]
     format: Optional[str]
     mimetype: Optional[str]
