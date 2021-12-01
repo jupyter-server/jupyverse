@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
 from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.backends import current_user  # type: ignore
@@ -165,15 +165,14 @@ def get_path_content(path: Path, get_content: bool):
                 with open(path) as f:
                     content = f.read()
             except Exception:
-                # FIXME: return error code?
-                pass
+                raise HTTPException(status_code=404, detail="Item not found")
     format: Optional[str] = None
     if path.is_dir():
         size = None
         type = "directory"
         format = "json"
         mimetype = None
-    else:
+    elif path.is_file():
         size = get_file_size(path)
         if path.suffix == ".ipynb":
             type = "notebook"
@@ -187,6 +186,8 @@ def get_path_content(path: Path, get_content: bool):
             type = "file"
             format = None
             mimetype = "text/plain"
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
 
     return {
         "name": path.name,
