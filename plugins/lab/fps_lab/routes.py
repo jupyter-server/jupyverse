@@ -129,7 +129,7 @@ def init_router(router, redirect_after_root):
             prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
         ) as f:
             package = json.load(f)
-        if name0 == "@jupyterlab":
+        if name0 in ["@jupyterlab", "@retrolab"]:
             lab_or_extensions = Path("lab")
         else:
             lab_or_extensions = Path("labextensions") / name0 / name1
