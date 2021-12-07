@@ -3,9 +3,6 @@
 
 # jupyverse
 
-**jupyverse is experimental and should not be used in place of
-[jupyter-server](https://github.com/jupyter-server/jupyter_server), which is the official Jupyter server.**
-
 A set of [FPS](https://github.com/jupyter-server/fps) plugins implementing a Jupyter server.
 
 Try it online:
@@ -13,7 +10,7 @@ Try it online:
 - RetroLab frontend: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?urlpath=jupyverse-rlab)
 
 
-## Motivation for Experimental Server
+## Motivation
 
 For the motivations behind this project, please refer to this issue in the
 [Jupyter server team compass](https://github.com/jupyter-server/team-compass/issues/11).
@@ -21,10 +18,14 @@ For the motivations behind this project, please refer to this issue in the
 ## Install
 
 ```bash
-pip install jupyverse[jupyterlab]
+pip install jupyverse[jupyterlab]  # for the JupyterLab front-end
+# or
+pip install jupyverse[retrolab]  # for the RetroLab front-end
 ```
 
-Note: at this stage of development, it is preferable to install from sources (see below).
+Note: you cannot have both the JupyterLab and the RetroLab front-ends enabled at the same time.
+When switching e.g. from the JupyterLab to the RetroLab front-end, you need to
+`pip uninstall fps-jupyterlab` or launch Jupyverse with `--JupyterLab.enabled=false`.
 
 ## Development install
 
@@ -32,13 +33,13 @@ Clone this repository and install the needed plugins:
 
 ```bash
 pip install -e . --no-deps
+pip install -e plugins/jupyterlab
 pip install -e plugins/login
 pip install -e plugins/auth
 pip install -e plugins/contents
 pip install -e plugins/kernels
 pip install -e plugins/terminals
 pip install -e plugins/lab
-pip install -e plugins/jupyterlab
 pip install -e plugins/nbconvert
 pip install -e plugins/yjs
 
