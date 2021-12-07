@@ -1,3 +1,4 @@
+from http import HTTPStatus
 import json
 import os
 import shutil
@@ -6,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
 from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from starlette.requests import Request  # type: ignore
 
 from fps_auth.backends import current_user  # type: ignore
@@ -131,6 +132,23 @@ async def save_content(
         # FIXME: return error code?
         pass
     return Content(**get_path_content(Path(save_content.path), False))
+
+
+@router.delete(
+    "/api/contents/{path:path}",
+    status_code=204,
+)
+async def delete_content(
+    path,
+    user: User = Depends(current_user),
+):
+    p = Path(path)
+    if p.exists():
+        if p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+    return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 def get_file_modification_time(path: Path):
