@@ -71,7 +71,7 @@ async def edit_file(
     return get_index(name, "edit", auth_config.collaborative, lab_config.base_url)
 
 
-@router.get("/retro/consoles/{name}", response_class=HTMLResponse)
+@router.get("/retro/consoles/{name:path}", response_class=HTMLResponse)
 async def get_console(
     name: str,
     user: User = Depends(current_user),
