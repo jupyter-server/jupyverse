@@ -18,18 +18,37 @@ router = APIRouter()
 
 
 @router.post(
-    "/api/contents{directory:path}",
+    "/api/contents/{path:path}/checkpoints",
+    status_code=201,
+)
+async def create_checkpoint(path, user: User = Depends(current_user)):
+    src_path = Path(path)
+    dst_path = (
+        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+    )
+    try:
+        dst_path.parent.mkdir(exist_ok=True)
+        shutil.copyfile(src_path, dst_path)
+    except Exception:
+        # FIXME: return error code?
+        return []
+    mtime = get_file_modification_time(dst_path)
+    return Checkpoint(**{"id": "checkpoint", "last_modified": mtime})
+
+
+@router.post(
+    "/api/contents{path:path}",
     status_code=201,
 )
 async def create_content(
-    directory: Optional[str],
+    path: Optional[str],
     request: Request,
     user: User = Depends(current_user),
 ):
     create_content = CreateContent(**(await request.json()))
-    path = Path(create_content.path)
+    content_path = Path(create_content.path)
     if create_content.type == "notebook":
-        available_path = get_available_path(path / "Untitled.ipynb")
+        available_path = get_available_path(content_path / "Untitled.ipynb")
         with open(available_path, "w") as f:
             json.dump(
                 {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}, f
@@ -46,11 +65,13 @@ async def create_content(
             pass
     elif create_content.type == "directory":
         name = "Untitled Folder"
-        available_path = get_available_path(path / name, sep=" ")
+        available_path = get_available_path(content_path / name, sep=" ")
         available_path.mkdir(parents=True, exist_ok=True)
     else:
         assert create_content.ext is not None
-        available_path = get_available_path(path / ("untitled" + create_content.ext))
+        available_path = get_available_path(
+            content_path / ("untitled" + create_content.ext)
+        )
         open(available_path, "w").close()
 
     return Content(**get_path_content(available_path, False))
@@ -110,25 +131,6 @@ async def save_content(
         # FIXME: return error code?
         pass
     return Content(**get_path_content(Path(save_content.path), False))
-
-
-@router.post(
-    "/api/contents/{path:path}/checkpoints",
-    status_code=201,
-)
-async def create_checkpoint(path, user: User = Depends(current_user)):
-    src_path = Path(path)
-    dst_path = (
-        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-    )
-    try:
-        dst_path.parent.mkdir(exist_ok=True)
-        shutil.copyfile(src_path, dst_path)
-    except Exception:
-        # FIXME: return error code?
-        return []
-    mtime = get_file_modification_time(dst_path)
-    return Checkpoint(**{"id": "checkpoint", "last_modified": mtime})
 
 
 def get_file_modification_time(path: Path):
