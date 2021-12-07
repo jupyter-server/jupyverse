@@ -2,11 +2,36 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.26
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.25...0f2ab3e1dd6cddf6ecd8eb1a590f186df9b5552a))
+
+### Merged PRs
+
+- Update README [#135](https://github.com/jupyter-server/jupyverse/pull/135) ([@davidbrochart](https://github.com/davidbrochart))
+- Implement rename [#134](https://github.com/jupyter-server/jupyverse/pull/134) ([@davidbrochart](https://github.com/davidbrochart))
+- Implement file/folder delete [#133](https://github.com/jupyter-server/jupyverse/pull/133) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix opening of files and notebooks in directory [#132](https://github.com/jupyter-server/jupyverse/pull/132) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix file creation [#131](https://github.com/jupyter-server/jupyverse/pull/131) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix directory creation [#130](https://github.com/jupyter-server/jupyverse/pull/130) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix retro consoles [#129](https://github.com/jupyter-server/jupyverse/pull/129) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix retrolab extension handling [#128](https://github.com/jupyter-server/jupyverse/pull/128) ([@davidbrochart](https://github.com/davidbrochart))
+- Return 404 when content not found [#126](https://github.com/jupyter-server/jupyverse/pull/126) ([@davidbrochart](https://github.com/davidbrochart))
+- Pass dev_mode to JupyterLab front-end [#125](https://github.com/jupyter-server/jupyverse/pull/125) ([@davidbrochart](https://github.com/davidbrochart))
+- Support JupyterLab's dev mode, improve extension system [#124](https://github.com/jupyter-server/jupyverse/pull/124) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix create_guest [#123](https://github.com/jupyter-server/jupyverse/pull/123) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-11-05&to=2021-12-07&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-11-05..2021-12-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.25
 
 No merged PRs
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.24
 
