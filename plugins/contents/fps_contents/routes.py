@@ -12,22 +12,23 @@ from starlette.requests import Request  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 
-from .models import Checkpoint, Content, SaveContent
+from .models import Checkpoint, Content, SaveContent, CreateContent
 
 router = APIRouter()
 
 
 @router.post(
-    "/api/contents",
+    "/api/contents{directory:path}",
     status_code=201,
 )
 async def create_content(
+    directory: Optional[str],
     request: Request,
     user: User = Depends(current_user),
 ):
-    create_content = await request.json()
-    path = Path(create_content["path"])
-    if create_content["type"] == "notebook":
+    create_content = CreateContent(**(await request.json()))
+    path = Path(create_content.path)
+    if create_content.type == "notebook":
         available_path = get_available_path(path / "Untitled.ipynb")
         with open(available_path, "w") as f:
             json.dump(
@@ -43,8 +44,13 @@ async def create_content(
         except Exception:
             # FIXME: return error code?
             pass
+    elif create_content.type == "directory":
+        name = "Untitled Folder"
+        available_path = get_available_path(path / name, sep=" ")
+        available_path.mkdir(parents=True, exist_ok=True)
     else:
-        available_path = get_available_path(path / ("untitled" + create_content["ext"]))
+        assert create_content.ext is not None
+        available_path = get_available_path(path / ("untitled" + create_content.ext))
         open(available_path, "w").close()
 
     return Content(**get_path_content(available_path, False))
@@ -203,7 +209,7 @@ def get_path_content(path: Path, get_content: bool):
     }
 
 
-def get_available_path(path: Path):
+def get_available_path(path: Path, sep: str = ""):
     directory = path.parent
     name = Path(path.name)
     i = None
@@ -214,6 +220,8 @@ def get_available_path(path: Path):
         else:
             i_str = str(i)
             i += 1
+        if i_str:
+            i_str = sep + i_str
         available_path = directory / (name.stem + i_str + name.suffix)
         if not available_path.exists():
             return available_path
