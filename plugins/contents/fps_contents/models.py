@@ -15,6 +15,12 @@ class SaveContent(BaseModel):
     type: str
 
 
+class CreateContent(BaseModel):
+    ext: Optional[str]
+    path: str
+    type: str
+
+
 class Content(BaseModel):
     name: str
     path: str
