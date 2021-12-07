@@ -51,34 +51,34 @@ async def get_tree(
     return get_index("Tree", "tree", auth_config.collaborative, lab_config.base_url)
 
 
-@router.get("/retro/notebooks/{name}", response_class=HTMLResponse)
+@router.get("/retro/notebooks/{path:path}", response_class=HTMLResponse)
 async def get_notebook(
-    name: str,
+    path,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "notebooks", auth_config.collaborative, lab_config.base_url)
+    return get_index(path, "notebooks", auth_config.collaborative, lab_config.base_url)
 
 
-@router.get("/retro/edit/{name}", response_class=HTMLResponse)
+@router.get("/retro/edit/{path:path}", response_class=HTMLResponse)
 async def edit_file(
-    name: str,
+    path,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "edit", auth_config.collaborative, lab_config.base_url)
+    return get_index(path, "edit", auth_config.collaborative, lab_config.base_url)
 
 
-@router.get("/retro/consoles/{name:path}", response_class=HTMLResponse)
+@router.get("/retro/consoles/{path:path}", response_class=HTMLResponse)
 async def get_console(
-    name: str,
+    patn,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "consoles", auth_config.collaborative, lab_config.base_url)
+    return get_index(path, "consoles", auth_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
