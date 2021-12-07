@@ -13,7 +13,7 @@ from starlette.requests import Request  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 
-from .models import Checkpoint, Content, SaveContent, CreateContent
+from .models import Checkpoint, Content, SaveContent, CreateContent, RenameContent
 
 router = APIRouter()
 
@@ -149,6 +149,17 @@ async def delete_content(
         else:
             p.unlink()
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
+
+
+@router.patch("/api/contents/{path:path}")
+async def rename_content(
+    path,
+    request: Request,
+    user: User = Depends(current_user),
+):
+    rename_content = RenameContent(**(await request.json()))
+    Path(path).rename(rename_content.path)
+    return Content(**get_path_content(Path(rename_content.path), False))
 
 
 def get_file_modification_time(path: Path):

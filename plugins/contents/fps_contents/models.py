@@ -21,6 +21,10 @@ class CreateContent(BaseModel):
     type: str
 
 
+class RenameContent(BaseModel):
+    path: str
+
+
 class Content(BaseModel):
     name: str
     path: str
