@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Union, cast
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, Depends, HTTPException, Response
 from starlette.requests import Request  # type: ignore
+from anyio import open_file
 
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
@@ -50,9 +51,11 @@ async def create_content(
     content_path = Path(create_content.path)
     if create_content.type == "notebook":
         available_path = get_available_path(content_path / "Untitled.ipynb")
-        with open(available_path, "w") as f:
-            json.dump(
-                {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}, f
+        async with await open_file(available_path, "w") as f:
+            await f.write(
+                json.dumps(
+                    {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}
+                )
             )
         src_path = available_path
         dst_path = (
@@ -75,7 +78,7 @@ async def create_content(
         )
         open(available_path, "w").close()
 
-    return Content(**get_path_content(available_path, False))
+    return Content(**await get_path_content(available_path, False))
 
 
 @router.get("/api/contents")
@@ -83,7 +86,7 @@ async def get_root_content(
     content: int,
     user: User = Depends(current_user),
 ):
-    return Content(**get_path_content(Path(""), bool(content)))
+    return Content(**await get_path_content(Path(""), bool(content)))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
@@ -104,7 +107,7 @@ async def get_content(
     content: int,
     user: User = Depends(current_user),
 ):
-    return Content(**get_path_content(Path(path), bool(content)))
+    return Content(**await get_path_content(Path(path), bool(content)))
 
 
 @router.put("/api/contents/{path:path}")
@@ -114,7 +117,7 @@ async def save_content(
 ):
     save_content = SaveContent(**(await request.json()))
     try:
-        with open(save_content.path, "w") as f:
+        async with await open_file(save_content.path, "w") as f:
             if save_content.format == "json":
                 dict_content = cast(Dict, save_content.content)
                 if save_content.type == "notebook":
@@ -124,14 +127,14 @@ async def save_content(
                         and "orig_nbformat" in dict_content["metadata"]
                     ):
                         del dict_content["metadata"]["orig_nbformat"]
-                    json.dump(dict_content, f, indent=2)
+                    await f.write(json.dumps(dict_content, indent=2))
             else:
                 str_content = cast(str, save_content.content)
-                f.write(str_content)
+                await f.write(str_content)
     except Exception:
         # FIXME: return error code?
         pass
-    return Content(**get_path_content(Path(save_content.path), False))
+    return Content(**await get_path_content(Path(save_content.path), False))
 
 
 @router.delete(
@@ -159,7 +162,7 @@ async def rename_content(
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)
-    return Content(**get_path_content(Path(rename_content.path), False))
+    return Content(**await get_path_content(Path(rename_content.path), False))
 
 
 def get_file_modification_time(path: Path):
@@ -188,19 +191,19 @@ def is_file_writable(path: Path) -> bool:
     return False
 
 
-def get_path_content(path: Path, get_content: bool):
+async def get_path_content(path: Path, get_content: bool):
     content: Optional[Union[str, List[Dict]]] = None
     if get_content:
         if path.is_dir():
             content = [
-                get_path_content(subpath, get_content=False)
+                await get_path_content(subpath, get_content=False)
                 for subpath in path.iterdir()
                 if not subpath.name.startswith(".")
             ]
         elif path.is_file():
             try:
-                with open(path) as f:
-                    content = f.read()
+                async with await open_file(path) as f:
+                    content = await f.read()
             except Exception:
                 raise HTTPException(status_code=404, detail="Item not found")
     format: Optional[str] = None
