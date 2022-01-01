@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.27
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.26...43f148c68605f6f47c7f2b28339382f4e920dc0c))
+
+### Merged PRs
+
+- Pin fastapi-users < 9 [#140](https://github.com/jupyter-server/jupyverse/pull/140) ([@davidbrochart](https://github.com/davidbrochart))
+- Use anyio for file IO [#138](https://github.com/jupyter-server/jupyverse/pull/138) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-12-07&to=2022-01-01&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-12-07..2022-01-01&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.26
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.25...0f2ab3e1dd6cddf6ecd8eb1a590f186df9b5552a))
@@ -26,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-11-05&to=2021-12-07&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-11-05..2021-12-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.25
 
