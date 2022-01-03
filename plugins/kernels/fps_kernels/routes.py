@@ -9,7 +9,7 @@ from fastapi import APIRouter, WebSocket, Response, Depends, status
 from fastapi.responses import FileResponse
 from starlette.requests import Request  # type: ignore
 
-from fps_auth.backends import cookie_authentication, current_user  # type: ignore
+from fps_auth.backends import get_jwt_strategy, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
@@ -194,7 +194,7 @@ async def kernel_channels(
         accept_websocket = True
     else:
         cookie = websocket._cookies["fastapiusersauth"]
-        user = await cookie_authentication(cookie, user_db)
+        user = await get_jwt_strategy().read_token(cookie, user_db)
         if user:
             accept_websocket = True
     if accept_websocket:

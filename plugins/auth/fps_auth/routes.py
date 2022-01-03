@@ -14,6 +14,7 @@ from .backends import (
     fapi_users,
     current_user,
     cookie_authentication,
+    github_cookie_authentication,
     github_authentication,
 )
 from .models import User, UserDB
@@ -81,7 +82,10 @@ r_user = register_router(fapi_users.get_users_router(), prefix="/auth/user")
 
 # GitHub OAuth register router
 r_github = register_router(
-    fapi_users.get_oauth_router(github_authentication, secret), prefix="/auth/github"
+    fapi_users.get_oauth_router(
+        github_authentication, github_cookie_authentication, secret
+    ),
+    prefix="/auth/github",
 )
 
 r = register_router(router)

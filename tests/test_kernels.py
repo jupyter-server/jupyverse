@@ -7,7 +7,7 @@ from fps_kernels.kernel_server.server import kernels, KernelServer
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_kernel_messages(auth_mode, client, capfd):
+async def test_kernel_messages(client, capfd):
     kernel_id = "kernel_id_0"
     kernel_name = "python3"
     kernelspec_path = (
