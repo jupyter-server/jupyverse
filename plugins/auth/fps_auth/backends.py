@@ -48,7 +48,7 @@ class GitHubTransport(CookieTransport):
 
 
 noauth_transport = NoAuthTransport()
-cookie_transport = CookieTransport()
+cookie_transport = CookieTransport(cookie_secure=get_auth_config().cookie_secure)
 github_transport = GitHubTransport()
 
 

@@ -39,11 +39,11 @@ def authenticated_user(client):
     assert response.status_code == 201
     # login with registered user
     login_body = {"username": username + "@example.com", "password": username}
-    assert "fastapiusersauth" not in client.cookies.keys()
+    assert "fastapiusersauth" not in client.cookies
     response = client.post("/auth/login", data=login_body)
-    assert "fastapiusersauth" in client.cookies.keys()
+    assert "fastapiusersauth" in client.cookies
     # who am I?
-    response = client.get("/auth/user/me", cookies=client.cookies.get_dict())
+    response = client.get("/auth/user/me")
     assert response.status_code != 401
     return username
 

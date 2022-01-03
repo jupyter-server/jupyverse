@@ -19,7 +19,7 @@ def test_kernel_channels_unauthenticated(client):
 def test_kernel_channels_authenticated(client, authenticated_user):
     with client.websocket_connect(
         "/api/kernels/kernel_id_0/channels?session_id=session_id_0",
-        cookies=client.cookies.get_dict(),
+        cookies=client.cookies,
     ):
         pass
 
@@ -50,5 +50,4 @@ def test_token_auth(client, app):
     auth_config = get_auth_config()
     with TestClient(app) as client:
         response = client.get(f"/?token={auth_config.token}")
-        response = client.get("/", cookies=client.cookies.get_dict())
     assert response.status_code == 200
