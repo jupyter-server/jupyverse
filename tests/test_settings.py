@@ -5,18 +5,28 @@ from fastapi.testclient import TestClient
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-def test_put_settings(client, app):
+def test_settings(client, app):
     with TestClient(app) as client:
+        # get previous theme
+        response = client.get("/lab/api/settings/@jupyterlab/apputils-extension:themes")
+        assert response.status_code == 200
+        theme = {"raw": json.loads(response.content)["raw"]}
+        # put new theme
         response = client.put(
             "/lab/api/settings/@jupyterlab/apputils-extension:themes",
-            data='{"raw":"my_settings"}',
+            data='{"raw": "{// jupyverse test\\n\\"theme\\": \\"JupyterLab Dark\\"}"}',
         )
-    assert response.status_code == 204
-
-
-@pytest.mark.parametrize("auth_mode", ("noauth",))
-def test_get_settings(client, app):
-    with TestClient(app) as client:
+        assert response.status_code == 204
+        # get new theme
         response = client.get("/lab/api/settings/@jupyterlab/apputils-extension:themes")
-    assert response.status_code == 200
-    assert json.loads(response.content)["raw"] == "my_settings"
+        assert response.status_code == 200
+        assert (
+            json.loads(response.content)["raw"]
+            == '{// jupyverse test\n"theme": "JupyterLab Dark"}'
+        )
+        # put previous theme back
+        response = client.put(
+            "/lab/api/settings/@jupyterlab/apputils-extension:themes",
+            data=json.dumps(theme),
+        )
+        assert response.status_code == 204
