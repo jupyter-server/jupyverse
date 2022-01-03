@@ -1,5 +1,5 @@
 from uuid import uuid4
-from typing import Optional
+from typing import Optional, Generic
 
 from fps.exceptions import RedirectException  # type: ignore
 
@@ -7,8 +7,14 @@ import httpx
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from fastapi import Depends, Response, HTTPException, status
 
-from fastapi_users.authentication import CookieAuthentication, BaseAuthentication  # type: ignore
-from fastapi_users import FastAPIUsers, BaseUserManager  # type: ignore
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    CookieTransport,
+    JWTStrategy,
+)
+from fastapi_users.authentication.transport.base import Transport
+from fastapi_users.authentication.strategy.base import Strategy
+from fastapi_users import FastAPIUsers, BaseUserManager, models  # type: ignore
 from starlette.requests import Request
 
 from fps.logging import get_configured_logger  # type: ignore
@@ -20,30 +26,55 @@ from .models import User, UserDB, UserCreate, UserUpdate
 logger = get_configured_logger("auth")
 
 
-class NoAuthAuthentication(BaseAuthentication):
-    def __init__(self, name: str = "noauth"):
-        super().__init__(name, logout=False)
-        self.scheme = None  # type: ignore
+class NoAuthTransport(Transport):
+    scheme = None  # type: ignore
 
-    async def __call__(self, credentials, user_manager):
+
+class NoAuthStrategy(Strategy, Generic[models.UC, models.UD]):
+    async def read_token(
+        self, token: Optional[str], user_manager: BaseUserManager[models.UC, models.UD]
+    ) -> Optional[models.UD]:
         active_user = await user_manager.user_db.get_by_email(
             get_auth_config().global_email
         )
         return active_user
 
 
-class GitHubAuthentication(CookieAuthentication):
-    async def get_login_response(self, user, response, user_manager):
-        await super().get_login_response(user, response, user_manager)
+class GitHubTransport(CookieTransport):
+    async def get_login_response(self, token: str, response: Response):
+        await super().get_login_response(token, response)
         response.status_code = status.HTTP_302_FOUND
         response.headers["Location"] = "/lab"
 
 
-noauth_authentication = NoAuthAuthentication(name="noauth")
-cookie_authentication = CookieAuthentication(
-    secret=secret, cookie_secure=get_auth_config().cookie_secure, name="cookie"  # type: ignore
+noauth_transport = NoAuthTransport()
+cookie_transport = CookieTransport()
+github_transport = GitHubTransport()
+
+
+def get_noauth_strategy() -> NoAuthStrategy:
+    return NoAuthStrategy()
+
+
+def get_jwt_strategy() -> JWTStrategy:
+    return JWTStrategy(secret=secret, lifetime_seconds=None)  # type: ignore
+
+
+noauth_authentication = AuthenticationBackend(
+    name="noauth",
+    transport=noauth_transport,
+    get_strategy=get_noauth_strategy,
 )
-github_cookie_authentication = GitHubAuthentication(secret=secret, name="github")
+cookie_authentication = AuthenticationBackend(
+    name="cookie",
+    transport=cookie_transport,
+    get_strategy=get_jwt_strategy,
+)
+github_cookie_authentication = AuthenticationBackend(
+    name="github",
+    transport=github_transport,
+    get_strategy=get_jwt_strategy,
+)
 github_authentication = GitHubOAuth2(
     get_auth_config().client_id, get_auth_config().client_secret.get_secret_value()
 )
@@ -127,24 +158,24 @@ async def current_user(
     if auth_config.collaborative:
         if not active_user and auth_config.mode == "noauth":
             active_user = await create_guest(user_db, auth_config)
-            await cookie_authentication.get_login_response(
-                active_user, response, user_manager
+            await noauth_authentication.login(
+                get_noauth_strategy(), active_user, response
             )
 
         elif not active_user and auth_config.mode == "token":
             global_user = await user_db.get_by_email(auth_config.global_email)
             if global_user and global_user.hashed_password == token:
                 active_user = await create_guest(user_db, auth_config)
-                await cookie_authentication.get_login_response(
-                    active_user, response, user_manager
+                await cookie_authentication.login(
+                    get_jwt_strategy(), active_user, response
                 )
     else:
         if auth_config.mode == "token":
             global_user = await user_db.get_by_email(auth_config.global_email)
             if global_user and global_user.hashed_password == token:
                 active_user = global_user
-                await cookie_authentication.get_login_response(
-                    active_user, response, user_manager
+                await cookie_authentication.login(
+                    get_jwt_strategy(), active_user, response
                 )
 
     if active_user:

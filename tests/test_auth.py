@@ -19,7 +19,7 @@ def test_kernel_channels_unauthenticated(client):
 def test_kernel_channels_authenticated(client, authenticated_user):
     with client.websocket_connect(
         "/api/kernels/kernel_id_0/channels?session_id=session_id_0",
-        cookies=client.cookies,
+        cookies=client.cookies.get_dict(),
     ):
         pass
 
@@ -39,15 +39,16 @@ def test_root_auth(auth_mode, client, app):
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-def test_no_auth(auth_mode, client, app):
+def test_no_auth(client, app):
     with TestClient(app) as client:
         response = client.get("/lab/api/settings")
     assert response.status_code == 200
 
 
 @pytest.mark.parametrize("auth_mode", ("token",))
-def test_token_auth(auth_mode, client, app):
+def test_token_auth(client, app):
+    auth_config = get_auth_config()
     with TestClient(app) as client:
-        auth_config = get_auth_config()
         response = client.get(f"/?token={auth_config.token}")
+        response = client.get("/", cookies=client.cookies.get_dict())
     assert response.status_code == 200

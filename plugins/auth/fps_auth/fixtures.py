@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore
 from fps_auth.config import AuthConfig, get_auth_config
 
 
