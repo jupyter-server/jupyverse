@@ -1,4 +1,5 @@
 import json
+import json5  # type: ignore
 from pathlib import Path
 import sys
 from http import HTTPStatus
@@ -19,9 +20,11 @@ from .config import get_lab_config  # type: ignore
 from .utils import get_federated_extensions
 
 
+LOCALE = "en"
+
+
 def init_router(router, redirect_after_root):
     prefix_dir: Path = Path(sys.prefix)
-    LOCALE = "en"
 
     extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
     federated_extensions, _ = get_federated_extensions(extensions_dir)
@@ -112,7 +115,7 @@ def init_router(router, redirect_after_root):
         package = ep.load()
         data = {}
         for path in (
-            Path(package.__file__).parent / "locale" / "fr_FR" / "LC_MESSAGES"
+            Path(package.__file__).parent / "locale" / language / "LC_MESSAGES"
         ).glob("*.json"):
             with open(path) as f:
                 data.update({path.stem: json.load(f)})
@@ -145,7 +148,7 @@ def init_router(router, redirect_after_root):
         ) as f:
             schema = json.load(f)
         key = f"{name1}:{name2}"
-        result = {
+        setting = {
             "id": f"@jupyterlab/{key}",
             "schema": schema,
             "version": package["version"],
@@ -155,10 +158,11 @@ def init_router(router, redirect_after_root):
             "created": None,
         }
         if user:
-            settings = json.loads(user.settings)
-            if key in settings:
-                result.update(settings[key])
-        return result
+            user_settings = json.loads(user.settings)
+            if key in user_settings:
+                setting.update(user_settings[key])
+                setting["settings"] = json5.loads(user_settings[key]["raw"])
+        return setting
 
     @router.put(
         "/lab/api/settings/@jupyterlab/{name0}:{name1}",
@@ -206,6 +210,7 @@ def init_router(router, redirect_after_root):
             }
             if key in user_settings:
                 setting.update(user_settings[key])
+                setting["settings"] = json5.loads(user_settings[key]["raw"])
             settings.append(setting)
         return {"settings": settings}
 
