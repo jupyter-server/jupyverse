@@ -73,7 +73,7 @@ def init_router(router, redirect_after_root):
     @router.get(
         "/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json"
     )
-    async def get_listings():
+    async def get_listings(user=Depends(current_user)):
         return {
             "blocked_extensions_uris": [],
             "allowed_extensions_uris": [],
@@ -81,8 +81,15 @@ def init_router(router, redirect_after_root):
             "allowed_extensions": [],
         }
 
+    @router.get("/lab/api/translations/")
+    async def get_translations_(
+        lab_config=Depends(get_lab_config),
+        user: User = Depends(current_user),
+    ):
+        return RedirectResponse(f"{lab_config.base_url}lab/api/translations")
+
     @router.get("/lab/api/translations")
-    async def get_translations():
+    async def get_translations(user: User = Depends(current_user)):
         locale = Locale.parse("en")
         data = {
             "en": {
@@ -101,6 +108,7 @@ def init_router(router, redirect_after_root):
     @router.get("/lab/api/translations/{language}")
     async def get_translation(
         language,
+        user: User = Depends(current_user),
     ):
         global LOCALE
         if language == "en":
