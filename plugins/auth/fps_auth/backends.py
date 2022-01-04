@@ -158,9 +158,7 @@ async def current_user(
     if auth_config.collaborative:
         if not active_user and auth_config.mode == "noauth":
             active_user = await create_guest(user_db, auth_config)
-            await noauth_authentication.login(
-                get_noauth_strategy(), active_user, response
-            )
+            await cookie_authentication.login(get_jwt_strategy(), active_user, response)
 
         elif not active_user and auth_config.mode == "token":
             global_user = await user_db.get_by_email(auth_config.global_email)
