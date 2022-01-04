@@ -13,6 +13,7 @@ from fps_auth.backends import get_jwt_strategy, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
+from fps_lab.config import get_lab_config  # type: ignore
 
 from .kernel_server.server import KernelServer, kernels  # type: ignore
 from .models import Session
@@ -31,13 +32,15 @@ async def stop_kernels():
 
 
 @router.get("/api/kernelspecs")
-async def get_kernelspecs():
+async def get_kernelspecs(
+    lab_config=Depends(get_lab_config), user: User = Depends(current_user)
+):
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
         with open(path) as f:
             spec = json.load(f)
         name = path.parent.name
         resources = {
-            f.stem: f"/kernelspecs/{name}/{f.name}"
+            f.stem: f"{lab_config.base_url}kernelspecs/{name}/{f.name}"
             for f in path.parent.iterdir()
             if f.is_file() and f.name != "kernel.json"
         }
@@ -49,6 +52,7 @@ async def get_kernelspecs():
 async def get_kernelspec(
     kernel_name,
     file_name,
+    user: User = Depends(current_user),
 ):
     return FileResponse(
         prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name
@@ -56,7 +60,7 @@ async def get_kernelspec(
 
 
 @router.get("/api/kernels")
-async def get_kernels():
+async def get_kernels(user: User = Depends(current_user)):
     results = []
     for kernel_id, kernel in kernels.items():
         results.append(
@@ -97,7 +101,7 @@ async def rename_session(
 
 
 @router.get("/api/sessions")
-async def get_sessions():
+async def get_sessions(user: User = Depends(current_user)):
     for session in sessions.values():
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
