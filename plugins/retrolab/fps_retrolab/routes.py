@@ -46,7 +46,9 @@ retro_federated_extensions = [
 
 @router.get("/retro/tree", response_class=HTMLResponse)
 async def get_tree(
-    lab_config=Depends(get_lab_config), auth_config=Depends(get_auth_config)
+    user: User = Depends(current_user),
+    lab_config=Depends(get_lab_config),
+    auth_config=Depends(get_auth_config),
 ):
     return get_index("Tree", "tree", auth_config.collaborative, lab_config.base_url)
 
@@ -73,7 +75,7 @@ async def edit_file(
 
 @router.get("/retro/consoles/{path:path}", response_class=HTMLResponse)
 async def get_console(
-    patn,
+    path,
     user: User = Depends(current_user),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
