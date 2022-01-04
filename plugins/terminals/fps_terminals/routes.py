@@ -5,7 +5,7 @@ from typing import Dict, Any
 from fps.hooks import register_router  # type: ignore
 from fastapi import APIRouter, WebSocket, Response, Depends, status
 
-from fps_auth.backends import cookie_authentication, current_user  # type: ignore
+from fps_auth.backends import get_jwt_strategy, current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
@@ -44,7 +44,8 @@ async def delete_terminal(
     name: str,
     user: User = Depends(current_user),
 ):
-    TERMINALS[name]["server"].quit()
+    for websocket in TERMINALS[name]["server"].websockets:
+        TERMINALS[name]["server"].quit(websocket)
     del TERMINALS[name]
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
@@ -61,7 +62,7 @@ async def terminal_websocket(
         accept_websocket = True
     else:
         cookie = websocket._cookies["fastapiusersauth"]
-        user = await cookie_authentication(cookie, user_db)
+        user = await get_jwt_strategy().read_token(cookie, user_db)
         if user:
             accept_websocket = True
     if accept_websocket:
@@ -69,7 +70,8 @@ async def terminal_websocket(
         await TERMINALS[name]["server"].serve(websocket)
         if name in TERMINALS:
             TERMINALS[name]["server"].quit(websocket)
-            del TERMINALS[name]
+            if not TERMINALS[name]["server"].websockets:
+                del TERMINALS[name]
     else:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
