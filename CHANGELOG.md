@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.28
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.27...71cbcbf60156c56debdddfabcda633060a89f604))
+
+### Enhancements made
+
+- Add the french language pack on Binder [#74](https://github.com/jupyter-server/jupyverse/pull/74) ([@jtpio](https://github.com/jtpio))
+
+### Other merged PRs
+
+- Fix terminals [#152](https://github.com/jupyter-server/jupyverse/pull/152) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix retrolab console [#151](https://github.com/jupyter-server/jupyverse/pull/151) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix trailing slash redirect in translations request [#150](https://github.com/jupyter-server/jupyverse/pull/150) ([@davidbrochart](https://github.com/davidbrochart))
+- Add base URL to kernelspecs file path [#149](https://github.com/jupyter-server/jupyverse/pull/149) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix noauth+collaborative mode [#148](https://github.com/jupyter-server/jupyverse/pull/148) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix binder [#147](https://github.com/jupyter-server/jupyverse/pull/147) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix language setting [#146](https://github.com/jupyter-server/jupyverse/pull/146) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix settings test [#144](https://github.com/jupyter-server/jupyverse/pull/144) ([@davidbrochart](https://github.com/davidbrochart))
+- Update with fastapi-users v9 [#142](https://github.com/jupyter-server/jupyverse/pull/142) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-01-01&to=2022-01-05&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-01-01..2022-01-05&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Afcollonval+updated%3A2022-01-01..2022-01-05&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ajtpio+updated%3A2022-01-01..2022-01-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.27
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.26...43f148c68605f6f47c7f2b28339382f4e920dc0c))
@@ -16,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2021-12-07&to=2022-01-01&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2021-12-07..2022-01-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.26
 
