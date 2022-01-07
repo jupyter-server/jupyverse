@@ -18,9 +18,13 @@ from .connect import (
 from .message import (
     receive_message,
     send_message,
+    send_raw_message,
     create_message,
     to_binary,
     from_binary,
+    get_channel_parts,
+    get_parent_header,
+    get_bin_msg,
 )  # type: ignore
 
 
@@ -137,53 +141,46 @@ class KernelServer:
     async def listen_web(self, websocket: WebSocket):
         try:
             while True:
-                msg = await receive_json_or_bytes(websocket)
-                msg_type = msg["header"]["msg_type"]
-                if (msg_type in self.blocked_messages) or (
-                    self.allowed_messages is not None
-                    and msg_type not in self.allowed_messages
-                ):
-                    continue
-                channel = msg.pop("channel")
+                msg = await websocket.receive_bytes()
+                # FIXME: add back message filtering
+                channel, parts = get_channel_parts(msg)
                 if channel == "shell":
-                    send_message(msg, self.shell_channel, self.key)
+                    send_raw_message(parts, self.shell_channel, self.key)
                 elif channel == "control":
-                    send_message(msg, self.control_channel, self.key)
+                    send_raw_message(parts, self.control_channel, self.key)
         except WebSocketDisconnect:
             pass
 
     async def listen_shell(self):
         while True:
-            msg = await receive_message(self.shell_channel)
-            msg["channel"] = "shell"
-            session = msg["parent_header"]["session"]
+            parts = await self.shell_channel.recv_multipart()
+            parent_header = get_parent_header(parts)
+            session = parent_header["session"]
             if session in self.sessions:
                 websocket = self.sessions[session]
-                await send_json_or_bytes(websocket, msg)
+                bin_msg = get_bin_msg("shell", parts)
+                await websocket.send_bytes(bin_msg)
 
     async def listen_control(self):
         while True:
-            msg = await receive_message(self.control_channel)
-            msg["channel"] = "control"
-            session = msg["parent_header"]["session"]
+            parts = await self.control_channel.recv_multipart()
+            parent_header = get_parent_header(parts)
+            session = parent_header["session"]
             if session in self.sessions:
                 websocket = self.sessions[session]
-                await send_json_or_bytes(websocket, msg)
+                bin_msg = get_bin_msg("control", parts)
+                await websocket.send_bytes(bin_msg)
 
     async def listen_iopub(self):
         while True:
-            msg = await receive_message(self.iopub_channel)
-            msg["channel"] = "iopub"
+            parts = await self.iopub_channel.recv_multipart()
+            bin_msg = get_bin_msg("iopub", parts)
             for websocket in self.sessions.values():
                 try:
-                    await send_json_or_bytes(websocket, msg)
+                    await websocket.send_bytes(bin_msg)
                 except Exception:
                     pass
-            if "content" in msg and "execution_state" in msg["content"]:
-                self.last_activity = {
-                    "date": msg["header"]["date"],
-                    "execution_state": msg["content"]["execution_state"],
-                }
+            # FIXME: add back last_activity update
 
     async def _wait_for_ready(self):
         while True:

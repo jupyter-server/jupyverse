@@ -91,6 +91,36 @@ def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
     sock.send_multipart(serialize(msg, key), copy=True)
 
 
+def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
+    if len(parts) == 4:
+        msg = parts
+        buffers = []
+    else:
+        msg = parts[:4]
+        buffers = parts[4:]
+    to_send = [DELIM, sign(msg, key)] + msg + buffers
+    sock.send_multipart(to_send)
+
+
+def get_channel_parts(msg: bytes) -> Tuple[str, List[bytes]]:
+    layout_len = int.from_bytes(msg[:2], "little")
+    layout = json.loads(msg[2:2 + layout_len])
+    parts: List[bytes] = list(get_parts(msg[2 + layout_len:], layout["offsets"]))
+    return layout["channel"], parts
+
+
+def get_parts(msg, offsets):
+    i0 = 0
+    i = 1
+    while True:
+        i1 = i0 + offsets[i]
+        if i0 == i1:
+            return
+        yield msg[i0:i1]
+        i0 = i1
+        i += 1
+
+
 async def receive_message(
     sock: Socket, timeout: float = float("inf")
 ) -> Optional[Dict[str, Any]]:
@@ -101,6 +131,22 @@ async def receive_message(
         idents, msg_list = feed_identities(msg_list)
         return deserialize(msg_list)
     return None
+
+
+def get_bin_msg(channel: str, parts: List[bytes]) -> bytes:
+    idents, parts = feed_identities(parts)
+    layout = json.dumps({
+        "channel": channel,
+        "offsets": [0] + [len(part) for part in parts[1:]] + [0],
+    }).encode("utf-8")
+    layout_length = len(layout).to_bytes(2, byteorder="little")
+    bin_msg = b"".join([layout_length, layout] + parts[1:])
+    return bin_msg
+
+
+def get_parent_header(parts: List[bytes]) -> Dict[str, Any]:
+    idents, msg_list = feed_identities(parts)
+    return unpack(msg_list[2])
 
 
 def utcnow() -> datetime:
