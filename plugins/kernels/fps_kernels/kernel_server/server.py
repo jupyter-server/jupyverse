@@ -181,6 +181,7 @@ class KernelServer:
                 except Exception:
                     pass
             # FIXME: add back last_activity update
+            # or replace it with control channel retrieving
 
     async def _wait_for_ready(self):
         while True:

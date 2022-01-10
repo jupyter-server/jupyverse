@@ -111,14 +111,10 @@ def get_channel_parts(msg: bytes) -> Tuple[str, List[bytes]]:
 
 def get_parts(msg, offsets):
     i0 = 0
-    i = 1
-    while True:
-        i1 = i0 + offsets[i]
-        if i0 == i1:
-            return
+    for i1 in offsets:
         yield msg[i0:i1]
         i0 = i1
-        i += 1
+    yield msg[i0:]
 
 
 async def receive_message(
@@ -135,9 +131,15 @@ async def receive_message(
 
 def get_bin_msg(channel: str, parts: List[bytes]) -> bytes:
     idents, parts = feed_identities(parts)
+    offsets = []
+    curr_sum = 0
+    for part in parts[1:]:
+        length = len(part)
+        offsets.append(length + curr_sum)
+        curr_sum += length
     layout = json.dumps({
         "channel": channel,
-        "offsets": [0] + [len(part) for part in parts[1:]] + [0],
+        "offsets": offsets,
     }).encode("utf-8")
     layout_length = len(layout).to_bytes(2, byteorder="little")
     bin_msg = b"".join([layout_length, layout] + parts[1:])
