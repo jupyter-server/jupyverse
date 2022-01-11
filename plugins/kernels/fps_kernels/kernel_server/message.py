@@ -129,7 +129,7 @@ async def receive_message(
     return None
 
 
-def get_bin_msg(channel: str, parts: List[bytes]) -> bytes:
+def get_bin_msg(channel: str, parts: List[bytes]) -> List[bytes]:
     idents, parts = feed_identities(parts)
     offsets = []
     curr_sum = 0
@@ -142,7 +142,7 @@ def get_bin_msg(channel: str, parts: List[bytes]) -> bytes:
         "offsets": offsets,
     }).encode("utf-8")
     layout_length = len(layout).to_bytes(2, byteorder="little")
-    bin_msg = b"".join([layout_length, layout] + parts[1:])
+    bin_msg = [layout_length, layout] + parts[1:]
     return bin_msg
 
 
