@@ -220,8 +220,6 @@ async def receive_json_or_bytes(websocket):
 
 
 async def send_json_or_bytes(websocket, msg):
-    if "traceback" in msg["content"]:
-        print("\n".join(msg["content"]["traceback"]))
     bmsg = to_binary(msg)
     if bmsg is None:
         await websocket.send_json(msg)
