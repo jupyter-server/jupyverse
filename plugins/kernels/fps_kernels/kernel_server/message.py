@@ -69,13 +69,18 @@ def serialize(msg: Dict[str, Any], key: str) -> List[bytes]:
     return to_send
 
 
-def deserialize(msg_list: List[bytes]) -> Dict[str, Any]:
+def deserialize(
+    msg_list: List[bytes], parent_header: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     message: Dict[str, Any] = {}
     header = unpack(msg_list[1])
     message["header"] = header
     message["msg_id"] = header["msg_id"]
     message["msg_type"] = header["msg_type"]
-    message["parent_header"] = unpack(msg_list[2])
+    if parent_header:
+        message["parent_header"] = parent_header
+    else:
+        message["parent_header"] = unpack(msg_list[2])
     message["metadata"] = unpack(msg_list[3])
     message["content"] = unpack(msg_list[4])
     message["buffers"] = [memoryview(b) for b in msg_list[5:]]
@@ -104,8 +109,10 @@ def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
 
 def get_channel_parts(msg: bytes) -> Tuple[str, List[bytes]]:
     layout_len = int.from_bytes(msg[:2], "little")
-    layout = json.loads(msg[2:2 + layout_len])
-    parts: List[bytes] = list(get_parts(msg[2 + layout_len:], layout["offsets"]))
+    layout = json.loads(msg[2 : 2 + layout_len])  # noqa
+    parts: List[bytes] = list(
+        get_parts(msg[2 + layout_len :], layout["offsets"])  # noqa
+    )
     return layout["channel"], parts
 
 
@@ -129,26 +136,38 @@ async def receive_message(
     return None
 
 
-def get_bin_msg(channel: str, parts: List[bytes]) -> List[bytes]:
+async def get_zmq_parts(socket: Socket) -> List[bytes]:
+    parts = await socket.recv_multipart()
     idents, parts = feed_identities(parts)
+    return parts
+
+
+def get_msg_from_parts(
+    parts: List[bytes], parent_header: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    return deserialize(parts, parent_header=parent_header)
+
+
+def get_bin_msg_from_parts(channel: str, parts: List[bytes]) -> List[bytes]:
     offsets = []
     curr_sum = 0
     for part in parts[1:]:
         length = len(part)
         offsets.append(length + curr_sum)
         curr_sum += length
-    layout = json.dumps({
-        "channel": channel,
-        "offsets": offsets,
-    }).encode("utf-8")
+    layout = json.dumps(
+        {
+            "channel": channel,
+            "offsets": offsets,
+        }
+    ).encode("utf-8")
     layout_length = len(layout).to_bytes(2, byteorder="little")
     bin_msg = [layout_length, layout] + parts[1:]
     return bin_msg
 
 
 def get_parent_header(parts: List[bytes]) -> Dict[str, Any]:
-    idents, msg_list = feed_identities(parts)
-    return unpack(msg_list[2])
+    return unpack(parts[2])
 
 
 def utcnow() -> datetime:

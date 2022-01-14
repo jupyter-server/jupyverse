@@ -15,7 +15,7 @@ from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 
-from .kernel_server.server import KernelServer, kernels  # type: ignore
+from .kernel_server.server import AcceptedWebSocket, KernelServer, kernels  # type: ignore
 from .models import Session
 
 router = APIRouter()
@@ -202,10 +202,12 @@ async def kernel_channels(
         if user:
             accept_websocket = True
     if accept_websocket:
-        await websocket.accept()
+        subprotocol = "0.0.1" if "0.0.1" in websocket["subprotocols"] else None
+        await websocket.accept(subprotocol=subprotocol)
+        accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
         if kernel_id in kernels:
             kernel_server = kernels[kernel_id]["server"]
-            await kernel_server.serve(websocket, session_id)
+            await kernel_server.serve(accepted_websocket, session_id)
     else:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
