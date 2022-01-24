@@ -202,7 +202,11 @@ async def kernel_channels(
         if user:
             accept_websocket = True
     if accept_websocket:
-        subprotocol = "0.0.1" if "0.0.1" in websocket["subprotocols"] else None
+        subprotocol = (
+            "v1.websocket.jupyter.org"
+            if "v1.websocket.jupyter.org" in websocket["subprotocols"]
+            else None
+        )
         await websocket.accept(subprotocol=subprotocol)
         accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
         if kernel_id in kernels:

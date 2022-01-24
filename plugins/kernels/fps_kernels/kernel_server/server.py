@@ -157,7 +157,7 @@ class KernelServer:
                         send_message(msg, self.shell_channel, self.key)
                     elif channel == "control":
                         send_message(msg, self.control_channel, self.key)
-            elif websocket.accepted_subprotocol == "0.0.1":
+            elif websocket.accepted_subprotocol == "v1.websocket.jupyter.org":
                 while True:
                     msg = await websocket.websocket.receive_bytes()
                     # FIXME: add back message filtering
@@ -188,7 +188,7 @@ class KernelServer:
                         msg = get_msg_from_parts(parts, parent_header=parent_header)
                         msg["channel"] = channel_name
                         await send_json_or_bytes(websocket.websocket, msg)
-                    elif websocket.accepted_subprotocol == "0.0.1":
+                    elif websocket.accepted_subprotocol == "v1.websocket.jupyter.org":
                         bin_msg = get_bin_msg_from_parts(channel_name, parts)
                         try:
                             await websocket.websocket.send_bytes(bin_msg)
@@ -205,7 +205,7 @@ class KernelServer:
                         msg = get_msg_from_parts(parts, parent_header=parent_header)
                         msg["channel"] = channel_name
                         await send_json_or_bytes(websocket.websocket, msg)
-                    elif websocket.accepted_subprotocol == "0.0.1":
+                    elif websocket.accepted_subprotocol == "v1.websocket.jupyter.org":
                         bin_msg = get_bin_msg_from_parts(channel_name, parts)
                         await websocket.websocket.send_bytes(bin_msg)
 
