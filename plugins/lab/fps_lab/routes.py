@@ -19,13 +19,26 @@ from fps_auth.models import User  # type: ignore
 from .config import get_lab_config  # type: ignore
 from .utils import get_federated_extensions
 
+try:
+    import jupyterlab  # type: ignore
+    from fps_jupyterlab.config import get_jlab_config  # type: ignore
+
+    jlab_dev_mode = get_jlab_config().dev_mode
+except Exception:
+    jlab_dev_mode = False
+
 
 LOCALE = "en"
 
 
-def init_router(router, redirect_after_root):
-    prefix_dir: Path = Path(sys.prefix)
+prefix_dir = Path(sys.prefix)
+if jlab_dev_mode:
+    jlab_dir = Path(jupyterlab.__file__).parent.parent / "dev_mode"
+else:
+    jlab_dir = prefix_dir / "share" / "jupyter" / "lab"
 
+
+def init_router(router, redirect_after_root):
     extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
     federated_extensions, _ = get_federated_extensions(extensions_dir)
 
@@ -33,20 +46,13 @@ def init_router(router, redirect_after_root):
         name = ext["name"]
         router.mount(
             f"/lab/extensions/{name}/static",
-            StaticFiles(
-                directory=prefix_dir
-                / "share"
-                / "jupyter"
-                / "labextensions"
-                / name
-                / "static"
-            ),
+            StaticFiles(directory=extensions_dir / name / "static"),
             name=name,
         )
 
     router.mount(
         "/lab/api/themes",
-        StaticFiles(directory=prefix_dir / "share" / "jupyter" / "lab" / "themes"),
+        StaticFiles(directory=jlab_dir / "themes"),
         name="themes",
     )
 
@@ -136,24 +142,13 @@ def init_router(router, redirect_after_root):
         name2,
         user: User = Depends(current_user),
     ):
-        with open(
-            prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
-        ) as f:
+        with open(jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
         if name0 in ["@jupyterlab", "@retrolab"]:
-            lab_or_extensions = Path("lab")
+            schemas_parent = jlab_dir
         else:
-            lab_or_extensions = Path("labextensions") / name0 / name1
-        with open(
-            prefix_dir
-            / "share"
-            / "jupyter"
-            / lab_or_extensions
-            / "schemas"
-            / name0
-            / name1
-            / f"{name2}.json"
-        ) as f:
+            schemas_parent = extensions_dir / name0 / name1
+        with open(schemas_parent / "schemas" / name0 / name1 / f"{name2}.json") as f:
             schema = json.load(f)
         key = f"{name1}:{name2}"
         setting = {
@@ -191,18 +186,14 @@ def init_router(router, redirect_after_root):
 
     @router.get("/lab/api/settings")
     async def get_settings(user: User = Depends(current_user)):
-        with open(
-            prefix_dir / "share" / "jupyter" / "lab" / "static" / "package.json"
-        ) as f:
+        with open(jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
         if user:
             user_settings = json.loads(user.settings)
         else:
             user_settings = {}
         settings = []
-        for path in (
-            prefix_dir / "share" / "jupyter" / "lab" / "schemas" / "@jupyterlab"
-        ).glob("*/*.json"):
+        for path in (jlab_dir / "schemas" / "@jupyterlab").glob("*/*.json"):
             with open(path) as f:
                 schema = json.load(f)
             key = f"{path.parent.name}:{path.stem}"
