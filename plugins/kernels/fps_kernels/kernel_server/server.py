@@ -23,10 +23,10 @@ from .message import (
     create_message,
     to_binary,
     from_binary,
-    get_channel_parts,
+    deserialize_msg_from_ws_v1,
     get_parent_header,
     get_zmq_parts,
-    get_bin_msg_from_parts,
+    serialize_msg_to_ws_v1,
     get_msg_from_parts,
 )  # type: ignore
 
@@ -143,29 +143,7 @@ class KernelServer:
 
     async def listen_web(self, websocket: AcceptedWebSocket):
         try:
-            if not websocket.accepted_subprotocol:
-                while True:
-                    msg = await receive_json_or_bytes(websocket.websocket)
-                    msg_type = msg["header"]["msg_type"]
-                    if (msg_type in self.blocked_messages) or (
-                        self.allowed_messages is not None
-                        and msg_type not in self.allowed_messages
-                    ):
-                        continue
-                    channel = msg.pop("channel")
-                    if channel == "shell":
-                        send_message(msg, self.shell_channel, self.key)
-                    elif channel == "control":
-                        send_message(msg, self.control_channel, self.key)
-            elif websocket.accepted_subprotocol == "v1.websocket.jupyter.org":
-                while True:
-                    msg = await websocket.websocket.receive_bytes()
-                    # FIXME: add back message filtering
-                    channel, parts = get_channel_parts(msg)
-                    if channel == "shell":
-                        send_raw_message(parts, self.shell_channel, self.key)
-                    elif channel == "control":
-                        send_raw_message(parts, self.control_channel, self.key)
+            await self.send_to_zmq(websocket)
         except WebSocketDisconnect:
             pass
 
@@ -183,31 +161,14 @@ class KernelServer:
             if channel == self.iopub_channel:
                 # broadcast to all web clients
                 for websocket in self.sessions.values():
-                    if not websocket.accepted_subprotocol:
-                        # default, "legacy" protocol
-                        msg = get_msg_from_parts(parts, parent_header=parent_header)
-                        msg["channel"] = channel_name
-                        await send_json_or_bytes(websocket.websocket, msg)
-                    elif websocket.accepted_subprotocol == "v1.websocket.jupyter.org":
-                        bin_msg = get_bin_msg_from_parts(channel_name, parts)
-                        try:
-                            await websocket.websocket.send_bytes(bin_msg)
-                        except Exception:
-                            pass
+                    await send_to_ws(websocket, parts, parent_header, channel_name)
                 # FIXME: add back last_activity update
                 # or should we request it from the control channel?
             else:
                 session = parent_header["session"]
                 if session in self.sessions:
                     websocket = self.sessions[session]
-                    if not websocket.accepted_subprotocol:
-                        # default, "legacy" protocol
-                        msg = get_msg_from_parts(parts, parent_header=parent_header)
-                        msg["channel"] = channel_name
-                        await send_json_or_bytes(websocket.websocket, msg)
-                    elif websocket.accepted_subprotocol == "v1.websocket.jupyter.org":
-                        bin_msg = get_bin_msg_from_parts(channel_name, parts)
-                        await websocket.websocket.send_bytes(bin_msg)
+                    await send_to_ws(websocket, parts, parent_header, channel_name)
 
     async def _wait_for_ready(self):
         while True:
@@ -221,6 +182,45 @@ class KernelServer:
                     pass
                 else:
                     break
+
+    async def send_to_zmq(self, websocket):
+        if not websocket.accepted_subprotocol:
+            while True:
+                msg = await receive_json_or_bytes(websocket.websocket)
+                msg_type = msg["header"]["msg_type"]
+                if (msg_type in self.blocked_messages) or (
+                    self.allowed_messages is not None
+                    and msg_type not in self.allowed_messages
+                ):
+                    continue
+                channel = msg.pop("channel")
+                if channel == "shell":
+                    send_message(msg, self.shell_channel, self.key)
+                elif channel == "control":
+                    send_message(msg, self.control_channel, self.key)
+        elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
+            while True:
+                msg = await websocket.websocket.receive_bytes()
+                # FIXME: add back message filtering
+                channel, parts = deserialize_msg_from_ws_v1(msg)
+                if channel == "shell":
+                    send_raw_message(parts, self.shell_channel, self.key)
+                elif channel == "control":
+                    send_raw_message(parts, self.control_channel, self.key)
+
+
+async def send_to_ws(websocket, parts, parent_header, channel_name):
+    if not websocket.accepted_subprotocol:
+        # default, "legacy" protocol
+        msg = get_msg_from_parts(parts, parent_header=parent_header)
+        msg["channel"] = channel_name
+        await send_json_or_bytes(websocket.websocket, msg)
+    elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
+        bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
+        try:
+            await websocket.websocket.send_bytes(bin_msg)
+        except Exception:
+            pass
 
 
 async def receive_json_or_bytes(websocket):

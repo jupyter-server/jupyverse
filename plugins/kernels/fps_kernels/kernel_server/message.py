@@ -97,31 +97,23 @@ def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
 
 
 def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
-    if len(parts) == 4:
-        msg = parts
-        buffers = []
-    else:
-        msg = parts[:4]
-        buffers = parts[4:]
+    msg = parts[:4]
+    buffers = parts[4:]
     to_send = [DELIM, sign(msg, key)] + msg + buffers
     sock.send_multipart(to_send)
 
 
-def get_channel_parts(msg: bytes) -> Tuple[str, List[bytes]]:
-    layout_len = int.from_bytes(msg[:2], "little")
-    layout = json.loads(msg[2 : 2 + layout_len])  # noqa
-    parts: List[bytes] = list(
-        get_parts(msg[2 + layout_len :], layout["offsets"])  # noqa
-    )
-    return layout["channel"], parts
-
-
-def get_parts(msg, offsets):
-    i0 = 0
-    for i1 in offsets:
-        yield msg[i0:i1]
-        i0 = i1
-    yield msg[i0:]
+def deserialize_msg_from_ws_v1(ws_msg):
+    offset_number = int.from_bytes(ws_msg[:8], "little")
+    offsets = [
+        int.from_bytes(ws_msg[8 * (i + 1) : 8 * (i + 2)], "little")  # noqa
+        for i in range(offset_number)
+    ]
+    channel = ws_msg[offsets[0] : offsets[1]].decode("utf-8")  # noqa
+    msg_list = [
+        ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)  # noqa
+    ]
+    return channel, msg_list
 
 
 async def receive_message(
@@ -148,21 +140,17 @@ def get_msg_from_parts(
     return deserialize(parts, parent_header=parent_header)
 
 
-def get_bin_msg_from_parts(channel: str, parts: List[bytes]) -> List[bytes]:
+def serialize_msg_to_ws_v1(msg_list, channel):
+    msg_list = msg_list[1:]
+    channel = channel.encode("utf-8")
     offsets = []
-    curr_sum = 0
-    for part in parts[1:]:
-        length = len(part)
-        offsets.append(length + curr_sum)
-        curr_sum += length
-    layout = json.dumps(
-        {
-            "channel": channel,
-            "offsets": offsets,
-        }
-    ).encode("utf-8")
-    layout_length = len(layout).to_bytes(2, byteorder="little")
-    bin_msg = [layout_length, layout] + parts[1:]
+    offsets.append(8 * (1 + 1 + len(msg_list) + 1))
+    offsets.append(len(channel) + offsets[-1])
+    for msg in msg_list:
+        offsets.append(len(msg) + offsets[-1])
+    offset_number = len(offsets).to_bytes(8, byteorder="little")
+    offsets = [offset.to_bytes(8, byteorder="little") for offset in offsets]
+    bin_msg = [offset_number] + offsets + [channel] + msg_list
     return bin_msg
 
 
