@@ -103,7 +103,7 @@ def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
     sock.send_multipart(to_send)
 
 
-def deserialize_msg_from_ws_v1(ws_msg):
+def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
     offset_number = int.from_bytes(ws_msg[:8], "little")
     offsets = [
         int.from_bytes(ws_msg[8 * (i + 1) : 8 * (i + 2)], "little")  # noqa
@@ -140,17 +140,17 @@ def get_msg_from_parts(
     return deserialize(parts, parent_header=parent_header)
 
 
-def serialize_msg_to_ws_v1(msg_list, channel):
+def serialize_msg_to_ws_v1(msg_list: List[bytes], channel: str) -> List[bytes]:
     msg_list = msg_list[1:]
-    channel = channel.encode("utf-8")
+    channel_b = channel.encode("utf-8")
     offsets = []
     offsets.append(8 * (1 + 1 + len(msg_list) + 1))
-    offsets.append(len(channel) + offsets[-1])
+    offsets.append(len(channel_b) + offsets[-1])
     for msg in msg_list:
         offsets.append(len(msg) + offsets[-1])
     offset_number = len(offsets).to_bytes(8, byteorder="little")
-    offsets = [offset.to_bytes(8, byteorder="little") for offset in offsets]
-    bin_msg = [offset_number] + offsets + [channel] + msg_list
+    offsets_b = [offset.to_bytes(8, byteorder="little") for offset in offsets]
+    bin_msg = [offset_number] + offsets_b + [channel_b] + msg_list
     return bin_msg
 
 

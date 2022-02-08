@@ -161,14 +161,12 @@ class KernelServer:
             if channel == self.iopub_channel:
                 # broadcast to all web clients
                 for websocket in self.sessions.values():
-                    await send_to_ws(websocket, parts, parent_header, channel_name)
-                # FIXME: add back last_activity update
-                # or should we request it from the control channel?
+                    await self.send_to_ws(websocket, parts, parent_header, channel_name)
             else:
                 session = parent_header["session"]
                 if session in self.sessions:
                     websocket = self.sessions[session]
-                    await send_to_ws(websocket, parts, parent_header, channel_name)
+                    await self.send_to_ws(websocket, parts, parent_header, channel_name)
 
     async def _wait_for_ready(self):
         while True:
@@ -201,26 +199,42 @@ class KernelServer:
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
             while True:
                 msg = await websocket.websocket.receive_bytes()
-                # FIXME: add back message filtering
                 channel, parts = deserialize_msg_from_ws_v1(msg)
+                # NOTE: we parse the header for message filtering
+                # it is not as bad as parsing the content
+                header = json.loads(parts[0])
+                msg_type = header["msg_type"]
+                if (msg_type in self.blocked_messages) or (
+                    self.allowed_messages is not None
+                    and msg_type not in self.allowed_messages
+                ):
+                    continue
                 if channel == "shell":
                     send_raw_message(parts, self.shell_channel, self.key)
                 elif channel == "control":
                     send_raw_message(parts, self.control_channel, self.key)
 
-
-async def send_to_ws(websocket, parts, parent_header, channel_name):
-    if not websocket.accepted_subprotocol:
-        # default, "legacy" protocol
-        msg = get_msg_from_parts(parts, parent_header=parent_header)
-        msg["channel"] = channel_name
-        await send_json_or_bytes(websocket.websocket, msg)
-    elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
-        bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
-        try:
-            await websocket.websocket.send_bytes(bin_msg)
-        except Exception:
-            pass
+    async def send_to_ws(self, websocket, parts, parent_header, channel_name):
+        if not websocket.accepted_subprotocol:
+            # default, "legacy" protocol
+            msg = get_msg_from_parts(parts, parent_header=parent_header)
+            msg["channel"] = channel_name
+            await send_json_or_bytes(websocket.websocket, msg)
+            if channel_name == "iopub":
+                if "content" in msg and "execution_state" in msg["content"]:
+                    self.last_activity = {
+                        "date": msg["header"]["date"],
+                        "execution_state": msg["content"]["execution_state"],
+                    }
+        elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
+            bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
+            try:
+                await websocket.websocket.send_bytes(bin_msg)
+            except Exception:
+                pass
+            # FIXME: update last_activity
+            # but we don't want to parse the content!
+            # or should we request it from the control channel?
 
 
 async def receive_json_or_bytes(websocket):
