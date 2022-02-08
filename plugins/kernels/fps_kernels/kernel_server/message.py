@@ -69,13 +69,18 @@ def serialize(msg: Dict[str, Any], key: str) -> List[bytes]:
     return to_send
 
 
-def deserialize(msg_list: List[bytes]) -> Dict[str, Any]:
+def deserialize(
+    msg_list: List[bytes], parent_header: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     message: Dict[str, Any] = {}
     header = unpack(msg_list[1])
     message["header"] = header
     message["msg_id"] = header["msg_id"]
     message["msg_type"] = header["msg_type"]
-    message["parent_header"] = unpack(msg_list[2])
+    if parent_header:
+        message["parent_header"] = parent_header
+    else:
+        message["parent_header"] = unpack(msg_list[2])
     message["metadata"] = unpack(msg_list[3])
     message["content"] = unpack(msg_list[4])
     message["buffers"] = [memoryview(b) for b in msg_list[5:]]
@@ -91,6 +96,26 @@ def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
     sock.send_multipart(serialize(msg, key), copy=True)
 
 
+def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
+    msg = parts[:4]
+    buffers = parts[4:]
+    to_send = [DELIM, sign(msg, key)] + msg + buffers
+    sock.send_multipart(to_send)
+
+
+def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
+    offset_number = int.from_bytes(ws_msg[:8], "little")
+    offsets = [
+        int.from_bytes(ws_msg[8 * (i + 1) : 8 * (i + 2)], "little")  # noqa
+        for i in range(offset_number)
+    ]
+    channel = ws_msg[offsets[0] : offsets[1]].decode("utf-8")  # noqa
+    msg_list = [
+        ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)  # noqa
+    ]
+    return channel, msg_list
+
+
 async def receive_message(
     sock: Socket, timeout: float = float("inf")
 ) -> Optional[Dict[str, Any]]:
@@ -101,6 +126,36 @@ async def receive_message(
         idents, msg_list = feed_identities(msg_list)
         return deserialize(msg_list)
     return None
+
+
+async def get_zmq_parts(socket: Socket) -> List[bytes]:
+    parts = await socket.recv_multipart()
+    idents, parts = feed_identities(parts)
+    return parts
+
+
+def get_msg_from_parts(
+    parts: List[bytes], parent_header: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    return deserialize(parts, parent_header=parent_header)
+
+
+def serialize_msg_to_ws_v1(msg_list: List[bytes], channel: str) -> List[bytes]:
+    msg_list = msg_list[1:]
+    channel_b = channel.encode("utf-8")
+    offsets = []
+    offsets.append(8 * (1 + 1 + len(msg_list) + 1))
+    offsets.append(len(channel_b) + offsets[-1])
+    for msg in msg_list:
+        offsets.append(len(msg) + offsets[-1])
+    offset_number = len(offsets).to_bytes(8, byteorder="little")
+    offsets_b = [offset.to_bytes(8, byteorder="little") for offset in offsets]
+    bin_msg = [offset_number] + offsets_b + [channel_b] + msg_list
+    return bin_msg
+
+
+def get_parent_header(parts: List[bytes]) -> Dict[str, Any]:
+    return unpack(parts[2])
 
 
 def utcnow() -> datetime:

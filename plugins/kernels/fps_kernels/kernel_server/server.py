@@ -5,7 +5,7 @@ import signal
 from datetime import datetime
 from typing import Iterable, Optional, List, Dict, cast
 
-from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
+from fastapi import WebSocketDisconnect  # type: ignore
 from starlette.websockets import WebSocketState
 
 from .connect import (
@@ -14,13 +14,20 @@ from .connect import (
     launch_kernel,
     connect_channel,
     cfg_t,
+    AcceptedWebSocket,
 )  # type: ignore
 from .message import (
     receive_message,
     send_message,
+    send_raw_message,
     create_message,
     to_binary,
     from_binary,
+    deserialize_msg_from_ws_v1,
+    get_parent_header,
+    get_zmq_parts,
+    serialize_msg_to_ws_v1,
+    get_msg_from_parts,
 )  # type: ignore
 
 
@@ -42,7 +49,7 @@ class KernelServer:
         self.connection_file = connection_file
         self.write_connection_file = write_connection_file
         self.channel_tasks: List[asyncio.Task] = []
-        self.sessions: Dict[str, WebSocket] = {}
+        self.sessions: Dict[str, AcceptedWebSocket] = {}
         # blocked messages and allowed messages are mutually exclusive
         self.blocked_messages: List[str] = []
         self.allowed_messages: Optional[
@@ -103,9 +110,9 @@ class KernelServer:
         self.iopub_channel = connect_channel("iopub", self.connection_cfg)
         await self._wait_for_ready()
         self.channel_tasks += [
-            asyncio.create_task(self.listen_shell()),
-            asyncio.create_task(self.listen_control()),
-            asyncio.create_task(self.listen_iopub()),
+            asyncio.create_task(self.listen("shell")),
+            asyncio.create_task(self.listen("control")),
+            asyncio.create_task(self.listen("iopub")),
         ]
 
     async def stop(self) -> None:
@@ -129,61 +136,37 @@ class KernelServer:
         self.setup_connection_file()
         await self.start()
 
-    async def serve(self, websocket: WebSocket, session_id: str):
+    async def serve(self, websocket: AcceptedWebSocket, session_id: str):
         self.sessions[session_id] = websocket
         await self.listen_web(websocket)
         del self.sessions[session_id]
 
-    async def listen_web(self, websocket: WebSocket):
+    async def listen_web(self, websocket: AcceptedWebSocket):
         try:
-            while True:
-                msg = await receive_json_or_bytes(websocket)
-                msg_type = msg["header"]["msg_type"]
-                if (msg_type in self.blocked_messages) or (
-                    self.allowed_messages is not None
-                    and msg_type not in self.allowed_messages
-                ):
-                    continue
-                channel = msg.pop("channel")
-                if channel == "shell":
-                    send_message(msg, self.shell_channel, self.key)
-                elif channel == "control":
-                    send_message(msg, self.control_channel, self.key)
+            await self.send_to_zmq(websocket)
         except WebSocketDisconnect:
             pass
 
-    async def listen_shell(self):
-        while True:
-            msg = await receive_message(self.shell_channel)
-            msg["channel"] = "shell"
-            session = msg["parent_header"]["session"]
-            if session in self.sessions:
-                websocket = self.sessions[session]
-                await send_json_or_bytes(websocket, msg)
+    async def listen(self, channel_name: str):
+        if channel_name == "shell":
+            channel = self.shell_channel
+        elif channel_name == "control":
+            channel = self.control_channel
+        elif channel_name == "iopub":
+            channel = self.iopub_channel
 
-    async def listen_control(self):
         while True:
-            msg = await receive_message(self.control_channel)
-            msg["channel"] = "control"
-            session = msg["parent_header"]["session"]
-            if session in self.sessions:
-                websocket = self.sessions[session]
-                await send_json_or_bytes(websocket, msg)
-
-    async def listen_iopub(self):
-        while True:
-            msg = await receive_message(self.iopub_channel)
-            msg["channel"] = "iopub"
-            for websocket in self.sessions.values():
-                try:
-                    await send_json_or_bytes(websocket, msg)
-                except Exception:
-                    pass
-            if "content" in msg and "execution_state" in msg["content"]:
-                self.last_activity = {
-                    "date": msg["header"]["date"],
-                    "execution_state": msg["content"]["execution_state"],
-                }
+            parts = await get_zmq_parts(channel)
+            parent_header = get_parent_header(parts)
+            if channel == self.iopub_channel:
+                # broadcast to all web clients
+                for websocket in self.sessions.values():
+                    await self.send_to_ws(websocket, parts, parent_header, channel_name)
+            else:
+                session = parent_header["session"]
+                if session in self.sessions:
+                    websocket = self.sessions[session]
+                    await self.send_to_ws(websocket, parts, parent_header, channel_name)
 
     async def _wait_for_ready(self):
         while True:
@@ -197,6 +180,61 @@ class KernelServer:
                     pass
                 else:
                     break
+
+    async def send_to_zmq(self, websocket):
+        if not websocket.accepted_subprotocol:
+            while True:
+                msg = await receive_json_or_bytes(websocket.websocket)
+                msg_type = msg["header"]["msg_type"]
+                if (msg_type in self.blocked_messages) or (
+                    self.allowed_messages is not None
+                    and msg_type not in self.allowed_messages
+                ):
+                    continue
+                channel = msg.pop("channel")
+                if channel == "shell":
+                    send_message(msg, self.shell_channel, self.key)
+                elif channel == "control":
+                    send_message(msg, self.control_channel, self.key)
+        elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
+            while True:
+                msg = await websocket.websocket.receive_bytes()
+                channel, parts = deserialize_msg_from_ws_v1(msg)
+                # NOTE: we parse the header for message filtering
+                # it is not as bad as parsing the content
+                header = json.loads(parts[0])
+                msg_type = header["msg_type"]
+                if (msg_type in self.blocked_messages) or (
+                    self.allowed_messages is not None
+                    and msg_type not in self.allowed_messages
+                ):
+                    continue
+                if channel == "shell":
+                    send_raw_message(parts, self.shell_channel, self.key)
+                elif channel == "control":
+                    send_raw_message(parts, self.control_channel, self.key)
+
+    async def send_to_ws(self, websocket, parts, parent_header, channel_name):
+        if not websocket.accepted_subprotocol:
+            # default, "legacy" protocol
+            msg = get_msg_from_parts(parts, parent_header=parent_header)
+            msg["channel"] = channel_name
+            await send_json_or_bytes(websocket.websocket, msg)
+            if channel_name == "iopub":
+                if "content" in msg and "execution_state" in msg["content"]:
+                    self.last_activity = {
+                        "date": msg["header"]["date"],
+                        "execution_state": msg["content"]["execution_state"],
+                    }
+        elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
+            bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
+            try:
+                await websocket.websocket.send_bytes(bin_msg)
+            except Exception:
+                pass
+            # FIXME: update last_activity
+            # but we don't want to parse the content!
+            # or should we request it from the control channel?
 
 
 async def receive_json_or_bytes(websocket):

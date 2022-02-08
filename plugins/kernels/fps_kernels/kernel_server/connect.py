@@ -4,11 +4,13 @@ import socket
 import json
 import asyncio
 import uuid
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
 
 import zmq
 import zmq.asyncio
 from zmq.sugar.socket import Socket
+
+from fastapi import WebSocket
 
 
 channel_socket_types = {
@@ -101,3 +103,20 @@ def connect_channel(channel_name: str, cfg: cfg_t) -> Socket:
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")
     return sock
+
+
+class AcceptedWebSocket:
+    _websocket: WebSocket
+    _accepted_subprotocol: Optional[str]
+
+    def __init__(self, websocket, accepted_subprotocol):
+        self._websocket = websocket
+        self._accepted_subprotocol = accepted_subprotocol
+
+    @property
+    def websocket(self):
+        return self._websocket
+
+    @property
+    def accepted_subprotocol(self):
+        return self._accepted_subprotocol
