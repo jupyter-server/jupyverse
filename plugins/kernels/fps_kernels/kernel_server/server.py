@@ -1,4 +1,5 @@
 import os
+import uuid
 import json
 import asyncio
 import signal
@@ -105,12 +106,21 @@ class KernelServer:
             self.kernelspec_path, self.connection_file_path, self.capture_kernel_output
         )
         assert self.connection_cfg is not None
-        self.shell_channel = connect_channel("shell", self.connection_cfg)
-        self.control_channel = connect_channel("control", self.connection_cfg)
+        identity = uuid.uuid4().hex.encode("ascii")
+        self.shell_channel = connect_channel(
+            "shell", self.connection_cfg, identity=identity
+        )
+        self.stdin_channel = connect_channel(
+            "stdin", self.connection_cfg, identity=identity
+        )
+        self.control_channel = connect_channel(
+            "control", self.connection_cfg, identity=identity
+        )
         self.iopub_channel = connect_channel("iopub", self.connection_cfg)
         await self._wait_for_ready()
         self.channel_tasks += [
             asyncio.create_task(self.listen("shell")),
+            asyncio.create_task(self.listen("stdin")),
             asyncio.create_task(self.listen("control")),
             asyncio.create_task(self.listen("iopub")),
         ]
@@ -154,6 +164,8 @@ class KernelServer:
             channel = self.control_channel
         elif channel_name == "iopub":
             channel = self.iopub_channel
+        elif channel_name == "stdin":
+            channel = self.stdin_channel
 
         while True:
             parts = await get_zmq_parts(channel)
@@ -196,6 +208,8 @@ class KernelServer:
                     send_message(msg, self.shell_channel, self.key)
                 elif channel == "control":
                     send_message(msg, self.control_channel, self.key)
+                elif channel == "stdin":
+                    send_message(msg, self.stdin_channel, self.key)
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
             while True:
                 msg = await websocket.websocket.receive_bytes()
@@ -213,6 +227,8 @@ class KernelServer:
                     send_raw_message(parts, self.shell_channel, self.key)
                 elif channel == "control":
                     send_raw_message(parts, self.control_channel, self.key)
+                elif channel == "stdin":
+                    send_raw_message(parts, self.stdin_channel, self.key)
 
     async def send_to_ws(self, websocket, parts, parent_header, channel_name):
         if not websocket.accepted_subprotocol:
