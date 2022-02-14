@@ -87,19 +87,23 @@ async def launch_kernel(
     return p
 
 
-def create_socket(channel: str, cfg: cfg_t) -> Socket:
+def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
     ip = cfg["ip"]
     port = cfg[f"{channel}_port"]
     url = f"tcp://{ip}:{port}"
     socket_type = channel_socket_types[channel]
     sock = context.socket(socket_type)
     sock.linger = 1000  # set linger to 1s to prevent hangs at exit
+    if identity:
+        sock.identity = identity
     sock.connect(url)
     return sock
 
 
-def connect_channel(channel_name: str, cfg: cfg_t) -> Socket:
-    sock = create_socket(channel_name, cfg)
+def connect_channel(
+    channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None
+) -> Socket:
+    sock = create_socket(channel_name, cfg, identity)
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")
     return sock
