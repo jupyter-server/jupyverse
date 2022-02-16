@@ -1,0 +1,3 @@
+# fps-login
+
+An [FPS](https://github.com/jupyter-server/fps) plugin implementing the login API.
