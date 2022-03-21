@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.29
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.28...090205cbdaa1193f06a6d10dbea8b83ac0b46e54))
+
+### Merged PRs
+
+- Support python 3.7 [#163](https://github.com/jupyter-server/jupyverse/pull/163) ([@davidbrochart](https://github.com/davidbrochart))
+- Support stdin channel [#160](https://github.com/jupyter-server/jupyverse/pull/160) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix JupyterLab dev_mode [#159](https://github.com/jupyter-server/jupyverse/pull/159) ([@davidbrochart](https://github.com/davidbrochart))
+- Manually restart kernel as stop and start [#158](https://github.com/jupyter-server/jupyverse/pull/158) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove leftover [#155](https://github.com/jupyter-server/jupyverse/pull/155) ([@davidbrochart](https://github.com/davidbrochart))
+- Protocol alignment [#154](https://github.com/jupyter-server/jupyverse/pull/154) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-01-05&to=2022-03-21&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-01-05..2022-03-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.28
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.27...71cbcbf60156c56debdddfabcda633060a89f604))
@@ -27,8 +48,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-01-01&to=2022-01-05&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-01-01..2022-01-05&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Afcollonval+updated%3A2022-01-01..2022-01-05&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ajtpio+updated%3A2022-01-01..2022-01-05&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.27
 
