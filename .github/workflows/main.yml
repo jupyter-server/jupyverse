@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [ 3.9 ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
 
     steps:
     - name: Checkout
@@ -45,7 +45,7 @@ jobs:
         pip install ./plugins/yjs
         pip install ./plugins/lab
         pip install ./plugins/jupyterlab
-        
+
         pip install flake8 black mypy pytest pytest-asyncio requests ipykernel
 
     - name: Check style
