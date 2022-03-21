@@ -1,5 +1,5 @@
 from uuid import uuid4
-from typing import Literal, Optional
+from typing import Optional
 from pydantic import SecretStr
 
 from fps.config import PluginModel, get_config  # type: ignore
@@ -10,7 +10,8 @@ class AuthConfig(PluginModel):
     client_id: str = ""
     client_secret: SecretStr = SecretStr("")
     redirect_uri: str = ""
-    mode: Literal["noauth", "token", "user"] = "token"
+    # mode: Literal["noauth", "token", "user"] = "token"
+    mode: str = "token"
     token: str = str(uuid4())
     collaborative: bool = False
     global_email: str = "guest@jupyter.com"

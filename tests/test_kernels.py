@@ -1,4 +1,5 @@
 import os
+import sys
 from time import sleep
 
 import pytest
@@ -7,6 +8,10 @@ from fps_kernels.kernel_server.server import kernels, KernelServer
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
+@pytest.mark.skipif(
+    sys.platform.startswith("win") and sys.version_info < (3, 8),
+    reason="ipykernel not supported",
+)
 async def test_kernel_messages(client, capfd):
     kernel_id = "kernel_id_0"
     kernel_name = "python3"

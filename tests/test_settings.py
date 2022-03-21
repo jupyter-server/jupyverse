@@ -1,10 +1,15 @@
 import json
+import sys
 
 import pytest
 from fastapi.testclient import TestClient
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
+@pytest.mark.skipif(
+    sys.platform.startswith("linux") and sys.version_info < (3, 8),
+    reason="pytest-asyncio issue",
+)
 def test_settings(client, app):
     with TestClient(app) as client:
         # get previous theme
