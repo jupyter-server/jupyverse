@@ -200,7 +200,7 @@ async def get_path_content(path: Path, get_content: bool):
                 for subpath in path.iterdir()
                 if not subpath.name.startswith(".")
             ]
-        elif path.is_file():
+        elif path.is_file() or path.is_symlink():
             try:
                 async with await open_file(path) as f:
                     content = await f.read()
@@ -212,7 +212,7 @@ async def get_path_content(path: Path, get_content: bool):
         type = "directory"
         format = "json"
         mimetype = None
-    elif path.is_file():
+    elif path.is_file() or path.is_symlink():
         size = get_file_size(path)
         if path.suffix == ".ipynb":
             type = "notebook"
