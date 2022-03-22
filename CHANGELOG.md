@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.30
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.29...dd3b60678adadb77cca1f54581cde735fc91a366))
+
+### Merged PRs
+
+- Add license [#168](https://github.com/jupyter-server/jupyverse/pull/168) ([@davidbrochart](https://github.com/davidbrochart))
+- Don't install fps-terminals on Windows [#167](https://github.com/jupyter-server/jupyverse/pull/167) ([@davidbrochart](https://github.com/davidbrochart))
+- Handle symlinks [#166](https://github.com/jupyter-server/jupyverse/pull/166) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-03-21&to=2022-03-22&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-03-21..2022-03-22&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.29
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.28...090205cbdaa1193f06a6d10dbea8b83ac0b46e54))
@@ -20,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-01-05&to=2022-03-21&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-01-05..2022-03-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.28
 
