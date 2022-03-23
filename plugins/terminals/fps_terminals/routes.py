@@ -1,5 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
+import os
 from typing import Dict, Any
 
 from fps.hooks import register_router  # type: ignore
@@ -11,7 +12,11 @@ from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 
 from .models import Terminal
-from .server import TerminalServer
+
+if os.name == "nt":
+    from .win_server import TerminalServer  # type: ignore
+else:
+    from .server import TerminalServer  # type: ignore
 
 router = APIRouter()
 
