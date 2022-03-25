@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.31
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.30...5e050741eb9bf0b36f058065edd84791f2e0a11a))
+
+### Merged PRs
+
+- Include static directory [#171](https://github.com/jupyter-server/jupyverse/pull/171) ([@davidbrochart](https://github.com/davidbrochart))
+- Support Windows terminals [#170](https://github.com/jupyter-server/jupyverse/pull/170) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-03-22&to=2022-03-25&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-03-22..2022-03-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.30
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.29...dd3b60678adadb77cca1f54581cde735fc91a366))
@@ -17,8 +34,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-03-21&to=2022-03-22&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-03-21..2022-03-22&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.29
 
