@@ -1,1 +1,2 @@
+recursive-include fps_login/static *
 include *.md
