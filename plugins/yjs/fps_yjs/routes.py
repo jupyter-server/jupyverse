@@ -4,13 +4,12 @@ import uuid
 from enum import IntEnum
 from typing import Dict, Set
 
-from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, status
 import fastapi
-
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
+from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import cookie_authentication  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
 
 router = APIRouter()
 
@@ -122,8 +121,7 @@ class YjsEchoWebSocket:
                 elif message[0] == ServerMessageType.REQUEST_INITIALIZED_CONTENT:
                     # print("client requested initial content")
                     await self.websocket.send_bytes(
-                        bytes([ServerMessageType.REQUEST_INITIALIZED_CONTENT])
-                        + room.content
+                        bytes([ServerMessageType.REQUEST_INITIALIZED_CONTENT]) + room.content
                     )
                 elif message[0] == ServerMessageType.PUT_INITIALIZED_CONTENT:
                     # print("client put initialized content")

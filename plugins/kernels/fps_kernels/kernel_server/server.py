@@ -1,36 +1,35 @@
-import os
-import uuid
-import json
 import asyncio
+import json
+import os
 import signal
+import uuid
 from datetime import datetime
-from typing import Iterable, Optional, List, Dict, cast
+from typing import Dict, Iterable, List, Optional, cast
 
 from fastapi import WebSocketDisconnect  # type: ignore
 from starlette.websockets import WebSocketState
 
 from .connect import (
-    write_connection_file as _write_connection_file,
-    read_connection_file,
-    launch_kernel,
-    connect_channel,
-    cfg_t,
     AcceptedWebSocket,
-)  # type: ignore
-from .message import (
+    cfg_t,
+    connect_channel,
+    launch_kernel,
+    read_connection_file,
+)
+from .connect import write_connection_file as _write_connection_file  # type: ignore
+from .message import (  # type: ignore
+    create_message,
+    deserialize_msg_from_ws_v1,
+    from_binary,
+    get_msg_from_parts,
+    get_parent_header,
+    get_zmq_parts,
     receive_message,
     send_message,
     send_raw_message,
-    create_message,
-    to_binary,
-    from_binary,
-    deserialize_msg_from_ws_v1,
-    get_parent_header,
-    get_zmq_parts,
     serialize_msg_to_ws_v1,
-    get_msg_from_parts,
-)  # type: ignore
-
+    to_binary,
+)
 
 kernels: dict = {}
 
@@ -53,9 +52,7 @@ class KernelServer:
         self.sessions: Dict[str, AcceptedWebSocket] = {}
         # blocked messages and allowed messages are mutually exclusive
         self.blocked_messages: List[str] = []
-        self.allowed_messages: Optional[
-            List[str]
-        ] = None  # when None, all messages are allowed
+        self.allowed_messages: Optional[List[str]] = None  # when None, all messages are allowed
         # when [], no message is allowed
         self.setup_connection_file()
 
@@ -95,9 +92,7 @@ class KernelServer:
 
     async def start(self) -> None:
         if not self.kernelspec_path:
-            raise RuntimeError(
-                "Could not find a kernel, maybe you forgot to install one?"
-            )
+            raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
         self.last_activity = {
             "date": datetime.utcnow().isoformat() + "Z",
             "execution_state": "starting",
@@ -107,15 +102,9 @@ class KernelServer:
         )
         assert self.connection_cfg is not None
         identity = uuid.uuid4().hex.encode("ascii")
-        self.shell_channel = connect_channel(
-            "shell", self.connection_cfg, identity=identity
-        )
-        self.stdin_channel = connect_channel(
-            "stdin", self.connection_cfg, identity=identity
-        )
-        self.control_channel = connect_channel(
-            "control", self.connection_cfg, identity=identity
-        )
+        self.shell_channel = connect_channel("shell", self.connection_cfg, identity=identity)
+        self.stdin_channel = connect_channel("stdin", self.connection_cfg, identity=identity)
+        self.control_channel = connect_channel("control", self.connection_cfg, identity=identity)
         self.iopub_channel = connect_channel("iopub", self.connection_cfg)
         await self._wait_for_ready()
         self.channel_tasks += [
@@ -199,8 +188,7 @@ class KernelServer:
                 msg = await receive_json_or_bytes(websocket.websocket)
                 msg_type = msg["header"]["msg_type"]
                 if (msg_type in self.blocked_messages) or (
-                    self.allowed_messages is not None
-                    and msg_type not in self.allowed_messages
+                    self.allowed_messages is not None and msg_type not in self.allowed_messages
                 ):
                     continue
                 channel = msg.pop("channel")
@@ -219,8 +207,7 @@ class KernelServer:
                 header = json.loads(parts[0])
                 msg_type = header["msg_type"]
                 if (msg_type in self.blocked_messages) or (
-                    self.allowed_messages is not None
-                    and msg_type not in self.allowed_messages
+                    self.allowed_messages is not None and msg_type not in self.allowed_messages
                 ):
                     continue
                 if channel == "shell":
