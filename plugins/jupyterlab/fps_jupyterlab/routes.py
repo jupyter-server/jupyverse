@@ -1,22 +1,20 @@
 import json
-from pathlib import Path
 from http import HTTPStatus
+from pathlib import Path
 
 import jupyterlab  # type: ignore
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.requests import Request  # type: ignore
 from fps.hooks import register_router  # type: ignore
-
-from fps_auth.db import get_user_db  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
-
-from fps_lab.routes import init_router  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.models import User  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_lab.routes import init_router  # type: ignore
 from fps_lab.utils import get_federated_extensions  # type: ignore
+from starlette.requests import Request  # type: ignore
 
 from .config import get_jlab_config
 
@@ -44,9 +42,7 @@ async def get_lab(
     auth_config=Depends(get_auth_config),
 ):
     return HTMLResponse(
-        get_index(
-            "default", auth_config.collaborative, config.dev_mode, lab_config.base_url
-        )
+        get_index("default", auth_config.collaborative, config.dev_mode, lab_config.base_url)
     )
 
 
@@ -55,9 +51,7 @@ async def load_workspace(
     path, lab_config=Depends(get_lab_config), auth_config=Depends(get_auth_config)
 ):
     return HTMLResponse(
-        get_index(
-            "default", auth_config.collaborative, config.dev_mode, lab_config.base_url
-        )
+        get_index("default", auth_config.collaborative, config.dev_mode, lab_config.base_url)
     )
 
 
@@ -89,9 +83,7 @@ async def get_workspace(
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
-    return get_index(
-        name, auth_config.collaborative, config.dev_mode, lab_config.base_url
-    )
+    return get_index(name, auth_config.collaborative, config.dev_mode, lab_config.base_url)
 
 
 INDEX_HTML = """\
@@ -133,9 +125,7 @@ def get_index(workspace, collaborative, dev_mode, base_url="/"):
         main_id = path.name.split(".")[1]
         break
     vendor_id = None
-    for path in (static_lab_dir).glob(
-        "vendors-node_modules_whatwg-fetch_fetch_js.*.js"
-    ):
+    for path in (static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
         vendor_id = path.name.split(".")[1]
         break
     full_static_url = f"{base_url}static/lab"

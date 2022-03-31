@@ -46,12 +46,10 @@ jobs:
         pip install ./plugins/lab
         pip install ./plugins/jupyterlab
 
-        pip install flake8 black mypy pytest pytest-asyncio requests ipykernel
+        pip install mypy pytest pytest-asyncio requests ipykernel
 
-    - name: Check style
+    - name: Check types
       run: |
-        black --check jupyverse plugins tests
-        flake8 jupyverse plugins tests
         mypy jupyverse
         mypy plugins/contents/fps_contents
         mypy plugins/kernels/fps_kernels

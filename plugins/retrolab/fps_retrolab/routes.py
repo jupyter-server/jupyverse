@@ -1,18 +1,16 @@
 import json
 from pathlib import Path
 
-from fps.hooks import register_router  # type: ignore
 import retrolab  # type: ignore
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-
+from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
-
-from fps_lab.routes import init_router  # type: ignore
+from fps_auth.models import User  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_lab.routes import init_router  # type: ignore
 from fps_lab.utils import get_federated_extensions  # type: ignore
 
 router = APIRouter()

@@ -1,8 +1,8 @@
-from uuid import uuid4
+import asyncio
 import socket
 import subprocess
 import time
-import asyncio
+from uuid import uuid4
 
 import pytest
 

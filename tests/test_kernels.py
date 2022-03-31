@@ -3,7 +3,7 @@ import sys
 from time import sleep
 
 import pytest
-from fps_kernels.kernel_server.server import kernels, KernelServer
+from fps_kernels.kernel_server.server import KernelServer, kernels
 
 
 @pytest.mark.asyncio
@@ -18,9 +18,7 @@ async def test_kernel_messages(client, capfd):
     kernelspec_path = (
         os.environ["CONDA_PREFIX"] + f"/share/jupyter/kernels/{kernel_name}/kernel.json"
     )
-    kernel_server = KernelServer(
-        kernelspec_path=kernelspec_path, capture_kernel_output=False
-    )
+    kernel_server = KernelServer(kernelspec_path=kernelspec_path, capture_kernel_output=False)
     await kernel_server.start()
     kernels[kernel_id] = {"server": kernel_server}
     msg_id = "0"

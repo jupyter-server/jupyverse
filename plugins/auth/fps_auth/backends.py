@@ -1,27 +1,24 @@
+from typing import Generic, Optional
 from uuid import uuid4
-from typing import Optional, Generic
-
-from fps.exceptions import RedirectException  # type: ignore
 
 import httpx
-from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
-from fastapi import Depends, Response, HTTPException, status
-
+from fastapi import Depends, HTTPException, Response, status
+from fastapi_users import BaseUserManager, FastAPIUsers, models  # type: ignore
 from fastapi_users.authentication import (
     AuthenticationBackend,
     CookieTransport,
     JWTStrategy,
 )
-from fastapi_users.authentication.transport.base import Transport
 from fastapi_users.authentication.strategy.base import Strategy
-from fastapi_users import FastAPIUsers, BaseUserManager, models  # type: ignore
+from fastapi_users.authentication.transport.base import Transport
+from fps.exceptions import RedirectException  # type: ignore
+from fps.logging import get_configured_logger  # type: ignore
+from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from starlette.requests import Request
 
-from fps.logging import get_configured_logger  # type: ignore
-
 from .config import get_auth_config
-from .db import secret, get_user_db
-from .models import User, UserDB, UserCreate, UserUpdate
+from .db import get_user_db, secret
+from .models import User, UserCreate, UserDB, UserUpdate
 
 logger = get_configured_logger("auth")
 
@@ -34,9 +31,7 @@ class NoAuthStrategy(Strategy, Generic[models.UC, models.UD]):
     async def read_token(
         self, token: Optional[str], user_manager: BaseUserManager[models.UC, models.UD]
     ) -> Optional[models.UD]:
-        active_user = await user_manager.user_db.get_by_email(
-            get_auth_config().global_email
-        )
+        active_user = await user_manager.user_db.get_by_email(get_auth_config().global_email)
         return active_user
 
 
@@ -88,9 +83,7 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
             if oauth_account.oauth_name == "github":
                 async with httpx.AsyncClient() as client:
                     r = (
-                        await client.get(
-                            f"https://api.github.com/user/{oauth_account.account_id}"
-                        )
+                        await client.get(f"https://api.github.com/user/{oauth_account.account_id}")
                     ).json()
 
                 user.anonymous = False
@@ -145,9 +138,7 @@ async def current_user(
     response: Response,
     token: Optional[str] = None,
     user: User = Depends(
-        fapi_users.current_user(
-            optional=True, get_enabled_backends=get_enabled_backends
-        )
+        fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
     ),
     user_db=Depends(get_user_db),
     user_manager: UserManager = Depends(get_user_manager),
@@ -164,17 +155,13 @@ async def current_user(
             global_user = await user_db.get_by_email(auth_config.global_email)
             if global_user and global_user.hashed_password == token:
                 active_user = await create_guest(user_db, auth_config)
-                await cookie_authentication.login(
-                    get_jwt_strategy(), active_user, response
-                )
+                await cookie_authentication.login(get_jwt_strategy(), active_user, response)
     else:
         if auth_config.mode == "token":
             global_user = await user_db.get_by_email(auth_config.global_email)
             if global_user and global_user.hashed_password == token:
                 active_user = global_user
-                await cookie_authentication.login(
-                    get_jwt_strategy(), active_user, response
-                )
+                await cookie_authentication.login(get_jwt_strategy(), active_user, response)
 
     if active_user:
         return active_user

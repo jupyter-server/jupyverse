@@ -1,20 +1,19 @@
-from http import HTTPStatus
 import json
 import os
 import shutil
 from datetime import datetime
+from http import HTTPStatus
 from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
-from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, Depends, HTTPException, Response
-from starlette.requests import Request  # type: ignore
 from anyio import open_file
-
+from fastapi import APIRouter, Depends, HTTPException, Response
+from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
+from starlette.requests import Request  # type: ignore
 
-from .models import Checkpoint, Content, SaveContent, CreateContent, RenameContent
+from .models import Checkpoint, Content, CreateContent, RenameContent, SaveContent
 
 router = APIRouter()
 
@@ -25,9 +24,7 @@ router = APIRouter()
 )
 async def create_checkpoint(path, user: User = Depends(current_user)):
     src_path = Path(path)
-    dst_path = (
-        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-    )
+    dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     try:
         dst_path.parent.mkdir(exist_ok=True)
         shutil.copyfile(src_path, dst_path)
@@ -53,14 +50,10 @@ async def create_content(
         available_path = get_available_path(content_path / "Untitled.ipynb")
         async with await open_file(available_path, "w") as f:
             await f.write(
-                json.dumps(
-                    {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}
-                )
+                json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5})
             )
         src_path = available_path
-        dst_path = (
-            Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-        )
+        dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
         try:
             dst_path.parent.mkdir(exist_ok=True)
             shutil.copyfile(src_path, dst_path)
@@ -73,9 +66,7 @@ async def create_content(
         available_path.mkdir(parents=True, exist_ok=True)
     else:
         assert create_content.ext is not None
-        available_path = get_available_path(
-            content_path / ("untitled" + create_content.ext)
-        )
+        available_path = get_available_path(content_path / ("untitled" + create_content.ext))
         open(available_path, "w").close()
 
     return Content(**await get_path_content(available_path, False))
@@ -92,9 +83,7 @@ async def get_root_content(
 @router.get("/api/contents/{path:path}/checkpoints")
 async def get_checkpoint(path, user: User = Depends(current_user)):
     src_path = Path(path)
-    dst_path = (
-        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-    )
+    dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     if not dst_path.exists():
         return []
     mtime = get_file_modification_time(dst_path)
@@ -122,10 +111,7 @@ async def save_content(
                 dict_content = cast(Dict, save_content.content)
                 if save_content.type == "notebook":
                     # see https://github.com/jupyterlab/jupyterlab/issues/11005
-                    if (
-                        "metadata" in dict_content
-                        and "orig_nbformat" in dict_content["metadata"]
-                    ):
+                    if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
                         del dict_content["metadata"]["orig_nbformat"]
                     await f.write(json.dumps(dict_content, indent=2))
             else:

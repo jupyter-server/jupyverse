@@ -1,15 +1,14 @@
+import os
 from datetime import datetime
 from http import HTTPStatus
-import os
-from typing import Dict, Any
+from typing import Any, Dict
 
+from fastapi import APIRouter, Depends, Response, WebSocket, status
 from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, WebSocket, Response, Depends, status
-
-from fps_auth.backends import get_jwt_strategy, current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.backends import current_user, get_jwt_strategy  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.models import User  # type: ignore
 
 from .models import Terminal
 

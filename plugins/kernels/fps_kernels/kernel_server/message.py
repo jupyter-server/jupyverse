@@ -1,10 +1,10 @@
-import hmac
 import hashlib
+import hmac
 import json
 import struct
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple, cast
 from uuid import uuid4
-from typing import List, Dict, Tuple, Any, Optional, cast
 
 from zmq.sugar.socket import Socket
 from zmq.utils import jsonapi
@@ -110,15 +110,11 @@ def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
         for i in range(offset_number)
     ]
     channel = ws_msg[offsets[0] : offsets[1]].decode("utf-8")  # noqa
-    msg_list = [
-        ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)  # noqa
-    ]
+    msg_list = [ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)]  # noqa
     return channel, msg_list
 
 
-async def receive_message(
-    sock: Socket, timeout: float = float("inf")
-) -> Optional[Dict[str, Any]]:
+async def receive_message(sock: Socket, timeout: float = float("inf")) -> Optional[Dict[str, Any]]:
     timeout *= 1000  # in ms
     ready = await sock.poll(timeout)
     if ready:
@@ -162,9 +158,7 @@ def utcnow() -> datetime:
     return datetime.utcnow().replace(tzinfo=timezone.utc)
 
 
-def create_message_header(
-    msg_type: str, session_id: str, msg_id: str
-) -> Dict[str, Any]:
+def create_message_header(msg_type: str, session_id: str, msg_id: str) -> Dict[str, Any]:
     if not session_id:
         session_id = uuid4().hex
     if not msg_id:

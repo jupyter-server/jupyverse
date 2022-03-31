@@ -1,20 +1,20 @@
 import json
-import json5  # type: ignore
-from pathlib import Path
 import sys
 from http import HTTPStatus
-import pkg_resources  # type: ignore
+from pathlib import Path
 
+import json5  # type: ignore
+import pkg_resources  # type: ignore
 from babel import Locale  # type: ignore
-import jupyverse  # type: ignore
-from fastapi import Response, Depends, status
+from fastapi import Depends, Response, status
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fps_auth.backends import current_user  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.models import User  # type: ignore
 from starlette.requests import Request  # type: ignore
 
-from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.backends import current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
+import jupyverse  # type: ignore
 
 from .config import get_lab_config  # type: ignore
 from .utils import get_federated_extensions
@@ -76,9 +76,7 @@ def init_router(router, redirect_after_root):
             "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/" + rest_of_path
         )
 
-    @router.get(
-        "/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json"
-    )
+    @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
     async def get_listings(user=Depends(current_user)):
         return {
             "blocked_extensions_uris": [],
@@ -128,9 +126,9 @@ def init_router(router, redirect_after_root):
         LOCALE = language
         package = ep.load()
         data = {}
-        for path in (
-            Path(package.__file__).parent / "locale" / language / "LC_MESSAGES"
-        ).glob("*.json"):
+        for path in (Path(package.__file__).parent / "locale" / language / "LC_MESSAGES").glob(
+            "*.json"
+        ):
             with open(path) as f:
                 data.update({path.stem: json.load(f)})
         return {"data": data, "message": ""}

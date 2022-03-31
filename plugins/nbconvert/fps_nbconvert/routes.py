@@ -5,7 +5,6 @@ import nbconvert  # type: ignore
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
-
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.models import User  # type: ignore
 
@@ -15,9 +14,7 @@ router = APIRouter()
 @router.get("/api/nbconvert")
 async def get_nbconvert_formats():
     return {
-        name: {
-            "output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype
-        }
+        name: {"output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype}
         for name in nbconvert.exporters.get_export_names()
     }
 

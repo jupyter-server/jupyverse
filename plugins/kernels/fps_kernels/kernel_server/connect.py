@@ -1,17 +1,15 @@
-import os
-import tempfile
-import socket
-import json
 import asyncio
+import json
+import os
+import socket
+import tempfile
 import uuid
-from typing import Dict, Tuple, Union, Optional
+from typing import Dict, Optional, Tuple, Union
 
 import zmq
 import zmq.asyncio
-from zmq.sugar.socket import Socket
-
 from fastapi import WebSocket
-
+from zmq.sugar.socket import Socket
 
 channel_socket_types = {
     "hb": zmq.REQ,
@@ -100,9 +98,7 @@ def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) ->
     return sock
 
 
-def connect_channel(
-    channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None
-) -> Socket:
+def connect_channel(channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
     sock = create_socket(channel_name, cfg, identity)
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")

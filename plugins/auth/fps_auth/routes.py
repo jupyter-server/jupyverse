@@ -1,22 +1,21 @@
 from uuid import uuid4
 
-from fps.hooks import register_router  # type: ignore
+from fastapi import APIRouter, Depends
 from fps.config import get_config  # type: ignore
+from fps.hooks import register_router  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
 from fps_uvicorn.config import UvicornConfig  # type: ignore
-
-from fastapi import APIRouter, Depends
 from sqlalchemy.orm import sessionmaker  # type: ignore
 
-from .config import get_auth_config
-from .db import user_db, secret, database, engine, UserTable
 from .backends import (
-    fapi_users,
-    current_user,
     cookie_authentication,
-    github_cookie_authentication,
+    current_user,
+    fapi_users,
     github_authentication,
+    github_cookie_authentication,
 )
+from .config import get_auth_config
+from .db import UserTable, database, engine, secret, user_db
 from .models import User, UserDB
 
 logger = get_configured_logger("auth")
@@ -74,17 +73,13 @@ async def get_users(user: User = Depends(current_user)):
 
 
 # Cookie based auth login and logout
-r_cookie_auth = register_router(
-    fapi_users.get_auth_router(cookie_authentication), prefix="/auth"
-)
+r_cookie_auth = register_router(fapi_users.get_auth_router(cookie_authentication), prefix="/auth")
 r_register = register_router(fapi_users.get_register_router(), prefix="/auth")
 r_user = register_router(fapi_users.get_users_router(), prefix="/auth/user")
 
 # GitHub OAuth register router
 r_github = register_router(
-    fapi_users.get_oauth_router(
-        github_authentication, github_cookie_authentication, secret
-    ),
+    fapi_users.get_oauth_router(github_authentication, github_cookie_authentication, secret),
     prefix="/auth/github",
 )
 

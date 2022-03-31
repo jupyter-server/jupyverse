@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 import pytest
-from utils import clear_content_values, create_content, sort_content_by_name
 from fastapi.testclient import TestClient
+from utils import clear_content_values, create_content, sort_content_by_name
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))

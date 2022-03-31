@@ -1,18 +1,19 @@
 import secrets
 from pathlib import Path
 
-from fastapi_users.db import SQLAlchemyBaseUserTable, SQLAlchemyUserDatabase  # type: ignore
-from fastapi_users.db import SQLAlchemyBaseOAuthAccountTable  # type: ignore
-from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
-from sqlalchemy import Boolean, String, Text, Column  # type: ignore
-import sqlalchemy  # type: ignore
 import databases  # type: ignore
+import sqlalchemy  # type: ignore
+from fastapi_users.db import SQLAlchemyBaseOAuthAccountTable  # type: ignore
+from fastapi_users.db import (  # type: ignore
+    SQLAlchemyBaseUserTable,
+    SQLAlchemyUserDatabase,
+)
 from fps.config import get_config  # type: ignore
+from sqlalchemy import Boolean, Column, String, Text  # type: ignore
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
 
 from .config import AuthConfig
-from .models import (
-    UserDB,
-)
+from .models import UserDB
 
 auth_config = get_config(AuthConfig)
 
@@ -57,9 +58,7 @@ class OAuthAccount(SQLAlchemyBaseOAuthAccountTable, Base):
     pass
 
 
-engine = sqlalchemy.create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = sqlalchemy.create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 Base.metadata.create_all(engine)
 

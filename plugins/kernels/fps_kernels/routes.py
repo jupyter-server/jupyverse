@@ -4,18 +4,21 @@ import sys
 import uuid
 from http import HTTPStatus
 
-from fps.hooks import register_router  # type: ignore
-from fastapi import APIRouter, WebSocket, Response, Depends, status
+from fastapi import APIRouter, Depends, Response, WebSocket, status
 from fastapi.responses import FileResponse
+from fps.hooks import register_router  # type: ignore
+from fps_auth.backends import current_user, get_jwt_strategy  # type: ignore
+from fps_auth.config import get_auth_config  # type: ignore
+from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.models import User  # type: ignore
+from fps_lab.config import get_lab_config  # type: ignore
 from starlette.requests import Request  # type: ignore
 
-from fps_auth.backends import get_jwt_strategy, current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.config import get_auth_config  # type: ignore
-from fps_lab.config import get_lab_config  # type: ignore
-
-from .kernel_server.server import AcceptedWebSocket, KernelServer, kernels  # type: ignore
+from .kernel_server.server import (  # type: ignore
+    AcceptedWebSocket,
+    KernelServer,
+    kernels,
+)
 from .models import Session
 
 router = APIRouter()
@@ -32,9 +35,7 @@ async def stop_kernels():
 
 
 @router.get("/api/kernelspecs")
-async def get_kernelspecs(
-    lab_config=Depends(get_lab_config), user: User = Depends(current_user)
-):
+async def get_kernelspecs(lab_config=Depends(get_lab_config), user: User = Depends(current_user)):
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
         with open(path) as f:
             spec = json.load(f)
@@ -54,9 +55,7 @@ async def get_kernelspec(
     file_name,
     user: User = Depends(current_user),
 ):
-    return FileResponse(
-        prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name
-    )
+    return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
 
 
 @router.get("/api/kernels")
@@ -106,9 +105,7 @@ async def get_sessions(user: User = Depends(current_user)):
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
         session["kernel"]["last_activity"] = kernel_server.last_activity["date"]
-        session["kernel"]["execution_state"] = kernel_server.last_activity[
-            "execution_state"
-        ]
+        session["kernel"]["execution_state"] = kernel_server.last_activity["execution_state"]
     return list(sessions.values())
 
 
