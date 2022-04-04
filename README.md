@@ -17,10 +17,18 @@ For the motivations behind this project, please refer to this issue in the
 
 ## Install
 
+With `pip`:
 ```bash
 pip install jupyverse[jupyterlab]  # for the JupyterLab front-end
 # or
 pip install jupyverse[retrolab]  # for the RetroLab front-end
+```
+
+With `mamba` or `conda` (using the `conda-forge` channel):
+```bash
+mamba install jupyverse fps-jupyterlab  # for the JupyterLab front-end
+# or
+mamba install jupyverse fps-retrolab  # for the RetroLab front-end
 ```
 
 Note: you cannot have both the JupyterLab and the RetroLab front-ends enabled at the same time.
