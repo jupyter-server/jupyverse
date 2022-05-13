@@ -36,7 +36,7 @@ jobs:
 
     - name: Install jupyverse
       run: |
-        mkdir fps && cd fps && curl -L -O https://github.com/jupyter-server/fps/archive/master.tar.gz && tar zxf master.tar.gz && cd fps-master && pip install . && pip install ./plugins/uvicorn && cd ../.. && rm -rf fps
+        pip install fps[uvicorn]
         pip install . --no-deps
         pip install ./plugins/auth
         pip install ./plugins/contents

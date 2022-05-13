@@ -7,9 +7,12 @@ from typing import Dict, Set
 import fastapi
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import cookie_authentication  # type: ignore
+from fps_auth.backends import (  # type: ignore
+    UserManager,
+    get_jwt_strategy,
+    get_user_manager,
+)
 from fps_auth.config import get_auth_config  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
 
 router = APIRouter()
 
@@ -28,14 +31,14 @@ async def websocket_endpoint(
     type,
     path,
     auth_config=Depends(get_auth_config),
-    user_db=Depends(get_user_db),
+    user_manager: UserManager = Depends(get_user_manager),
 ):
     accept_websocket = False
     if auth_config.mode == "noauth":
         accept_websocket = True
     elif "fastapiusersauth" in websocket._cookies:
-        cookie = websocket._cookies["fastapiusersauth"]
-        user = await cookie_authentication(cookie, user_db)
+        token = websocket._cookies["fastapiusersauth"]
+        user = await get_jwt_strategy().read_token(token, user_manager)
         if user:
             accept_websocket = True
     if accept_websocket:

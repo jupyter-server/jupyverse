@@ -9,8 +9,8 @@ from fps_kernels.kernel_server.server import KernelServer, kernels
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.skipif(
-    sys.platform.startswith("win") and sys.version_info < (3, 8),
-    reason="ipykernel not supported",
+    sys.version_info < (3, 8),
+    reason="pytest-asyncio issue",
 )
 async def test_kernel_messages(client, capfd):
     kernel_id = "kernel_id_0"

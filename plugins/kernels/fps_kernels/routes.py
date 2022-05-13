@@ -7,10 +7,14 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, Response, WebSocket, status
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import current_user, get_jwt_strategy  # type: ignore
+from fps_auth.backends import (  # type: ignore
+    UserManager,
+    current_user,
+    get_jwt_strategy,
+    get_user_manager,
+)
 from fps_auth.config import get_auth_config  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.models import User  # type: ignore
+from fps_auth.models import UserRead  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 from starlette.requests import Request  # type: ignore
 
@@ -35,7 +39,9 @@ async def stop_kernels():
 
 
 @router.get("/api/kernelspecs")
-async def get_kernelspecs(lab_config=Depends(get_lab_config), user: User = Depends(current_user)):
+async def get_kernelspecs(
+    lab_config=Depends(get_lab_config), user: UserRead = Depends(current_user)
+):
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
         with open(path) as f:
             spec = json.load(f)
@@ -53,13 +59,13 @@ async def get_kernelspecs(lab_config=Depends(get_lab_config), user: User = Depen
 async def get_kernelspec(
     kernel_name,
     file_name,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
 
 
 @router.get("/api/kernels")
-async def get_kernels(user: User = Depends(current_user)):
+async def get_kernels(user: UserRead = Depends(current_user)):
     results = []
     for kernel_id, kernel in kernels.items():
         results.append(
@@ -77,7 +83,7 @@ async def get_kernels(user: User = Depends(current_user)):
 @router.delete("/api/sessions/{session_id}", status_code=204)
 async def delete_session(
     session_id: str,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     kernel_id = sessions[session_id]["kernel"]["id"]
     kernel_server = kernels[kernel_id]["server"]
@@ -90,7 +96,7 @@ async def delete_session(
 @router.patch("/api/sessions/{session_id}")
 async def rename_session(
     request: Request,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     rename_session = await request.json()
     session_id = rename_session.pop("id")
@@ -100,7 +106,7 @@ async def rename_session(
 
 
 @router.get("/api/sessions")
-async def get_sessions(user: User = Depends(current_user)):
+async def get_sessions(user: UserRead = Depends(current_user)):
     for session in sessions.values():
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
@@ -116,7 +122,7 @@ async def get_sessions(user: User = Depends(current_user)):
 )
 async def create_session(
     request: Request,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     create_session = await request.json()
     kernel_name = create_session["kernel"]["name"]
@@ -150,7 +156,7 @@ async def create_session(
 @router.post("/api/kernels/{kernel_id}/restart")
 async def restart_kernel(
     kernel_id,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     if kernel_id in kernels:
         kernel = kernels[kernel_id]
@@ -168,7 +174,7 @@ async def restart_kernel(
 @router.get("/api/kernels/{kernel_id}")
 async def get_kernel(
     kernel_id,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     if kernel_id in kernels:
         kernel = kernels[kernel_id]
@@ -188,14 +194,14 @@ async def kernel_channels(
     kernel_id,
     session_id,
     auth_config=Depends(get_auth_config),
-    user_db=Depends(get_user_db),
+    user_manager: UserManager = Depends(get_user_manager),
 ):
     accept_websocket = False
     if auth_config.mode == "noauth":
         accept_websocket = True
-    else:
-        cookie = websocket._cookies["fastapiusersauth"]
-        user = await get_jwt_strategy().read_token(cookie, user_db)
+    elif "fastapiusersauth" in websocket._cookies:
+        token = websocket._cookies["fastapiusersauth"]
+        user = await get_jwt_strategy().read_token(token, user_manager)
         if user:
             accept_websocket = True
     if accept_websocket:

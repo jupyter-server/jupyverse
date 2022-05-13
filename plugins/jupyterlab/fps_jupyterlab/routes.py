@@ -10,7 +10,7 @@ from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.models import User  # type: ignore
+from fps_auth.models import UserRead  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.utils import get_federated_extensions  # type: ignore
@@ -37,7 +37,7 @@ router.mount(
 
 @router.get("/lab")
 async def get_lab(
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
@@ -56,7 +56,7 @@ async def load_workspace(
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: User = Depends(current_user)):
+async def get_workspace_data(user: UserRead = Depends(current_user)):
     if user:
         return json.loads(user.workspace)
     return {}
@@ -68,18 +68,17 @@ async def get_workspace_data(user: User = Depends(current_user)):
 )
 async def set_workspace(
     request: Request,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
     user_db=Depends(get_user_db),
 ):
-    user.workspace = await request.body()
-    await user_db.update(user)
+    await user_db.update(user, {"workspace": await request.body()})
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
 
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
 async def get_workspace(
     name,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):

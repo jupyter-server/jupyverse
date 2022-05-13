@@ -40,6 +40,7 @@ When switching e.g. from the JupyterLab to the RetroLab front-end, you need to
 Clone this repository and install the needed plugins:
 
 ```bash
+pip install fps[uvicorn]
 pip install -e . --no-deps
 pip install -e plugins/jupyterlab
 pip install -e plugins/login
@@ -50,9 +51,6 @@ pip install -e plugins/terminals
 pip install -e plugins/lab
 pip install -e plugins/nbconvert
 pip install -e plugins/yjs
-
-# you should also install the latest FPS:
-pip install git+https://github.com/jupyter-server/fps
 
 # if you want RetroLab instead of JupyterLab:
 # pip install -e . --no-deps

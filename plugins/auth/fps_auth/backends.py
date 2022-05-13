@@ -1,9 +1,14 @@
+import uuid
 from typing import Generic, Optional
-from uuid import uuid4
 
 import httpx
 from fastapi import Depends, HTTPException, Response, status
-from fastapi_users import BaseUserManager, FastAPIUsers, models  # type: ignore
+from fastapi_users import (  # type: ignore
+    BaseUserManager,
+    FastAPIUsers,
+    UUIDIDMixin,
+    models,
+)
 from fastapi_users.authentication import (
     AuthenticationBackend,
     CookieTransport,
@@ -11,14 +16,14 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.authentication.strategy.base import Strategy
 from fastapi_users.authentication.transport.base import Transport
+from fastapi_users.db import SQLAlchemyUserDatabase
 from fps.exceptions import RedirectException  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from starlette.requests import Request
 
 from .config import get_auth_config
-from .db import get_user_db, secret
-from .models import User, UserCreate, UserDB, UserUpdate
+from .db import User, get_user_db, secret
 
 logger = get_configured_logger("auth")
 
@@ -27,10 +32,10 @@ class NoAuthTransport(Transport):
     scheme = None  # type: ignore
 
 
-class NoAuthStrategy(Strategy, Generic[models.UC, models.UD]):
+class NoAuthStrategy(Strategy, Generic[models.UP, models.ID]):
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UC, models.UD]
-    ) -> Optional[models.UD]:
+        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+    ) -> Optional[models.UP]:
         active_user = await user_manager.user_db.get_by_email(get_auth_config().global_email)
         return active_user
 
@@ -75,10 +80,8 @@ github_authentication = GitHubOAuth2(
 )
 
 
-class UserManager(BaseUserManager[UserCreate, UserDB]):
-    user_db_model = UserDB
-
-    async def on_after_register(self, user: UserDB, request: Optional[Request] = None):
+class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+    async def on_after_register(self, user: User, request: Optional[Request] = None):
         for oauth_account in user.oauth_accounts:
             if oauth_account.oauth_name == "github":
                 async with httpx.AsyncClient() as client:
@@ -86,18 +89,19 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
                         await client.get(f"https://api.github.com/user/{oauth_account.account_id}")
                     ).json()
 
-                user.anonymous = False
-                user.username = r["login"]
-                user.name = r["name"]
-                user.color = None
-                user.avatar = r["avatar_url"]
-                user.workspace = "{}"
-                user.settings = "{}"
+                await self.user_db.update(
+                    user,
+                    dict(
+                        anonymous=False,
+                        username=r["login"],
+                        color=None,
+                        avatar=r["avatar_url"],
+                        is_active=True,
+                    ),
+                )
 
-        await self.user_db.update(user)
 
-
-def get_user_manager(user_db=Depends(get_user_db)):
+def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)
 
 
@@ -108,20 +112,18 @@ async def get_enabled_backends(auth_config=Depends(get_auth_config)):
         return [cookie_authentication, github_cookie_authentication]
 
 
-fapi_users = FastAPIUsers(
+fapi_users = FastAPIUsers[User, uuid.UUID](
     get_user_manager,
     [noauth_authentication, cookie_authentication, github_cookie_authentication],
-    User,
-    UserCreate,
-    UserUpdate,
-    UserDB,
 )
 
 
 async def create_guest(user_db, auth_config):
+    # workspace and settings are copied from global user
+    # but this is a new user
     global_user = await user_db.get_by_email(auth_config.global_email)
-    user_id = str(uuid4())
-    guest = UserDB(
+    user_id = str(uuid.uuid4())
+    guest = dict(
         id=user_id,
         anonymous=True,
         email=f"{user_id}@jupyter.com",
@@ -130,8 +132,7 @@ async def create_guest(user_db, auth_config):
         workspace=global_user.workspace,
         settings=global_user.settings,
     )
-    await user_db.create(guest)
-    return guest
+    return await user_db.create(guest)
 
 
 async def current_user(
@@ -141,7 +142,6 @@ async def current_user(
         fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
     ),
     user_db=Depends(get_user_db),
-    user_manager: UserManager = Depends(get_user_manager),
     auth_config=Depends(get_auth_config),
 ):
     active_user = user
