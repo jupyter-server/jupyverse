@@ -77,7 +77,7 @@ def start_jupyverse(auth_mode, clear_users, capfd):
     ]
     print(" ".join(command_list))
     p = subprocess.Popen(command_list)
-    dtime, ttime, timeout = 0.1, 0, 5
+    dtime, ttime, timeout = 0.1, 0, 10
     while True:
         time.sleep(dtime)
         ttime += dtime
