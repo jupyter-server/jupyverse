@@ -10,7 +10,7 @@ from anyio import open_file
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
+from fps_auth.models import UserRead  # type: ignore
 from starlette.requests import Request  # type: ignore
 
 from .models import Checkpoint, Content, CreateContent, RenameContent, SaveContent
@@ -22,7 +22,7 @@ router = APIRouter()
     "/api/contents/{path:path}/checkpoints",
     status_code=201,
 )
-async def create_checkpoint(path, user: User = Depends(current_user)):
+async def create_checkpoint(path, user: UserRead = Depends(current_user)):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     try:
@@ -42,7 +42,7 @@ async def create_checkpoint(path, user: User = Depends(current_user)):
 async def create_content(
     path: Optional[str],
     request: Request,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     create_content = CreateContent(**(await request.json()))
     content_path = Path(create_content.path)
@@ -75,13 +75,13 @@ async def create_content(
 @router.get("/api/contents")
 async def get_root_content(
     content: int,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     return Content(**await get_path_content(Path(""), bool(content)))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
-async def get_checkpoint(path, user: User = Depends(current_user)):
+async def get_checkpoint(path, user: UserRead = Depends(current_user)):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     if not dst_path.exists():
@@ -94,7 +94,7 @@ async def get_checkpoint(path, user: User = Depends(current_user)):
 async def get_content(
     path: str,
     content: int,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     return Content(**await get_path_content(Path(path), bool(content)))
 
@@ -102,7 +102,7 @@ async def get_content(
 @router.put("/api/contents/{path:path}")
 async def save_content(
     request: Request,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     save_content = SaveContent(**(await request.json()))
     try:
@@ -129,7 +129,7 @@ async def save_content(
 )
 async def delete_content(
     path,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     p = Path(path)
     if p.exists():
@@ -144,7 +144,7 @@ async def delete_content(
 async def rename_content(
     path,
     request: Request,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)

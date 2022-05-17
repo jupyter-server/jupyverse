@@ -3,7 +3,8 @@ import json
 import pytest
 import requests
 
-theme = {"raw": None}
+prev_theme = {}
+test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
@@ -13,11 +14,10 @@ def test_settings_persistence_put(start_jupyverse):
     # get previous theme
     response = requests.get(url + "/lab/api/settings/@jupyterlab/apputils-extension:themes")
     assert response.status_code == 200
-    theme["raw"] = json.loads(response.content)["raw"]
+    prev_theme["raw"] = json.loads(response.content)["raw"]
     # put new theme
     response = requests.put(
-        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
-        data='{"raw": "{// jupyverse test\\n\\"theme\\": \\"JupyterLab Dark\\"}"}',
+        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes", data=json.dumps(test_theme)
     )
     assert response.status_code == 204
 
@@ -31,10 +31,10 @@ def test_settings_persistence_get(start_jupyverse):
         url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
     )
     assert response.status_code == 200
-    assert json.loads(response.content)["raw"] == '{// jupyverse test\n"theme": "JupyterLab Dark"}'
+    assert json.loads(response.content)["raw"] == test_theme["raw"]
     # put previous theme back
     response = requests.put(
         url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
-        data=json.dumps(theme),
+        data=json.dumps(prev_theme),
     )
     assert response.status_code == 204

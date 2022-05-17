@@ -2,12 +2,11 @@ import os
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 from utils import clear_content_values, create_content, sort_content_by_name
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-def test_tree(client, app, tmp_path):
+def test_tree(client, tmp_path):
     os.chdir(tmp_path)
     dname = Path(".")
     expected = []
@@ -51,8 +50,7 @@ def test_tree(client, app, tmp_path):
         path=str(dname),
         format="json",
     )
-    with TestClient(app) as client:
-        response = client.get("/api/contents", params={"content": 1})
+    response = client.get("/api/contents", params={"content": 1})
     actual = response.json()
     # ignore modification and creation times
     clear_content_values(actual, keys=["created", "last_modified"])

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import current_user  # type: ignore
-from fps_auth.models import User  # type: ignore
+from fps_auth.models import UserRead  # type: ignore
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ async def get_nbconvert_document(
     format: str,
     path: str,
     download: bool,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     exporter = nbconvert.exporters.get_exporter(format)
     if download:

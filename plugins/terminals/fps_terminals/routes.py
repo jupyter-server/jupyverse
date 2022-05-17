@@ -8,7 +8,7 @@ from fps.hooks import register_router  # type: ignore
 from fps_auth.backends import current_user, get_jwt_strategy  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.models import User  # type: ignore
+from fps_auth.models import UserRead  # type: ignore
 
 from .models import Terminal
 
@@ -29,7 +29,7 @@ async def get_terminals():
 
 @router.post("/api/terminals")
 async def create_terminal(
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     name = str(len(TERMINALS) + 1)
     terminal = Terminal(
@@ -46,7 +46,7 @@ async def create_terminal(
 @router.delete("/api/terminals/{name}", status_code=204)
 async def delete_terminal(
     name: str,
-    user: User = Depends(current_user),
+    user: UserRead = Depends(current_user),
 ):
     for websocket in TERMINALS[name]["server"].websockets:
         TERMINALS[name]["server"].quit(websocket)
