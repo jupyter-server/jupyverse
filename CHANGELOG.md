@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.33
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.32...db404f0decf2b0739613cdf17a3d925d536e7991))
+
+### Merged PRs
+
+- Relax timeout in tests [#180](https://github.com/jupyter-server/jupyverse/pull/180) ([@davidbrochart](https://github.com/davidbrochart))
+- Update fastapi-users>=10 [#179](https://github.com/jupyter-server/jupyverse/pull/179) ([@davidbrochart](https://github.com/davidbrochart))
+- [pre-commit.ci] pre-commit autoupdate [#178](https://github.com/jupyter-server/jupyverse/pull/178) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Update install instructions for conda-forge [#177](https://github.com/jupyter-server/jupyverse/pull/177) ([@davidbrochart](https://github.com/davidbrochart))
+- Run pre-commit [#176](https://github.com/jupyter-server/jupyverse/pull/176) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-03-25&to=2022-05-17&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-03-25..2022-05-17&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-03-25..2022-05-17&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.32
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.31...7cef3ccb7073e67734270e7b05e2645ace959aff))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-03-25&to=2022-03-25&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-03-25..2022-03-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.31
 
