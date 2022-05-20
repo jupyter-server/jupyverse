@@ -40,7 +40,7 @@ async def test_kernel_messages(client, capfd):
         f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
     ) as websocket:
         websocket.send_json(msg)
-    sleep(0.1)
+    sleep(0.5)
     out, err = capfd.readouterr()
     assert not err
 
@@ -51,7 +51,7 @@ async def test_kernel_messages(client, capfd):
         f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
     ) as websocket:
         websocket.send_json(msg)
-    sleep(0.1)
+    sleep(0.5)
     out, err = capfd.readouterr()
     assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
 
@@ -62,7 +62,7 @@ async def test_kernel_messages(client, capfd):
         f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
     ) as websocket:
         websocket.send_json(msg)
-    sleep(0.1)
+    sleep(0.5)
     out, err = capfd.readouterr()
     assert not err
 
@@ -73,6 +73,6 @@ async def test_kernel_messages(client, capfd):
         f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
     ) as websocket:
         websocket.send_json(msg)
-    sleep(0.1)
+    sleep(0.5)
     out, err = capfd.readouterr()
     assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
