@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple, cast
 from uuid import uuid4
 
-from zmq.sugar.socket import Socket
+from zmq.asyncio import Socket
 from zmq.utils import jsonapi
 
 protocol_version_info = (5, 3)
