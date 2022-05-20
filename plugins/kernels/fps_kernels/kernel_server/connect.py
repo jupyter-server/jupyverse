@@ -9,7 +9,7 @@ from typing import Dict, Optional, Tuple, Union
 import zmq
 import zmq.asyncio
 from fastapi import WebSocket
-from zmq.sugar.socket import Socket
+from zmq.asyncio import Socket
 
 channel_socket_types = {
     "hb": zmq.REQ,
