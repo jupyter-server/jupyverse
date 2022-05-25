@@ -172,7 +172,7 @@ class KernelServer:
     async def _wait_for_ready(self):
         while True:
             msg = create_message("kernel_info_request")
-            send_message(msg, self.shell_channel, self.key)
+            await send_message(msg, self.shell_channel, self.key)
             msg = await receive_message(self.shell_channel, 0.2)
             if msg is not None and msg["msg_type"] == "kernel_info_reply":
                 msg = await receive_message(self.iopub_channel, 0.2)
@@ -193,11 +193,11 @@ class KernelServer:
                     continue
                 channel = msg.pop("channel")
                 if channel == "shell":
-                    send_message(msg, self.shell_channel, self.key)
+                    await send_message(msg, self.shell_channel, self.key)
                 elif channel == "control":
-                    send_message(msg, self.control_channel, self.key)
+                    await send_message(msg, self.control_channel, self.key)
                 elif channel == "stdin":
-                    send_message(msg, self.stdin_channel, self.key)
+                    await send_message(msg, self.stdin_channel, self.key)
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
             while True:
                 msg = await websocket.websocket.receive_bytes()
@@ -211,11 +211,11 @@ class KernelServer:
                 ):
                     continue
                 if channel == "shell":
-                    send_raw_message(parts, self.shell_channel, self.key)
+                    await send_raw_message(parts, self.shell_channel, self.key)
                 elif channel == "control":
-                    send_raw_message(parts, self.control_channel, self.key)
+                    await send_raw_message(parts, self.control_channel, self.key)
                 elif channel == "stdin":
-                    send_raw_message(parts, self.stdin_channel, self.key)
+                    await send_raw_message(parts, self.stdin_channel, self.key)
 
     async def send_to_ws(self, websocket, parts, parent_header, channel_name):
         if not websocket.accepted_subprotocol:

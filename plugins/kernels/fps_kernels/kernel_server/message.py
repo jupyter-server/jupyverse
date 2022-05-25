@@ -92,15 +92,15 @@ def feed_identities(msg_list: List[bytes]) -> Tuple[List[bytes], List[bytes]]:
     return msg_list[:idx], msg_list[idx + 1 :]  # noqa
 
 
-def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
-    sock.send_multipart(serialize(msg, key), copy=True)
+async def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
+    await sock.send_multipart(serialize(msg, key), copy=True)
 
 
-def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
+async def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
     msg = parts[:4]
     buffers = parts[4:]
     to_send = [DELIM, sign(msg, key)] + msg + buffers
-    sock.send_multipart(to_send)
+    await sock.send_multipart(to_send)
 
 
 def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
