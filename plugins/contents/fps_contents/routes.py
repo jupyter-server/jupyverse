@@ -113,7 +113,7 @@ async def save_content(
                     # see https://github.com/jupyterlab/jupyterlab/issues/11005
                     if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
                         del dict_content["metadata"]["orig_nbformat"]
-                    await f.write(json.dumps(dict_content, indent=2))
+                await f.write(json.dumps(dict_content, indent=2))
             else:
                 str_content = cast(str, save_content.content)
                 await f.write(str_content)
@@ -204,6 +204,14 @@ async def get_path_content(path: Path, get_content: bool):
             type = "notebook"
             format = None
             mimetype = None
+            if content is not None:
+                content = cast(str, content)
+                nb = json.loads(content)
+                for cell in nb["cells"]:
+                    if "metadata" not in cell:
+                        cell["metadata"] = {}
+                    cell["metadata"].update({"trusted": False})
+                content = json.dumps(nb)
         elif path.suffix == ".json":
             type = "json"
             format = "text"
