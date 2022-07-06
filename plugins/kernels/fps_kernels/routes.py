@@ -2,7 +2,9 @@ import json
 import pathlib
 import sys
 import uuid
+from functools import partial
 from http import HTTPStatus
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Response, WebSocket, status
 from fastapi.responses import FileResponse
@@ -16,8 +18,10 @@ from fps_auth.backends import (  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 from fps_auth.models import UserRead  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
 
+from .kernel_driver.driver import KernelDriver  # type: ignore
 from .kernel_server.server import (  # type: ignore
     AcceptedWebSocket,
     KernelServer,
@@ -132,7 +136,7 @@ async def create_session(
         ),
     )
     kernel_id = str(uuid.uuid4())
-    kernels[kernel_id] = {"name": kernel_name, "server": kernel_server}
+    kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
     await kernel_server.start()
     session_id = str(uuid.uuid4())
     session = {
@@ -169,6 +173,67 @@ async def restart_kernel(
             "execution_state": kernel["server"].last_activity["execution_state"],
         }
         return result
+
+
+@router.post("/api/kernels/{kernel_id}/execute")
+async def execute_cell(
+    request: Request,
+    kernel_id,
+    user: UserRead = Depends(current_user),
+):
+    r = await request.json()
+    if kernel_id in kernels:
+        room = YDocWebSocketHandler.websocket_server.get_room(r["document_id"])
+        nb = room.document.source
+        cell = nb["cells"][int(r["cell_idx"])]
+        cell["outputs"] = []
+
+        kernel = kernels[kernel_id]
+        kernelspec_path = str(
+            prefix_dir / "share" / "jupyter" / "kernels" / kernel["name"] / "kernel.json"
+        )
+        if not kernel["driver"]:
+            kernel["driver"] = driver = KernelDriver(
+                kernelspec_path=kernelspec_path,
+                write_connection_file=False,
+                connection_file=kernel["server"].connection_file_path,
+            )
+            await driver.connect()
+        driver = kernel["driver"]
+
+        await driver.execute(cell["source"], output_hook=partial(output_hook, cell["outputs"]))
+        room.document.source = nb
+
+
+def output_hook(outputs, msg: Dict[str, Any]):
+    # msg_id = msg["parent_header"]["msg_id"]
+    execution_count = 1  # self.msg_id_2_execution_count[msg_id]
+    msg_type = msg["header"]["msg_type"]
+    content = msg["content"]
+    if msg_type == "stream":
+        if (not outputs) or (outputs[-1]["name"] != content["name"]):
+            outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
+        outputs[-1]["text"].append(content["text"])
+    elif msg_type in ("display_data", "execute_result"):
+        outputs.append(
+            {
+                "data": {"text/plain": [content["data"].get("text/plain", "")]},
+                "execution_count": execution_count,
+                "metadata": {},
+                "output_type": msg_type,
+            }
+        )
+    elif msg_type == "error":
+        outputs.append(
+            {
+                "ename": content["ename"],
+                "evalue": content["evalue"],
+                "output_type": "error",
+                "traceback": content["traceback"],
+            }
+        )
+    else:
+        return
 
 
 @router.get("/api/kernels/{kernel_id}")
