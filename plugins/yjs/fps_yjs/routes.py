@@ -21,6 +21,7 @@ from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type:
 YFILE = YDOCS["file"]
 RENAME_SESSION = 127
 
+
 class JupyterSQLiteYStore(SQLiteYStore):
     db_path = ".jupyter_ystore.db"
 
