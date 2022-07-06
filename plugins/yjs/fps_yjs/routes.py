@@ -1,8 +1,7 @@
+import asyncio
 import re
-import time
-import uuid
-from enum import IntEnum
-from typing import Dict, Set
+from datetime import datetime
+from typing import Optional, Set, Tuple
 
 import fastapi
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
@@ -13,6 +12,12 @@ from fps_auth.backends import (  # type: ignore
     get_user_manager,
 )
 from fps_auth.config import get_auth_config  # type: ignore
+from fps_contents.routes import read_content, write_content  # type: ignore
+from jupyter_ydoc import ydocs as YDOCS  # type: ignore
+from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
+
+YFILE = YDOCS["file"]
+RENAME_SESSION = 127
 
 router = APIRouter()
 
@@ -25,9 +30,14 @@ def get_path_param_names(path: str) -> Set[str]:
 fastapi.utils.get_path_param_names.__code__ = get_path_param_names.__code__
 
 
-@router.websocket("/api/yjs/{type}:{path:path}")
+def to_datetime(iso_date: str) -> datetime:
+    return datetime.fromisoformat(iso_date.rstrip("Z"))
+
+
+@router.websocket("/api/yjs/{format}:{type}:{path:path}")
 async def websocket_endpoint(
     websocket: WebSocket,
+    format,
     type,
     path,
     auth_config=Depends(get_auth_config),
@@ -43,113 +53,192 @@ async def websocket_endpoint(
             accept_websocket = True
     if accept_websocket:
         await websocket.accept()
-        socket = YjsEchoWebSocket(websocket)
-        await socket.open(path)
+        full_path = f"{format}:{type}:{path}"
+        socket = YDocWebSocketHandler(WebsocketAdapter(websocket, full_path), full_path)
+        await socket.serve()
     else:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
 
-# The y-protocol defines messages types that just need to be propagated to all other peers.
-# Here, we define some additional messageTypes that the server can interpret.
-# Messages that the server can't interpret should be broadcasted to all other clients.
+class WebsocketAdapter:
+    """An adapter to make a Starlette's WebSocket look like a ypy-websocket's WebSocket"""
 
+    def __init__(self, websocket, path: str):
+        self._websocket = websocket
+        self._path = path
 
-class ServerMessageType(IntEnum):
-    # The client is asking for a lock. Should return a lock-identifier if one is available.
-    ACQUIRE_LOCK = 127
-    # The client is asking to release a lock to make it available to other users again.
-    RELEASE_LOCK = 126
-    # The client is asking to retrieve the initial state of the Yjs document. Return an empty buffer
-    # when nothing is available.
-    REQUEST_INITIALIZED_CONTENT = 125
-    # The client retrieved an empty "initial content" and generated the initial state of the
-    # document after acquiring a lock. Store this.
-    PUT_INITIALIZED_CONTENT = 124
-    # The client moved the document to a different location. After receiving this message, we make
-    # the current document available under a different url.
-    # The other clients are automatically notified of this change because the path is shared through
-    # the Yjs document as well.
-    RENAME_SESSION = 123
+    @property
+    def path(self) -> str:
+        return self._path
 
+    @path.setter
+    def path(self, value: str) -> None:
+        self._path = value
 
-class YjsRoom:
-    def __init__(self):
-        self.lock = None
-        self.clients = {}
-        self.content = bytes([])
+    def __aiter__(self):
+        return self
 
-
-class YjsEchoWebSocket:
-    rooms: Dict[str, YjsRoom] = {}
-
-    def __init__(self, websocket):
-        self.websocket = websocket
-
-    async def open(self, guid):
-        # print("[YJSEchoWS]: open", guid)
-        cls = self.__class__
-        self.room_id = guid
-        self.id = str(uuid.uuid4())
-        room = cls.rooms.get(self.room_id)
-        if room is None:
-            room = YjsRoom()
-            cls.rooms[self.room_id] = room
-        room.clients[self.id] = self
-        # Send SyncStep1 message (based on y-protocols)
-        await self.websocket.send_bytes(bytes([0, 0, 1, 0]))
-
+    async def __anext__(self):
         try:
-            while True:
-                message = await self.websocket.receive_bytes()
-                # print("[YJSEchoWS]: message, ", message)
-                cls = self.__class__
-                room_id = self.room_id
-                room = cls.rooms.get(room_id)
-                if message[0] == ServerMessageType.ACQUIRE_LOCK:
-                    now = int(time.time())
-                    if room.lock is None or now - room.lock > 15:  # no lock or timeout
-                        room.lock = now
-                        # print('Acquired new lock: ', room.lock)
-                        # return acquired lock
-                        await self.websocket.send_bytes(
-                            bytes([ServerMessageType.ACQUIRE_LOCK])
-                            + room.lock.to_bytes(4, byteorder="little")
-                        )
-                elif message[0] == ServerMessageType.RELEASE_LOCK:
-                    releasedLock = int.from_bytes(message[1:], byteorder="little")
-                    # print("trying release lock: ", releasedLock)
-                    if room.lock == releasedLock:
-                        # print('released lock: ', room.lock)
-                        room.lock = None
-                elif message[0] == ServerMessageType.REQUEST_INITIALIZED_CONTENT:
-                    # print("client requested initial content")
-                    await self.websocket.send_bytes(
-                        bytes([ServerMessageType.REQUEST_INITIALIZED_CONTENT]) + room.content
-                    )
-                elif message[0] == ServerMessageType.PUT_INITIALIZED_CONTENT:
-                    # print("client put initialized content")
-                    room.content = message[1:]
-                elif message[0] == ServerMessageType.RENAME_SESSION:
-                    # We move the room to a different entry and also change the room_id property of
-                    # each connected client
-                    new_room_id = message[1:].decode("utf-8")
-                    for client_id, client in room.clients.items():
-                        client.room_id = new_room_id
-                    cls.rooms.pop(room_id)
-                    cls.rooms[new_room_id] = room
-                    # print("renamed room to " + new_room_id + ". Old room name was " + room_id)
-                elif room:
-                    for client_id, client in room.clients.items():
-                        if self.id != client_id:
-                            await client.websocket.send_bytes(message)
+            message = await self._websocket.receive_bytes()
         except WebSocketDisconnect:
-            # print("[YJSEchoWS]: close")
-            cls = self.__class__
-            room = cls.rooms.get(self.room_id)
-            room.clients.pop(self.id)
-            if len(room.clients) == 0:
-                cls.rooms.pop(self.room_id)
-                # print("[YJSEchoWS]: close room " + self.room_id)
+            raise StopAsyncIteration()
+        return message
+
+    async def send(self, message):
+        await self._websocket.send_bytes(message)
+
+    async def recv(self):
+        return await self._websocket.receive_bytes()
+
+
+class JupyterRoom(YRoom):
+    def __init__(self, type):
+        super().__init__(ready=False)
+        self.type = type
+        self.cleaner = None
+        self.watcher = None
+        self.document = YDOCS.get(type, YFILE)(self.ydoc)
+
+
+class JupyterWebsocketServer(WebsocketServer):
+    def get_room(self, path: str) -> JupyterRoom:
+        file_format, file_type, file_path = path.split(":", 2)
+        if path not in self.rooms.keys():
+            self.rooms[path] = JupyterRoom(file_type)
+        return self.rooms[path]
+
+
+class YDocWebSocketHandler:
+
+    saving_document: Optional[asyncio.Task]
+    websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
+
+    def __init__(self, websocket, path):
+        self.websocket = websocket
+        self.room = self.websocket_server.get_room(self.websocket.path)
+        self.set_file_info(path)
+
+    def get_file_info(self) -> Tuple[str, str, str]:
+        room_name = self.websocket_server.get_room_name(self.room)
+        file_format, file_type, file_path = room_name.split(":", 2)
+        return file_format, file_type, file_path
+
+    def set_file_info(self, value: str) -> None:
+        self.websocket_server.rename_room(value, from_room=self.room)
+        self.websocket.path = value
+
+    async def serve(self):
+        self.set_file_info(self.websocket.path)
+        self.saving_document = None
+        self.room.on_message = self.on_message
+
+        # cancel the deletion of the room if it was scheduled
+        if self.room.cleaner is not None:
+            self.room.cleaner.cancel()
+
+        if not self.room.ready:
+            file_format, file_type, file_path = self.get_file_info()
+            is_notebook = file_type == "notebook"
+            model = await read_content(file_path, True, as_json=is_notebook)
+            self.last_modified = to_datetime(model.last_modified)
+            # check again if ready, because loading the file is async
+            if not self.room.ready:
+                self.room.document.source = model.content
+                self.room.document.dirty = False
+                self.room.ready = True
+                self.room.watcher = asyncio.create_task(self.watch_file())
+                # save the document when changed
+                self.room.document.observe(self.on_document_change)
+
+        await self.websocket_server.serve(self.websocket)
+        if self.room.clients == [self.websocket]:
+            # no client in this room after we disconnect
+            # keep the document for a while in case someone reconnects
+            self.room.cleaner = asyncio.create_task(self.clean_room())
+
+    async def on_message(self, message):
+        if message[0] == RENAME_SESSION:
+            # The client moved the document to a different location. After receiving this message,
+            # we make the current document available under a different url.
+            # The other clients are automatically notified of this change because
+            # the path is shared through the Yjs document as well.
+            new_room_name = message[1:].decode("utf-8")
+            self.set_file_info(new_room_name)
+            self.websocket_server.rename_room(new_room_name, from_room=self.room)
+            # send rename acknowledge
+            await self.websocket.send(bytes([RENAME_SESSION, 1]))
+
+    async def watch_file(self):
+        poll_interval = 1  # FIXME: pass in config
+        if not poll_interval:
+            self.room.watcher = None
+            return
+        while True:
+            await asyncio.sleep(poll_interval)
+            await self.maybe_load_document()
+
+    async def maybe_load_document(self):
+        file_format, file_type, file_path = self.get_file_info()
+        model = await read_content(file_path, False)
+        # do nothing if the file was saved by us
+        if self.last_modified < to_datetime(model.last_modified):
+            is_notebook = file_type == "notebook"
+            model = await read_content(file_path, True, as_json=is_notebook)
+            self.room.document.source = model.content
+            self.last_modified = to_datetime(model.last_modified)
+
+    async def clean_room(self) -> None:
+        await asyncio.sleep(60)  # FIXME: pass in config
+        if self.room.watcher:
+            self.room.watcher.cancel()
+        self.room.document.unobserve()
+        self.websocket_server.delete_room(room=self.room)
+
+    def on_document_change(self, event):
+        try:
+            dirty = event.keys["dirty"]["newValue"]
+            if not dirty:
+                # we cleared the dirty flag, nothing to save
+                return
+        except Exception:
+            pass
+        # unobserve and observe again because the structure of the document may have changed
+        # e.g. a new cell added to a notebook
+        self.room.document.unobserve()
+        self.room.document.observe(self.on_document_change)
+        if self.saving_document is not None and not self.saving_document.done():
+            # the document is being saved, cancel that
+            self.saving_document.cancel()
+            self.saving_document = None
+        self.saving_document = asyncio.create_task(self.maybe_save_document())
+
+    async def maybe_save_document(self):
+        # save after 1 second of inactivity to prevent too frequent saving
+        await asyncio.sleep(1)
+        file_format, file_type, file_path = self.get_file_info()
+        is_notebook = file_type == "notebook"
+        model = await read_content(file_path, True, as_json=is_notebook)
+        if self.last_modified < to_datetime(model.last_modified):
+            # file changed on disk, let's revert
+            self.room.document.source = model.content
+            self.last_modified = to_datetime(model.last_modified)
+            return
+        if model.content != self.room.document.source:
+            # don't save if not needed
+            # this also prevents the dirty flag from bouncing between windows of
+            # the same document opened as different types (e.g. notebook/text editor)
+            format = "json" if file_type == "notebook" else "text"
+            content = {
+                "content": self.room.document.source,
+                "format": format,
+                "path": file_path,
+                "type": file_type,
+            }
+            await write_content(content)
+            model = await read_content(file_path, False)
+            self.last_modified = to_datetime(model.last_modified)
+        self.room.document.dirty = False
 
 
 r = register_router(router)

@@ -9,7 +9,7 @@ class Checkpoint(BaseModel):
 
 
 class SaveContent(BaseModel):
-    content: Union[str, Dict]
+    content: Optional[Union[str, Dict]]
     format: str
     path: str
     type: str
@@ -30,7 +30,7 @@ class Content(BaseModel):
     path: str
     last_modified: Optional[str]
     created: Optional[str]
-    content: Optional[Union[str, List[Dict]]]
+    content: Optional[Union[str, Dict, List[Dict]]]
     format: Optional[str]
     mimetype: Optional[str]
     size: Optional[int]

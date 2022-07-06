@@ -69,7 +69,7 @@ async def create_content(
         available_path = get_available_path(content_path / ("untitled" + create_content.ext))
         open(available_path, "w").close()
 
-    return Content(**await get_path_content(available_path, False))
+    return await read_content(available_path, False)
 
 
 @router.get("/api/contents")
@@ -77,7 +77,7 @@ async def get_root_content(
     content: int,
     user: UserRead = Depends(current_user),
 ):
-    return Content(**await get_path_content(Path(""), bool(content)))
+    return await read_content("", bool(content))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
@@ -93,34 +93,25 @@ async def get_checkpoint(path, user: UserRead = Depends(current_user)):
 @router.get("/api/contents/{path:path}")
 async def get_content(
     path: str,
-    content: int,
+    content: int = 0,
     user: UserRead = Depends(current_user),
 ):
-    return Content(**await get_path_content(Path(path), bool(content)))
+    return await read_content(path, bool(content))
 
 
 @router.put("/api/contents/{path:path}")
 async def save_content(
+    path,
     request: Request,
+    response: Response,
     user: UserRead = Depends(current_user),
 ):
-    save_content = SaveContent(**(await request.json()))
+    content = SaveContent(**(await request.json()))
     try:
-        async with await open_file(save_content.path, "w") as f:
-            if save_content.format == "json":
-                dict_content = cast(Dict, save_content.content)
-                if save_content.type == "notebook":
-                    # see https://github.com/jupyterlab/jupyterlab/issues/11005
-                    if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
-                        del dict_content["metadata"]["orig_nbformat"]
-                await f.write(json.dumps(dict_content, indent=2))
-            else:
-                str_content = cast(str, save_content.content)
-                await f.write(str_content)
+        await write_content(content)
     except Exception:
-        # FIXME: return error code?
-        pass
-    return Content(**await get_path_content(Path(save_content.path), False))
+        raise HTTPException(status_code=404, detail=f"Error saving {content.path}")
+    return await read_content(content.path, False)
 
 
 @router.delete(
@@ -148,7 +139,7 @@ async def rename_content(
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)
-    return Content(**await get_path_content(Path(rename_content.path), False))
+    return await read_content(rename_content.path, False)
 
 
 def get_file_modification_time(path: Path):
@@ -164,7 +155,7 @@ def get_file_creation_time(path: Path):
 def get_file_size(path: Path) -> Optional[int]:
     if path.exists():
         return path.stat().st_size
-    return None
+    raise HTTPException(status_code=404, detail="Item not found")
 
 
 def is_file_writable(path: Path) -> bool:
@@ -177,12 +168,14 @@ def is_file_writable(path: Path) -> bool:
     return False
 
 
-async def get_path_content(path: Path, get_content: bool):
-    content: Optional[Union[str, List[Dict]]] = None
+async def read_content(path: Union[str, Path], get_content: bool, as_json: bool = False) -> Content:
+    if isinstance(path, str):
+        path = Path(path)
+    content: Optional[Union[str, Dict, List[Dict]]] = None
     if get_content:
         if path.is_dir():
             content = [
-                await get_path_content(subpath, get_content=False)
+                (await read_content(subpath, get_content=False)).dict()
                 for subpath in path.iterdir()
                 if not subpath.name.startswith(".")
             ]
@@ -190,6 +183,8 @@ async def get_path_content(path: Path, get_content: bool):
             try:
                 async with await open_file(path) as f:
                     content = await f.read()
+                if as_json:
+                    content = json.loads(content)
             except Exception:
                 raise HTTPException(status_code=404, detail="Item not found")
     format: Optional[str] = None
@@ -205,13 +200,19 @@ async def get_path_content(path: Path, get_content: bool):
             format = None
             mimetype = None
             if content is not None:
-                content = cast(str, content)
-                nb = json.loads(content)
+                nb: dict
+                if as_json:
+                    content = cast(Dict, content)
+                    nb = content
+                else:
+                    content = cast(str, content)
+                    nb = json.loads(content)
                 for cell in nb["cells"]:
                     if "metadata" not in cell:
                         cell["metadata"] = {}
                     cell["metadata"].update({"trusted": False})
-                content = json.dumps(nb)
+                if not as_json:
+                    content = json.dumps(nb)
         elif path.suffix == ".json":
             type = "json"
             format = "text"
@@ -223,18 +224,36 @@ async def get_path_content(path: Path, get_content: bool):
     else:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    return {
-        "name": path.name,
-        "path": str(path),
-        "last_modified": get_file_modification_time(path),
-        "created": get_file_creation_time(path),
-        "content": content,
-        "format": format,
-        "mimetype": mimetype,
-        "size": size,
-        "writable": is_file_writable(path),
-        "type": type,
-    }
+    return Content(
+        **{
+            "name": path.name,
+            "path": str(path),
+            "last_modified": get_file_modification_time(path),
+            "created": get_file_creation_time(path),
+            "content": content,
+            "format": format,
+            "mimetype": mimetype,
+            "size": size,
+            "writable": is_file_writable(path),
+            "type": type,
+        }
+    )
+
+
+async def write_content(content: Union[SaveContent, Dict]) -> None:
+    if not isinstance(content, SaveContent):
+        content = SaveContent(**content)
+    async with await open_file(content.path, "w") as f:
+        if content.format == "json":
+            dict_content = cast(Dict, content.content)
+            if content.type == "notebook":
+                # see https://github.com/jupyterlab/jupyterlab/issues/11005
+                if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
+                    del dict_content["metadata"]["orig_nbformat"]
+            await f.write(json.dumps(dict_content, indent=2))
+        else:
+            content.content = cast(str, content.content)
+            await f.write(content.content)
 
 
 def get_available_path(path: Path, sep: str = ""):
