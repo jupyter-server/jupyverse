@@ -32,3 +32,8 @@ class Session(BaseModel):
     type: str
     kernel: Kernel
     notebook: Notebook
+
+
+class Execution(BaseModel):
+    document_id: str
+    cell_idx: int

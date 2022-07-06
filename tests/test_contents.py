@@ -7,6 +7,7 @@ from utils import clear_content_values, create_content, sort_content_by_name
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 def test_tree(client, tmp_path):
+    prev_dir = os.getcwd()
     os.chdir(tmp_path)
     dname = Path(".")
     expected = []
@@ -58,3 +59,4 @@ def test_tree(client, tmp_path):
     sort_content_by_name(actual)
     sort_content_by_name(expected)
     assert actual == expected
+    os.chdir(prev_dir)
