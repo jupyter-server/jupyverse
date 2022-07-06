@@ -1,6 +1,7 @@
 import asyncio
 import re
 from datetime import datetime
+from pathlib import Path
 from typing import Optional, Set, Tuple
 
 import fastapi
@@ -15,9 +16,15 @@ from fps_auth.config import get_auth_config  # type: ignore
 from fps_contents.routes import read_content, write_content  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
+from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
 
 YFILE = YDOCS["file"]
 RENAME_SESSION = 127
+
+
+class JupyterSQLiteYStore(SQLiteYStore):
+    db_path = ".jupyter_ystore.db"
+
 
 router = APIRouter()
 
@@ -93,8 +100,8 @@ class WebsocketAdapter:
 
 
 class JupyterRoom(YRoom):
-    def __init__(self, type):
-        super().__init__(ready=False)
+    def __init__(self, type: str, ystore: BaseYStore):
+        super().__init__(ready=False, ystore=ystore)
         self.type = type
         self.cleaner = None
         self.watcher = None
@@ -105,7 +112,10 @@ class JupyterWebsocketServer(WebsocketServer):
     def get_room(self, path: str) -> JupyterRoom:
         file_format, file_type, file_path = path.split(":", 2)
         if path not in self.rooms.keys():
-            self.rooms[path] = JupyterRoom(file_type)
+            p = Path(file_path)
+            updates_file_path = str(p.parent / f".{file_type}:{p.name}.y")
+            ystore = JupyterSQLiteYStore(path=updates_file_path)  # FIXME: pass in config
+            self.rooms[path] = JupyterRoom(file_type, ystore)
         return self.rooms[path]
 
 
@@ -144,7 +154,22 @@ class YDocWebSocketHandler:
             self.last_modified = to_datetime(model.last_modified)
             # check again if ready, because loading the file is async
             if not self.room.ready:
-                self.room.document.source = model.content
+                # try to apply Y updates from the YStore for this document
+                try:
+                    await self.room.ystore.apply_updates(self.room.ydoc)
+                    read_from_source = False
+                except YDocNotFound:
+                    # YDoc not found in the YStore, create the document from
+                    # the source file (no change history)
+                    read_from_source = True
+                if not read_from_source:
+                    # if YStore updates and source file are out-of-sync, resync updates with source
+                    if self.room.document.source != model.content:
+                        read_from_source = True
+                if read_from_source:
+                    self.room.document.source = model.content
+                    await self.room.ystore.encode_state_as_update(self.room.ydoc)
+
                 self.room.document.dirty = False
                 self.room.ready = True
                 self.room.watcher = asyncio.create_task(self.watch_file())
@@ -216,7 +241,11 @@ class YDocWebSocketHandler:
     async def maybe_save_document(self):
         # save after 1 second of inactivity to prevent too frequent saving
         await asyncio.sleep(1)
-        file_format, file_type, file_path = self.get_file_info()
+        # if the room cannot be found, don't save
+        try:
+            file_format, file_type, file_path = self.get_file_info()
+        except Exception:
+            return
         is_notebook = file_type == "notebook"
         model = await read_content(file_path, True, as_json=is_notebook)
         if self.last_modified < to_datetime(model.last_modified):
