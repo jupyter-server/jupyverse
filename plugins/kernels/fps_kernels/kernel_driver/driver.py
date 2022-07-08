@@ -59,7 +59,7 @@ class KernelDriver:
         self.key = cast(str, self.connection_cfg["key"])
         self.session_id = uuid.uuid4().hex
         self.msg_cnt = 0
-        self.execute_requests: Dict[str, Any] = {}
+        self.execute_requests: Dict[str, Dict[str, asyncio.Future]] = {}
         self.channel_tasks: List[asyncio.Task] = []
 
     async def restart(self, startup_timeout: float = float("inf")) -> None:
@@ -109,16 +109,14 @@ class KernelDriver:
             msg = await receive_message(self.iopub_channel)  # type: ignore
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
-                self.execute_requests[msg_id]["iopub_msg"] = msg
-                self.execute_requests[msg_id]["iopub_event"].set()
+                self.execute_requests[msg_id]["iopub_msg"].set_result(msg)
 
     async def listen_shell(self):
         while True:
             msg = await receive_message(self.shell_channel)  # type: ignore
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
-                self.execute_requests[msg_id]["shell_msg"] = msg
-                self.execute_requests[msg_id]["shell_event"].set()
+                self.execute_requests[msg_id]["shell_msg"].set_result(msg)
 
     async def execute(
         self,
@@ -142,35 +140,35 @@ class KernelDriver:
         if wait_for_executed:
             deadline = time.time() + timeout
             self.execute_requests[msg_id] = {
-                "iopub_event": asyncio.Event(),
-                "shell_event": asyncio.Event(),
+                "iopub_msg": asyncio.Future(),
+                "shell_msg": asyncio.Future(),
             }
             while True:
                 try:
                     await asyncio.wait_for(
-                        self.execute_requests[msg_id]["iopub_event"].wait(),
+                        self.execute_requests[msg_id]["iopub_msg"],
                         deadline_to_timeout(deadline),
                     )
                 except asyncio.TimeoutError:
                     error_message = f"Kernel didn't respond in {timeout} seconds"
                     raise RuntimeError(error_message)
-                msg = self.execute_requests[msg_id]["iopub_msg"]
+                msg = self.execute_requests[msg_id]["iopub_msg"].result()
                 self._handle_outputs(cell["outputs"], msg)
                 if (
                     msg["header"]["msg_type"] == "status"
                     and msg["content"]["execution_state"] == "idle"
                 ):
                     break
-                self.execute_requests[msg_id]["iopub_event"].clear()
+                self.execute_requests[msg_id]["iopub_msg"] = asyncio.Future()
             try:
                 await asyncio.wait_for(
-                    self.execute_requests[msg_id]["shell_event"].wait(),
+                    self.execute_requests[msg_id]["shell_msg"],
                     deadline_to_timeout(deadline),
                 )
             except asyncio.TimeoutError:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
-            msg = self.execute_requests[msg_id]["shell_msg"]
+            msg = self.execute_requests[msg_id]["shell_msg"].result()
             cell["execution_count"] = msg["content"]["execution_count"]
             del self.execute_requests[msg_id]
 
