@@ -2,9 +2,7 @@ import json
 import pathlib
 import sys
 import uuid
-from functools import partial
 from http import HTTPStatus
-from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Response, WebSocket, status
 from fastapi.responses import FileResponse
@@ -201,39 +199,8 @@ async def execute_cell(
             await driver.connect()
         driver = kernel["driver"]
 
-        await driver.execute(cell["source"], output_hook=partial(output_hook, cell["outputs"]))
+        await driver.execute(cell)
         room.document.source = nb
-
-
-def output_hook(outputs, msg: Dict[str, Any]):
-    # msg_id = msg["parent_header"]["msg_id"]
-    execution_count = 1  # self.msg_id_2_execution_count[msg_id]
-    msg_type = msg["header"]["msg_type"]
-    content = msg["content"]
-    if msg_type == "stream":
-        if (not outputs) or (outputs[-1]["name"] != content["name"]):
-            outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
-        outputs[-1]["text"].append(content["text"])
-    elif msg_type in ("display_data", "execute_result"):
-        outputs.append(
-            {
-                "data": {"text/plain": [content["data"].get("text/plain", "")]},
-                "execution_count": execution_count,
-                "metadata": {},
-                "output_type": msg_type,
-            }
-        )
-    elif msg_type == "error":
-        outputs.append(
-            {
-                "ename": content["ename"],
-                "evalue": content["evalue"],
-                "output_type": "error",
-                "traceback": content["traceback"],
-            }
-        )
-    else:
-        return
 
 
 @router.get("/api/kernels/{kernel_id}")

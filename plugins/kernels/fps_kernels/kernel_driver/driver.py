@@ -1,6 +1,5 @@
 import asyncio
 import os
-import sys
 import time
 import uuid
 from typing import Any, Dict, List, Optional, Tuple, cast
@@ -37,19 +36,6 @@ async def receive_message(sock: Socket, timeout: float = float("inf")) -> Option
         idents, msg_list = feed_identities(msg_list)
         return deserialize(msg_list)
     return None
-
-
-def _output_hook_default(msg: Dict[str, Any]) -> None:
-    """Default hook for redisplaying plain-text output"""
-    msg_type = msg["header"]["msg_type"]
-    content = msg["content"]
-    if msg_type == "stream":
-        stream = getattr(sys, content["name"])
-        stream.write(content["text"])
-    elif msg_type in ("display_data", "execute_result"):
-        sys.stdout.write(content["data"].get("text/plain", ""))
-    elif msg_type == "error":
-        print("\n".join(content["traceback"]), file=sys.stderr)
 
 
 class KernelDriver:
@@ -136,13 +122,14 @@ class KernelDriver:
 
     async def execute(
         self,
-        code: str,
+        cell: Dict[str, Any],
         timeout: float = float("inf"),
         msg_id: str = "",
         wait_for_executed: bool = True,
-        output_hook=_output_hook_default,
     ) -> None:
-        content = {"code": code, "silent": False}
+        if cell["cell_type"] != "code":
+            return
+        content = {"code": cell["source"], "silent": False}
         msg = create_message(
             "execute_request", content, session_id=self.session_id, msg_cnt=self.msg_cnt
         )
@@ -168,7 +155,7 @@ class KernelDriver:
                     error_message = f"Kernel didn't respond in {timeout} seconds"
                     raise RuntimeError(error_message)
                 msg = self.execute_requests[msg_id]["iopub_msg"]
-                output_hook(msg)
+                self._handle_outputs(cell["outputs"], msg)
                 if (
                     msg["header"]["msg_type"] == "status"
                     and msg["content"]["execution_state"] == "idle"
@@ -184,6 +171,7 @@ class KernelDriver:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
             msg = self.execute_requests[msg_id]["shell_msg"]
+            cell["execution_count"] = msg["content"]["execution_count"]
             del self.execute_requests[msg_id]
 
     async def _wait_for_ready(self, timeout):
@@ -204,3 +192,31 @@ class KernelDriver:
                 if msg is not None:
                     break
             new_timeout = deadline_to_timeout(deadline)
+
+    def _handle_outputs(self, outputs: List[Dict[str, Any]], msg: Dict[str, Any]):
+        msg_type = msg["header"]["msg_type"]
+        content = msg["content"]
+        if msg_type == "stream":
+            if (not outputs) or (outputs[-1]["name"] != content["name"]):
+                outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
+            outputs[-1]["text"].append(content["text"])
+        elif msg_type in ("display_data", "execute_result"):
+            outputs.append(
+                {
+                    "data": {"text/plain": [content["data"].get("text/plain", "")]},
+                    "execution_count": content["execution_count"],
+                    "metadata": {},
+                    "output_type": msg_type,
+                }
+            )
+        elif msg_type == "error":
+            outputs.append(
+                {
+                    "ename": content["ename"],
+                    "evalue": content["evalue"],
+                    "output_type": "error",
+                    "traceback": content["traceback"],
+                }
+            )
+        else:
+            return

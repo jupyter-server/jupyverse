@@ -71,7 +71,7 @@ async def test_rest_api(start_jupyverse):
         # wait for file to be loaded and Y model to be created in server and client
         await asyncio.sleep(0.1)
         # execute notebook
-        for cell_idx in range(2):
+        for cell_idx in range(3):
             response = requests.post(
                 f"{url}/api/kernels/{kernel_id}/execute",
                 data=json.dumps(
@@ -95,4 +95,12 @@ async def test_rest_api(start_jupyverse):
         ]
         assert cells[1]["outputs"] == [
             {"name": "stdout", "output_type": "stream", "text": ["Hello World!\n"]}
+        ]
+        assert cells[2]["outputs"] == [
+            {
+                "data": {"text/plain": ["7"]},
+                "execution_count": 3.0,
+                "metadata": {},
+                "output_type": "execute_result",
+            }
         ]
