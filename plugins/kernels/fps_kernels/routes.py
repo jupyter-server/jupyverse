@@ -25,7 +25,7 @@ from .kernel_server.server import (  # type: ignore
     KernelServer,
     kernels,
 )
-from .models import Session, Execution
+from .models import Execution, Session
 
 router = APIRouter()
 
