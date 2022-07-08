@@ -25,7 +25,7 @@ from .kernel_server.server import (  # type: ignore
     KernelServer,
     kernels,
 )
-from .models import Session
+from .models import Session, Execution
 
 router = APIRouter()
 
@@ -175,15 +175,14 @@ async def restart_kernel(
 
 @router.post("/api/kernels/{kernel_id}/execute")
 async def execute_cell(
-    request: Request,
+    execution: Execution,
     kernel_id,
     user: UserRead = Depends(current_user),
 ):
-    r = await request.json()
     if kernel_id in kernels:
-        room = YDocWebSocketHandler.websocket_server.get_room(r["document_id"])
+        room = YDocWebSocketHandler.websocket_server.get_room(execution.document_id)
         nb = room.document.source
-        cell = nb["cells"][int(r["cell_idx"])]
+        cell = nb["cells"][execution.cell_idx]
         cell["outputs"] = []
 
         kernel = kernels[kernel_id]
