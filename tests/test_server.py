@@ -10,7 +10,8 @@ test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
 def test_settings_persistence_put(start_jupyverse):
-    url = start_jupyverse
+    hostname, port = start_jupyverse
+    url = f"http://{hostname}:{port}"
     # get previous theme
     response = requests.get(url + "/lab/api/settings/@jupyterlab/apputils-extension:themes")
     assert response.status_code == 200
@@ -25,7 +26,8 @@ def test_settings_persistence_put(start_jupyverse):
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
 def test_settings_persistence_get(start_jupyverse):
-    url = start_jupyverse
+    hostname, port = start_jupyverse
+    url = f"http://{hostname}:{port}"
     # get new theme
     response = requests.get(
         url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",

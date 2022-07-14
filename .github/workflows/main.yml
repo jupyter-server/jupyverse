@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+        os: [ubuntu-latest, macos-latest]
+        python-version: [ '3.10' ]
 
     steps:
     - name: Checkout
@@ -46,7 +46,7 @@ jobs:
         pip install ./plugins/lab
         pip install ./plugins/jupyterlab
 
-        pip install mypy pytest pytest-asyncio requests ipykernel
+        pip install .[test]
 
     - name: Check types
       run: |
