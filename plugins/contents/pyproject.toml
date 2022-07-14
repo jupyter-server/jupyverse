@@ -7,7 +7,7 @@ name = "fps_contents"
 description = "An FPS plugin for the contents API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "anyio", "watchfiles >=0.16.1,<1",]
+dependencies = [ "fps >=0.0.8", "fps-auth-base", "anyio", "watchfiles >=0.16.1,<1", "asgiwebdav >=1.3.2,<2"]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -31,6 +31,9 @@ skip = [ "check-links",]
 
 [project.entry-points.fps_router]
 fps-contents = "fps_contents.routes"
+
+[project.entry-points.fps_application]
+fps-contents = "fps_contents.webdav"
 
 [tool.hatch.version]
 path = "fps_contents/__init__.py"

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+from uuid import uuid4
 
+import easywebdav
 import pytest
 from utils import clear_content_values, create_content, sort_content_by_name
 
@@ -60,3 +62,16 @@ def test_tree(client, tmp_path):
     sort_content_by_name(expected)
     assert actual == expected
     os.chdir(prev_dir)
+
+
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+@pytest.mark.parametrize("clear_users", (False,))
+def test_webdav(start_jupyverse):
+    hostname, port = start_jupyverse
+    webdav = easywebdav.connect(hostname, port=port, path="webdav", username="foo", password="bar")
+    dirname = str(uuid4())
+    assert not Path(dirname).exists()
+    webdav.mkdir(dirname)
+    assert Path(dirname).is_dir()
+    webdav.rmdir(dirname)
+    assert not Path(dirname).exists()

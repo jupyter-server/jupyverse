@@ -48,6 +48,6 @@ def start_jupyverse(auth_mode, clear_users, cwd, capfd):
         out, err = capfd.readouterr()
         if "Application startup complete" in err:
             break
-    url = f"http://127.0.0.1:{port}"
-    yield url
+    hostname = "127.0.0.1"
+    yield hostname, port
     p.kill()

@@ -57,7 +57,7 @@ pre-install-commands = [
   "pip install -e ./plugins/terminals",
   "pip install -e ./plugins/yjs",
 ]
-dependencies = ["fastapi>=0.82.0"]
+dependencies = ["fastapi>=0.82.0", "easywebdav"]
 features = ["test"]
 
 [tool.hatch.envs.dev.overrides]
