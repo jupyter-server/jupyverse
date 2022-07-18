@@ -24,11 +24,11 @@ pip install "jupyverse[jupyterlab]"  # for the JupyterLab front-end
 pip install "jupyverse[retrolab]"  # for the RetroLab front-end
 ```
 
-With `mamba` or `conda` (using the `conda-forge` channel):
+With `conda` (using the `conda-forge` channel) (try `conda install -n base conda-libmamba-solver` to use the fast mamba solver):
 ```bash
-mamba install jupyverse fps-jupyterlab  # for the JupyterLab front-end
+conda install --experimental-solver=libmamba jupyverse fps-jupyterlab  # for the JupyterLab front-end
 # or
-mamba install jupyverse fps-retrolab  # for the RetroLab front-end
+conda install --experimental-solver=libmamba jupyverse fps-retrolab  # for the RetroLab front-end
 ```
 
 Note: you cannot have both the JupyterLab and the RetroLab front-ends enabled at the same time.
