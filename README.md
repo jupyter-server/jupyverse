@@ -19,9 +19,9 @@ For the motivations behind this project, please refer to this issue in the
 
 With `pip`:
 ```bash
-pip install jupyverse[jupyterlab]  # for the JupyterLab front-end
+pip install "jupyverse[jupyterlab]"  # for the JupyterLab front-end
 # or
-pip install jupyverse[retrolab]  # for the RetroLab front-end
+pip install "jupyverse[retrolab]"  # for the RetroLab front-end
 ```
 
 With `mamba` or `conda` (using the `conda-forge` channel):
