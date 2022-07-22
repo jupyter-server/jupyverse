@@ -24,7 +24,7 @@ pip install "jupyverse[jupyterlab]"  # for the JupyterLab front-end
 pip install "jupyverse[retrolab]"  # for the RetroLab front-end
 ```
 
-With `conda` (using the `conda-forge` channel) (try `conda install -n base conda-libmamba-solver` to use the fast mamba solver):
+With `mamba`:
 ```bash
 conda install --experimental-solver=libmamba jupyverse fps-jupyterlab  # for the JupyterLab front-end
 # or
