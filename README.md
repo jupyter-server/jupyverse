@@ -28,7 +28,7 @@ With `mamba`:
 ```bash
 mamba install -c conda-forge jupyverse fps-jupyterlab  # for the JupyterLab front-end
 # or
-conda install --experimental-solver=libmamba jupyverse fps-retrolab  # for the RetroLab front-end
+mamba install -c conda-forge jupyverse fps-retrolab  # for the RetroLab front-end
 ```
 
 Note: you cannot have both the JupyterLab and the RetroLab front-ends enabled at the same time.
