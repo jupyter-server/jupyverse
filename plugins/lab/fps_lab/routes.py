@@ -60,7 +60,7 @@ def init_router(router, redirect_after_root):
     async def get_root(
         response: Response,
         lab_config=Depends(get_lab_config),
-        user=Depends(current_user),
+        user: UserRead = Depends(current_user),
     ):
         # auto redirect
         response.status_code = status.HTTP_302_FOUND
@@ -77,7 +77,7 @@ def init_router(router, redirect_after_root):
         )
 
     @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
-    async def get_listings(user=Depends(current_user)):
+    async def get_listings(user: UserRead = Depends(current_user)):
         return {
             "blocked_extensions_uris": [],
             "allowed_extensions_uris": [],
