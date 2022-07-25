@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.34
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.33...d612ecaf5a96c692f9e10c53e3b5bb4db795c304))
+
+### Merged PRs
+
+- Pin fastapi-users >=10.1.4 [#194](https://github.com/jupyter-server/jupyverse/pull/194) ([@davidbrochart](https://github.com/davidbrochart))
+- Documentation update [#193](https://github.com/jupyter-server/jupyverse/pull/193) ([@photocyte](https://github.com/photocyte))
+- Store Y updates [#190](https://github.com/jupyter-server/jupyverse/pull/190) ([@davidbrochart](https://github.com/davidbrochart))
+- Don't trust notebook [#188](https://github.com/jupyter-server/jupyverse/pull/188) ([@davidbrochart](https://github.com/davidbrochart))
+- [pre-commit.ci] pre-commit autoupdate [#185](https://github.com/jupyter-server/jupyverse/pull/185) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Await zmq sends [#184](https://github.com/jupyter-server/jupyverse/pull/184) ([@minrk](https://github.com/minrk))
+- fix zmq Socket types [#183](https://github.com/jupyter-server/jupyverse/pull/183) ([@minrk](https://github.com/minrk))
+- Increase time to receive message type warning [#182](https://github.com/jupyter-server/jupyverse/pull/182) ([@davidbrochart](https://github.com/davidbrochart))
+- Load/auto-save document from the back-end using y-py [#127](https://github.com/jupyter-server/jupyverse/pull/127) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-05-17&to=2022-07-25&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-05-17..2022-07-25&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aminrk+updated%3A2022-05-17..2022-07-25&type=Issues) | [@photocyte](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aphotocyte+updated%3A2022-05-17..2022-07-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-05-17..2022-07-25&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2022-05-17..2022-07-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.33
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.32...db404f0decf2b0739613cdf17a3d925d536e7991))
@@ -19,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-03-25&to=2022-05-17&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-03-25..2022-05-17&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-03-25..2022-05-17&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.32
 
