@@ -1,6 +1,8 @@
+import os
 import socket
 import subprocess
 import time
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -9,6 +11,11 @@ pytest_plugins = (
     "fps.testing.fixtures",
     "fps_auth.fixtures",
 )
+
+
+@pytest.fixture()
+def cwd():
+    return Path(__file__).parent.parent
 
 
 @pytest.fixture()
@@ -66,7 +73,8 @@ def get_open_port():
 
 
 @pytest.fixture()
-def start_jupyverse(auth_mode, clear_users, capfd):
+def start_jupyverse(auth_mode, clear_users, cwd, capfd):
+    os.chdir(cwd)
     port = get_open_port()
     command_list = [
         "jupyverse",

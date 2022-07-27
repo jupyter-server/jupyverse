@@ -16,14 +16,16 @@ from fps_auth.backends import (  # type: ignore
 from fps_auth.config import get_auth_config  # type: ignore
 from fps_auth.models import UserRead  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
+from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
 
+from .kernel_driver.driver import KernelDriver  # type: ignore
 from .kernel_server.server import (  # type: ignore
     AcceptedWebSocket,
     KernelServer,
     kernels,
 )
-from .models import Session
+from .models import Execution, Session
 
 router = APIRouter()
 
@@ -132,7 +134,7 @@ async def create_session(
         ),
     )
     kernel_id = str(uuid.uuid4())
-    kernels[kernel_id] = {"name": kernel_name, "server": kernel_server}
+    kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
     await kernel_server.start()
     session_id = str(uuid.uuid4())
     session = {
@@ -169,6 +171,36 @@ async def restart_kernel(
             "execution_state": kernel["server"].last_activity["execution_state"],
         }
         return result
+
+
+@router.post("/api/kernels/{kernel_id}/execute")
+async def execute_cell(
+    request: Request,
+    kernel_id,
+    user: UserRead = Depends(current_user),
+):
+    r = await request.json()
+    execution = Execution(**r)
+    if kernel_id in kernels:
+        ynotebook = YDocWebSocketHandler.websocket_server.get_room(execution.document_id).document
+        cell = ynotebook.get_cell(execution.cell_idx)
+        cell["outputs"] = []
+
+        kernel = kernels[kernel_id]
+        kernelspec_path = str(
+            prefix_dir / "share" / "jupyter" / "kernels" / kernel["name"] / "kernel.json"
+        )
+        if not kernel["driver"]:
+            kernel["driver"] = driver = KernelDriver(
+                kernelspec_path=kernelspec_path,
+                write_connection_file=False,
+                connection_file=kernel["server"].connection_file_path,
+            )
+            await driver.connect()
+        driver = kernel["driver"]
+
+        await driver.execute(cell)
+        ynotebook.set_cell(execution.cell_idx, cell)
 
 
 @router.get("/api/kernels/{kernel_id}")
