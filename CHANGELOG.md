@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.35
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.34...6574141ed7c0c1ab6e74ebd9a4491f712c183f02))
+
+### Merged PRs
+
+- Support global awareness [#202](https://github.com/jupyter-server/jupyverse/pull/202) ([@davidbrochart](https://github.com/davidbrochart))
+- Disable Windows for test_rest_api [#200](https://github.com/jupyter-server/jupyverse/pull/200) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix GitHub workflow execution duplication [#199](https://github.com/jupyter-server/jupyverse/pull/199) ([@davidbrochart](https://github.com/davidbrochart))
+- [pre-commit.ci] pre-commit autoupdate [#198](https://github.com/jupyter-server/jupyverse/pull/198) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Update jupyter_ydoc and ypy-websocket pinning [#196](https://github.com/jupyter-server/jupyverse/pull/196) ([@davidbrochart](https://github.com/davidbrochart))
+- Add POST execute cell [#191](https://github.com/jupyter-server/jupyverse/pull/191) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-07-25&to=2022-08-08&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-07-25..2022-08-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-07-25..2022-08-08&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.34
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.33...d612ecaf5a96c692f9e10c53e3b5bb4db795c304))
@@ -23,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-05-17&to=2022-07-25&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-05-17..2022-07-25&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aminrk+updated%3A2022-05-17..2022-07-25&type=Issues) | [@photocyte](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aphotocyte+updated%3A2022-05-17..2022-07-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-05-17..2022-07-25&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2022-05-17..2022-07-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.33
 
