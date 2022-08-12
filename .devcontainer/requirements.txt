@@ -2,7 +2,6 @@
 ./plugins/auth
 ./plugins/contents
 ./plugins/jupyterlab
-./plugins/jupyterlab
 ./plugins/kernels
 ./plugins/login
 ./plugins/nbconvert
