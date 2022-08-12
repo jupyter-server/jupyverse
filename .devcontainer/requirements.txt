@@ -1,0 +1,16 @@
+.
+fps[unicorn]
+./plugins/auth
+./plugins/contents
+./plugins/kernels
+./plugins/nbconvert
+./plugins/yjs
+./plugins/lab
+./plugins/jupyterlab
+jupyter_ydoc >=0.1.16<0.2.0
+y-py >=0.5.4
+mypy
+pytest
+pytest-asyncio
+requests
+ipykernel
