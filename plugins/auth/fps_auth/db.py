@@ -54,6 +54,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     avatar = Column(String(length=32), nullable=True)
     workspace = Column(Text(), default="{}", nullable=False)
     settings = Column(Text(), default="{}", nullable=False)
+    permissions = Column(Text(), default="{}", nullable=False)
     oauth_accounts: List[OAuthAccount] = relationship("OAuthAccount", lazy="joined")
 
 

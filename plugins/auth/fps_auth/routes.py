@@ -1,6 +1,9 @@
+import json
+from typing import Dict, List
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends
+from fastapi.exceptions import HTTPException
 from fps.config import get_config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
@@ -16,7 +19,7 @@ from .backends import (
 )
 from .config import get_auth_config
 from .db import Session, User, UserDb, create_db_and_tables, secret
-from .models import UserCreate, UserRead, UserUpdate
+from .models import Permissions, UserCreate, UserRead, UserUpdate
 
 logger = get_configured_logger("auth")
 
@@ -50,6 +53,7 @@ async def startup():
                 is_verified=True,
                 workspace="{}",
                 settings="{}",
+                permissions="{}",
             )
             await user_db.create(global_user)
 
@@ -68,6 +72,39 @@ async def get_users(user: UserRead = Depends(current_user)):
         statement = select(User)
         users = (await session.execute(statement)).unique().all()
     return [usr.User for usr in users if usr.User.is_active]
+
+
+@router.get("/api/me")
+async def get_api_me(
+    permissions,
+    user: UserRead = Depends(current_user),
+):
+    try:
+        permissions_to_check = Permissions.parse_obj(json.loads(permissions))
+    except BaseException:
+        raise HTTPException(
+            400,
+            detail='permissions should be a JSON dict of {{"resource": ["action",]}}, '
+            f"got {permissions}",
+        )
+
+    user_permissions = json.loads(user.permissions)
+    checked_permissions: Dict[str, List[str]] = {}
+    for resource, actions in permissions_to_check.items():
+        user_resource_permissions = user_permissions.get(resource)
+        if user_resource_permissions is None:
+            continue
+        allowed = checked_permissions[resource] = []
+        for action in actions:
+            if action in user_resource_permissions:
+                allowed.append(action)
+
+    keys = ["email", "name", "avatar", "anonymous", "username", "color"]
+    identity = {k: getattr(user, k) for k in keys}
+    return {
+        "identity": identity,
+        "permissions": checked_permissions,
+    }
 
 
 # redefine GET /me because we want our current_user dependency
