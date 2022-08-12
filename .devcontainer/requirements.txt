@@ -3,14 +3,12 @@
 ./plugins/contents
 ./plugins/jupyterlab
 ./plugins/kernels
-./plugins/lab
+./plugins/jupyterlab
+./plugins/login
+./plugins/terminals
 ./plugins/nbconvert
 ./plugins/yjs
-fps[unicorn]
-ipykernel
-jupyter_ydoc >=0.1.16<0.2.0
+fps[unicorn] >=0.0.10
 mypy
 pytest
 pytest-asyncio
-requests
-y-py >=0.5.4
