@@ -1,0 +1,13 @@
+.
+./plugins/auth
+./plugins/contents
+./plugins/jupyterlab
+./plugins/kernels
+./plugins/login
+./plugins/nbconvert
+./plugins/terminals
+./plugins/yjs
+fps[unicorn] >=0.0.10
+mypy
+pytest
+pytest-asyncio
