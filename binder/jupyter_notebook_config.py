@@ -2,8 +2,8 @@ jupyverse_jlab_command = " ".join(
     [
         "jupyverse",
         "--no-open-browser",
-        "--authenticator.mode=noauth",
-        "--authenticator.collaborative",
+        "--auth.mode=noauth",
+        "--auth.collaborative",
         "--RetroLab.enabled=false",
         "--Lab.base_url={base_url}jupyverse-jlab/",
         "--port={port}",
@@ -16,8 +16,8 @@ jupyverse_rlab_command = " ".join(
     [
         "jupyverse",
         "--no-open-browser",
-        "--authenticator.mode=noauth",
-        "--authenticator.collaborative",
+        "--auth.mode=noauth",
+        "--auth.collaborative",
         "--JupyterLab.enabled=false",
         "--Lab.base_url={base_url}jupyverse-rlab/",
         "--port={port}",

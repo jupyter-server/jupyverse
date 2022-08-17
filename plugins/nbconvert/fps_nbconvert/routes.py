@@ -24,7 +24,7 @@ async def get_nbconvert_document(
     format: str,
     path: str,
     download: bool,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("nbconvert")),
 ):
     exporter = nbconvert.exporters.get_exporter(format)
     if download:

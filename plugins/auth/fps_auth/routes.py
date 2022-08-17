@@ -1,9 +1,8 @@
-import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends
-from fastapi.exceptions import HTTPException
+from fastapi_users.password import PasswordHelper
 from fps.config import get_config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
@@ -36,11 +35,27 @@ async def startup():
 
     async with UserDb() as user_db:
 
-        global_user = await user_db.get_by_email(auth_config.global_email)
+        if auth_config.test:
+            admin_user = await user_db.get_by_email("admin@jupyter.com")
+            if not admin_user:
+                admin_user = dict(
+                    id=uuid4(),
+                    anonymous=False,
+                    email="admin@jupyter.com",
+                    username="admin@jupyter.com",
+                    hashed_password=PasswordHelper().hash("jupyverse"),
+                    is_superuser=True,
+                    is_active=True,
+                    is_verified=True,
+                    workspace="{}",
+                    settings="{}",
+                    permissions={"admin": ["read", "write"]},
+                )
+                await user_db.create(admin_user)
 
+        global_user = await user_db.get_by_email(auth_config.global_email)
         if global_user:
             await user_db.update(global_user, {"hashed_password": auth_config.token})
-
         else:
             global_user = dict(
                 id=uuid4(),
@@ -53,7 +68,7 @@ async def startup():
                 is_verified=True,
                 workspace="{}",
                 settings="{}",
-                permissions="{}",
+                permissions={},
             )
             await user_db.create(global_user)
 
@@ -67,7 +82,7 @@ async def startup():
 
 
 @router.get("/auth/users")
-async def get_users(user: UserRead = Depends(current_user)):
+async def get_users(user: UserRead = Depends(current_user("admin"))):
     async with Session() as session:
         statement = select(User)
         users = (await session.execute(statement)).unique().all()
@@ -76,30 +91,23 @@ async def get_users(user: UserRead = Depends(current_user)):
 
 @router.get("/api/me")
 async def get_api_me(
-    permissions,
-    user: UserRead = Depends(current_user),
+    permissions_to_check: Optional[Permissions] = None,
+    user: UserRead = Depends(current_user()),
 ):
-    try:
-        permissions_to_check = Permissions.parse_obj(json.loads(permissions))
-    except BaseException:
-        raise HTTPException(
-            400,
-            detail='permissions should be a JSON dict of {{"resource": ["action",]}}, '
-            f"got {permissions}",
-        )
-
-    user_permissions = json.loads(user.permissions)
     checked_permissions: Dict[str, List[str]] = {}
-    for resource, actions in permissions_to_check.items():
-        user_resource_permissions = user_permissions.get(resource)
-        if user_resource_permissions is None:
-            continue
-        allowed = checked_permissions[resource] = []
-        for action in actions:
-            if action in user_resource_permissions:
-                allowed.append(action)
+    if permissions_to_check is not None:
+        permissions = permissions_to_check.permissions
+        user_permissions = user.permissions
+        for resource, actions in permissions.items():
+            user_resource_permissions = user_permissions.get(resource)
+            if user_resource_permissions is None:
+                continue
+            allowed = checked_permissions[resource] = []
+            for action in actions:
+                if action in user_resource_permissions:
+                    allowed.append(action)
 
-    keys = ["email", "name", "avatar", "anonymous", "username", "color"]
+    keys = ["username", "name", "display_name", "initials", "avatar_url", "color"]
     identity = {k: getattr(user, k) for k in keys}
     return {
         "identity": identity,
@@ -113,7 +121,7 @@ users_router = APIRouter()
 
 
 @users_router.get("/me")
-async def get_me(user: UserRead = Depends(current_user)):
+async def get_me(user: UserRead = Depends(current_user("admin"))):
     return user
 
 
@@ -121,7 +129,11 @@ users_router.include_router(fapi_users.get_users_router(UserRead, UserUpdate))
 
 # Cookie based auth login and logout
 r_cookie_auth = register_router(fapi_users.get_auth_router(cookie_authentication), prefix="/auth")
-r_register = register_router(fapi_users.get_register_router(UserRead, UserCreate), prefix="/auth")
+r_register = register_router(
+    fapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    dependencies=[Depends(current_user("admin"))],
+)
 r_user = register_router(users_router, prefix="/auth/user")
 
 # GitHub OAuth register router

@@ -22,7 +22,7 @@ router = APIRouter()
     "/api/contents/{path:path}/checkpoints",
     status_code=201,
 )
-async def create_checkpoint(path, user: UserRead = Depends(current_user)):
+async def create_checkpoint(path, user: UserRead = Depends(current_user("contents"))):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     try:
@@ -42,7 +42,7 @@ async def create_checkpoint(path, user: UserRead = Depends(current_user)):
 async def create_content(
     path: Optional[str],
     request: Request,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("contents")),
 ):
     create_content = CreateContent(**(await request.json()))
     content_path = Path(create_content.path)
@@ -75,13 +75,13 @@ async def create_content(
 @router.get("/api/contents")
 async def get_root_content(
     content: int,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("contents")),
 ):
     return await read_content("", bool(content))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
-async def get_checkpoint(path, user: UserRead = Depends(current_user)):
+async def get_checkpoint(path, user: UserRead = Depends(current_user("contents"))):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     if not dst_path.exists():
@@ -94,7 +94,7 @@ async def get_checkpoint(path, user: UserRead = Depends(current_user)):
 async def get_content(
     path: str,
     content: int = 0,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("contents")),
 ):
     return await read_content(path, bool(content))
 
@@ -104,7 +104,7 @@ async def save_content(
     path,
     request: Request,
     response: Response,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("contents")),
 ):
     content = SaveContent(**(await request.json()))
     try:
@@ -120,7 +120,7 @@ async def save_content(
 )
 async def delete_content(
     path,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("contents")),
 ):
     p = Path(path)
     if p.exists():
@@ -135,7 +135,7 @@ async def delete_content(
 async def rename_content(
     path,
     request: Request,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("contents")),
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)

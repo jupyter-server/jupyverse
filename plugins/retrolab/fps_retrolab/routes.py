@@ -44,7 +44,7 @@ retro_federated_extensions = [
 
 @router.get("/retro/tree", response_class=HTMLResponse)
 async def get_tree(
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
@@ -54,7 +54,7 @@ async def get_tree(
 @router.get("/retro/notebooks/{path:path}", response_class=HTMLResponse)
 async def get_notebook(
     path,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
@@ -64,7 +64,7 @@ async def get_notebook(
 @router.get("/retro/edit/{path:path}", response_class=HTMLResponse)
 async def edit_file(
     path,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
@@ -74,7 +74,7 @@ async def edit_file(
 @router.get("/retro/consoles/{path:path}", response_class=HTMLResponse)
 async def get_console(
     path,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
@@ -84,7 +84,7 @@ async def get_console(
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
 async def get_terminal(
     name: str,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):

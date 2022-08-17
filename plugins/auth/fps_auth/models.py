@@ -5,33 +5,28 @@ from fastapi_users import schemas
 from pydantic import BaseModel
 
 
-class JupyterUser(BaseModel):
+class Permissions(BaseModel):
+    permissions: Dict[str, List[str]]
+
+
+class JupyterUser(Permissions):
     anonymous: bool = True
     username: str = ""
-    name: Optional[str] = None
+    name: str = ""
+    display_name: str = ""
+    initials: Optional[str] = None
     color: Optional[str] = None
-    avatar: Optional[str] = None
+    avatar_url: Optional[str] = None
     workspace: str = "{}"
     settings: str = "{}"
-    permissions: str = "{}"
-
-
-class Permissions(BaseModel):
-    __root__: Dict[str, List[str]]
-
-    def items(self):
-        return self.__root__.items()
 
 
 class UserRead(schemas.BaseUser[uuid.UUID], JupyterUser):
     pass
 
 
-class UserCreate(schemas.BaseUserCreate):
-    anonymous: bool = True
-    username: Optional[str] = None
-    name: Optional[str] = None
-    color: Optional[str] = None
+class UserCreate(schemas.BaseUserCreate, JupyterUser):
+    pass
 
 
 class UserUpdate(schemas.BaseUserUpdate, JupyterUser):

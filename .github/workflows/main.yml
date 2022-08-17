@@ -38,19 +38,16 @@ jobs:
 
     - name: Install jupyverse
       run: |
-        pip install fps[uvicorn]
-        pip install . --no-deps
+        pip install ./plugins/jupyterlab
+        pip install ./plugins/login
         pip install ./plugins/auth
         pip install ./plugins/contents
         pip install ./plugins/kernels
+        pip install ./plugins/terminals
+        pip install ./plugins/lab
         pip install ./plugins/nbconvert
         pip install ./plugins/yjs
-        pip install ./plugins/lab
-        pip install ./plugins/jupyterlab
-        pip install "jupyter_ydoc >=0.1.16,<0.2.0"  # FIXME: remove with next JupyterLab release
-        pip install "y-py >=0.5.4"
-
-        pip install mypy pytest pytest-asyncio requests ipykernel
+        pip install .[test]
 
     - name: Check types
       run: |

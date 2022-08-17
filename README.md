@@ -40,8 +40,6 @@ When switching e.g. from the JupyterLab to the RetroLab front-end, you need to
 Clone this repository and install the needed plugins:
 
 ```bash
-pip install fps[uvicorn]
-pip install -e . --no-deps
 pip install -e plugins/jupyterlab
 pip install -e plugins/login
 pip install -e plugins/auth
@@ -51,9 +49,9 @@ pip install -e plugins/terminals
 pip install -e plugins/lab
 pip install -e plugins/nbconvert
 pip install -e plugins/yjs
+pip install -e .[test]
 
 # if you want RetroLab instead of JupyterLab:
-# pip install -e . --no-deps
 # pip install -e plugins/retrolab
 # ...
 ```
@@ -63,7 +61,7 @@ pip install -e plugins/yjs
 ## Without authentication
 
 ```bash
-jupyverse --open-browser --authenticator.mode=noauth
+jupyverse --open-browser --auth.mode=noauth
 ```
 
 This will open a browser at 127.0.0.1:8000 by default, and load the JupyterLab front-end.
@@ -72,7 +70,7 @@ You have full access to the API, without restriction.
 ## With token authentication
 
 ```bash
-jupyverse --open-browser --authenticator.mode=token
+jupyverse --open-browser --auth.mode=token
 ```
 
 This is the default mode, and it corresponds to
@@ -81,7 +79,7 @@ This is the default mode, and it corresponds to
 ## With user authentication
 
 ```bash
-jupyverse --open-browser --authenticator.mode=user
+jupyverse --open-browser --auth.mode=user
 ```
 
 We provide a JupyterLab extension for authentication, that you can install with:
@@ -96,7 +94,7 @@ You can currently authenticate as an anonymous user, or
 ## With collaborative editing
 
 ```bash
-jupyverse --open-browser --authenticator.collaborative
+jupyverse --open-browser --auth.collaborative
 ```
 
 This is especially interesting if you are "user-authenticated", since your will appear as the
