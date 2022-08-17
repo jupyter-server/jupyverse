@@ -60,13 +60,12 @@ def authenticated_client(client, permissions):
     response = client.post("/auth/register", json=register_body)
     assert response.status_code == 201
 
-    # FIXME:
-    # # log out
-    # response = client.post("/auth/logout")
-    # assert response.status_code == 200
-    # # check that we can't get our identity, since we're not logged in
-    # response = client.get("/api/me")
-    # assert response.status_code == 403
+    # log out
+    response = client.post("/auth/logout")
+    assert response.status_code == 200
+    # check that we can't get our identity, since we're not logged in
+    response = client.get("/api/me")
+    assert response.status_code == 403
 
     # log in with registered user
     login_body = {"username": username + "@example.com", "password": username}

@@ -62,7 +62,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
 
 engine = create_async_engine(DATABASE_URL)
-Session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def create_db_and_tables():
@@ -71,7 +71,7 @@ async def create_db_and_tables():
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    async with Session() as session:
+    async with async_session_maker() as session:
         yield session
 
 
@@ -81,7 +81,7 @@ async def get_user_db(session: AsyncSession = Depends(get_async_session)):
 
 class UserDb:
     async def __aenter__(self):
-        self.session = Session()
+        self.session = async_session_maker()
         session = await self.session.__aenter__()
         return SQLAlchemyUserDatabase(session, User, OAuthAccount)
 

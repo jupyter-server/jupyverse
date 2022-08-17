@@ -1,8 +1,8 @@
+import contextlib
 from typing import Dict, List, Optional
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends
-from fastapi_users.password import PasswordHelper
+from fastapi_users.exceptions import UserAlreadyExists
 from fps.config import get_config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
@@ -13,11 +13,20 @@ from .backends import (
     cookie_authentication,
     current_user,
     fapi_users,
+    get_user_manager,
     github_authentication,
     github_cookie_authentication,
 )
 from .config import get_auth_config
-from .db import Session, User, UserDb, create_db_and_tables, secret
+from .db import (
+    User,
+    UserDb,
+    async_session_maker,
+    create_db_and_tables,
+    get_async_session,
+    get_user_db,
+    secret,
+)
 from .models import Permissions, UserCreate, UserRead, UserUpdate
 
 logger = get_configured_logger("auth")
@@ -27,50 +36,59 @@ uvicorn_config = get_config(UvicornConfig)
 router = APIRouter()
 
 
+get_async_session_context = contextlib.asynccontextmanager(get_async_session)
+get_user_db_context = contextlib.asynccontextmanager(get_user_db)
+get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
+
+
+async def create_user(
+    username: str,
+    email: str,
+    password: str,
+    is_superuser: bool = False,
+    permissions: Dict[str, List[str]] = {},
+):
+    async with get_async_session_context() as session:
+        async with get_user_db_context(session) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                await user_manager.create(
+                    UserCreate(
+                        username=username,
+                        email=email,
+                        password=password,
+                        is_superuser=is_superuser,
+                        permissions=permissions,
+                    )
+                )
+
+
 @router.on_event("startup")
 async def startup():
     await create_db_and_tables()
 
     auth_config = get_auth_config()
 
-    async with UserDb() as user_db:
-
-        if auth_config.test:
-            admin_user = await user_db.get_by_email("admin@jupyter.com")
-            if not admin_user:
-                admin_user = dict(
-                    id=uuid4(),
-                    anonymous=False,
-                    email="admin@jupyter.com",
-                    username="admin@jupyter.com",
-                    hashed_password=PasswordHelper().hash("jupyverse"),
-                    is_superuser=True,
-                    is_active=True,
-                    is_verified=True,
-                    workspace="{}",
-                    settings="{}",
-                    permissions={"admin": ["read", "write"]},
-                )
-                await user_db.create(admin_user)
-
-        global_user = await user_db.get_by_email(auth_config.global_email)
-        if global_user:
-            await user_db.update(global_user, {"hashed_password": auth_config.token})
-        else:
-            global_user = dict(
-                id=uuid4(),
-                anonymous=True,
-                email=auth_config.global_email,
-                username=auth_config.global_email,
-                hashed_password=auth_config.token,
-                is_superuser=False,
-                is_active=False,
-                is_verified=True,
-                workspace="{}",
-                settings="{}",
-                permissions={},
+    if auth_config.test:
+        try:
+            await create_user(
+                username="admin@jupyter.com",
+                email="admin@jupyter.com",
+                password="jupyverse",
+                permissions={"admin": ["read", "write"]},
             )
-            await user_db.create(global_user)
+        except UserAlreadyExists:
+            pass
+
+    try:
+        await create_user(
+            username=auth_config.global_email,
+            email=auth_config.global_email,
+            password=auth_config.token,
+        )
+    except UserAlreadyExists:
+        async with UserDb() as user_db:
+            global_user = await user_db.get_by_email(auth_config.global_email)
+            await user_db.update(global_user, {"hashed_password": auth_config.token})
 
     if auth_config.mode == "token":
         logger.info("")
@@ -83,7 +101,7 @@ async def startup():
 
 @router.get("/auth/users")
 async def get_users(user: UserRead = Depends(current_user("admin"))):
-    async with Session() as session:
+    async with async_session_maker() as session:
         statement = select(User)
         users = (await session.execute(statement)).unique().all()
     return [usr.User for usr in users if usr.User.is_active]
