@@ -20,7 +20,6 @@ from .backends import (
 from .config import get_auth_config
 from .db import (
     User,
-    UserDb,
     async_session_maker,
     create_db_and_tables,
     get_async_session,
@@ -41,25 +40,27 @@ get_user_db_context = contextlib.asynccontextmanager(get_user_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 
-async def create_user(
-    username: str,
-    email: str,
-    password: str,
-    is_superuser: bool = False,
-    permissions: Dict[str, List[str]] = {},
-):
+@contextlib.asynccontextmanager
+async def _get_user_manager():
     async with get_async_session_context() as session:
         async with get_user_db_context(session) as user_db:
             async with get_user_manager_context(user_db) as user_manager:
-                await user_manager.create(
-                    UserCreate(
-                        username=username,
-                        email=email,
-                        password=password,
-                        is_superuser=is_superuser,
-                        permissions=permissions,
-                    )
-                )
+                yield user_manager
+
+
+async def create_user(**kwargs):
+    async with _get_user_manager() as user_manager:
+        await user_manager.create(UserCreate(**kwargs))
+
+
+async def update_user(user, **kwargs):
+    async with _get_user_manager() as user_manager:
+        await user_manager.update(UserUpdate(**kwargs), user)
+
+
+async def get_user_by_email(user_email):
+    async with _get_user_manager() as user_manager:
+        return await user_manager.get_by_email(user_email)
 
 
 @router.on_event("startup")
@@ -81,14 +82,18 @@ async def startup():
 
     try:
         await create_user(
-            username=auth_config.global_email,
+            username=auth_config.token,
             email=auth_config.global_email,
-            password=auth_config.token,
+            password="",
+            permissions={},
         )
     except UserAlreadyExists:
-        async with UserDb() as user_db:
-            global_user = await user_db.get_by_email(auth_config.global_email)
-            await user_db.update(global_user, {"hashed_password": auth_config.token})
+        global_user = await get_user_by_email(auth_config.global_email)
+        await update_user(
+            global_user,
+            username=auth_config.token,
+            permissions={},
+        )
 
     if auth_config.mode == "token":
         logger.info("")

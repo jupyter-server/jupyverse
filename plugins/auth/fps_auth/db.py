@@ -77,13 +77,3 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
-
-
-class UserDb:
-    async def __aenter__(self):
-        self.session = async_session_maker()
-        session = await self.session.__aenter__()
-        return SQLAlchemyUserDatabase(session, User, OAuthAccount)
-
-    async def __aexit__(self, exc_type, exc_value, exc_tb):
-        return await self.session.__aexit__(exc_type, exc_value, exc_tb)

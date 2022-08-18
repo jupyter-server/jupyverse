@@ -24,6 +24,7 @@ from starlette.requests import Request
 
 from .config import get_auth_config
 from .db import User, get_user_db, secret
+from .models import UserCreate
 
 logger = get_configured_logger("auth")
 
@@ -118,21 +119,20 @@ fapi_users = FastAPIUsers[User, uuid.UUID](
 )
 
 
-async def create_guest(user_db, auth_config):
+async def create_guest(user_manager, auth_config):
     # workspace and settings are copied from global user
     # but this is a new user
-    global_user = await user_db.get_by_email(auth_config.global_email)
+    global_user = await user_manager.get_by_email(auth_config.global_email)
     user_id = str(uuid.uuid4())
     guest = dict(
-        id=user_id,
         anonymous=True,
         email=f"{user_id}@jupyter.com",
         username=f"{user_id}@jupyter.com",
-        hashed_password="",
+        password="",
         workspace=global_user.workspace,
         settings=global_user.settings,
     )
-    return await user_db.create(guest)
+    return await user_manager.create(UserCreate(**guest))
 
 
 def current_user(resource: Optional[str] = None):
@@ -143,7 +143,7 @@ def current_user(resource: Optional[str] = None):
         user: Optional[User] = Depends(
             fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
         ),
-        user_db=Depends(get_user_db),
+        user_manager: UserManager = Depends(get_user_manager),
         auth_config=Depends(get_auth_config),
     ):
         if auth_config.mode == "user":
@@ -161,18 +161,18 @@ def current_user(resource: Optional[str] = None):
             # "noauth" or "token" authentication
             if auth_config.collaborative:
                 if not user and auth_config.mode == "noauth":
-                    user = await create_guest(user_db, auth_config)
+                    user = await create_guest(user_manager, auth_config)
                     await cookie_authentication.login(get_jwt_strategy(), user, response)
 
                 elif not user and auth_config.mode == "token":
-                    global_user = await user_db.get_by_email(auth_config.global_email)
+                    global_user = await user_manager.get_by_email(auth_config.global_email)
                     if global_user and global_user.hashed_password == token:
-                        user = await create_guest(user_db, auth_config)
+                        user = await create_guest(user_manager, auth_config)
                         await cookie_authentication.login(get_jwt_strategy(), user, response)
             else:
                 if auth_config.mode == "token":
-                    global_user = await user_db.get_by_email(auth_config.global_email)
-                    if global_user and global_user.hashed_password == token:
+                    global_user = await user_manager.get_by_email(auth_config.global_email)
+                    if global_user and global_user.username == token:
                         user = global_user
                         await cookie_authentication.login(get_jwt_strategy(), user, response)
 
