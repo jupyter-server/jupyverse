@@ -25,7 +25,7 @@ def test_root_auth(auth_mode, client):
         expected = 200
         content_type = "text/html; charset=utf-8"
     elif auth_mode in ["token", "user"]:
-        expected = 401
+        expected = 403
         content_type = "application/json"
 
     assert response.status_code == expected
@@ -42,8 +42,26 @@ def test_no_auth(client):
 def test_token_auth(client):
     # no token provided, should not work
     response = client.get("/")
-    assert response.status_code == 401
+    assert response.status_code == 403
     # token provided, should work
     auth_config = get_auth_config()
     response = client.get(f"/?token={auth_config.token}")
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize("auth_mode", ("user",))
+@pytest.mark.parametrize(
+    "permissions",
+    (
+        {},
+        {"admin": ["read"], "foo": ["bar", "baz"]},
+    ),
+)
+def test_permissions(authenticated_client, permissions):
+    response = authenticated_client.get("/auth/user/me")
+    if "admin" in permissions.keys():
+        # we have the permissions
+        assert response.status_code == 200
+    else:
+        # we don't have the permissions
+        assert response.status_code == 403

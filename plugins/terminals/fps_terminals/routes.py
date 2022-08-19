@@ -3,11 +3,9 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Response, WebSocket, status
+from fastapi import APIRouter, Depends, Response
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import current_user, get_jwt_strategy  # type: ignore
-from fps_auth.config import get_auth_config  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
+from fps_auth.backends import current_user, websocket_for_current_user  # type: ignore
 from fps_auth.models import UserRead  # type: ignore
 
 from .models import Terminal
@@ -29,7 +27,7 @@ async def get_terminals():
 
 @router.post("/api/terminals")
 async def create_terminal(
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("terminals")),
 ):
     name = str(len(TERMINALS) + 1)
     terminal = Terminal(
@@ -46,7 +44,7 @@ async def create_terminal(
 @router.delete("/api/terminals/{name}", status_code=204)
 async def delete_terminal(
     name: str,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("terminals")),
 ):
     for websocket in TERMINALS[name]["server"].websockets:
         TERMINALS[name]["server"].quit(websocket)
@@ -56,28 +54,15 @@ async def delete_terminal(
 
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(
-    websocket: WebSocket,
     name,
-    auth_config=Depends(get_auth_config),
-    user_db=Depends(get_user_db),
+    websocket=Depends(websocket_for_current_user("terminals")),
 ):
-    accept_websocket = False
-    if auth_config.mode == "noauth":
-        accept_websocket = True
-    else:
-        cookie = websocket._cookies["fastapiusersauth"]
-        user = await get_jwt_strategy().read_token(cookie, user_db)
-        if user:
-            accept_websocket = True
-    if accept_websocket:
-        await websocket.accept()
-        await TERMINALS[name]["server"].serve(websocket)
-        if name in TERMINALS:
-            TERMINALS[name]["server"].quit(websocket)
-            if not TERMINALS[name]["server"].websockets:
-                del TERMINALS[name]
-    else:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    await websocket.accept()
+    await TERMINALS[name]["server"].serve(websocket)
+    if name in TERMINALS:
+        TERMINALS[name]["server"].quit(websocket)
+        if not TERMINALS[name]["server"].websockets:
+            del TERMINALS[name]
 
 
 r = register_router(router)

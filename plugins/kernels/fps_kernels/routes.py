@@ -4,16 +4,11 @@ import sys
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, Response, WebSocket, status
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import (  # type: ignore
-    UserManager,
-    current_user,
-    get_jwt_strategy,
-    get_user_manager,
-)
-from fps_auth.config import get_auth_config  # type: ignore
+from fps_auth.backends import current_user  # type: ignore
+from fps_auth.backends import websocket_for_current_user  # type: ignore
 from fps_auth.models import UserRead  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
@@ -42,7 +37,7 @@ async def stop_kernels():
 
 @router.get("/api/kernelspecs")
 async def get_kernelspecs(
-    lab_config=Depends(get_lab_config), user: UserRead = Depends(current_user)
+    lab_config=Depends(get_lab_config), user: UserRead = Depends(current_user("kernelspecs"))
 ):
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
         with open(path) as f:
@@ -61,13 +56,13 @@ async def get_kernelspecs(
 async def get_kernelspec(
     kernel_name,
     file_name,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
 ):
     return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
 
 
 @router.get("/api/kernels")
-async def get_kernels(user: UserRead = Depends(current_user)):
+async def get_kernels(user: UserRead = Depends(current_user("kernels"))):
     results = []
     for kernel_id, kernel in kernels.items():
         results.append(
@@ -85,7 +80,7 @@ async def get_kernels(user: UserRead = Depends(current_user)):
 @router.delete("/api/sessions/{session_id}", status_code=204)
 async def delete_session(
     session_id: str,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("sessions")),
 ):
     kernel_id = sessions[session_id]["kernel"]["id"]
     kernel_server = kernels[kernel_id]["server"]
@@ -98,7 +93,7 @@ async def delete_session(
 @router.patch("/api/sessions/{session_id}")
 async def rename_session(
     request: Request,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("sessions")),
 ):
     rename_session = await request.json()
     session_id = rename_session.pop("id")
@@ -108,7 +103,7 @@ async def rename_session(
 
 
 @router.get("/api/sessions")
-async def get_sessions(user: UserRead = Depends(current_user)):
+async def get_sessions(user: UserRead = Depends(current_user("sessions"))):
     for session in sessions.values():
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
@@ -124,7 +119,7 @@ async def get_sessions(user: UserRead = Depends(current_user)):
 )
 async def create_session(
     request: Request,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("sessions")),
 ):
     create_session = await request.json()
     kernel_name = create_session["kernel"]["name"]
@@ -158,7 +153,7 @@ async def create_session(
 @router.post("/api/kernels/{kernel_id}/restart")
 async def restart_kernel(
     kernel_id,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("kernels")),
 ):
     if kernel_id in kernels:
         kernel = kernels[kernel_id]
@@ -177,7 +172,7 @@ async def restart_kernel(
 async def execute_cell(
     request: Request,
     kernel_id,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("kernels")),
 ):
     r = await request.json()
     execution = Execution(**r)
@@ -206,7 +201,7 @@ async def execute_cell(
 @router.get("/api/kernels/{kernel_id}")
 async def get_kernel(
     kernel_id,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user("kernels")),
 ):
     if kernel_id in kernels:
         kernel = kernels[kernel_id]
@@ -222,33 +217,20 @@ async def get_kernel(
 
 @router.websocket("/api/kernels/{kernel_id}/channels")
 async def kernel_channels(
-    websocket: WebSocket,
     kernel_id,
     session_id,
-    auth_config=Depends(get_auth_config),
-    user_manager: UserManager = Depends(get_user_manager),
+    websocket=Depends(websocket_for_current_user("kernels")),
 ):
-    accept_websocket = False
-    if auth_config.mode == "noauth":
-        accept_websocket = True
-    elif "fastapiusersauth" in websocket._cookies:
-        token = websocket._cookies["fastapiusersauth"]
-        user = await get_jwt_strategy().read_token(token, user_manager)
-        if user:
-            accept_websocket = True
-    if accept_websocket:
-        subprotocol = (
-            "v1.kernel.websocket.jupyter.org"
-            if "v1.kernel.websocket.jupyter.org" in websocket["subprotocols"]
-            else None
-        )
-        await websocket.accept(subprotocol=subprotocol)
-        accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
-        if kernel_id in kernels:
-            kernel_server = kernels[kernel_id]["server"]
-            await kernel_server.serve(accepted_websocket, session_id)
-    else:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    subprotocol = (
+        "v1.kernel.websocket.jupyter.org"
+        if "v1.kernel.websocket.jupyter.org" in websocket["subprotocols"]
+        else None
+    )
+    await websocket.accept(subprotocol=subprotocol)
+    accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
+    if kernel_id in kernels:
+        kernel_server = kernels[kernel_id]["server"]
+        await kernel_server.serve(accepted_websocket, session_id)
 
 
 r = register_router(router)

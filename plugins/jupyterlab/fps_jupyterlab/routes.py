@@ -37,7 +37,7 @@ router.mount(
 
 @router.get("/lab")
 async def get_lab(
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):
@@ -56,7 +56,7 @@ async def load_workspace(
 
 
 @router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: UserRead = Depends(current_user)):
+async def get_workspace_data(user: UserRead = Depends(current_user())):
     if user:
         return json.loads(user.workspace)
     return {}
@@ -68,7 +68,7 @@ async def get_workspace_data(user: UserRead = Depends(current_user)):
 )
 async def set_workspace(
     request: Request,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     user_db=Depends(get_user_db),
 ):
     await user_db.update(user, {"workspace": await request.body()})
@@ -78,7 +78,7 @@ async def set_workspace(
 @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
 async def get_workspace(
     name,
-    user: UserRead = Depends(current_user),
+    user: UserRead = Depends(current_user()),
     lab_config=Depends(get_lab_config),
     auth_config=Depends(get_auth_config),
 ):

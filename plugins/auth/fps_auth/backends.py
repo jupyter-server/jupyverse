@@ -2,7 +2,7 @@ import uuid
 from typing import Generic, Optional
 
 import httpx
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Response, WebSocket, status
 from fastapi_users import (  # type: ignore
     BaseUserManager,
     FastAPIUsers,
@@ -24,6 +24,7 @@ from starlette.requests import Request
 
 from .config import get_auth_config
 from .db import User, get_user_db, secret
+from .models import UserCreate
 
 logger = get_configured_logger("auth")
 
@@ -95,13 +96,13 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
                         anonymous=False,
                         username=r["login"],
                         color=None,
-                        avatar=r["avatar_url"],
+                        avatar_url=r["avatar_url"],
                         is_active=True,
                     ),
                 )
 
 
-def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)
 
 
@@ -118,56 +119,97 @@ fapi_users = FastAPIUsers[User, uuid.UUID](
 )
 
 
-async def create_guest(user_db, auth_config):
+async def create_guest(user_manager, auth_config):
     # workspace and settings are copied from global user
     # but this is a new user
-    global_user = await user_db.get_by_email(auth_config.global_email)
+    global_user = await user_manager.get_by_email(auth_config.global_email)
     user_id = str(uuid.uuid4())
     guest = dict(
-        id=user_id,
         anonymous=True,
         email=f"{user_id}@jupyter.com",
         username=f"{user_id}@jupyter.com",
-        hashed_password="",
+        password="",
         workspace=global_user.workspace,
         settings=global_user.settings,
     )
-    return await user_db.create(guest)
+    return await user_manager.create(UserCreate(**guest))
 
 
-async def current_user(
-    response: Response,
-    token: Optional[str] = None,
-    user: User = Depends(
-        fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
-    ),
-    user_db=Depends(get_user_db),
-    auth_config=Depends(get_auth_config),
-):
-    active_user = user
+def current_user(resource: Optional[str] = None):
+    async def _(
+        request: Request,
+        response: Response,
+        token: Optional[str] = None,
+        user: Optional[User] = Depends(
+            fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
+        ),
+        user_manager: UserManager = Depends(get_user_manager),
+        auth_config=Depends(get_auth_config),
+    ):
+        if auth_config.mode == "user":
+            # "user" authentication: check authorization
+            if user and resource:
+                # check if allowed to access the resource
+                permissions = user.permissions.get(resource, [])
+                if request.method in ("GET", "HEAD"):
+                    if "read" not in permissions:
+                        user = None
+                elif request.method in ("POST", "PUT", "PATCH", "DELETE"):
+                    if "write" not in permissions:
+                        user = None
+        else:
+            # "noauth" or "token" authentication
+            if auth_config.collaborative:
+                if not user and auth_config.mode == "noauth":
+                    user = await create_guest(user_manager, auth_config)
+                    await cookie_authentication.login(get_jwt_strategy(), user, response)
 
-    if auth_config.collaborative:
-        if not active_user and auth_config.mode == "noauth":
-            active_user = await create_guest(user_db, auth_config)
-            await cookie_authentication.login(get_jwt_strategy(), active_user, response)
+                elif not user and auth_config.mode == "token":
+                    global_user = await user_manager.get_by_email(auth_config.global_email)
+                    if global_user and global_user.hashed_password == token:
+                        user = await create_guest(user_manager, auth_config)
+                        await cookie_authentication.login(get_jwt_strategy(), user, response)
+            else:
+                if auth_config.mode == "token":
+                    global_user = await user_manager.get_by_email(auth_config.global_email)
+                    if global_user and global_user.username == token:
+                        user = global_user
+                        await cookie_authentication.login(get_jwt_strategy(), user, response)
 
-        elif not active_user and auth_config.mode == "token":
-            global_user = await user_db.get_by_email(auth_config.global_email)
-            if global_user and global_user.hashed_password == token:
-                active_user = await create_guest(user_db, auth_config)
-                await cookie_authentication.login(get_jwt_strategy(), active_user, response)
-    else:
-        if auth_config.mode == "token":
-            global_user = await user_db.get_by_email(auth_config.global_email)
-            if global_user and global_user.hashed_password == token:
-                active_user = global_user
-                await cookie_authentication.login(get_jwt_strategy(), active_user, response)
+        if user:
+            return user
 
-    if active_user:
-        return active_user
+        elif auth_config.login_url:
+            raise RedirectException(auth_config.login_url)
 
-    elif auth_config.login_url:
-        raise RedirectException(auth_config.login_url)
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    return _
+
+
+def websocket_for_current_user(resource: str):
+    async def _(
+        websocket: WebSocket,
+        auth_config=Depends(get_auth_config),
+        user_manager: UserManager = Depends(get_user_manager),
+    ) -> Optional[WebSocket]:
+        accept_websocket = False
+        if auth_config.mode == "noauth":
+            accept_websocket = True
+        elif "fastapiusersauth" in websocket._cookies:
+            token = websocket._cookies["fastapiusersauth"]
+            user = await get_jwt_strategy().read_token(token, user_manager)
+            if user:
+                if auth_config.mode == "user":
+                    if "execute" in user.permissions.get(resource, []):
+                        accept_websocket = True
+                else:
+                    accept_websocket = True
+        if accept_websocket:
+            return websocket
+        else:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return None
+
+    return _

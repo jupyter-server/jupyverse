@@ -5,14 +5,9 @@ from pathlib import Path
 from typing import Optional, Set, Tuple
 
 import fastapi
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, WebSocketDisconnect
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import (  # type: ignore
-    UserManager,
-    get_jwt_strategy,
-    get_user_manager,
-)
-from fps_auth.config import get_auth_config  # type: ignore
+from fps_auth.backends import websocket_for_current_user  # type: ignore
 from fps_contents.routes import read_content, write_content  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
@@ -44,25 +39,12 @@ def to_datetime(iso_date: str) -> datetime:
 
 @router.websocket("/api/yjs/{path:path}")
 async def websocket_endpoint(
-    websocket: WebSocket,
     path,
-    auth_config=Depends(get_auth_config),
-    user_manager: UserManager = Depends(get_user_manager),
+    websocket=Depends(websocket_for_current_user("yjs")),
 ):
-    accept_websocket = False
-    if auth_config.mode == "noauth":
-        accept_websocket = True
-    elif "fastapiusersauth" in websocket._cookies:
-        token = websocket._cookies["fastapiusersauth"]
-        user = await get_jwt_strategy().read_token(token, user_manager)
-        if user:
-            accept_websocket = True
-    if accept_websocket:
-        await websocket.accept()
-        socket = YDocWebSocketHandler(WebsocketAdapter(websocket, path), path)
-        await socket.serve()
-    else:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    await websocket.accept()
+    socket = YDocWebSocketHandler(WebsocketAdapter(websocket, path), path)
+    await socket.serve()
 
 
 class WebsocketAdapter:
