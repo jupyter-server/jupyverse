@@ -75,7 +75,7 @@ async def test_rest_api(start_jupyverse):
         ydoc = Y.YDoc()
         WebsocketProvider(ydoc, websocket)
         # wait for file to be loaded and Y model to be created in server and client
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
         # execute notebook
         for cell_idx in range(3):
             response = requests.post(
@@ -88,7 +88,7 @@ async def test_rest_api(start_jupyverse):
                 ),
             )
         # wait for Y model to be updated
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
         # retrieve cells
         cells = ydoc.get_array("cells").to_json()
         assert cells[0]["outputs"] == [

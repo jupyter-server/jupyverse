@@ -5,7 +5,10 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Response
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import current_user, websocket_for_current_user  # type: ignore
+from fps_auth.backends import (  # type: ignore
+    current_user,
+    websocket_permissions_for_current_user,
+)
 from fps_auth.models import UserRead  # type: ignore
 
 from .models import Terminal
@@ -55,10 +58,13 @@ async def delete_terminal(
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(
     name,
-    websocket=Depends(websocket_for_current_user("terminals")),
+    websocket_permissions=Depends(
+        websocket_permissions_for_current_user({"terminals": ["read", "execute"]})
+    ),
 ):
+    websocket, permissions = websocket_permissions
     await websocket.accept()
-    await TERMINALS[name]["server"].serve(websocket)
+    await TERMINALS[name]["server"].serve(websocket, permissions)
     if name in TERMINALS:
         TERMINALS[name]["server"].quit(websocket)
         if not TERMINALS[name]["server"].websockets:

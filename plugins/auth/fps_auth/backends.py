@@ -1,5 +1,5 @@
 import uuid
-from typing import Generic, Optional
+from typing import Dict, Generic, List, Optional, Tuple
 
 import httpx
 from fastapi import Depends, HTTPException, Response, WebSocket, status
@@ -188,13 +188,23 @@ def current_user(resource: Optional[str] = None):
     return _
 
 
-def websocket_for_current_user(resource: str):
+def websocket_permissions_for_current_user(permissions_to_check: Dict[str, List[str]]):
+    """
+    A function returning a dependency for the WebSocket connection.
+
+    :param permissions: permissions the user should be granted access to. The user should have
+    access to at least one of them for the WebSocket to be opened.
+    :returns: a dependency for the WebSocket connection. The dependency returns a tuple consisting
+    of the websocket and the checked user permissions.
+    """
+
     async def _(
         websocket: WebSocket,
         auth_config=Depends(get_auth_config),
         user_manager: UserManager = Depends(get_user_manager),
-    ) -> Optional[WebSocket]:
+    ) -> Tuple[WebSocket, Optional[Dict[str, List[str]]]]:
         accept_websocket = False
+        checked_permissions: Optional[Dict[str, List[str]]] = None
         if auth_config.mode == "noauth":
             accept_websocket = True
         elif "fastapiusersauth" in websocket._cookies:
@@ -202,14 +212,24 @@ def websocket_for_current_user(resource: str):
             user = await get_jwt_strategy().read_token(token, user_manager)
             if user:
                 if auth_config.mode == "user":
-                    if "execute" in user.permissions.get(resource, []):
+                    checked_permissions = {}
+                    permissions = permissions_to_check
+                    user_permissions = user.permissions
+                    for resource, actions in permissions.items():
+                        user_resource_permissions = user_permissions.get(resource)
+                        if user_resource_permissions is None:
+                            continue
+                        allowed = checked_permissions[resource] = []
+                        for action in actions:
+                            if action in user_resource_permissions:
+                                allowed.append(action)
+                    if checked_permissions:
                         accept_websocket = True
                 else:
                     accept_websocket = True
         if accept_websocket:
-            return websocket
-        else:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return None
+            return websocket, checked_permissions
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     return _
