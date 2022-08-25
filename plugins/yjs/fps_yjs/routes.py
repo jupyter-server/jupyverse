@@ -5,13 +5,14 @@ from pathlib import Path
 from typing import Optional, Set, Tuple
 
 import fastapi
-from fastapi import APIRouter, Depends, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import websocket_for_current_user  # type: ignore
 from fps_contents.routes import read_content, write_content  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
+
+from jupyverse import websocket_auth
 
 YFILE = YDOCS["file"]
 AWARENESS = 1
@@ -40,7 +41,7 @@ def to_datetime(iso_date: str) -> datetime:
 @router.websocket("/api/yjs/{path:path}")
 async def websocket_endpoint(
     path,
-    websocket=Depends(websocket_for_current_user("yjs")),
+    websocket: WebSocket = Depends(websocket_auth(permissions={"yjs": ["read", "write"]})),
 ):
     await websocket.accept()
     socket = YDocWebSocketHandler(WebsocketAdapter(websocket, path), path)

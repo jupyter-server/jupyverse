@@ -94,7 +94,7 @@ You can currently authenticate as an anonymous user, or
 ## With collaborative editing
 
 ```bash
-jupyverse --open-browser --auth.collaborative
+jupyverse --open-browser --lab.collaborative
 ```
 
 This is especially interesting if you are "user-authenticated", since your will appear as the

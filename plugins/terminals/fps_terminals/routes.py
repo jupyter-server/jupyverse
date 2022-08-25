@@ -3,10 +3,10 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, WebSocket
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import current_user, websocket_for_current_user  # type: ignore
-from fps_auth.models import UserRead  # type: ignore
+
+from jupyverse import User, current_user, websocket_auth
 
 from .models import Terminal
 
@@ -21,13 +21,13 @@ TERMINALS: Dict[str, Dict[str, Any]] = {}
 
 
 @router.get("/api/terminals")
-async def get_terminals():
+async def get_terminals(user: User = Depends(current_user({"terminals": ["read"]}))):
     return [terminal["info"] for terminal in TERMINALS.values()]
 
 
 @router.post("/api/terminals")
 async def create_terminal(
-    user: UserRead = Depends(current_user("terminals")),
+    user: User = Depends(current_user({"terminals": ["write"]})),
 ):
     name = str(len(TERMINALS) + 1)
     terminal = Terminal(
@@ -44,7 +44,7 @@ async def create_terminal(
 @router.delete("/api/terminals/{name}", status_code=204)
 async def delete_terminal(
     name: str,
-    user: UserRead = Depends(current_user("terminals")),
+    user: User = Depends(current_user(permissions={"terminals": ["write"]})),
 ):
     for websocket in TERMINALS[name]["server"].websockets:
         TERMINALS[name]["server"].quit(websocket)
@@ -55,7 +55,7 @@ async def delete_terminal(
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(
     name,
-    websocket=Depends(websocket_for_current_user("terminals")),
+    websocket: WebSocket = Depends(websocket_auth(permissions={"terminals": ["execute"]})),
 ):
     await websocket.accept()
     await TERMINALS[name]["server"].serve(websocket)

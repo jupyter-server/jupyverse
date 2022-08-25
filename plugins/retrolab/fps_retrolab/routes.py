@@ -6,12 +6,11 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import current_user  # type: ignore
-from fps_auth.config import get_auth_config  # type: ignore
-from fps_auth.models import UserRead  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.utils import get_federated_extensions  # type: ignore
+
+from jupyverse import User, current_user  # type: ignore
 
 router = APIRouter()
 prefix_dir, federated_extensions = init_router(router, "retro/tree")
@@ -44,51 +43,46 @@ retro_federated_extensions = [
 
 @router.get("/retro/tree", response_class=HTMLResponse)
 async def get_tree(
-    user: UserRead = Depends(current_user()),
+    user: User = Depends(current_user()),
     lab_config=Depends(get_lab_config),
-    auth_config=Depends(get_auth_config),
 ):
-    return get_index("Tree", "tree", auth_config.collaborative, lab_config.base_url)
+    return get_index("Tree", "tree", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/notebooks/{path:path}", response_class=HTMLResponse)
 async def get_notebook(
     path,
-    user: UserRead = Depends(current_user()),
+    user: User = Depends(current_user()),
     lab_config=Depends(get_lab_config),
-    auth_config=Depends(get_auth_config),
 ):
-    return get_index(path, "notebooks", auth_config.collaborative, lab_config.base_url)
+    return get_index(path, "notebooks", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/edit/{path:path}", response_class=HTMLResponse)
 async def edit_file(
     path,
-    user: UserRead = Depends(current_user()),
+    user: User = Depends(current_user()),
     lab_config=Depends(get_lab_config),
-    auth_config=Depends(get_auth_config),
 ):
-    return get_index(path, "edit", auth_config.collaborative, lab_config.base_url)
+    return get_index(path, "edit", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/consoles/{path:path}", response_class=HTMLResponse)
 async def get_console(
     path,
-    user: UserRead = Depends(current_user()),
+    user: User = Depends(current_user()),
     lab_config=Depends(get_lab_config),
-    auth_config=Depends(get_auth_config),
 ):
-    return get_index(path, "consoles", auth_config.collaborative, lab_config.base_url)
+    return get_index(path, "consoles", lab_config.collaborative, lab_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
 async def get_terminal(
     name: str,
-    user: UserRead = Depends(current_user()),
+    user: User = Depends(current_user()),
     lab_config=Depends(get_lab_config),
-    auth_config=Depends(get_auth_config),
 ):
-    return get_index(name, "terminals", auth_config.collaborative, lab_config.base_url)
+    return get_index(name, "terminals", lab_config.collaborative, lab_config.base_url)
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):

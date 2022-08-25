@@ -9,12 +9,10 @@ from babel import Locale  # type: ignore
 from fastapi import Depends, Response, status
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fps_auth.backends import current_user  # type: ignore
-from fps_auth.db import get_user_db  # type: ignore
-from fps_auth.models import UserRead  # type: ignore
 from starlette.requests import Request  # type: ignore
 
 import jupyverse  # type: ignore
+from jupyverse import User, current_user, update_user
 
 from .config import get_lab_config  # type: ignore
 from .utils import get_federated_extensions
@@ -56,11 +54,11 @@ def init_router(router, redirect_after_root):
         name="themes",
     )
 
-    @router.get("/")
+    @router.get("/", name="root")
     async def get_root(
         response: Response,
         lab_config=Depends(get_lab_config),
-        user: UserRead = Depends(current_user()),
+        user: User = Depends(current_user()),
     ):
         # auto redirect
         response.status_code = status.HTTP_302_FOUND
@@ -77,7 +75,7 @@ def init_router(router, redirect_after_root):
         )
 
     @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
-    async def get_listings(user: UserRead = Depends(current_user())):
+    async def get_listings(user: User = Depends(current_user())):
         return {
             "blocked_extensions_uris": [],
             "allowed_extensions_uris": [],
@@ -88,12 +86,12 @@ def init_router(router, redirect_after_root):
     @router.get("/lab/api/translations/")
     async def get_translations_(
         lab_config=Depends(get_lab_config),
-        user: UserRead = Depends(current_user()),
+        user: User = Depends(current_user()),
     ):
         return RedirectResponse(f"{lab_config.base_url}lab/api/translations")
 
     @router.get("/lab/api/translations")
-    async def get_translations(user: UserRead = Depends(current_user())):
+    async def get_translations(user: User = Depends(current_user())):
         locale = Locale.parse("en")
         data = {
             "en": {
@@ -112,7 +110,7 @@ def init_router(router, redirect_after_root):
     @router.get("/lab/api/translations/{language}")
     async def get_translation(
         language,
-        user: UserRead = Depends(current_user()),
+        user: User = Depends(current_user()),
     ):
         global LOCALE
         if language == "en":
@@ -138,7 +136,7 @@ def init_router(router, redirect_after_root):
         name0,
         name1,
         name2,
-        user: UserRead = Depends(current_user()),
+        user: User = Depends(current_user()),
     ):
         with open(jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
@@ -173,16 +171,16 @@ def init_router(router, redirect_after_root):
         request: Request,
         name0,
         name1,
-        user: UserRead = Depends(current_user()),
-        user_db=Depends(get_user_db),
+        user: User = Depends(current_user()),
+        user_update=Depends(update_user),
     ):
         settings = json.loads(user.settings)
         settings[f"{name0}:{name1}"] = await request.json()
-        await user_db.update(user, {"settings": json.dumps(settings)})
+        await user_update({"settings": json.dumps(settings)})
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     @router.get("/lab/api/settings")
-    async def get_settings(user: UserRead = Depends(current_user())):
+    async def get_settings(user: User = Depends(current_user())):
         with open(jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
         if user:

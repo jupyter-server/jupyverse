@@ -105,7 +105,7 @@ async def startup():
 
 
 @router.get("/auth/users")
-async def get_users(user: UserRead = Depends(current_user("admin"))):
+async def get_users(user: UserRead = Depends(current_user(permissions={"admin": ["read"]}))):
     async with async_session_maker() as session:
         statement = select(User)
         users = (await session.execute(statement)).unique().all()
@@ -144,7 +144,7 @@ users_router = APIRouter()
 
 
 @users_router.get("/me")
-async def get_me(user: UserRead = Depends(current_user("admin"))):
+async def get_me(user: UserRead = Depends(current_user(permissions={"admin": ["read"]}))):
     return user
 
 
@@ -155,7 +155,7 @@ r_cookie_auth = register_router(fapi_users.get_auth_router(cookie_authentication
 r_register = register_router(
     fapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
-    dependencies=[Depends(current_user("admin"))],
+    dependencies=[Depends(current_user(permissions={"admin": ["write"]}))],
 )
 r_user = register_router(users_router, prefix="/auth/user")
 

@@ -9,9 +9,9 @@ from typing import Dict, List, Optional, Union, cast
 from anyio import open_file
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fps.hooks import register_router  # type: ignore
-from fps_auth.backends import current_user  # type: ignore
-from fps_auth.models import UserRead  # type: ignore
 from starlette.requests import Request  # type: ignore
+
+from jupyverse import User, current_user
 
 from .models import Checkpoint, Content, CreateContent, RenameContent, SaveContent
 
@@ -22,7 +22,9 @@ router = APIRouter()
     "/api/contents/{path:path}/checkpoints",
     status_code=201,
 )
-async def create_checkpoint(path, user: UserRead = Depends(current_user("contents"))):
+async def create_checkpoint(
+    path, user: User = Depends(current_user(permissions={"contents": ["write"]}))
+):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     try:
@@ -42,7 +44,7 @@ async def create_checkpoint(path, user: UserRead = Depends(current_user("content
 async def create_content(
     path: Optional[str],
     request: Request,
-    user: UserRead = Depends(current_user("contents")),
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     create_content = CreateContent(**(await request.json()))
     content_path = Path(create_content.path)
@@ -75,13 +77,15 @@ async def create_content(
 @router.get("/api/contents")
 async def get_root_content(
     content: int,
-    user: UserRead = Depends(current_user("contents")),
+    user: User = Depends(current_user(permissions={"contents": ["read"]})),
 ):
     return await read_content("", bool(content))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
-async def get_checkpoint(path, user: UserRead = Depends(current_user("contents"))):
+async def get_checkpoint(
+    path, user: User = Depends(current_user(permissions={"contents": ["read"]}))
+):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
     if not dst_path.exists():
@@ -94,7 +98,7 @@ async def get_checkpoint(path, user: UserRead = Depends(current_user("contents")
 async def get_content(
     path: str,
     content: int = 0,
-    user: UserRead = Depends(current_user("contents")),
+    user: User = Depends(current_user(permissions={"contents": ["read"]})),
 ):
     return await read_content(path, bool(content))
 
@@ -104,7 +108,7 @@ async def save_content(
     path,
     request: Request,
     response: Response,
-    user: UserRead = Depends(current_user("contents")),
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     content = SaveContent(**(await request.json()))
     try:
@@ -120,7 +124,7 @@ async def save_content(
 )
 async def delete_content(
     path,
-    user: UserRead = Depends(current_user("contents")),
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     p = Path(path)
     if p.exists():
@@ -135,7 +139,7 @@ async def delete_content(
 async def rename_content(
     path,
     request: Request,
-    user: UserRead = Depends(current_user("contents")),
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)
