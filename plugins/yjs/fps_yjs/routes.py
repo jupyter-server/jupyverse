@@ -5,12 +5,13 @@ from pathlib import Path
 from typing import Optional, Set, Tuple
 
 import fastapi
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocketDisconnect
 from fps.hooks import register_router  # type: ignore
 from fps_contents.routes import read_content, write_content  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
+from ypy_websocket.yutils import YMessageType  # type: ignore
 
 from jupyverse import websocket_auth
 
@@ -41,10 +42,13 @@ def to_datetime(iso_date: str) -> datetime:
 @router.websocket("/api/yjs/{path:path}")
 async def websocket_endpoint(
     path,
-    websocket: WebSocket = Depends(websocket_auth(permissions={"yjs": ["read", "write"]})),
+    websocket_permissions=Depends(websocket_auth(permissions={"yjs": ["read", "write"]})),
 ):
+    if websocket_permissions is None:
+        return
+    websocket, permissions = websocket_permissions
     await websocket.accept()
-    socket = YDocWebSocketHandler(WebsocketAdapter(websocket, path), path)
+    socket = YDocWebSocketHandler(WebsocketAdapter(websocket, path), path, permissions)
     await socket.serve()
 
 
@@ -120,8 +124,9 @@ class YDocWebSocketHandler:
     saving_document: Optional[asyncio.Task]
     websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
 
-    def __init__(self, websocket, path):
+    def __init__(self, websocket, path, permissions):
         self.websocket = websocket
+        self.can_write = permissions is None or "write" in permissions.get("yjs", [])
         self.room = self.websocket_server.get_room(self.websocket.path)
         self.set_file_info(path)
 
@@ -185,14 +190,9 @@ class YDocWebSocketHandler:
         :param message: received message
         :returns: True if the message must be discarded, False otherwise (default: False).
         """
+        skip = False
         byte = message[0]
         msg = message[1:]
-        if byte == AWARENESS:
-            skip = False
-            # changes = self.room.awareness.get_changes(msg)
-            # filter out message depending on changes
-            if skip:
-                return True
         if byte == RENAME_SESSION:
             # The client moved the document to a different location. After receiving this message,
             # we make the current document available under a different url.
@@ -203,7 +203,17 @@ class YDocWebSocketHandler:
             self.websocket_server.rename_room(new_room_name, from_room=self.room)
             # send rename acknowledge
             await self.websocket.send(bytes([RENAME_SESSION, 1]))
-        return False
+        elif byte == AWARENESS:
+            # changes = self.room.awareness.get_changes(msg)
+            # # filter out message depending on changes
+            # skip = True
+            pass
+        elif byte == YMessageType.SYNC:
+            if not self.can_write and msg[0] == YMessageType.SYNC_UPDATE:
+                skip = True
+        else:
+            skip = True
+        return skip
 
     async def watch_file(self):
         poll_interval = 1  # FIXME: pass in config

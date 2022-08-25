@@ -12,6 +12,8 @@ class AuthFiefConfig(PluginModel, BaseSettings):
         env_prefix = "fps_auth_fief_"
         # config can be set with environment variables, e.g.:
         # export FPS_AUTH_FIEF_BASE_URL=https://jupyverse.fief.dev
+        # export FPS_AUTH_FIEF_CLIENT_ID=my_client_id
+        # export FPS_AUTH_FIEF_CLIENT_SECRET=my_client_secret
 
 
 def get_auth_fief_config():

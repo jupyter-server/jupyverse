@@ -3,7 +3,7 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Response, WebSocket
+from fastapi import APIRouter, Depends, Response
 from fps.hooks import register_router  # type: ignore
 
 from jupyverse import User, current_user, websocket_auth
@@ -55,10 +55,13 @@ async def delete_terminal(
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(
     name,
-    websocket: WebSocket = Depends(websocket_auth(permissions={"terminals": ["execute"]})),
+    websocket_permissions=Depends(websocket_auth(permissions={"terminals": ["read", "execute"]})),
 ):
+    if websocket_permissions is None:
+        return
+    websocket, permissions = websocket_permissions
     await websocket.accept()
-    await TERMINALS[name]["server"].serve(websocket)
+    await TERMINALS[name]["server"].serve(websocket, permissions)
     if name in TERMINALS:
         TERMINALS[name]["server"].quit(websocket)
         if not TERMINALS[name]["server"].websockets:

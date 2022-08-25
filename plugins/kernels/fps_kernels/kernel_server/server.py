@@ -135,8 +135,14 @@ class KernelServer:
         self.setup_connection_file()
         await self.start()
 
-    async def serve(self, websocket: AcceptedWebSocket, session_id: str):
+    async def serve(
+        self,
+        websocket: AcceptedWebSocket,
+        session_id: str,
+        permissions: Optional[Dict[str, List[str]]],
+    ):
         self.sessions[session_id] = websocket
+        self.can_execute = permissions is None or "execute" in permissions.get("kernels", [])
         await self.listen_web(websocket)
         del self.sessions[session_id]
 
@@ -186,6 +192,8 @@ class KernelServer:
         if not websocket.accepted_subprotocol:
             while True:
                 msg = await receive_json_or_bytes(websocket.websocket)
+                if not self.can_execute:
+                    continue
                 msg_type = msg["header"]["msg_type"]
                 if (msg_type in self.blocked_messages) or (
                     self.allowed_messages is not None and msg_type not in self.allowed_messages
@@ -201,6 +209,8 @@ class KernelServer:
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
             while True:
                 msg = await websocket.websocket.receive_bytes()
+                if not self.can_execute:
+                    continue
                 channel, parts = deserialize_msg_from_ws_v1(msg)
                 # NOTE: we parse the header for message filtering
                 # it is not as bad as parsing the content

@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Dict, Generic, List, Optional
+from typing import Any, Dict, Generic, List, Optional, Tuple
 
 import httpx
 from fastapi import Depends, HTTPException, Response, WebSocket, status
@@ -190,12 +190,22 @@ def current_user(permissions: Optional[Dict[str, List[str]]] = None):
 
 
 def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
+    """
+    A function returning a dependency for the WebSocket connection.
+
+    :param permissions: the permissions the user should be granted access to. The user should have
+    access to at least one of them for the WebSocket to be opened.
+    :returns: a dependency for the WebSocket connection. The dependency returns a tuple consisting
+    of the websocket and the checked user permissions if the websocket is accepted, None otherwise.
+    """
+
     async def _(
         websocket: WebSocket,
         auth_config=Depends(get_auth_config),
         user_manager: UserManager = Depends(get_user_manager),
-    ) -> Optional[WebSocket]:
+    ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
         accept_websocket = False
+        checked_permissions: Optional[Dict[str, List[str]]] = None
         if auth_config.mode == "noauth":
             accept_websocket = True
         elif "fastapiusersauth" in websocket._cookies:
@@ -207,15 +217,20 @@ def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
                     if permissions is None:
                         accept_websocket = True
                     else:
+                        checked_permissions = {}
                         for resource, actions in permissions.items():
-                            user_actions_for_resource = user.permissions.get(resource, [])
-                            if any([a in user_actions_for_resource for a in actions]):
-                                accept_websocket = True
-                                break
+                            user_actions_for_resource = user.permissions.get(resource)
+                            if user_actions_for_resource is None:
+                                continue
+                            allowed = checked_permissions[resource] = []
+                            for action in actions:
+                                if action in user_actions_for_resource:
+                                    allowed.append(action)
+                                    accept_websocket = True
                 else:
                     accept_websocket = True
         if accept_websocket:
-            return websocket
+            return websocket, checked_permissions
         else:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None

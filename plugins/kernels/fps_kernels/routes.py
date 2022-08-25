@@ -4,7 +4,7 @@ import sys
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, Response, WebSocket
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
@@ -219,8 +219,11 @@ async def get_kernel(
 async def kernel_channels(
     kernel_id,
     session_id,
-    websocket: WebSocket = Depends(websocket_auth(permissions={"kernels": ["execute"]})),
+    websocket_permissions=Depends(websocket_auth(permissions={"kernels": ["execute"]})),
 ):
+    if websocket_permissions is None:
+        return
+    websocket, permissions = websocket_permissions
     subprotocol = (
         "v1.kernel.websocket.jupyter.org"
         if "v1.kernel.websocket.jupyter.org" in websocket["subprotocols"]
@@ -230,7 +233,7 @@ async def kernel_channels(
     accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
     if kernel_id in kernels:
         kernel_server = kernels[kernel_id]["server"]
-        await kernel_server.serve(accepted_websocket, session_id)
+        await kernel_server.serve(accepted_websocket, session_id, permissions)
 
 
 r = register_router(router)
