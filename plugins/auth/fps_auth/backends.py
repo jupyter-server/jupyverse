@@ -1,5 +1,5 @@
 import uuid
-from typing import Generic, Optional
+from typing import Any, Dict, Generic, List, Optional, Tuple
 
 import httpx
 from fastapi import Depends, HTTPException, Response, WebSocket, status
@@ -19,12 +19,13 @@ from fastapi_users.authentication.transport.base import Transport
 from fastapi_users.db import SQLAlchemyUserDatabase
 from fps.exceptions import RedirectException  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
+from fps_lab.config import get_lab_config  # type: ignore
 from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
 from starlette.requests import Request
 
 from .config import get_auth_config
 from .db import User, get_user_db, secret
-from .models import UserCreate
+from .models import UserCreate, UserRead
 
 logger = get_configured_logger("auth")
 
@@ -106,8 +107,10 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     yield UserManager(user_db)
 
 
-async def get_enabled_backends(auth_config=Depends(get_auth_config)):
-    if auth_config.mode == "noauth" and not auth_config.collaborative:
+async def get_enabled_backends(
+    auth_config=Depends(get_auth_config), lab_config=Depends(get_lab_config)
+):
+    if auth_config.mode == "noauth" and not lab_config.collaborative:
         return [noauth_authentication, github_cookie_authentication]
     else:
         return [cookie_authentication, github_cookie_authentication]
@@ -131,13 +134,13 @@ async def create_guest(user_manager, auth_config):
         password="",
         workspace=global_user.workspace,
         settings=global_user.settings,
+        permissions={},
     )
     return await user_manager.create(UserCreate(**guest))
 
 
-def current_user(resource: Optional[str] = None):
+def current_user(permissions: Optional[Dict[str, List[str]]] = None):
     async def _(
-        request: Request,
         response: Response,
         token: Optional[str] = None,
         user: Optional[User] = Depends(
@@ -145,21 +148,19 @@ def current_user(resource: Optional[str] = None):
         ),
         user_manager: UserManager = Depends(get_user_manager),
         auth_config=Depends(get_auth_config),
+        lab_config=Depends(get_lab_config),
     ):
         if auth_config.mode == "user":
             # "user" authentication: check authorization
-            if user and resource:
-                # check if allowed to access the resource
-                permissions = user.permissions.get(resource, [])
-                if request.method in ("GET", "HEAD"):
-                    if "read" not in permissions:
+            if user and permissions:
+                for resource, actions in permissions.items():
+                    user_actions_for_resource = user.permissions.get(resource, [])
+                    if not all([a in user_actions_for_resource for a in actions]):
                         user = None
-                elif request.method in ("POST", "PUT", "PATCH", "DELETE"):
-                    if "write" not in permissions:
-                        user = None
+                        break
         else:
             # "noauth" or "token" authentication
-            if auth_config.collaborative:
+            if lab_config.collaborative:
                 if not user and auth_config.mode == "noauth":
                     user = await create_guest(user_manager, auth_config)
                     await cookie_authentication.login(get_jwt_strategy(), user, response)
@@ -188,13 +189,23 @@ def current_user(resource: Optional[str] = None):
     return _
 
 
-def websocket_for_current_user(resource: str):
+def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
+    """
+    A function returning a dependency for the WebSocket connection.
+
+    :param permissions: the permissions the user should be granted access to. The user should have
+    access to at least one of them for the WebSocket to be opened.
+    :returns: a dependency for the WebSocket connection. The dependency returns a tuple consisting
+    of the websocket and the checked user permissions if the websocket is accepted, None otherwise.
+    """
+
     async def _(
         websocket: WebSocket,
         auth_config=Depends(get_auth_config),
         user_manager: UserManager = Depends(get_user_manager),
-    ) -> Optional[WebSocket]:
+    ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
         accept_websocket = False
+        checked_permissions: Optional[Dict[str, List[str]]] = None
         if auth_config.mode == "noauth":
             accept_websocket = True
         elif "fastapiusersauth" in websocket._cookies:
@@ -202,14 +213,36 @@ def websocket_for_current_user(resource: str):
             user = await get_jwt_strategy().read_token(token, user_manager)
             if user:
                 if auth_config.mode == "user":
-                    if "execute" in user.permissions.get(resource, []):
+                    # "user" authentication: check authorization
+                    if permissions is None:
                         accept_websocket = True
+                    else:
+                        checked_permissions = {}
+                        for resource, actions in permissions.items():
+                            user_actions_for_resource = user.permissions.get(resource)
+                            if user_actions_for_resource is None:
+                                continue
+                            allowed = checked_permissions[resource] = []
+                            for action in actions:
+                                if action in user_actions_for_resource:
+                                    allowed.append(action)
+                                    accept_websocket = True
                 else:
                     accept_websocket = True
         if accept_websocket:
-            return websocket
+            return websocket, checked_permissions
         else:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
+
+    return _
+
+
+async def update_user(
+    user: UserRead = Depends(current_user()), user_db: SQLAlchemyUserDatabase = Depends(get_user_db)
+):
+    async def _(data: Dict[str, Any]) -> UserRead:
+        await user_db.update(user, data)
+        return user
 
     return _

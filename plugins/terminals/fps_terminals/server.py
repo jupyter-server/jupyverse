@@ -24,7 +24,7 @@ class TerminalServer:
         self.p_out = os.fdopen(self.fd, "w+b", 0)
         self.websockets = []
 
-    async def serve(self, websocket):
+    async def serve(self, websocket, permissions):
         self.websocket = websocket
         self.websockets.append(websocket)
         self.event = asyncio.Event()
@@ -43,14 +43,16 @@ class TerminalServer:
 
         self.loop.add_reader(self.p_out, on_output)
         await websocket.send_json(["setup", {}])
+        can_execute = permissions is None or "execute" in permissions.get("terminals", [])
         try:
             while True:
                 msg = await websocket.receive_json()
-                if msg[0] == "stdin":
-                    self.p_out.write(msg[1].encode())
-                elif msg[0] == "set_size":
-                    winsize = struct.pack("HH", msg[1], msg[2])
-                    fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
+                if can_execute:
+                    if msg[0] == "stdin":
+                        self.p_out.write(msg[1].encode())
+                    elif msg[0] == "set_size":
+                        winsize = struct.pack("HH", msg[1], msg[2])
+                        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
         except WebSocketDisconnect:
             task.cancel()
 
