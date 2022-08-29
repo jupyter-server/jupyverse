@@ -6,6 +6,7 @@ from fastapi_users.exceptions import UserAlreadyExists
 from fps.config import get_config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
+from fps_uvicorn.cli import add_query_params  # type: ignore
 from fps_uvicorn.config import UvicornConfig  # type: ignore
 from sqlalchemy import select  # type: ignore
 
@@ -30,7 +31,9 @@ from .models import Permissions, UserCreate, UserRead, UserUpdate
 
 logger = get_configured_logger("auth")
 
-uvicorn_config = get_config(UvicornConfig)
+auth_config = get_auth_config()
+if auth_config.mode == "token":
+    add_query_params({"token": auth_config.token})
 
 router = APIRouter()
 
@@ -67,8 +70,6 @@ async def get_user_by_email(user_email):
 async def startup():
     await create_db_and_tables()
 
-    auth_config = get_auth_config()
-
     if auth_config.test:
         try:
             await create_user(
@@ -96,6 +97,7 @@ async def startup():
         )
 
     if auth_config.mode == "token":
+        uvicorn_config = get_config(UvicornConfig)
         logger.info("")
         logger.info("To access the server, copy and paste this URL:")
         logger.info(
