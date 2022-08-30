@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        group: [check_release, link_check]
+        group: [check_release]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -38,14 +38,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-pip-
-      - name: Cache checked links
-        if: ${{ matrix.group == 'link_check' }}
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pytest-link-check
-          key: ${{ runner.os }}-linkcheck-${{ hashFiles('**/*.md', '**/*.rst') }}-md-links
-          restore-keys: |
-            ${{ runner.os }}-linkcheck-
       - name: Upgrade packaging dependencies
         run: |
           pip install --upgrade pip setuptools wheel --user
@@ -66,6 +58,3 @@ jobs:
         uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check Links
-        if: ${{ matrix.group == 'link_check' }}
-        uses: jupyter-server/jupyter_releaser/.github/actions/check-links@v1
