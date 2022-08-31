@@ -167,7 +167,7 @@ def current_user(permissions: Optional[Dict[str, List[str]]] = None):
 
                 elif not user and auth_config.mode == "token":
                     global_user = await user_manager.get_by_email(auth_config.global_email)
-                    if global_user and global_user.hashed_password == token:
+                    if global_user and global_user.username == token:
                         user = await create_guest(user_manager, auth_config)
                         await cookie_authentication.login(get_jwt_strategy(), user, response)
             else:
