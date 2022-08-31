@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.36
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.35...7577605fee6687ef74c6eba69574421dcf75781d))
+
+### Merged PRs
+
+- Add documentation [#213](https://github.com/jupyter-server/jupyverse/pull/213) ([@davidbrochart](https://github.com/davidbrochart))
+- Open browser window with token as query parameter [#212](https://github.com/jupyter-server/jupyverse/pull/212) ([@davidbrochart](https://github.com/davidbrochart))
+- Add auth_fief plugin, register auth via entry point, add WebSocket auth [#211](https://github.com/jupyter-server/jupyverse/pull/211) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove Podman specific `runArgs` [#208](https://github.com/jupyter-server/jupyverse/pull/208) ([@RobertRosca](https://github.com/RobertRosca))
+- Add devcontainer configuration [#207](https://github.com/jupyter-server/jupyverse/pull/207) ([@RobertRosca](https://github.com/RobertRosca))
+- Add authorization [#206](https://github.com/jupyter-server/jupyverse/pull/206) ([@davidbrochart](https://github.com/davidbrochart))
+- [pre-commit.ci] pre-commit autoupdate [#205](https://github.com/jupyter-server/jupyverse/pull/205) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-08-08&to=2022-08-31&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-08-08..2022-08-31&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-08-08..2022-08-31&type=Issues) | [@RobertRosca](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3ARobertRosca+updated%3A2022-08-08..2022-08-31&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2022-08-08..2022-08-31&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.35
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.34...6574141ed7c0c1ab6e74ebd9a4491f712c183f02))
@@ -20,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-07-25&to=2022-08-08&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-07-25..2022-08-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-07-25..2022-08-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.34
 
