@@ -10,4 +10,6 @@ try:
     update_user = auth["update_user"]
     websocket_auth = auth["websocket_auth"]
 except KeyError:
-    raise RuntimeError("An auth plugin must be installed for Jupyverse to run. For instance: pip install fps-auth")
+    raise RuntimeError(
+        "An auth plugin must be installed for Jupyverse to run. For instance: pip install fps-auth"
+    )
