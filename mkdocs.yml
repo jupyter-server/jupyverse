@@ -1,0 +1,51 @@
+site_name: Jupyverse
+site_description: A composable Jupyter server based on FastAPI
+
+theme:
+  name: 'material'
+  palette:
+    - scheme: default
+      primary: 'black'
+      accent: 'black'
+      toggle:
+          icon: material/lightbulb-outline
+          name: Switch to dark mode
+    - scheme: slate
+      primary: 'black'
+      accent: 'black'
+      toggle:
+          icon: material/lightbulb
+          name: Switch to light mode
+  logo: jupyter.svg
+  favicon: jupyter.svg
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
+
+nav:
+- Overview: index.md
+- install.md
+- Usage:
+  - usage/single_user.md
+  - usage/multi_user.md
+- Plugins:
+  - 'FPS': plugins/fps.md
+  - 'auth': plugins/auth.md
+  - 'fps-contents': plugins/contents.md
+  - 'fps-lab': plugins/lab.md
+  - 'fps-jupyterlab': plugins/jupyterlab.md
+  - 'fps-retrolab': plugins/retrolab.md
+  - 'fps-nbconvert': plugins/nbconvert.md
+  - 'fps-login': plugins/login.md
+  - 'fps-kernels': plugins/kernels.md
+  - 'fps-terminals': plugins/terminals.md
+  - 'fps-yjs': plugins/yjs.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences

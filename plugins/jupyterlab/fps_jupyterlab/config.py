@@ -1,5 +1,5 @@
 from fps.config import PluginModel, get_config  # type: ignore
-from fps.hooks import register_config, register_plugin_name  # type: ignore
+from fps.hooks import register_config  # type: ignore
 
 
 class JupyterLabConfig(PluginModel):
@@ -11,4 +11,3 @@ def get_jlab_config():
 
 
 c = register_config(JupyterLabConfig)
-n = register_plugin_name("JupyterLab")

@@ -1,5 +1,5 @@
 from fps.config import PluginModel, get_config  # type: ignore
-from fps.hooks import register_config, register_plugin_name  # type: ignore
+from fps.hooks import register_config  # type: ignore
 
 
 class LabConfig(PluginModel):
@@ -12,4 +12,3 @@ def get_lab_config():
 
 
 c = register_config(LabConfig)
-n = register_plugin_name("Lab")
