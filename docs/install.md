@@ -4,22 +4,22 @@ Jupyverse can be installed to run either [JupyterLab](https://jupyterlab.readthe
 
 For the JupyterLab front-end:
 ```bash
-pip install "jupyverse[jupyterlab]"
+pip install "jupyverse[jupyterlab,auth]"
 ```
 Or for the RetroLab front-end:
 ```bash
-pip install "jupyverse[retrolab]"
+pip install "jupyverse[retrolab,auth]"
 ```
 
 ## With `mamba`
 
 For the JupyterLab front-end:
 ```bash
-mamba install -c conda-forge jupyverse fps-jupyterlab
+mamba install -c conda-forge jupyverse fps-jupyterlab fps-auth
 ```
 Or for the RetroLab front-end:
 ```bash
-mamba install -c conda-forge jupyverse fps-retrolab
+mamba install -c conda-forge jupyverse fps-retrolab fps-auth
 ```
 
 !!! note
@@ -38,7 +38,7 @@ cd jupyverse
 
 Then install the needed plugins.
 
-- With [fps-auth](../plugins/auth/#fps-auth) plugin:
+- With the [fps-auth](../plugins/auth/#fps-auth) plugin:
 ```bash
 pip install -e plugins/jupyterlab
 pip install -e plugins/login
@@ -51,7 +51,7 @@ pip install -e plugins/nbconvert
 pip install -e plugins/yjs
 pip install -e .[test]
 ```
-- With [fps-auth-fief](../plugins/auth/#fps-auth-fief) plugin:
+- With the [fps-auth-fief](../plugins/auth/#fps-auth-fief) plugin:
 ```bash
 pip install -e plugins/jupyterlab
 pip install -e plugins/auth_fief
