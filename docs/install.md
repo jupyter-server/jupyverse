@@ -25,7 +25,7 @@ mamba install -c conda-forge jupyverse fps-retrolab fps-auth
 !!! note
     You cannot have both the JupyterLab and the RetroLab front-ends enabled at the same time.
     When switching e.g. from the JupyterLab to the RetroLab front-end, you need to
-    `pip uninstall fps-jupyterlab` or launch Jupyverse with `--JupyterLab.enabled=false`.
+    `pip uninstall fps-jupyterlab` or launch Jupyverse with `--jupyterlab.enabled=false`.
     More on that in the [plugins section](../plugins/jupyterlab).
 
 ## Development install
