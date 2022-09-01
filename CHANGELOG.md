@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.37
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.36...a0a199c29216ed1f2d52c9197b86c0dc8839dfc2))
+
+### Merged PRs
+
+- Add fps-auth-fief to jupyter-releaser [#216](https://github.com/jupyter-server/jupyverse/pull/216) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix jupyterlab and retrolab plugins name (now lower-case) [#215](https://github.com/jupyter-server/jupyverse/pull/215) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-08-31&to=2022-09-01&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-08-31..2022-09-01&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.36
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.35...7577605fee6687ef74c6eba69574421dcf75781d))
@@ -21,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-08-08&to=2022-08-31&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-08-08..2022-08-31&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-08-08..2022-08-31&type=Issues) | [@RobertRosca](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3ARobertRosca+updated%3A2022-08-08..2022-08-31&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2022-08-08..2022-08-31&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.35
 
