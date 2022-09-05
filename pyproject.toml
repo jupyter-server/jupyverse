@@ -113,8 +113,5 @@ namespaces = false
 [tool.setuptools.dynamic]
 version = {attr = "jupyverse.__version__"}
 
-[tool.flake8]
-max-line-length = 100
-
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
