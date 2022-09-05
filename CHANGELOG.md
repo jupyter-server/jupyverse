@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.38
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.37...1cecf0968b0089b0ae1de4d7ee4567f3ea8556ac))
+
+### Merged PRs
+
+- Make jupyverse depend on released plugins [#219](https://github.com/jupyter-server/jupyverse/pull/219) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove FastAPI monkey-patch [#218](https://github.com/jupyter-server/jupyverse/pull/218) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-01&to=2022-09-05&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-01..2022-09-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.37
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.36...a0a199c29216ed1f2d52c9197b86c0dc8839dfc2))
@@ -16,8 +33,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-08-31&to=2022-09-01&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-08-31..2022-09-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.36
 
