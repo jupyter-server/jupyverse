@@ -1,10 +1,8 @@
 import asyncio
-import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Set, Tuple
+from typing import Optional, Tuple
 
-import fastapi
 from fastapi import APIRouter, Depends, WebSocketDisconnect
 from fps.hooks import register_router  # type: ignore
 from fps_contents.routes import read_content, write_content  # type: ignore
@@ -25,14 +23,6 @@ class JupyterSQLiteYStore(SQLiteYStore):
 
 
 router = APIRouter()
-
-
-def get_path_param_names(path: str) -> Set[str]:
-    return {name.split(":")[0] for name in re.findall("{(.*?)}", path)}
-
-
-# FIXME: remove the patch when https://github.com/tiangolo/fastapi/pull/3879 is merged
-fastapi.utils.get_path_param_names.__code__ = get_path_param_names.__code__
 
 
 def to_datetime(iso_date: str) -> datetime:
