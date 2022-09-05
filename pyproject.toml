@@ -1,3 +1,78 @@
+[build-system]
+requires = [
+    "setuptools>=61.2",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jupyverse"
+description = "A set of FPS plugins implementing a Jupyter server"
+authors = [
+    { name = "Jupyter Development Team", email = "jupyter@googlegroups.com" },
+]
+keywords = [
+    "jupyter",
+    "server",
+    "fastapi",
+    "pluggy",
+    "plugins",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "fastapi >=0.82.0",
+    "fps >=0.0.19",
+    "fps-uvicorn >=0.0.19",
+    "fps-contents",
+    "fps-kernels",
+    "fps-terminals",
+    "fps-nbconvert",
+    "fps-yjs",
+]
+dynamic = [
+    "version",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+text = "BSD 3-Clause License"
+
+[project.urls]
+Homepage = "https://jupyter.org"
+
+[project.optional-dependencies]
+jupyterlab = [
+    "fps-jupyterlab",
+]
+retrolab = [
+    "fps-retrolab",
+]
+auth = [
+    "fps-auth",
+]
+auth-fief = [
+    "fps-auth-fief",
+]
+test = [
+    "mypy",
+    "types-setuptools",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-env",
+    "requests",
+    "websockets",
+    "ipykernel",
+]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+]
+
+[project.scripts]
+jupyverse = "fps_uvicorn.cli:app"
+
 [tool.check-manifest]
 ignore = [".*"]
 
@@ -20,3 +95,26 @@ skip = ["check-links", "check-manifest"]
 
 [tool.jupyter-releaser.options]
 python_packages = [".:jupyverse", "plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login"]
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.setuptools]
+include-package-data = true
+platforms = [
+    "Windows",
+    "Linux",
+    "Mac OS X",
+]
+
+[tool.setuptools.packages.find]
+namespaces = false
+
+[tool.setuptools.dynamic]
+version = {attr = "jupyverse.__version__"}
+
+[tool.flake8]
+max-line-length = "100"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
