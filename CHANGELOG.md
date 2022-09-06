@@ -4,18 +4,20 @@
 
 ## 0.0.38
 
-([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.37...1cecf0968b0089b0ae1de4d7ee4567f3ea8556ac))
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.37...0793c799d414ae49fffd1eeaac7b7353a0e76168))
 
-### Merged PRs
+### Other merged PRs
 
+- Pin plugins with >=0.0.37 [#223](https://github.com/jupyter-server/jupyverse/pull/223) ([@davidbrochart](https://github.com/davidbrochart))
+- Move flake8 config to pyproject.toml [#222](https://github.com/jupyter-server/jupyverse/pull/222) ([@davidbrochart](https://github.com/davidbrochart))
 - Make jupyverse depend on released plugins [#219](https://github.com/jupyter-server/jupyverse/pull/219) ([@davidbrochart](https://github.com/davidbrochart))
 - Remove FastAPI monkey-patch [#218](https://github.com/jupyter-server/jupyverse/pull/218) ([@davidbrochart](https://github.com/davidbrochart))
 
 ### Contributors to this release
 
-([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-01&to=2022-09-05&type=c))
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-01&to=2022-09-06&type=c))
 
-[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-01..2022-09-05&type=Issues)
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-01..2022-09-06&type=Issues)
 
 <!-- <END NEW CHANGELOG ENTRY> -->
 
