@@ -6,6 +6,13 @@ from typing import Optional, Tuple
 from fastapi import APIRouter, Depends, WebSocketDisconnect
 from fps.hooks import register_router  # type: ignore
 from fps_contents.routes import read_content, write_content  # type: ignore
+
+try:
+    from fps_contents.watchfiles import awatch
+
+    has_awatch = True
+except ImportError:
+    has_awatch = False
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
@@ -206,13 +213,19 @@ class YDocWebSocketHandler:
         return skip
 
     async def watch_file(self):
-        poll_interval = 1  # FIXME: pass in config
-        if not poll_interval:
-            self.room.watcher = None
-            return
-        while True:
-            await asyncio.sleep(poll_interval)
-            await self.maybe_load_document()
+        if has_awatch:
+            file_format, file_type, file_path = self.get_file_info()
+            async for changes in awatch(file_path):
+                await self.maybe_load_document()
+        else:
+            # contents plugin doesn't provide watcher, fall back to polling
+            poll_interval = 1  # FIXME: pass in config
+            if not poll_interval:
+                self.room.watcher = None
+                return
+            while True:
+                await asyncio.sleep(poll_interval)
+                await self.maybe_load_document()
 
     async def maybe_load_document(self):
         file_format, file_type, file_path = self.get_file_info()
