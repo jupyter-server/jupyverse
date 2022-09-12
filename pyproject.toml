@@ -1,36 +1,17 @@
 [build-system]
-requires = [
-    "setuptools>=61.2",
-]
+requires = [ "setuptools>=61.2",]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "jupyverse"
 description = "A set of FPS plugins implementing a Jupyter server"
-authors = [
-    { name = "Jupyter Development Team", email = "jupyter@googlegroups.com" },
-]
-keywords = [
-    "jupyter",
-    "server",
-    "fastapi",
-    "pluggy",
-    "plugins",
-]
+keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [
-    "fastapi >=0.82.0",
-    "fps >=0.0.19",
-    "fps-uvicorn >=0.0.19",
-    "fps-contents >=0.0.37",
-    "fps-kernels >=0.0.37",
-    "fps-terminals >=0.0.37",
-    "fps-nbconvert >=0.0.37",
-    "fps-yjs >=0.0.37",
-]
-dynamic = [
-    "version",
-]
+dependencies = [ "fastapi >=0.82.0", "fps >=0.0.19", "fps-uvicorn >=0.0.19", "fps-contents >=0.0.37", "fps-kernels >=0.0.37", "fps-terminals >=0.0.37", "fps-nbconvert >=0.0.37", "fps-yjs >=0.0.37",]
+dynamic = [ "version",]
+[[project.authors]]
+name = "Jupyter Development Team"
+email = "jupyter@googlegroups.com"
 
 [project.readme]
 file = "README.md"
@@ -43,78 +24,52 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = [
-    "fps-jupyterlab >=0.0.37",
-]
-retrolab = [
-    "fps-retrolab >=0.0.37",
-]
-auth = [
-    "fps-auth >=0.0.37",
-]
-auth-fief = [
-    "fps-auth-fief >=0.0.37",
-]
-test = [
-    "mypy",
-    "types-setuptools",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-env",
-    "requests",
-    "websockets",
-    "ipykernel",
-]
-docs = [
-    "mkdocs",
-    "mkdocs-material",
-]
+jupyterlab = [ "fps-jupyterlab >=0.0.37",]
+retrolab = [ "fps-retrolab >=0.0.37",]
+auth = [ "fps-auth >=0.0.37",]
+auth-fief = [ "fps-auth-fief >=0.0.37",]
+test = [ "mypy", "types-setuptools", "pytest", "pytest-asyncio", "pytest-env", "requests", "websockets", "ipykernel",]
+docs = [ "mkdocs", "mkdocs-material",]
 
 [project.scripts]
 jupyverse = "fps_uvicorn.cli:app"
 
 [tool.check-manifest]
-ignore = [".*"]
+ignore = [ ".*",]
+
+[tool.tbump]
+[[tool.tbump.file]]
+src = "jupyverse/__init__.py"
+
+[tool.jupyter-releaser]
+skip = [ "check-links", "check-manifest",]
+
+[tool.setuptools]
+include-package-data = true
+platforms = [ "Windows", "Linux", "Mac OS X",]
+
+[tool.flake8]
+max-line-length = 100
 
 [tool.tbump.version]
-current = "0.0.38"
-regex = '''
-  (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)
-  ((?P<channel>a|b|rc|.dev)(?P<release>\d+))?
-'''
+current = "0.0.39"
+regex = "  (?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)\n  ((?P<channel>a|b|rc|.dev)(?P<release>\\d+))?\n"
 
 [tool.tbump.git]
 message_template = "Bump to {new_version}"
 tag_template = "v{new_version}"
 
-[[tool.tbump.file]]
-src = "jupyverse/__init__.py"
-
-[tool.jupyter-releaser]
-skip = ["check-links", "check-manifest"]
-
 [tool.jupyter-releaser.options]
-python_packages = ["plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login", ".:jupyverse:fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs"]
+python_packages = [ "plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login", ".:jupyverse:fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs",]
 
 [tool.distutils.bdist_wheel]
 universal = 1
 
-[tool.setuptools]
-include-package-data = true
-platforms = [
-    "Windows",
-    "Linux",
-    "Mac OS X",
-]
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
 
 [tool.setuptools.packages.find]
 namespaces = false
 
-[tool.setuptools.dynamic]
-version = {attr = "jupyverse.__version__"}
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"
-
-[tool.flake8]
-max-line-length = 100
+[tool.setuptools.dynamic.version]
+attr = "jupyverse.__version__"
