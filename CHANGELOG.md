@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.39
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.38...39f19ba1b0fdc0b82552a318be4f76533cb9c93a))
+
+### Merged PRs
+
+- Add file watcher [#225](https://github.com/jupyter-server/jupyverse/pull/225) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-06&to=2022-09-12&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-06..2022-09-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.38
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.37...0793c799d414ae49fffd1eeaac7b7353a0e76168))
@@ -18,8 +34,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-01&to=2022-09-06&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-01..2022-09-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.37
 
