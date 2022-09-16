@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.40
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.38...2f4a777357a2a94346270c259ff0953c084d30c5))
+
+### Other merged PRs
+
+- Switch to hatch build system [#227](https://github.com/jupyter-server/jupyverse/pull/227) ([@davidbrochart](https://github.com/davidbrochart))
+- Add file watcher [#225](https://github.com/jupyter-server/jupyverse/pull/225) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-06&to=2022-09-16&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-06..2022-09-16&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.39
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.38...39f19ba1b0fdc0b82552a318be4f76533cb9c93a))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-06&to=2022-09-12&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-06..2022-09-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.38
 
