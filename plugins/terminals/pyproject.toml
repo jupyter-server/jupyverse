@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,13 +7,8 @@ name = "fps_terminals"
 description = "An FPS plugin for the terminals API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [
-  "fps >=0.0.8",
-  "websockets",
-  "pywinpty;platform_system=='Windows'"
-]
+dependencies = [ "fps >=0.0.8", "websockets", "pywinpty;platform_system=='Windows'",]
 dynamic = [ "version",]
-
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -22,20 +17,20 @@ email = "jupyter@googlegroups.com"
 file = "README.md"
 content-type = "text/markdown"
 
-[project.entry-points.fps_router]
-fps-terminals = "fps_terminals.routes"
-
 [project.license]
 text = "BSD 3-Clause License"
 
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[tool.hatch.version]
-path = "fps_terminals/__init__.py"
-
 [tool.check-manifest]
 ignore = [ ".*",]
 
 [tool.jupyter-releaser]
 skip = [ "check-links",]
+
+[project.entry-points.fps_router]
+fps-terminals = "fps_terminals.routes"
+
+[tool.hatch.version]
+path = "fps_terminals/__init__.py"

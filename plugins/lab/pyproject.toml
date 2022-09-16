@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,14 +7,8 @@ name = "fps_lab"
 description = "An FPS plugin for the JupyterLab/RetroLab API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [
-  "fps >=0.0.8",
-  "aiofiles",
-  "babel",
-  "json5"
-]
+dependencies = [ "fps >=0.0.8", "aiofiles", "babel", "json5",]
 dynamic = [ "version",]
-
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -23,23 +17,23 @@ email = "jupyter@googlegroups.com"
 file = "README.md"
 content-type = "text/markdown"
 
-[project.entry-points.fps_router]
-fps-lab = "fps_lab.routes"
-
-[project.entry-points.fps_config]
-fps-lab = "fps_lab.config"
-
 [project.license]
 text = "BSD 3-Clause License"
 
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[tool.hatch.version]
-path = "fps_lab/__init__.py"
-
 [tool.check-manifest]
 ignore = [ ".*",]
 
 [tool.jupyter-releaser]
 skip = [ "check-links",]
+
+[project.entry-points.fps_router]
+fps-lab = "fps_lab.routes"
+
+[project.entry-points.fps_config]
+fps-lab = "fps_lab.config"
+
+[tool.hatch.version]
+path = "fps_lab/__init__.py"

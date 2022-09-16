@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,12 +7,8 @@ name = "fps_auth_fief"
 description = "An FPS plugin for the authentication API, using Fief"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [
-  "fps >=0.0.8",
-  "fief-client[fastapi]"
-]
+dependencies = [ "fps >=0.0.8", "fief-client[fastapi]",]
 dynamic = [ "version",]
-
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -20,6 +16,18 @@ email = "jupyter@googlegroups.com"
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
+
+[project.license]
+text = "BSD 3-Clause License"
+
+[project.urls]
+Homepage = "https://jupyter.org"
+
+[tool.check-manifest]
+ignore = [ ".*",]
+
+[tool.jupyter-releaser]
+skip = [ "check-links",]
 
 [project.entry-points.fps_router]
 fps-auth-fief = "fps_auth_fief.routes"
@@ -33,17 +41,5 @@ current_user = "fps_auth_fief.backends:current_user"
 update_user = "fps_auth_fief.backends:update_user"
 websocket_auth = "fps_auth_fief.backends:websocket_auth"
 
-[project.license]
-text = "BSD 3-Clause License"
-
-[project.urls]
-Homepage = "https://jupyter.org"
-
 [tool.hatch.version]
 path = "fps_auth_fief/__init__.py"
-
-[tool.check-manifest]
-ignore = [ ".*",]
-
-[tool.jupyter-releaser]
-skip = [ "check-links",]
