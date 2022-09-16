@@ -7,7 +7,7 @@ name = "jupyverse"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fastapi >=0.82.0", "fps >=0.0.19", "fps-uvicorn >=0.0.19", "fps-contents >=0.0.37", "fps-kernels >=0.0.37", "fps-terminals >=0.0.37", "fps-nbconvert >=0.0.37", "fps-yjs >=0.0.37",]
+dependencies = [ "fastapi >=0.82.0", "fps >=0.0.19", "fps-uvicorn >=0.0.19", "fps-contents ==0.0.41", "fps-kernels ==0.0.41", "fps-terminals ==0.0.41", "fps-nbconvert ==0.0.41", "fps-yjs ==0.0.41",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -24,10 +24,10 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = [ "fps-jupyterlab >=0.0.37",]
-retrolab = [ "fps-retrolab >=0.0.37",]
-auth = [ "fps-auth >=0.0.37",]
-auth-fief = [ "fps-auth-fief >=0.0.37",]
+jupyterlab = [ "fps-jupyterlab ==0.0.41",]
+retrolab = [ "fps-retrolab ==0.0.41",]
+auth = [ "fps-auth ==0.0.41",]
+auth-fief = [ "fps-auth-fief ==0.0.41",]
 test = [ "mypy", "types-setuptools", "pytest", "pytest-asyncio", "pytest-env", "requests", "websockets", "ipykernel",]
 docs = [ "mkdocs", "mkdocs-material",]
 
