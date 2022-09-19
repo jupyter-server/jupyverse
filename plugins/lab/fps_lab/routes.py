@@ -11,6 +11,8 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request  # type: ignore
 
+from fps_frontend.config import get_frontend_config # type: ignore
+
 import jupyverse  # type: ignore
 from jupyverse import User, current_user, update_user
 
@@ -57,7 +59,7 @@ def init_router(router, redirect_after_root):
     @router.get("/", name="root")
     async def get_root(
         response: Response,
-        lab_config=Depends(get_lab_config),
+        lab_config=Depends(get_frontend_config),
         user: User = Depends(current_user()),
     ):
         # auto redirect
@@ -85,7 +87,7 @@ def init_router(router, redirect_after_root):
 
     @router.get("/lab/api/translations/")
     async def get_translations_(
-        lab_config=Depends(get_lab_config),
+        lab_config=Depends(get_frontend_config),
         user: User = Depends(current_user()),
     ):
         return RedirectResponse(f"{lab_config.base_url}lab/api/translations")

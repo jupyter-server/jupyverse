@@ -7,7 +7,7 @@ name = "fps_kernels"
 description = "An FPS plugin for the kernels API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "fps-lab", "fps-yjs", "pyzmq", "websockets", "python-dateutil",]
+dependencies = [ "fps >=0.0.8", "fps-frontend", "fps-yjs", "pyzmq", "websockets", "python-dateutil",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
