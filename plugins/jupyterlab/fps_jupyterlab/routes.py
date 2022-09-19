@@ -47,9 +47,7 @@ async def get_lab(
 
 @router.get("/lab/tree/{path:path}")
 async def load_workspace(
-    path,
-    frontend_config=Depends(get_frontend_config),
-    lab_config=Depends(get_lab_config)
+    path, frontend_config=Depends(get_frontend_config), lab_config=Depends(get_lab_config)
 ):
     return HTMLResponse(
         get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
