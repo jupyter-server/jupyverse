@@ -7,7 +7,7 @@ name = "fps_nbconvert"
 description = "An FPS plugin for the nbconvert API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "nbconvert",]
+dependencies = [ "fps >=0.0.8", "fps-auth-base", "nbconvert",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"

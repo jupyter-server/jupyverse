@@ -8,10 +8,9 @@ from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
 from fps_frontend.config import get_frontend_config  # type: ignore
+from fps_auth_base import User, current_user, websocket_auth
 from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
-
-from jupyverse import User, current_user, websocket_auth
 
 from .kernel_driver.driver import KernelDriver  # type: ignore
 from .kernel_server.server import (  # type: ignore

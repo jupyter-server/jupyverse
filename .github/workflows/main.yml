@@ -41,6 +41,7 @@ jobs:
         pip install ./plugins/frontend
         pip install ./plugins/jupyterlab
         pip install ./plugins/login
+        pip install ./plugins/auth-base
         pip install ./plugins/auth
         pip install ./plugins/contents
         pip install ./plugins/kernels
@@ -59,6 +60,7 @@ jobs:
         mypy plugins/retrolab/fps_retrolab
         mypy plugins/jupyterlab/fps_jupyterlab
         mypy plugins/lab/fps_lab
+        mypy plugins/auth_base/fps_auth_base
         mypy plugins/auth/fps_auth
         mypy plugins/nbconvert/fps_nbconvert
         mypy plugins/yjs/fps_yjs

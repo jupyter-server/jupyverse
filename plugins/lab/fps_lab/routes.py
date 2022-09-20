@@ -10,10 +10,10 @@ from fastapi import Depends, Response, status
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fps_frontend.config import get_frontend_config  # type: ignore
+from fps_auth_base import User, current_user, update_user
 from starlette.requests import Request  # type: ignore
 
 import jupyverse  # type: ignore
-from jupyverse import User, current_user, update_user
 
 from .utils import get_federated_extensions
 

@@ -7,7 +7,7 @@ name = "fps_terminals"
 description = "An FPS plugin for the terminals API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "websockets", "pywinpty;platform_system=='Windows'",]
+dependencies = [ "fps >=0.0.8", "fps-auth-base", "websockets", "pywinpty;platform_system=='Windows'",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
