@@ -36,7 +36,7 @@ async def stop_kernels():
 
 @router.get("/api/kernelspecs")
 async def get_kernelspecs(
-    lab_config=Depends(get_frontend_config),
+    frontend_config=Depends(get_frontend_config),
     user: User = Depends(current_user(permissions={"kernelspecs": ["read"]})),
 ):
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
@@ -44,7 +44,7 @@ async def get_kernelspecs(
             spec = json.load(f)
         name = path.parent.name
         resources = {
-            f.stem: f"{lab_config.base_url}kernelspecs/{name}/{f.name}"
+            f.stem: f"{frontend_config.base_url}kernelspecs/{name}/{f.name}"
             for f in path.parent.iterdir()
             if f.is_file() and f.name != "kernel.json"
         }

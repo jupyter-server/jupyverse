@@ -44,7 +44,7 @@ skip = [ "check-links", "check-manifest",]
 max-line-length = 100
 
 [tool.jupyter-releaser.options]
-python_packages = [ "plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/frontend:fps-frontend", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login", ".:jupyverse:fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs",]
+python_packages = [ "plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/frontend:fps-frontend", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login", ".:jupyverse:fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs",]
 
 [tool.hatch.version]
 path = "jupyverse/__init__.py"

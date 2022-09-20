@@ -57,12 +57,12 @@ def init_router(router, redirect_after_root):
     @router.get("/", name="root")
     async def get_root(
         response: Response,
-        lab_config=Depends(get_frontend_config),
+        frontend_config=Depends(get_frontend_config),
         user: User = Depends(current_user()),
     ):
         # auto redirect
         response.status_code = status.HTTP_302_FOUND
-        response.headers["Location"] = lab_config.base_url + redirect_after_root
+        response.headers["Location"] = frontend_config.base_url + redirect_after_root
 
     @router.get("/favicon.ico")
     async def get_favicon():
@@ -85,10 +85,10 @@ def init_router(router, redirect_after_root):
 
     @router.get("/lab/api/translations/")
     async def get_translations_(
-        lab_config=Depends(get_frontend_config),
+        frontend_config=Depends(get_frontend_config),
         user: User = Depends(current_user()),
     ):
-        return RedirectResponse(f"{lab_config.base_url}lab/api/translations")
+        return RedirectResponse(f"{frontend_config.base_url}lab/api/translations")
 
     @router.get("/lab/api/translations")
     async def get_translations(user: User = Depends(current_user())):
