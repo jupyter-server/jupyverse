@@ -36,6 +36,7 @@ nav:
   - 'FPS': plugins/fps.md
   - 'auth': plugins/auth.md
   - 'fps-contents': plugins/contents.md
+  - 'fps-frontend': plugins/frontend.md
   - 'fps-lab': plugins/lab.md
   - 'fps-jupyterlab': plugins/jupyterlab.md
   - 'fps-retrolab': plugins/retrolab.md

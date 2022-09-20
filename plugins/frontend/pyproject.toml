@@ -3,12 +3,13 @@ requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
-name = "fps_jupyterlab"
-description = "An FPS plugin for the JupyterLab API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+name = "fps_frontend"
+description = "An FPS plugin for the frontend related configuration"
+keywords = ["fastapi", "pluggy", "plugins", "fps"]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "fps-frontend", "fps-lab", "jupyterlab >=4.0.0a27",]
-dynamic = [ "version",]
+dependencies = ["fps>=0.0.8"]
+dynamic = ["version"]
+
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -24,16 +25,13 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [tool.check-manifest]
-ignore = [ ".*",]
+ignore = [".*"]
 
 [tool.jupyter-releaser]
-skip = [ "check-links",]
-
-[project.entry-points.fps_router]
-fps-jupyterlab = "fps_jupyterlab.routes"
+skip = ["check-links"]
 
 [project.entry-points.fps_config]
-fps-jupyterlab = "fps_jupyterlab.config"
+fps-frontend = "fps_frontend.config"
 
 [tool.hatch.version]
-path = "fps_jupyterlab/__init__.py"
+path = "fps_frontend/__init__.py"

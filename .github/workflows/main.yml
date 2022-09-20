@@ -38,6 +38,7 @@ jobs:
 
     - name: Install jupyverse
       run: |
+        pip install ./plugins/frontend
         pip install ./plugins/jupyterlab
         pip install ./plugins/login
         pip install ./plugins/auth
@@ -52,6 +53,7 @@ jobs:
     - name: Check types
       run: |
         mypy jupyverse
+        mypy plugins/frontend/fps_frontend
         mypy plugins/contents/fps_contents
         mypy plugins/kernels/fps_kernels
         mypy plugins/retrolab/fps_retrolab

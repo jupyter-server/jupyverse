@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fps.hooks import register_router  # type: ignore
+from fps_frontend.config import get_frontend_config  # type: ignore
 from fps_lab.config import get_lab_config  # type: ignore
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.utils import get_federated_extensions  # type: ignore
@@ -36,17 +37,20 @@ router.mount(
 @router.get("/lab")
 async def get_lab(
     user: User = Depends(current_user()),
+    frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, config.dev_mode, lab_config.base_url)
+        get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
     )
 
 
 @router.get("/lab/tree/{path:path}")
-async def load_workspace(path, lab_config=Depends(get_lab_config)):
+async def load_workspace(
+    path, frontend_config=Depends(get_frontend_config), lab_config=Depends(get_lab_config)
+):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, config.dev_mode, lab_config.base_url)
+        get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
     )
 
 
@@ -75,9 +79,10 @@ async def set_workspace(
 async def get_workspace(
     name,
     user: User = Depends(current_user()),
+    frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(name, lab_config.collaborative, config.dev_mode, lab_config.base_url)
+    return get_index(name, lab_config.collaborative, config.dev_mode, frontend_config.base_url)
 
 
 INDEX_HTML = """\

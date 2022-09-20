@@ -7,7 +7,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
-from fps_lab.config import get_lab_config  # type: ignore
+from fps_frontend.config import get_frontend_config  # type: ignore
 from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
 
@@ -36,7 +36,7 @@ async def stop_kernels():
 
 @router.get("/api/kernelspecs")
 async def get_kernelspecs(
-    lab_config=Depends(get_lab_config),
+    frontend_config=Depends(get_frontend_config),
     user: User = Depends(current_user(permissions={"kernelspecs": ["read"]})),
 ):
     for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
@@ -44,7 +44,7 @@ async def get_kernelspecs(
             spec = json.load(f)
         name = path.parent.name
         resources = {
-            f.stem: f"{lab_config.base_url}kernelspecs/{name}/{f.name}"
+            f.stem: f"{frontend_config.base_url}kernelspecs/{name}/{f.name}"
             for f in path.parent.iterdir()
             if f.is_file() and f.name != "kernel.json"
         }
