@@ -11,6 +11,5 @@ try:
     websocket_auth = auth["websocket_auth"]
 except KeyError:
     raise RuntimeError(
-        "An auth plugin must be installed for fps-auth-base to run.",
-        "For instance: pip install fps-auth",
+        "An auth plugin must be installed, for instance: pip install fps-auth",
     )

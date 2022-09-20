@@ -24,10 +24,6 @@ text = "BSD 3-Clause License"
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[project.optional-dependencies]
-auth = [ "fps-auth ==0.0.41",]
-auth-fief = [ "fps-auth-fief ==0.0.41",]
-
 [tool.check-manifest]
 ignore = [ ".*",]
 
