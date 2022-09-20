@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fps.hooks import register_router  # type: ignore
+from fps_auth_base import User, current_user, update_user  # type: ignore
 from fps_frontend.config import get_frontend_config  # type: ignore
-from fps_auth_base import User, current_user, update_user
 from fps_lab.config import get_lab_config  # type: ignore
 from fps_lab.routes import init_router  # type: ignore
 from fps_lab.utils import get_federated_extensions  # type: ignore

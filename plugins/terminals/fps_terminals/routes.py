@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Response
 from fps.hooks import register_router  # type: ignore
-from fps_auth_base import User, current_user, websocket_auth
+from fps_auth_base import User, current_user, websocket_auth  # type: ignore
 
 from .models import Terminal
 
