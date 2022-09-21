@@ -44,6 +44,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -e . --no-deps
+          pip install -e plugins/auth_base
           pip install -e plugins/frontend
           pip install -e plugins/jupyterlab
           pip install -e plugins/retrolab

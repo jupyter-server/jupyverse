@@ -5,8 +5,7 @@ import nbconvert  # type: ignore
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
-
-from jupyverse import User, current_user
+from fps_auth_base import User, current_user  # type: ignore
 
 router = APIRouter()
 

@@ -13,12 +13,11 @@ try:
     has_awatch = True
 except ImportError:
     has_awatch = False
+from fps_auth_base import websocket_auth  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
 from ypy_websocket.yutils import YMessageType  # type: ignore
-
-from jupyverse import websocket_auth
 
 YFILE = YDOCS["file"]
 AWARENESS = 1

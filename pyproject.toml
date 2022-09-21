@@ -7,8 +7,9 @@ name = "jupyverse"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fastapi >=0.82.0", "fps >=0.0.19", "fps-uvicorn >=0.0.19", "fps-contents ==0.0.41", "fps-kernels ==0.0.41", "fps-terminals ==0.0.41", "fps-nbconvert ==0.0.41", "fps-yjs ==0.0.41",]
+dependencies = [ "fastapi >=0.82.0", "fps >=0.0.19", "fps-uvicorn >=0.0.19", "fps-auth-base ==0.0.41", "fps-contents ==0.0.41", "fps-kernels ==0.0.41", "fps-terminals ==0.0.41", "fps-nbconvert ==0.0.41", "fps-yjs ==0.0.41",]
 dynamic = [ "version",]
+
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -44,7 +45,7 @@ skip = [ "check-links", "check-manifest",]
 max-line-length = 100
 
 [tool.jupyter-releaser.options]
-python_packages = [ "plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/frontend:fps-frontend", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login", ".:jupyverse:fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs",]
+python_packages = ["plugins/auth_base:fps-auth-base", "plugins/auth:fps-auth", "plugins/auth_fief:fps-auth-fief", "plugins/contents:fps-contents", "plugins/frontend:fps-frontend", "plugins/jupyterlab:fps-jupyterlab", "plugins/kernels:fps-kernels", "plugins/lab:fps-lab", "plugins/nbconvert:fps-nbconvert", "plugins/retrolab:fps-retrolab", "plugins/terminals:fps-terminals", "plugins/yjs:fps-yjs", "plugins/login:fps-login", ".:jupyverse:fps-auth-base,fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs",]
 
 [tool.hatch.version]
 path = "jupyverse/__init__.py"

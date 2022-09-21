@@ -40,6 +40,7 @@ Then install the needed plugins.
 
 - With the [fps-auth](../plugins/auth/#fps-auth) plugin:
 ```bash
+pip install -e plugins/auth_base
 pip install -e plugins/frontend
 pip install -e plugins/lab
 pip install -e plugins/jupyterlab
@@ -54,6 +55,7 @@ pip install -e .[test]
 ```
 - With the [fps-auth-fief](../plugins/auth/#fps-auth-fief) plugin:
 ```bash
+pip install -e plugins/auth_base
 pip install -e plugins/frontend
 pip install -e plugins/lab
 pip install -e plugins/jupyterlab

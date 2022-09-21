@@ -35,6 +35,7 @@ nav:
 - Plugins:
   - 'FPS': plugins/fps.md
   - 'auth': plugins/auth.md
+  - 'fps-auth-base': plugins/auth_base.md
   - 'fps-contents': plugins/contents.md
   - 'fps-frontend': plugins/frontend.md
   - 'fps-lab': plugins/lab.md

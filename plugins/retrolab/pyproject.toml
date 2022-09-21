@@ -7,7 +7,7 @@ name = "fps_retrolab"
 description = "An FPS plugin for the RetroLab API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "fps-frontend", "fps-lab", "retrolab",]
+dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-frontend", "fps-lab", "retrolab",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"

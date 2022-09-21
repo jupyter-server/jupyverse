@@ -9,9 +9,8 @@ from typing import Dict, List, Optional, Union, cast
 from anyio import open_file
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fps.hooks import register_router  # type: ignore
+from fps_auth_base import User, current_user  # type: ignore
 from starlette.requests import Request  # type: ignore
-
-from jupyverse import User, current_user
 
 from .models import Checkpoint, Content, CreateContent, RenameContent, SaveContent
 
