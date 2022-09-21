@@ -2,11 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.42
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.41...2c1499e1b2d4b5f209174dd7445780bc610803a7))
+
+### Merged PRs
+
+- Create a base auth plugin to depend on instead of jupyverse [#232](https://github.com/jupyter-server/jupyverse/pull/232) ([@hbcarlos](https://github.com/hbcarlos))
+- Moves the frontend generic configuration to a new plugin [#231](https://github.com/jupyter-server/jupyverse/pull/231) ([@hbcarlos](https://github.com/hbcarlos))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-16&to=2022-09-21&type=c))
+
+[@hbcarlos](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ahbcarlos+updated%3A2022-09-16..2022-09-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.41
 
 No merged PRs
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.40
 
