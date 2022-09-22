@@ -2,8 +2,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import Depends, Response, WebSocket
-
-from .models import BaseUser
+from fps_auth_base.models import BaseUser  # type: ignore
 
 GLOBAL_USER = str(uuid.uuid4())
 
