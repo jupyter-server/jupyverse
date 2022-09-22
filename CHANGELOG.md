@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.43
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.42...213cc30f642789e115c9ea0fd03e11804c68e827))
+
+### Merged PRs
+
+- Fix plugin pinning [#234](https://github.com/jupyter-server/jupyverse/pull/234) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-21&to=2022-09-22&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-21..2022-09-22&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.42
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.41...2c1499e1b2d4b5f209174dd7445780bc610803a7))
@@ -16,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-16&to=2022-09-21&type=c))
 
 [@hbcarlos](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ahbcarlos+updated%3A2022-09-16..2022-09-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.41
 
