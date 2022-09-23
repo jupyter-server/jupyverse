@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import RedirectResponse
 from fief_client import FiefAccessTokenInfo
 from fps.hooks import register_router
-from fps_auth_base.models import Permissions
 
 from .backend import SESSION_COOKIE_NAME, auth, current_user, fief
-from .models import UserRead
+from .models import Permissions, UserRead
 
 router = APIRouter()
 

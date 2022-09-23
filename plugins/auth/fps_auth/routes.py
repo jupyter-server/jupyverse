@@ -6,7 +6,6 @@ from fastapi_users.exceptions import UserAlreadyExists
 from fps.config import get_config  # type: ignore
 from fps.hooks import register_router  # type: ignore
 from fps.logging import get_configured_logger  # type: ignore
-from fps_auth_base.models import Permissions  # type: ignore
 from fps_uvicorn.cli import add_query_params  # type: ignore
 from fps_uvicorn.config import UvicornConfig  # type: ignore
 from sqlalchemy import select  # type: ignore
@@ -28,7 +27,7 @@ from .db import (
     get_user_db,
     secret,
 )
-from .models import UserCreate, UserRead, UserUpdate
+from .models import Permissions, UserCreate, UserRead, UserUpdate
 
 logger = get_configured_logger("auth")
 

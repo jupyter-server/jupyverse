@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_noauth"
-description = "An FPS plugin for the authentication API"
+description = "An FPS plugin for a non-authenticated API."
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 dynamic = ["version"]
 requires-python = ">=3.7"
@@ -31,7 +31,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points.jupyverse_auth]
-User = "fps_auth_base.models:BaseUser"
+User = "fps_noauth.models:BaseUser"
 current_user = "fps_noauth.backends:current_user"
 update_user = "fps_noauth.backends:update_user"
 websocket_auth = "fps_noauth.backends:websocket_auth"

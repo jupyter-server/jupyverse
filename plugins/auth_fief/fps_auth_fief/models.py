@@ -1,9 +1,13 @@
-from typing import Optional
+from typing import Dict, List, Optional
 
-from fps_auth_base.models import BaseUser
+from pydantic import BaseModel
 
 
-class UserRead(BaseUser):
+class Permissions(BaseModel):
+    permissions: Dict[str, List[str]]
+
+
+class UserRead(Permissions):
     username: str = ""
     name: str = ""
     display_name: str = ""

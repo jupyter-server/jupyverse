@@ -1,11 +1,15 @@
 import uuid
-from typing import Optional
+from typing import Dict, List, Optional
 
 from fastapi_users import schemas
-from fps_auth_base.models import BaseUser  # type: ignore
+from pydantic import BaseModel
 
 
-class JupyterUser(BaseUser):
+class Permissions(BaseModel):
+    permissions: Dict[str, List[str]]
+
+
+class JupyterUser(Permissions):
     anonymous: bool = True
     username: str = ""
     name: str = ""

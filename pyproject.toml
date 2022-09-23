@@ -39,6 +39,7 @@ jupyterlab = [ "fps-jupyterlab >=0.0.42",]
 retrolab = [ "fps-retrolab >=0.0.42",]
 auth = [ "fps-auth >=0.0.42",]
 auth-fief = [ "fps-auth-fief >=0.0.42",]
+noauth = ["fps-noauth >=0.0.42"]
 test = [ "mypy", "types-setuptools", "pytest", "pytest-asyncio", "pytest-env", "requests", "websockets", "ipykernel",]
 docs = [ "mkdocs", "mkdocs-material",]
 
