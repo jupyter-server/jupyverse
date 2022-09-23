@@ -1,4 +1,4 @@
-The auth plugin has a special place because every other plugin depends on it for security reasons. One and only one auth plugin must be installed. It is possible to use any auth plugin as long as it follows a defined [API](./#api). Jupyverse comes with two auth plugins: [fps-auth](./#fps-auth) and [fps-auth-fief](./#fps-auth-fief).
+The auth plugin has a special place because every other plugin depends on it for security reasons. One and only one auth plugin must be installed. It is possible to use any auth plugin as long as it follows a defined [API](./#api). Jupyverse comes with three auth plugins: [fps-noauth](./#fps-noauth), [fps-auth](./#fps-auth) and [fps-auth-fief](./#fps-auth-fief).
 
 ## API
 
@@ -60,6 +60,13 @@ async def update_user():
 
     return _update_user
 ```
+
+## fps-noauth
+
+`fps-noauth` "implements" an unprotected API.
+
+!!! note
+    This can be a security risk! Use it only if you want all endpoints to be accessible by any user.
 
 ## fps-auth
 

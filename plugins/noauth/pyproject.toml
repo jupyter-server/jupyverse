@@ -3,18 +3,11 @@ requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
-name = "fps_auth"
-description = "An FPS plugin for the authentication API"
+name = "fps_noauth"
+description = "An FPS plugin for an unprotected API"
 keywords = ["jupyter", "server", "fastapi", "pluggy", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.7"
-dependencies = [
-    "fps[uvicorn] >=0.0.17",
-    "fps-lab",
-    "fps-login",
-    "aiosqlite",
-    "fastapi-users[sqlalchemy,oauth] >=10.1.4,<11"
-]
 
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -36,17 +29,11 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-auth = "fps_auth.routes"
-
-[project.entry-points.fps_config]
-fps-auth = "fps_auth.config"
-
 [project.entry-points.jupyverse_auth]
-User = "fps_auth.models:UserRead"
-current_user = "fps_auth.backends:current_user"
-update_user = "fps_auth.backends:update_user"
-websocket_auth = "fps_auth.backends:websocket_auth"
+User = "fps_noauth.backends:User"
+current_user = "fps_noauth.backends:current_user"
+update_user = "fps_noauth.backends:update_user"
+websocket_auth = "fps_noauth.backends:websocket_auth"
 
 [tool.hatch.version]
-path = "fps_auth/__init__.py"
+path = "fps_noauth/__init__.py"

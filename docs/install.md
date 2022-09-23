@@ -44,7 +44,6 @@ pip install -e plugins/auth_base
 pip install -e plugins/frontend
 pip install -e plugins/lab
 pip install -e plugins/jupyterlab
-pip install -e plugins/login
 pip install -e plugins/auth
 pip install -e plugins/contents
 pip install -e plugins/kernels
