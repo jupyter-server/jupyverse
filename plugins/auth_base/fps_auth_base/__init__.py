@@ -9,7 +9,6 @@ try:
     current_user = auth["current_user"]
     update_user = auth["update_user"]
     websocket_auth = auth["websocket_auth"]
-
 except KeyError:
     raise RuntimeError(
         "An auth plugin must be installed, for instance: pip install fps-auth",

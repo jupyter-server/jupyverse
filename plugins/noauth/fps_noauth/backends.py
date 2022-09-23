@@ -1,11 +1,8 @@
-import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import Depends, WebSocket
 
 from .models import BaseUser
-
-GLOBAL_USER = str(uuid.uuid4())
 
 
 def current_user(*args, **kwargs):

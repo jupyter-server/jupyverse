@@ -10,7 +10,6 @@ dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
 	"fps[uvicorn] >=0.0.17",
-	"fps-auth-base",
 	"fps-lab",
 	"fps-login",
 	"aiosqlite",
