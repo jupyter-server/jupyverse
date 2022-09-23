@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.44
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.43...ee5c523b7d110fb6ed7dc35816629fe52baa019f))
+
+### Merged PRs
+
+- Adds fps-noauth [#237](https://github.com/jupyter-server/jupyverse/pull/237) ([@hbcarlos](https://github.com/hbcarlos))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-22&to=2022-09-23&type=c))
+
+[@hbcarlos](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ahbcarlos+updated%3A2022-09-22..2022-09-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.43
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.42...213cc30f642789e115c9ea0fd03e11804c68e827))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-21&to=2022-09-22&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-21..2022-09-22&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.42
 
