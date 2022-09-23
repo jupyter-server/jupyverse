@@ -5,15 +5,15 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_auth"
 description = "An FPS plugin for the authentication API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = ["jupyter", "server", "fastapi", "pluggy", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
-  "fps[uvicorn] >=0.0.17",
-  "fps-lab",
-  "fps-login",
-  "aiosqlite",
-  "fastapi-users[sqlalchemy,oauth] >=10.1.4,<11"
+    "fps[uvicorn] >=0.0.17",
+    "fps-lab",
+    "fps-login",
+    "aiosqlite",
+    "fastapi-users[sqlalchemy,oauth] >=10.1.4,<11"
 ]
 
 [[project.authors]]

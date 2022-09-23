@@ -7,7 +7,7 @@ class Permissions(BaseModel):
     permissions: Dict[str, List[str]]
 
 
-class UserRead(Permissions):
+class UserRead(BaseModel):
     username: str = ""
     name: str = ""
     display_name: str = ""

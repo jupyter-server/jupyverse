@@ -1,3 +1,3 @@
 # fps-noauth
 
-An FPS plugin for a non-authenticated API.
+An FPS plugin for an unprotected API.

@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_noauth"
-description = "An FPS plugin for a non-authenticated API."
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+description = "An FPS plugin for an unprotected API"
+keywords = ["jupyter", "server", "fastapi", "pluggy", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.7"
 
