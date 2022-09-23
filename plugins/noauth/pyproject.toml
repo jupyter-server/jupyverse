@@ -31,7 +31,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points.jupyverse_auth]
-User = "fps_noauth.models:BaseUser"
+User = "fps_noauth.backends:User"
 current_user = "fps_noauth.backends:current_user"
 update_user = "fps_noauth.backends:update_user"
 websocket_auth = "fps_noauth.backends:websocket_auth"

@@ -1,8 +1,10 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from fastapi import Depends, WebSocket
+from fastapi import WebSocket
 
-from .models import BaseUser
+
+class User:
+    pass
 
 
 def current_user(*args, **kwargs):
@@ -30,8 +32,8 @@ def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
     return _
 
 
-async def update_user(user: BaseUser = Depends(current_user())):
-    async def _(data: Dict[str, Any]) -> BaseUser:
-        return user
+async def update_user(*args, **kwargs):
+    async def _():
+        pass
 
     return _
