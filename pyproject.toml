@@ -62,6 +62,8 @@ matrix.auth.post-install-commands = [
   { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
   { value = "pip install -e ./plugins/auth", if = ["auth"] },
   { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
+]
+matrix.frontend.post-install-commands = [
   { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
   { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
 ]
@@ -69,6 +71,28 @@ matrix.auth.post-install-commands = [
 [[tool.hatch.envs.dev.matrix]]
 frontend = ["jupyterlab", "retrolab"]
 auth = ["noauth", "auth", "auth_fief"]
+
+[tool.hatch.envs.dev.scripts]
+test = "pytest ./tests -v"
+lint = [
+  "black --line-length 100 jupyverse ./plugins",
+  "isort --profile=black jupyverse ./plugins",
+]
+typecheck = [
+  "mypy jupyverse",
+  "mypy plugins/auth_base/fps_auth_base",
+  "mypy plugins/frontend/fps_frontend",
+  "mypy plugins/contents/fps_contents",
+  "mypy plugins/kernels/fps_kernels",
+  "mypy plugins/retrolab/fps_retrolab",
+  "mypy plugins/jupyterlab/fps_jupyterlab",
+  "mypy plugins/lab/fps_lab",
+  "mypy plugins/auth/fps_auth",
+  "mypy plugins/nbconvert/fps_nbconvert",
+  "mypy plugins/yjs/fps_yjs",
+  "mypy plugins/terminals/fps_terminals",
+  "mypy plugins/login/fps_login",
+]
 
 [tool.hatch.envs.docs]
 features = ["docs"]
