@@ -70,9 +70,6 @@ matrix.auth.post-install-commands = [
 frontend = ["jupyterlab", "retrolab"]
 auth = ["noauth", "auth", "auth_fief"]
 
-[tool.hatch.envs.dev.scripts]
-jupyverse = "fps_uvicorn.cli:app"
-
 [tool.hatch.envs.docs]
 features = ["docs"]
 
