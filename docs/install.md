@@ -75,8 +75,8 @@ the plugin directory, as this is what users get when they install jupyverse. The
 directory.
 
 Currently the `dev` matrix environment is made up of all combinations of
-frontends (`lab`, `retro`) and authentication methods (`noauth`, `fief`,
-`auth`), which leads to six combinations.
+frontends (`jupyterlab`, `retrolab`) and authentication methods (`noauth`, `auth`,
+`auth_fief`), which leads to six combinations.
 
 A number of scripts are available in the dev environments, scripts can be
 executed using `hatch run {env}:{script}`, e.g. to serve jupyverse from the

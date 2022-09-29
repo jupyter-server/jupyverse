@@ -48,7 +48,6 @@ pre-install-commands = [
   "pip install -e ./plugins/auth_base",
   "pip install -e ./plugins/contents",
   "pip install -e ./plugins/frontend",
-  "pip install -e ./plugins/frontend",
   "pip install -e ./plugins/kernels",
   "pip install -e ./plugins/lab",
   "pip install -e ./plugins/nbconvert",
@@ -60,16 +59,16 @@ features = ["test"]
 
 [tool.hatch.envs.dev.overrides]
 matrix.auth.post-install-commands = [
-  { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
   { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
   { value = "pip install -e ./plugins/auth", if = ["auth"] },
-  { value = "pip install -e ./plugins/jupyterlab", if =["lab"]},
-  { value = "pip install -e ./plugins/retrolab", if =["retro"]},
+  { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
+  { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
+  { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
 ]
 
 [[tool.hatch.envs.dev.matrix]]
-frontend = ["lab", "retro"]
-auth = ["noauth", "auth", "fief"]
+frontend = ["jupyterlab", "retrolab"]
+auth = ["noauth", "auth", "auth_fief"]
 
 [tool.hatch.envs.dev.scripts]
 jupyverse = "fps_uvicorn.cli:app"
