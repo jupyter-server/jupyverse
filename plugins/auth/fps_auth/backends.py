@@ -33,6 +33,20 @@ logger = get_configured_logger("auth")
 class NoAuthTransport(Transport):
     scheme = None  # type: ignore
 
+    async def get_login_response(self, token: str, response: Response):
+        pass
+
+    async def get_logout_response(self, response: Response):
+        pass
+
+    @staticmethod
+    def get_openapi_login_responses_success():
+        pass
+
+    @staticmethod
+    def get_openapi_logout_responses_success():
+        pass
+
 
 class NoAuthStrategy(Strategy, Generic[models.UP, models.ID]):
     async def read_token(
@@ -40,6 +54,12 @@ class NoAuthStrategy(Strategy, Generic[models.UP, models.ID]):
     ) -> Optional[models.UP]:
         active_user = await user_manager.user_db.get_by_email(get_auth_config().global_email)
         return active_user
+
+    async def write_token(self, user: models.UP):
+        pass
+
+    async def destroy_token(self, token: str, user: models.UP):
+        pass
 
 
 class GitHubTransport(CookieTransport):
