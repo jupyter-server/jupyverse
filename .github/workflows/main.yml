@@ -26,15 +26,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Setup conda
-      uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/setup-python@v4
       with:
-        activate-environment: jupyverse-dev
-        environment-file: dev-environment.yml
         python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
-        auto-activate-base: false
-        channels: conda-forge
+        cache: 'pip'
 
     - name: Install jupyverse
       run: |
