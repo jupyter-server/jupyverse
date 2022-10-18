@@ -43,6 +43,67 @@ noauth = ["fps-noauth >=0.0.42"]
 test = [ "mypy", "types-setuptools", "pytest", "pytest-asyncio", "pytest-env", "requests", "websockets", "ipykernel",]
 docs = [ "mkdocs", "mkdocs-material",]
 
+[tool.hatch.envs.dev]
+# TODO: if/when hatch gets support for  defining editable dependencies, the
+# pre-install commands here and post-install commands in the matrix can be moved
+# to the dependencies section
+pre-install-commands = [
+  "pip install -e ./plugins/auth_base",
+  "pip install -e ./plugins/contents",
+  "pip install -e ./plugins/frontend",
+  "pip install -e ./plugins/kernels",
+  "pip install -e ./plugins/lab",
+  "pip install -e ./plugins/nbconvert",
+  "pip install -e ./plugins/terminals",
+  "pip install -e ./plugins/yjs",
+]
+dependencies = ["fastapi>=0.82.0"]
+features = ["test"]
+
+[tool.hatch.envs.dev.overrides]
+matrix.auth.post-install-commands = [
+  { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
+  { value = "pip install -e ./plugins/auth", if = ["auth"] },
+  { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
+]
+matrix.frontend.post-install-commands = [
+  { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
+  { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
+]
+
+[[tool.hatch.envs.dev.matrix]]
+frontend = ["jupyterlab", "retrolab"]
+auth = ["noauth", "auth", "auth_fief"]
+
+[tool.hatch.envs.dev.scripts]
+test = "pytest ./tests -v"
+lint = [
+  "black --line-length 100 jupyverse ./plugins",
+  "isort --profile=black jupyverse ./plugins",
+]
+typecheck = [
+  "mypy jupyverse",
+  "mypy plugins/auth_base/fps_auth_base",
+  "mypy plugins/frontend/fps_frontend",
+  "mypy plugins/contents/fps_contents",
+  "mypy plugins/kernels/fps_kernels",
+  "mypy plugins/retrolab/fps_retrolab",
+  "mypy plugins/jupyterlab/fps_jupyterlab",
+  "mypy plugins/lab/fps_lab",
+  "mypy plugins/auth/fps_auth",
+  "mypy plugins/nbconvert/fps_nbconvert",
+  "mypy plugins/yjs/fps_yjs",
+  "mypy plugins/terminals/fps_terminals",
+  "mypy plugins/login/fps_login",
+]
+
+[tool.hatch.envs.docs]
+features = ["docs"]
+
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build --clean --strict"
+serve = "mkdocs serve --dev-addr localhost:8000"
+
 [project.scripts]
 jupyverse = "fps_uvicorn.cli:app"
 

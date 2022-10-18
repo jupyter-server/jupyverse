@@ -34,37 +34,15 @@ jobs:
     - name: Upgrade pip
       run: python3 -m pip install --upgrade pip
 
-    - name: Install jupyverse
+    - name: Create jupyterlab-auth dev environment
       run: |
-        pip install ./plugins/auth_base
-        pip install ./plugins/frontend
-        pip install ./plugins/jupyterlab
-        pip install ./plugins/login
-        pip install ./plugins/auth
-        pip install ./plugins/contents
-        pip install ./plugins/kernels
-        pip install ./plugins/terminals
-        pip install ./plugins/lab
-        pip install ./plugins/nbconvert
-        pip install ./plugins/yjs
-        pip install .[test]
+        pip install hatch
+        hatch env create dev.jupyterlab-auth
 
     - name: Check types
       run: |
-        mypy jupyverse
-        mypy plugins/auth_base/fps_auth_base
-        mypy plugins/frontend/fps_frontend
-        mypy plugins/contents/fps_contents
-        mypy plugins/kernels/fps_kernels
-        mypy plugins/retrolab/fps_retrolab
-        mypy plugins/jupyterlab/fps_jupyterlab
-        mypy plugins/lab/fps_lab
-        mypy plugins/auth/fps_auth
-        mypy plugins/nbconvert/fps_nbconvert
-        mypy plugins/yjs/fps_yjs
-        mypy plugins/terminals/fps_terminals
-        mypy plugins/login/fps_login
+        hatch run dev.jupyterlab-auth:typecheck
 
     - name: Run tests
       run: |
-        pytest ./tests -v
+        hatch run dev.jupyterlab-auth:test
