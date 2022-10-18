@@ -8,9 +8,9 @@ on:
     branches:
     - main
 
-defaults:
-  run:
-    shell: bash -l {0}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -24,17 +24,15 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - name: Setup conda
-      uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/setup-python@v4
       with:
-        activate-environment: jupyverse-dev
-        environment-file: dev-environment.yml
         python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
-        auto-activate-base: false
-        channels: conda-forge
+        cache: 'pip'
+
+    - name: Upgrade pip
+      run: python3 -m pip install --upgrade pip
 
     - name: Install jupyverse
       run: |

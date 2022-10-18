@@ -1,5 +1,5 @@
-import os
 import sys
+from pathlib import Path
 from time import sleep
 
 import pytest
@@ -16,8 +16,9 @@ async def test_kernel_messages(client, capfd):
     kernel_id = "kernel_id_0"
     kernel_name = "python3"
     kernelspec_path = (
-        os.environ["CONDA_PREFIX"] + f"/share/jupyter/kernels/{kernel_name}/kernel.json"
+        Path(sys.prefix) / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
     )
+    assert kernelspec_path.exists()
     kernel_server = KernelServer(kernelspec_path=kernelspec_path, capture_kernel_output=False)
     await kernel_server.start()
     kernels[kernel_id] = {"server": kernel_server}
