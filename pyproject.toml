@@ -44,6 +44,9 @@ test = [ "mypy", "types-setuptools", "pytest", "pytest-asyncio", "pytest-env", "
 docs = [ "mkdocs", "mkdocs-material",]
 
 [tool.hatch.envs.dev]
+# TODO: if/when hatch gets support for  defining editable dependencies, the
+# pre-install commands here and post-install commands in the matrix can be moved
+# to the dependencies section
 pre-install-commands = [
   "pip install -e ./plugins/auth_base",
   "pip install -e ./plugins/contents",
