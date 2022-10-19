@@ -9,7 +9,7 @@ from fps_kernels.kernel_server.server import KernelServer, kernels
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.skipif(
-    sys.version_info < (3, 8),
+    sys.version_info < (3, 8) or sys.platform.startswith("win"),
     reason="pytest-asyncio issue",
 )
 async def test_kernel_messages(client, capfd):
