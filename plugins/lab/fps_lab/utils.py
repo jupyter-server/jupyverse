@@ -1,5 +1,4 @@
 import json
-from glob import glob
 from pathlib import Path
 from typing import List, Tuple
 
@@ -8,9 +7,11 @@ def get_federated_extensions(extensions_dir: Path) -> Tuple[List, List]:
     federated_extensions = []
     disabledExtensions = []
 
-    for path in glob(str(extensions_dir / "**" / "package.json"), recursive=True):
+    for path in extensions_dir.rglob("**/package.json"):
         with open(path) as f:
             package = json.load(f)
+        if "jupyterlab" not in package.keys():
+            continue
         name = package["name"]
         extension = package["jupyterlab"]["_build"]
         extension["name"] = name

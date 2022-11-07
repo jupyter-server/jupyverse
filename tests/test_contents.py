@@ -23,7 +23,7 @@ def test_tree(client, tmp_path):
                 size=size,
                 mimetype="text/plain",
                 name=fname,
-                path=str(dname / fname),
+                path=(dname / fname).as_posix(),
                 format=None,
             )
         )
@@ -38,7 +38,7 @@ def test_tree(client, tmp_path):
                 size=None,
                 mimetype=None,
                 name=sub_dname,
-                path=str(dname / sub_dname),
+                path=(dname / sub_dname).as_posix(),
                 format="json",
             )
         )
@@ -48,7 +48,7 @@ def test_tree(client, tmp_path):
         size=None,
         mimetype=None,
         name="",
-        path=str(dname),
+        path=dname.as_posix(),
         format="json",
     )
     response = client.get("/api/contents", params={"content": 1})

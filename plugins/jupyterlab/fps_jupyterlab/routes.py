@@ -40,16 +40,28 @@ async def get_lab(
     lab_config=Depends(get_lab_config),
 ):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
+        get_index(
+            "default",
+            lab_config.collaborative,
+            config.dev_mode,
+            frontend_config.base_url,
+        )
     )
 
 
 @router.get("/lab/tree/{path:path}")
 async def load_workspace(
-    path, frontend_config=Depends(get_frontend_config), lab_config=Depends(get_lab_config)
+    path,
+    frontend_config=Depends(get_frontend_config),
+    lab_config=Depends(get_lab_config),
 ):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
+        get_index(
+            "default",
+            lab_config.collaborative,
+            config.dev_mode,
+            frontend_config.base_url,
+        )
     )
 
 
@@ -81,7 +93,9 @@ async def get_workspace(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(name, lab_config.collaborative, config.dev_mode, frontend_config.base_url)
+    return get_index(
+        name, lab_config.collaborative, config.dev_mode, frontend_config.base_url
+    )
 
 
 INDEX_HTML = """\
@@ -123,7 +137,9 @@ def get_index(workspace, collaborative, dev_mode, base_url="/"):
         main_id = path.name.split(".")[1]
         break
     vendor_id = None
-    for path in (static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
+    for path in (static_lab_dir).glob(
+        "vendors-node_modules_whatwg-fetch_fetch_js.*.js"
+    ):
         vendor_id = path.name.split(".")[1]
         break
     full_static_url = f"{base_url}static/lab"
@@ -164,9 +180,9 @@ def get_index(workspace, collaborative, dev_mode, base_url="/"):
         "quitButton": True,
         "settingsUrl": "/lab/api/settings",
         "store_id": 0,
-        "schemasDir": str(prefix_dir / "share" / "jupyter" / "lab" / "schemas"),
+        "schemasDir": (prefix_dir / "share/jupyter/lab/schemas").as_posix(),
         "terminalsAvailable": True,
-        "themesDir": str(prefix_dir / "share" / "jupyter" / "lab" / "themes"),
+        "themesDir": (prefix_dir / "share/jupyter/lab/themes").as_posix(),
         "themesUrl": "/lab/api/themes",
         "token": "4e2804532de366abc81e32ab0c6bf68a73716fafbdbb2098",
         "translationsApiUrl": "/lab/api/translations",
