@@ -18,7 +18,7 @@ from .config import AuthConfig
 
 auth_config = get_config(AuthConfig)
 
-jupyter_dir = Path.home() / ".local" / "share" / "jupyter"
+jupyter_dir = Path.home() / ".local/share/jupyter"
 jupyter_dir.mkdir(parents=True, exist_ok=True)
 name = "jupyverse"
 if auth_config.test:

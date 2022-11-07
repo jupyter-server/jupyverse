@@ -24,11 +24,11 @@ router.mount(
 
 router.mount(
     "/lab/extensions/@retrolab/lab-extension/static",
-    StaticFiles(directory=retrolab_dir / "labextension" / "static"),
+    StaticFiles(directory=retrolab_dir / "labextension/static"),
     name="labextension/static",
 )
 
-for path in (retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
+for path in (retrolab_dir / "labextension/static").glob("remoteEntry.*.js"):
     load = f"static/{path.name}"
     break
 retro_federated_extensions = [
@@ -97,7 +97,7 @@ async def get_terminal(
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):
-    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
+    extensions_dir = prefix_dir / "share/jupyter/labextensions"
     federated_extensions, disabled_extension = get_federated_extensions(extensions_dir)
     page_config = {
         "appName": "RetroLab",
