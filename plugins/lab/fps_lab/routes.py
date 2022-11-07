@@ -31,7 +31,7 @@ LOCALE = "en"
 
 prefix_dir = Path(sys.prefix)
 if jlab_dev_mode:
-    jlab_dir = Path(jupyterlab.__file__).parent.parent / "dev_mode"
+    jlab_dir = Path(jupyterlab.__file__).parents[1] / "dev_mode"
 else:
     jlab_dir = prefix_dir / "share/jupyter/lab"
 
@@ -127,7 +127,7 @@ def init_router(router, redirect_after_root):
         package = ep.load()
         data = {}
         for path in (
-            Path(package.__file__).parent / "locale" / language / "LC_MESSAGES"
+            Path(package.__file__).parent / f"locale/{language}/LC_MESSAGES"
         ).glob("*.json"):
             with open(path) as f:
                 data.update({path.stem: json.load(f)})

@@ -14,7 +14,7 @@ pytest_plugins = (
 
 @pytest.fixture()
 def cwd():
-    return Path(__file__).parent.parent
+    return Path(__file__).parents[1]
 
 
 def get_open_port():

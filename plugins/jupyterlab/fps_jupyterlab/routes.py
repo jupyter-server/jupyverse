@@ -18,7 +18,7 @@ from .config import get_jlab_config
 
 router = APIRouter()
 prefix_dir, federated_extensions = init_router(router, "lab")
-jupyterlab_dir = Path(jupyterlab.__file__).parent.parent
+jupyterlab_dir = Path(jupyterlab.__file__).parents[1]
 
 config = get_jlab_config()
 if config.dev_mode:
