@@ -28,9 +28,7 @@ def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
     sock.send_multipart(to_send, copy=True)
 
 
-async def receive_message(
-    sock: Socket, timeout: float = float("inf")
-) -> Optional[Dict[str, Any]]:
+async def receive_message(sock: Socket, timeout: float = float("inf")) -> Optional[Dict[str, Any]]:
     timeout *= 1000  # in ms
     ready = await sock.poll(timeout)
     if ready:
@@ -52,13 +50,9 @@ class KernelDriver:
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path or find_kernelspec(kernel_name)
         if not self.kernelspec_path:
-            raise RuntimeError(
-                "Could not find a kernel, maybe you forgot to install one?"
-            )
+            raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
         if write_connection_file:
-            self.connection_file_path, self.connection_cfg = _write_connection_file(
-                connection_file
-            )
+            self.connection_file_path, self.connection_cfg = _write_connection_file(connection_file)
         else:
             self.connection_file_path = connection_file
             self.connection_cfg = read_connection_file(connection_file)
@@ -81,9 +75,7 @@ class KernelDriver:
         self.channel_tasks = []
         self.listen_channels()
 
-    async def start(
-        self, startup_timeout: float = float("inf"), connect: bool = True
-    ) -> None:
+    async def start(self, startup_timeout: float = float("inf"), connect: bool = True) -> None:
         self.kernel_process = await launch_kernel(
             self.kernelspec_path, self.connection_file_path, self.capture_kernel_output
         )
@@ -204,9 +196,7 @@ class KernelDriver:
         content = msg["content"]
         if msg_type == "stream":
             if (not outputs) or (outputs[-1]["name"] != content["name"]):
-                outputs.append(
-                    {"name": content["name"], "output_type": msg_type, "text": []}
-                )
+                outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
             outputs[-1]["text"].append(content["text"])
         elif msg_type in ("display_data", "execute_result"):
             outputs.append(
