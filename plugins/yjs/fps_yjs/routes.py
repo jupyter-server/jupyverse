@@ -3,21 +3,35 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple
 
-from fastapi import APIRouter, Depends, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    WebSocketDisconnect,
+    status,
+)
+from fastapi.responses import PlainTextResponse
 from fps.hooks import register_router  # type: ignore
+from fps_auth_base import User, current_user
+from fps_contents.fileid import get_file_id_manager
 from fps_contents.routes import read_content, write_content  # type: ignore
 
 try:
-    from fps_contents.watchfiles import awatch
+    from fps_contents import get_watch
 
-    has_awatch = True
+    has_watch = True
 except ImportError:
-    has_awatch = False
+    has_watch = False
+
 from fps_auth_base import websocket_auth  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
 from ypy_websocket.yutils import YMessageType  # type: ignore
+
+from .models import CreateRoomId
 
 YFILE = YDOCS["file"]
 AWARENESS = 1
@@ -126,9 +140,14 @@ class YDocWebSocketHandler:
         self.room = self.websocket_server.get_room(self.websocket.path)
         self.set_file_info(path)
 
-    def get_file_info(self) -> Tuple[str, str, str]:
+    async def get_file_info(self) -> Tuple[str, str, str]:
         room_name = self.websocket_server.get_room_name(self.room)
-        file_format, file_type, file_path = room_name.split(":", 2)
+        file_format, file_type, file_id = room_name.split(":", 2)
+        file_path = await get_file_id_manager().get_path(file_id)
+        if file_path is None:
+            raise RuntimeError(f"File {self.room.document.path} cannot be found anymore")
+        if file_path != self.room.document.path:
+            self.room.document.path = file_path
         return file_format, file_type, file_path
 
     def set_file_info(self, value: str) -> None:
@@ -145,7 +164,7 @@ class YDocWebSocketHandler:
             self.room.cleaner.cancel()
 
         if not self.room.is_transient and not self.room.ready:
-            file_format, file_type, file_path = self.get_file_info()
+            file_format, file_type, file_path = await self.get_file_info()
             is_notebook = file_type == "notebook"
             model = await read_content(file_path, True, as_json=is_notebook)
             self.last_modified = to_datetime(model.last_modified)
@@ -212,9 +231,9 @@ class YDocWebSocketHandler:
         return skip
 
     async def watch_file(self):
-        if has_awatch:
-            file_format, file_type, file_path = self.get_file_info()
-            async for changes in awatch(file_path):
+        if has_watch:
+            file_format, file_type, file_path = await self.get_file_info()
+            async for changes in get_watch()(file_path):
                 await self.maybe_load_document()
         else:
             # contents plugin doesn't provide watcher, fall back to polling
@@ -227,7 +246,7 @@ class YDocWebSocketHandler:
                 await self.maybe_load_document()
 
     async def maybe_load_document(self):
-        file_format, file_type, file_path = self.get_file_info()
+        file_format, file_type, file_path = await self.get_file_info()
         model = await read_content(file_path, False)
         # do nothing if the file was saved by us
         if self.last_modified < to_datetime(model.last_modified):
@@ -266,7 +285,7 @@ class YDocWebSocketHandler:
         await asyncio.sleep(1)
         # if the room cannot be found, don't save
         try:
-            file_format, file_type, file_path = self.get_file_info()
+            file_format, file_type, file_path = await self.get_file_info()
         except Exception:
             return
         is_notebook = file_type == "notebook"
@@ -291,6 +310,29 @@ class YDocWebSocketHandler:
             model = await read_content(file_path, False)
             self.last_modified = to_datetime(model.last_modified)
         self.room.document.dirty = False
+
+
+@router.put("/api/yjs/roomid/{path:path}", status_code=200, response_class=PlainTextResponse)
+async def create_roomid(
+    path,
+    request: Request,
+    response: Response,
+    user: User = Depends(current_user(permissions={"contents": ["read"]})),
+):
+    # we need to process the request manually
+    # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
+    create_room_id = CreateRoomId(**(await request.json()))
+    ws_url = f"{create_room_id.format}:{create_room_id.type}:"
+    idx = await get_file_id_manager().get_id(path)
+    if idx is not None:
+        return ws_url + idx
+
+    idx = await get_file_id_manager().index(path)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"File {path} does not exist")
+
+    response.status_code = status.HTTP_201_CREATED
+    return ws_url + idx
 
 
 r = register_router(router)
