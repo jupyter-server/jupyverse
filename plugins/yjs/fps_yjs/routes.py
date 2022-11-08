@@ -38,9 +38,7 @@ def to_datetime(iso_date: str) -> datetime:
 @router.websocket("/api/yjs/{path:path}")
 async def websocket_endpoint(
     path,
-    websocket_permissions=Depends(
-        websocket_auth(permissions={"yjs": ["read", "write"]})
-    ),
+    websocket_permissions=Depends(websocket_auth(permissions={"yjs": ["read", "write"]})),
 ):
     if websocket_permissions is None:
         return
@@ -109,9 +107,7 @@ class JupyterWebsocketServer(WebsocketServer):
                 file_format, file_type, file_path = path.split(":", 2)
                 p = Path(file_path)
                 updates_file_path = (p.parent / f".{file_type}:{p.name}.y").as_posix()
-                ystore = JupyterSQLiteYStore(
-                    path=updates_file_path
-                )  # FIXME: pass in config
+                ystore = JupyterSQLiteYStore(path=updates_file_path)  # FIXME: pass in config
                 self.rooms[path] = DocumentRoom(file_type, ystore)
             else:
                 # it is a transient document (e.g. awareness)

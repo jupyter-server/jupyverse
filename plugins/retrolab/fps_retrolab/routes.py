@@ -57,9 +57,7 @@ async def get_notebook(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(
-        path, "notebooks", lab_config.collaborative, frontend_config.base_url
-    )
+    return get_index(path, "notebooks", lab_config.collaborative, frontend_config.base_url)
 
 
 @router.get("/retro/edit/{path:path}", response_class=HTMLResponse)
@@ -79,9 +77,7 @@ async def get_console(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(
-        path, "consoles", lab_config.collaborative, frontend_config.base_url
-    )
+    return get_index(path, "consoles", lab_config.collaborative, frontend_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
@@ -91,9 +87,7 @@ async def get_terminal(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(
-        name, "terminals", lab_config.collaborative, frontend_config.base_url
-    )
+    return get_index(name, "terminals", lab_config.collaborative, frontend_config.base_url)
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):
