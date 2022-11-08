@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import pytest  # type: ignore
+
 from .config import AuthConfig, get_auth_config
 
 
