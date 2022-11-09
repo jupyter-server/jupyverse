@@ -6,26 +6,25 @@ import uuid
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, cast
 
-from fastapi import WebSocketDisconnect  # type: ignore
+from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 from starlette.websockets import WebSocketState
 
-from .connect import (
-    AcceptedWebSocket,
+from ..kernel_driver.connect import (
     cfg_t,
     connect_channel,
     launch_kernel,
     read_connection_file,
 )
-from .connect import write_connection_file as _write_connection_file  # type: ignore
+from ..kernel_driver.connect import (
+    write_connection_file as _write_connection_file,  # type: ignore
+)
+from ..kernel_driver.message import create_message, receive_message, send_message
 from .message import (  # type: ignore
-    create_message,
     deserialize_msg_from_ws_v1,
     from_binary,
     get_msg_from_parts,
     get_parent_header,
     get_zmq_parts,
-    receive_message,
-    send_message,
     send_raw_message,
     serialize_msg_to_ws_v1,
     to_binary,
@@ -34,10 +33,28 @@ from .message import (  # type: ignore
 kernels: dict = {}
 
 
+class AcceptedWebSocket:
+    _websocket: WebSocket
+    _accepted_subprotocol: Optional[str]
+
+    def __init__(self, websocket, accepted_subprotocol):
+        self._websocket = websocket
+        self._accepted_subprotocol = accepted_subprotocol
+
+    @property
+    def websocket(self):
+        return self._websocket
+
+    @property
+    def accepted_subprotocol(self):
+        return self._accepted_subprotocol
+
+
 class KernelServer:
     def __init__(
         self,
         kernelspec_path: str = "",
+        kernel_cwd: str = "",
         connection_cfg: Optional[cfg_t] = None,
         connection_file: str = "",
         write_connection_file: bool = True,
@@ -45,6 +62,7 @@ class KernelServer:
     ) -> None:
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
+        self.kernel_cwd = kernel_cwd
         self.connection_cfg = connection_cfg
         self.connection_file = connection_file
         self.write_connection_file = write_connection_file
@@ -98,7 +116,10 @@ class KernelServer:
             "execution_state": "starting",
         }
         self.kernel_process = await launch_kernel(
-            self.kernelspec_path, self.connection_file_path, self.capture_kernel_output
+            self.kernelspec_path,
+            self.connection_file_path,
+            self.kernel_cwd,
+            self.capture_kernel_output,
         )
         assert self.connection_cfg is not None
         identity = uuid.uuid4().hex.encode("ascii")
@@ -144,7 +165,9 @@ class KernelServer:
         self.sessions[session_id] = websocket
         self.can_execute = permissions is None or "execute" in permissions.get("kernels", [])
         await self.listen_web(websocket)
-        del self.sessions[session_id]
+        # the session could have been removed through the REST API, so check if it still exists
+        if session_id in self.sessions:
+            del self.sessions[session_id]
 
     async def listen_web(self, websocket: AcceptedWebSocket):
         try:
@@ -179,9 +202,9 @@ class KernelServer:
         while True:
             msg = create_message("kernel_info_request")
             await send_message(msg, self.shell_channel, self.key)
-            msg = await receive_message(self.shell_channel, 0.2)
+            msg = await receive_message(self.shell_channel, timeout=0.2)
             if msg is not None and msg["msg_type"] == "kernel_info_reply":
-                msg = await receive_message(self.iopub_channel, 0.2)
+                msg = await receive_message(self.iopub_channel, timeout=0.2)
                 if msg is None:
                     # IOPub not connected, start over
                     pass
