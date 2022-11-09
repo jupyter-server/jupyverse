@@ -57,9 +57,7 @@ async def get_kernelspec(
     file_name,
     user: User = Depends(current_user()),
 ):
-    return FileResponse(
-        prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name
-    )
+    return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
 
 
 @router.get("/api/kernels")
