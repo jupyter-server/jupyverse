@@ -57,9 +57,7 @@ async def get_notebook(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(
-        path, "notebooks", lab_config.collaborative, frontend_config.base_url
-    )
+    return get_index(path, "notebooks", lab_config.collaborative, frontend_config.base_url)
 
 
 @router.get("/retro/edit/{path:path}", response_class=HTMLResponse)
@@ -79,9 +77,7 @@ async def get_console(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(
-        path, "consoles", lab_config.collaborative, frontend_config.base_url
-    )
+    return get_index(path, "consoles", lab_config.collaborative, frontend_config.base_url)
 
 
 @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
@@ -91,9 +87,7 @@ async def get_terminal(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(
-        name, "terminals", lab_config.collaborative, frontend_config.base_url
-    )
+    return get_index(name, "terminals", lab_config.collaborative, frontend_config.base_url)
 
 
 def get_index(doc_name, retro_page, collaborative, base_url="/"):
@@ -102,9 +96,7 @@ def get_index(doc_name, retro_page, collaborative, base_url="/"):
     page_config = {
         "appName": "RetroLab",
         "appNamespace": "retro",
-        "appSettingsDir": (
-            prefix_dir / "share" / "jupyter" / "lab" / "settings"
-        ).as_posix(),
+        "appSettingsDir": (prefix_dir / "share" / "jupyter" / "lab" / "settings").as_posix(),
         "appUrl": "/lab",
         "appVersion": retrolab.__version__,
         "baseUrl": base_url,
@@ -125,9 +117,7 @@ def get_index(doc_name, retro_page, collaborative, base_url="/"):
         "fullTranslationsApiUrl": f"{base_url}lab/api/translations",
         "fullTreeUrl": f"{base_url}lab/tree",
         "fullWorkspacesApiUrl": f"{base_url}lab/api/workspaces",
-        "labextensionsPath": [
-            (prefix_dir / "share" / "jupyter" / "labextensions").as_posix()
-        ],
+        "labextensionsPath": [(prefix_dir / "share" / "jupyter" / "labextensions").as_posix()],
         "labextensionsUrl": "/lab/extensions",
         "licensesUrl": "/lab/api/licenses",
         "listingsUrl": "/lab/api/listings",

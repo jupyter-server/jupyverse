@@ -57,9 +57,7 @@ async def get_kernelspec(
     file_name,
     user: User = Depends(current_user()),
 ):
-    return FileResponse(
-        prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name
-    )
+    return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
 
 
 @router.get("/api/kernels")
@@ -113,9 +111,7 @@ async def get_sessions(
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
         session["kernel"]["last_activity"] = kernel_server.last_activity["date"]
-        session["kernel"]["execution_state"] = kernel_server.last_activity[
-            "execution_state"
-        ]
+        session["kernel"]["execution_state"] = kernel_server.last_activity["execution_state"]
     return list(sessions.values())
 
 
@@ -184,20 +180,13 @@ async def execute_cell(
     r = await request.json()
     execution = Execution(**r)
     if kernel_id in kernels:
-        ynotebook = YDocWebSocketHandler.websocket_server.get_room(
-            execution.document_id
-        ).document
+        ynotebook = YDocWebSocketHandler.websocket_server.get_room(execution.document_id).document
         cell = ynotebook.get_cell(execution.cell_idx)
         cell["outputs"] = []
 
         kernel = kernels[kernel_id]
         kernelspec_path = str(
-            prefix_dir
-            / "share"
-            / "jupyter"
-            / "kernels"
-            / kernel["name"]
-            / "kernel.json"
+            prefix_dir / "share" / "jupyter" / "kernels" / kernel["name"] / "kernel.json"
         )
         if not kernel["driver"]:
             kernel["driver"] = driver = KernelDriver(
