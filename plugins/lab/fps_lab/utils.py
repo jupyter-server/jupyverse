@@ -10,7 +10,7 @@ def get_federated_extensions(extensions_dir: Path) -> Tuple[List, List]:
     for path in extensions_dir.rglob("**/package.json"):
         with open(path) as f:
             package = json.load(f)
-        if "jupyterlab" not in package.keys():
+        if "jupyterlab" not in package:
             continue
         name = package["name"]
         extension = package["jupyterlab"]["_build"]
