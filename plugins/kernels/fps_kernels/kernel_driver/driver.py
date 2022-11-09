@@ -87,7 +87,7 @@ class KernelDriver:
         await self._wait_for_ready(startup_timeout)
         self.listen_channels()
 
-    def connect_channels(self, connection_cfg: cfg_t = None):
+    def connect_channels(self, connection_cfg: Optional[cfg_t] = None):
         connection_cfg = connection_cfg or self.connection_cfg
         self.shell_channel = connect_channel("shell", connection_cfg)
         self.control_channel = connect_channel("control", connection_cfg)

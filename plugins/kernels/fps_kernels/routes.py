@@ -61,7 +61,9 @@ async def get_kernelspec(
 
 
 @router.get("/api/kernels")
-async def get_kernels(user: User = Depends(current_user(permissions={"kernels": ["read"]}))):
+async def get_kernels(
+    user: User = Depends(current_user(permissions={"kernels": ["read"]})),
+):
     results = []
     for kernel_id, kernel in kernels.items():
         results.append(
@@ -102,7 +104,9 @@ async def rename_session(
 
 
 @router.get("/api/sessions")
-async def get_sessions(user: User = Depends(current_user(permissions={"sessions": ["read"]}))):
+async def get_sessions(
+    user: User = Depends(current_user(permissions={"sessions": ["read"]})),
+):
     for session in sessions.values():
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
@@ -123,9 +127,9 @@ async def create_session(
     create_session = await request.json()
     kernel_name = create_session["kernel"]["name"]
     kernel_server = KernelServer(
-        kernelspec_path=str(
+        kernelspec_path=(
             prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
-        ),
+        ).as_posix(),
     )
     kernel_id = str(uuid.uuid4())
     kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
@@ -181,9 +185,9 @@ async def execute_cell(
         cell["outputs"] = []
 
         kernel = kernels[kernel_id]
-        kernelspec_path = str(
+        kernelspec_path = (
             prefix_dir / "share" / "jupyter" / "kernels" / kernel["name"] / "kernel.json"
-        )
+        ).as_posix()
         if not kernel["driver"]:
             kernel["driver"] = driver = KernelDriver(
                 kernelspec_path=kernelspec_path,

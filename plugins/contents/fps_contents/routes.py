@@ -230,7 +230,7 @@ async def read_content(path: Union[str, Path], get_content: bool, as_json: bool 
     return Content(
         **{
             "name": path.name,
-            "path": str(path),
+            "path": path.as_posix(),
             "last_modified": get_file_modification_time(path),
             "created": get_file_creation_time(path),
             "content": content,

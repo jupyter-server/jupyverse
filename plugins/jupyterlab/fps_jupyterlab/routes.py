@@ -18,7 +18,7 @@ from .config import get_jlab_config
 
 router = APIRouter()
 prefix_dir, federated_extensions = init_router(router, "lab")
-jupyterlab_dir = Path(jupyterlab.__file__).parent.parent
+jupyterlab_dir = Path(jupyterlab.__file__).parents[1]
 
 config = get_jlab_config()
 if config.dev_mode:
@@ -40,16 +40,28 @@ async def get_lab(
     lab_config=Depends(get_lab_config),
 ):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
+        get_index(
+            "default",
+            lab_config.collaborative,
+            config.dev_mode,
+            frontend_config.base_url,
+        )
     )
 
 
 @router.get("/lab/tree/{path:path}")
 async def load_workspace(
-    path, frontend_config=Depends(get_frontend_config), lab_config=Depends(get_lab_config)
+    path,
+    frontend_config=Depends(get_frontend_config),
+    lab_config=Depends(get_lab_config),
 ):
     return HTMLResponse(
-        get_index("default", lab_config.collaborative, config.dev_mode, frontend_config.base_url)
+        get_index(
+            "default",
+            lab_config.collaborative,
+            config.dev_mode,
+            frontend_config.base_url,
+        )
     )
 
 
@@ -164,9 +176,9 @@ def get_index(workspace, collaborative, dev_mode, base_url="/"):
         "quitButton": True,
         "settingsUrl": "/lab/api/settings",
         "store_id": 0,
-        "schemasDir": str(prefix_dir / "share" / "jupyter" / "lab" / "schemas"),
+        "schemasDir": (prefix_dir / "share" / "jupyter" / "lab" / "schemas").as_posix(),
         "terminalsAvailable": True,
-        "themesDir": str(prefix_dir / "share" / "jupyter" / "lab" / "themes"),
+        "themesDir": (prefix_dir / "share" / "jupyter" / "lab" / "themes").as_posix(),
         "themesUrl": "/lab/api/themes",
         "token": "4e2804532de366abc81e32ab0c6bf68a73716fafbdbb2098",
         "translationsApiUrl": "/lab/api/translations",

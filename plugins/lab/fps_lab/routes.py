@@ -31,7 +31,7 @@ LOCALE = "en"
 
 prefix_dir = Path(sys.prefix)
 if jlab_dev_mode:
-    jlab_dir = Path(jupyterlab.__file__).parent.parent / "dev_mode"
+    jlab_dir = Path(jupyterlab.__file__).parents[1] / "dev_mode"
 else:
     jlab_dir = prefix_dir / "share" / "jupyter" / "lab"
 
