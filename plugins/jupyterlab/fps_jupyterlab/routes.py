@@ -22,9 +22,9 @@ jupyterlab_dir = Path(jupyterlab.__file__).parents[1]
 
 config = get_jlab_config()
 if config.dev_mode:
-    static_lab_dir = jupyterlab_dir / "dev_mode/static"
+    static_lab_dir = jupyterlab_dir / "dev_mode" / "static"
 else:
-    static_lab_dir = prefix_dir / "share/jupyter/lab/static"
+    static_lab_dir = prefix_dir / "share" / "jupyter" / "lab" / "static"
 
 router.mount(
     "/static/lab",
@@ -139,7 +139,7 @@ def get_index(workspace, collaborative, dev_mode, base_url="/"):
         vendor_id = path.name.split(".")[1]
         break
     full_static_url = f"{base_url}static/lab"
-    extensions_dir = prefix_dir / "share/jupyter/labextensions"
+    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
     federated_extensions, disabled_extension = get_federated_extensions(extensions_dir)
 
     page_config = {

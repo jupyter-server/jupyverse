@@ -33,11 +33,11 @@ prefix_dir = Path(sys.prefix)
 if jlab_dev_mode:
     jlab_dir = Path(jupyterlab.__file__).parents[1] / "dev_mode"
 else:
-    jlab_dir = prefix_dir / "share/jupyter/lab"
+    jlab_dir = prefix_dir / "share" / "jupyter" / "lab"
 
 
 def init_router(router, redirect_after_root):
-    extensions_dir = prefix_dir / "share/jupyter/labextensions"
+    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
     federated_extensions, _ = get_federated_extensions(extensions_dir)
 
     for ext in federated_extensions:
@@ -66,7 +66,7 @@ def init_router(router, redirect_after_root):
 
     @router.get("/favicon.ico")
     async def get_favicon():
-        return FileResponse(Path(jupyverse.__file__).parent / "static/favicon.ico")
+        return FileResponse(Path(jupyverse.__file__).parent / "static" / "favicon.ico")
 
     @router.get("/static/notebook/components/MathJax/{rest_of_path:path}")
     async def get_mathjax(rest_of_path):
@@ -74,7 +74,9 @@ def init_router(router, redirect_after_root):
             "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/" + rest_of_path
         )
 
-    @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
+    @router.get(
+        "/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json"
+    )
     async def get_listings(user: User = Depends(current_user())):
         return {
             "blocked_extensions_uris": [],
@@ -124,9 +126,9 @@ def init_router(router, redirect_after_root):
         LOCALE = language
         package = ep.load()
         data = {}
-        for path in (Path(package.__file__).parent / f"locale/{language}/LC_MESSAGES").glob(
-            "*.json"
-        ):
+        for path in (
+            Path(package.__file__).parent / "locale" / language / "LC_MESSAGES"
+        ).glob("*.json"):
             with open(path) as f:
                 data.update({path.stem: json.load(f)})
         return {"data": data, "message": ""}
@@ -138,7 +140,7 @@ def init_router(router, redirect_after_root):
         name2,
         user: User = Depends(current_user()),
     ):
-        with open(jlab_dir / "static/package.json") as f:
+        with open(jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
         if name0 in ["@jupyterlab", "@retrolab"]:
             schemas_parent = jlab_dir
@@ -181,14 +183,14 @@ def init_router(router, redirect_after_root):
 
     @router.get("/lab/api/settings")
     async def get_settings(user: User = Depends(current_user())):
-        with open(jlab_dir / "static/package.json") as f:
+        with open(jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
         if user:
             user_settings = json.loads(user.settings)
         else:
             user_settings = {}
         settings = []
-        for path in (jlab_dir / "schemas/@jupyterlab").glob("*/*.json"):
+        for path in (jlab_dir / "schemas" / "@jupyterlab").glob("*/*.json"):
             with open(path) as f:
                 schema = json.load(f)
             key = f"{path.parent.name}:{path.stem}"
