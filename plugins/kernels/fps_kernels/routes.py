@@ -1,8 +1,8 @@
 import json
-import pathlib
 import sys
 import uuid
 from http import HTTPStatus
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
@@ -18,13 +18,13 @@ from .kernel_server.server import (  # type: ignore
     KernelServer,
     kernels,
 )
-from .models import Execution, Session
+from .models import CreateSession, Execution, Session
 
 router = APIRouter()
 
 kernelspecs: dict = {}
 sessions: dict = {}
-prefix_dir: pathlib.Path = pathlib.Path(sys.prefix)
+prefix_dir: Path = Path(sys.prefix)
 
 
 @router.on_event("shutdown")
@@ -124,12 +124,13 @@ async def create_session(
     request: Request,
     user: User = Depends(current_user(permissions={"sessions": ["write"]})),
 ):
-    create_session = await request.json()
-    kernel_name = create_session["kernel"]["name"]
+    create_session = CreateSession(**(await request.json()))
+    kernel_name = create_session.kernel.name
     kernel_server = KernelServer(
         kernelspec_path=(
             prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
         ).as_posix(),
+        kernel_cwd=str(Path(create_session.path).parent),
     )
     kernel_id = str(uuid.uuid4())
     kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
@@ -137,17 +138,17 @@ async def create_session(
     session_id = str(uuid.uuid4())
     session = {
         "id": session_id,
-        "path": create_session["path"],
-        "name": create_session["name"],
-        "type": create_session["type"],
+        "path": create_session.path,
+        "name": create_session.name,
+        "type": create_session.type,
         "kernel": {
             "id": kernel_id,
-            "name": create_session["kernel"]["name"],
+            "name": create_session.kernel.name,
             "connections": kernel_server.connections,
             "last_activity": kernel_server.last_activity["date"],
             "execution_state": kernel_server.last_activity["execution_state"],
         },
-        "notebook": {"path": create_session["path"], "name": create_session["name"]},
+        "notebook": {"path": create_session.path, "name": create_session.name},
     }
     sessions[session_id] = session
     return Session(**session)

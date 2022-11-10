@@ -4,7 +4,7 @@ import os
 import socket
 import tempfile
 import uuid
-from typing import Dict, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 import zmq
 import zmq.asyncio
@@ -62,7 +62,7 @@ def write_connection_file(
     return fname, cfg
 
 
-def read_connection_file(fname: str = "") -> cfg_t:
+def read_connection_file(fname: str) -> cfg_t:
     with open(fname, "rt") as f:
         cfg: cfg_t = json.load(f)
 
@@ -70,33 +70,40 @@ def read_connection_file(fname: str = "") -> cfg_t:
 
 
 async def launch_kernel(
-    kernelspec_path: str, connection_file_path: str, capture_output: bool
+    kernelspec_path: str, connection_file_path: str, kernel_cwd: str, capture_output: bool
 ) -> asyncio.subprocess.Process:
     with open(kernelspec_path) as f:
         kernelspec = json.load(f)
     cmd = [s.format(connection_file=connection_file_path) for s in kernelspec["argv"]]
+    if kernel_cwd:
+        prev_dir = os.getcwd()
+        os.chdir(kernel_cwd)
     if capture_output:
         p = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.STDOUT
         )
     else:
         p = await asyncio.create_subprocess_exec(*cmd)
+    if kernel_cwd:
+        os.chdir(prev_dir)
     return p
 
 
-def create_socket(channel: str, cfg: cfg_t) -> Socket:
+def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
     ip = cfg["ip"]
     port = cfg[f"{channel}_port"]
     url = f"tcp://{ip}:{port}"
     socket_type = channel_socket_types[channel]
     sock = context.socket(socket_type)
     sock.linger = 1000  # set linger to 1s to prevent hangs at exit
+    if identity:
+        sock.identity = identity
     sock.connect(url)
     return sock
 
 
-def connect_channel(channel_name: str, cfg: cfg_t) -> Socket:
-    sock = create_socket(channel_name, cfg)
+def connect_channel(channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
+    sock = create_socket(channel_name, cfg, identity)
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")
     return sock

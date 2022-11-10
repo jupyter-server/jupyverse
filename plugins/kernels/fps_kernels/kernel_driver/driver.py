@@ -2,40 +2,16 @@ import asyncio
 import os
 import time
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, cast
-
-from zmq.asyncio import Socket
+from typing import Any, Dict, List, Optional, cast
 
 from .connect import cfg_t, connect_channel, launch_kernel, read_connection_file
 from .connect import write_connection_file as _write_connection_file
 from .kernelspec import find_kernelspec
-from .message import create_message, deserialize, serialize
-
-DELIM = b"<IDS|MSG>"
+from .message import create_message, receive_message, send_message
 
 
 def deadline_to_timeout(deadline: float) -> float:
     return max(0, deadline - time.time())
-
-
-def feed_identities(msg_list: List[bytes]) -> Tuple[List[bytes], List[bytes]]:
-    idx = msg_list.index(DELIM)
-    return msg_list[:idx], msg_list[idx + 1 :]  # noqa
-
-
-def send_message(msg: Dict[str, Any], sock: Socket, key: str) -> None:
-    to_send = serialize(msg, key)
-    sock.send_multipart(to_send, copy=True)
-
-
-async def receive_message(sock: Socket, timeout: float = float("inf")) -> Optional[Dict[str, Any]]:
-    timeout *= 1000  # in ms
-    ready = await sock.poll(timeout)
-    if ready:
-        msg_list = await sock.recv_multipart()
-        idents, msg_list = feed_identities(msg_list)
-        return deserialize(msg_list)
-    return None
 
 
 class KernelDriver:
@@ -43,12 +19,14 @@ class KernelDriver:
         self,
         kernel_name: str = "",
         kernelspec_path: str = "",
+        kernel_cwd: str = "",
         connection_file: str = "",
         write_connection_file: bool = True,
         capture_kernel_output: bool = True,
     ) -> None:
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path or find_kernelspec(kernel_name)
+        self.kernel_cwd = kernel_cwd
         if not self.kernelspec_path:
             raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
         if write_connection_file:
@@ -66,9 +44,11 @@ class KernelDriver:
         for task in self.channel_tasks:
             task.cancel()
         msg = create_message("shutdown_request", content={"restart": True})
-        send_message(msg, self.control_channel, self.key)
+        await send_message(msg, self.control_channel, self.key, change_date_to_str=True)
         while True:
-            msg = cast(Dict[str, Any], await receive_message(self.control_channel))
+            msg = cast(
+                Dict[str, Any], await receive_message(self.control_channel, change_str_to_date=True)
+            )
             if msg["msg_type"] == "shutdown_reply" and msg["content"]["restart"]:
                 break
         await self._wait_for_ready(startup_timeout)
@@ -77,7 +57,10 @@ class KernelDriver:
 
     async def start(self, startup_timeout: float = float("inf"), connect: bool = True) -> None:
         self.kernel_process = await launch_kernel(
-            self.kernelspec_path, self.connection_file_path, self.capture_kernel_output
+            self.kernelspec_path,
+            self.connection_file_path,
+            self.kernel_cwd,
+            self.capture_kernel_output,
         )
         if connect:
             await self.connect(startup_timeout)
@@ -106,14 +89,14 @@ class KernelDriver:
 
     async def listen_iopub(self):
         while True:
-            msg = await receive_message(self.iopub_channel)  # type: ignore
+            msg = await receive_message(self.iopub_channel, change_str_to_date=True)  # type: ignore
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
                 self.execute_requests[msg_id]["iopub_msg"].set_result(msg)
 
     async def listen_shell(self):
         while True:
-            msg = await receive_message(self.shell_channel)  # type: ignore
+            msg = await receive_message(self.shell_channel, change_str_to_date=True)  # type: ignore
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
                 self.execute_requests[msg_id]["shell_msg"].set_result(msg)
@@ -129,14 +112,14 @@ class KernelDriver:
             return
         content = {"code": cell["source"], "silent": False}
         msg = create_message(
-            "execute_request", content, session_id=self.session_id, msg_cnt=self.msg_cnt
+            "execute_request", content, session_id=self.session_id, msg_id=str(self.msg_cnt)
         )
         if msg_id:
             msg["header"]["msg_id"] = msg_id
         else:
             msg_id = msg["header"]["msg_id"]
         self.msg_cnt += 1
-        send_message(msg, self.shell_channel, self.key)
+        await send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
         if wait_for_executed:
             deadline = time.time() + timeout
             self.execute_requests[msg_id] = {
@@ -177,16 +160,20 @@ class KernelDriver:
         new_timeout = timeout
         while True:
             msg = create_message(
-                "kernel_info_request", session_id=self.session_id, msg_cnt=self.msg_cnt
+                "kernel_info_request", session_id=self.session_id, msg_id=str(self.msg_cnt)
             )
             self.msg_cnt += 1
-            send_message(msg, self.shell_channel, self.key)
-            msg = await receive_message(self.shell_channel, new_timeout)
+            await send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
+            msg = await receive_message(
+                self.shell_channel, timeout=new_timeout, change_str_to_date=True
+            )
             if msg is None:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
             if msg["msg_type"] == "kernel_info_reply":
-                msg = await receive_message(self.iopub_channel, 0.2)
+                msg = await receive_message(
+                    self.iopub_channel, timeout=0.2, change_str_to_date=True
+                )
                 if msg is not None:
                     break
             new_timeout = deadline_to_timeout(deadline)
