@@ -119,11 +119,15 @@ def deserialize(
     return message
 
 
-async def send_message(msg: Dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False) -> None:
+async def send_message(
+    msg: Dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False
+) -> None:
     await sock.send_multipart(serialize(msg, key, change_date_to_str=change_date_to_str), copy=True)
 
 
-async def receive_message(sock: Socket, timeout: float = float("inf"), change_str_to_date: bool = False) -> Optional[Dict[str, Any]]:
+async def receive_message(
+    sock: Socket, timeout: float = float("inf"), change_str_to_date: bool = False
+) -> Optional[Dict[str, Any]]:
     timeout *= 1000  # in ms
     ready = await sock.poll(timeout)
     if ready:

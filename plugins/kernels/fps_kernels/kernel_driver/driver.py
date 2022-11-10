@@ -46,7 +46,9 @@ class KernelDriver:
         msg = create_message("shutdown_request", content={"restart": True})
         await send_message(msg, self.control_channel, self.key, change_date_to_str=True)
         while True:
-            msg = cast(Dict[str, Any], await receive_message(self.control_channel, change_str_to_date=True))
+            msg = cast(
+                Dict[str, Any], await receive_message(self.control_channel, change_str_to_date=True)
+            )
             if msg["msg_type"] == "shutdown_reply" and msg["content"]["restart"]:
                 break
         await self._wait_for_ready(startup_timeout)
@@ -162,12 +164,16 @@ class KernelDriver:
             )
             self.msg_cnt += 1
             await send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
-            msg = await receive_message(self.shell_channel, timeout=new_timeout, change_str_to_date=True)
+            msg = await receive_message(
+                self.shell_channel, timeout=new_timeout, change_str_to_date=True
+            )
             if msg is None:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
             if msg["msg_type"] == "kernel_info_reply":
-                msg = await receive_message(self.iopub_channel, timeout=0.2, change_str_to_date=True)
+                msg = await receive_message(
+                    self.iopub_channel, timeout=0.2, change_str_to_date=True
+                )
                 if msg is not None:
                     break
             new_timeout = deadline_to_timeout(deadline)
