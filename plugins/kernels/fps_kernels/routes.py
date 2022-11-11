@@ -19,12 +19,14 @@ from .kernel_server.server import (  # type: ignore
     kernels,
 )
 from .models import CreateSession, Execution, Session
+from .config import get_kernel_config
 
 router = APIRouter()
 
 kernelspecs: dict = {}
 sessions: dict = {}
 prefix_dir: Path = Path(sys.prefix)
+user_local_dir: Path = Path.home() / '.local'
 
 
 @router.on_event("shutdown")
@@ -36,19 +38,26 @@ async def stop_kernels():
 @router.get("/api/kernelspecs")
 async def get_kernelspecs(
     frontend_config=Depends(get_frontend_config),
+    kernel_config=Depends(get_kernel_config),
     user: User = Depends(current_user(permissions={"kernelspecs": ["read"]})),
 ):
-    for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
-        with open(path) as f:
-            spec = json.load(f)
-        name = path.parent.name
-        resources = {
-            f.stem: f"{frontend_config.base_url}kernelspecs/{name}/{f.name}"
-            for f in path.parent.iterdir()
-            if f.is_file() and f.name != "kernel.json"
-        }
-        kernelspecs[name] = {"name": name, "spec": spec, "resources": resources}
-    return {"default": "python3", "kernelspecs": kernelspecs}
+    kernelspec_search_path = [
+        prefix_dir / "share" / "jupyter" / "kernels",
+        user_local_dir / "share" / "jupyter" / "kernels"
+    ]
+
+    for search_path in kernelspec_search_path:
+        for path in search_path.glob("*/kernel.json"):
+            with open(path) as f:
+                spec = json.load(f)
+            name = path.parent.name
+            resources = {
+                f.stem: f"{frontend_config.base_url}kernelspecs/{name}/{f.name}"
+                for f in path.parent.iterdir()
+                if f.is_file() and f.name != "kernel.json"
+            }
+            kernelspecs[name] = {"name": name, "spec": spec, "resources": resources}
+    return {"default": f"{kernel_config.default_kernel}", "kernelspecs": kernelspecs}
 
 
 @router.get("/kernelspecs/{kernel_name}/{file_name}")

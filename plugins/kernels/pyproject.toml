@@ -32,5 +32,8 @@ skip = [ "check-links",]
 [project.entry-points.fps_router]
 fps-kernels = "fps_kernels.routes"
 
+[project.entry-points.fps_config]
+fps-kernels = "fps_kernels.config"
+
 [tool.hatch.version]
 path = "fps_kernels/__init__.py"
