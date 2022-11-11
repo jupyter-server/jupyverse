@@ -12,6 +12,7 @@ from fps_frontend.config import get_frontend_config  # type: ignore
 from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
 
+from .config import get_kernel_config
 from .kernel_driver.driver import KernelDriver  # type: ignore
 from .kernel_server.server import (  # type: ignore
     AcceptedWebSocket,
@@ -19,14 +20,13 @@ from .kernel_server.server import (  # type: ignore
     kernels,
 )
 from .models import CreateSession, Execution, Session
-from .config import get_kernel_config
 
 router = APIRouter()
 
 kernelspecs: dict = {}
 sessions: dict = {}
 prefix_dir: Path = Path(sys.prefix)
-user_local_dir: Path = Path.home() / '.local'
+user_local_dir: Path = Path.home() / ".local"
 
 
 @router.on_event("shutdown")
@@ -43,7 +43,7 @@ async def get_kernelspecs(
 ):
     kernelspec_search_path = [
         prefix_dir / "share" / "jupyter" / "kernels",
-        user_local_dir / "share" / "jupyter" / "kernels"
+        user_local_dir / "share" / "jupyter" / "kernels",
     ]
 
     for search_path in kernelspec_search_path:
