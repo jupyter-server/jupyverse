@@ -27,7 +27,6 @@ router = APIRouter()
 kernelspecs: dict = {}
 sessions: dict = {}
 prefix_dir: Path = Path(sys.prefix)
-user_local_dir: Path = Path.home() / ".local"
 
 
 @router.on_event("shutdown")
