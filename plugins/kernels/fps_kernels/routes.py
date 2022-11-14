@@ -4,7 +4,7 @@ import uuid
 from http import HTTPStatus
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Response, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
 from fps_auth_base import User, current_user, websocket_auth  # type: ignore
@@ -14,7 +14,7 @@ from starlette.requests import Request  # type: ignore
 
 from .config import get_kernel_config
 from .kernel_driver.driver import KernelDriver  # type: ignore
-from .kernel_driver.kernelspec import kernelspec_dirs, find_kernelspec
+from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
 from .kernel_server.server import (  # type: ignore
     AcceptedWebSocket,
     KernelServer,
