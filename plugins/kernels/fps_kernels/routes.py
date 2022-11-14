@@ -192,12 +192,9 @@ async def execute_cell(
         cell["outputs"] = []
 
         kernel = kernels[kernel_id]
-        kernelspec_path = (
-            prefix_dir / "share" / "jupyter" / "kernels" / kernel["name"] / "kernel.json"
-        ).as_posix()
         if not kernel["driver"]:
             kernel["driver"] = driver = KernelDriver(
-                kernelspec_path=kernelspec_path,
+                kernelspec_path=find_kernelspec(kernel["name"]),
                 write_connection_file=False,
                 connection_file=kernel["server"].connection_file_path,
             )
