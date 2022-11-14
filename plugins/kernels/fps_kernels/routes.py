@@ -4,7 +4,7 @@ import uuid
 from http import HTTPStatus
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, HTTPException
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
 from fps_auth_base import User, current_user, websocket_auth  # type: ignore
@@ -14,6 +14,7 @@ from starlette.requests import Request  # type: ignore
 
 from .config import get_kernel_config
 from .kernel_driver.driver import KernelDriver  # type: ignore
+from .kernel_driver.kernelspec import kernelspec_dirs, find_kernelspec
 from .kernel_server.server import (  # type: ignore
     AcceptedWebSocket,
     KernelServer,
@@ -41,13 +42,8 @@ async def get_kernelspecs(
     kernel_config=Depends(get_kernel_config),
     user: User = Depends(current_user(permissions={"kernelspecs": ["read"]})),
 ):
-    kernelspec_search_path = [
-        prefix_dir / "share" / "jupyter" / "kernels",
-        user_local_dir / "share" / "jupyter" / "kernels",
-    ]
-
-    for search_path in kernelspec_search_path:
-        for path in search_path.glob("*/kernel.json"):
+    for search_path in kernelspec_dirs():
+        for path in Path(search_path).glob("*/kernel.json"):
             with open(path) as f:
                 spec = json.load(f)
             name = path.parent.name
@@ -66,7 +62,11 @@ async def get_kernelspec(
     file_name,
     user: User = Depends(current_user()),
 ):
-    return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
+    for search_path in kernelspec_dirs():
+        file_path = Path(search_path) / kernel_name / file_name
+        if file_path.exists():
+            return FileResponse(file_path)
+    raise HTTPException(404)
 
 
 @router.get("/api/kernels")
@@ -136,9 +136,7 @@ async def create_session(
     create_session = CreateSession(**(await request.json()))
     kernel_name = create_session.kernel.name
     kernel_server = KernelServer(
-        kernelspec_path=(
-            prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
-        ).as_posix(),
+        kernelspec_path=find_kernelspec(kernel_name),
         kernel_cwd=str(Path(create_session.path).parent),
     )
     kernel_id = str(uuid.uuid4())
