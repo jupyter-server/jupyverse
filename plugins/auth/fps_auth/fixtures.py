@@ -75,7 +75,7 @@ def authenticated_client(client, permissions):
     # we should now have a cookie
     assert "fastapiusersauth" in client.cookies
     # check our identity, since we're logged in
-    response = client.request('GET', "/api/me", json={"permissions": permissions})
+    response = client.request("GET", "/api/me", json={"permissions": permissions})
     assert response.status_code == 200
     me = response.json()
     assert me["identity"]["username"] == username
