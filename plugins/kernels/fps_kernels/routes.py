@@ -52,7 +52,7 @@ async def get_kernelspecs(
                 if f.is_file() and f.name != "kernel.json"
             }
             kernelspecs[name] = {"name": name, "spec": spec, "resources": resources}
-    return {"default": f"{kernel_config.default_kernel}", "kernelspecs": kernelspecs}
+    return {"default": kernel_config.default_kernel, "kernelspecs": kernelspecs}
 
 
 @router.get("/kernelspecs/{kernel_name}/{file_name}")
@@ -65,7 +65,7 @@ async def get_kernelspec(
         file_path = Path(search_path) / kernel_name / file_name
         if file_path.exists():
             return FileResponse(file_path)
-    raise HTTPException(404)
+    raise HTTPException(status_code=404, detail=f"Kernelspec {kernel_name}/{file_name} not found")
 
 
 @router.get("/api/kernels")
@@ -135,7 +135,7 @@ async def create_session(
     create_session = CreateSession(**(await request.json()))
     kernel_name = create_session.kernel.name
     kernel_server = KernelServer(
-        kernelspec_path=find_kernelspec(kernel_name),
+        kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
         kernel_cwd=str(Path(create_session.path).parent),
     )
     kernel_id = str(uuid.uuid4())
@@ -194,7 +194,7 @@ async def execute_cell(
         kernel = kernels[kernel_id]
         if not kernel["driver"]:
             kernel["driver"] = driver = KernelDriver(
-                kernelspec_path=find_kernelspec(kernel["name"]),
+                kernelspec_path=Path(find_kernelspec(kernel["name"])).as_posix(),
                 write_connection_file=False,
                 connection_file=kernel["server"].connection_file_path,
             )
