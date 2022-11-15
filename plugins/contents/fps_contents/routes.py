@@ -1,18 +1,17 @@
 import json
-import os
 import shutil
-from datetime import datetime
 from http import HTTPStatus
 from pathlib import Path
-from typing import Dict, List, Optional, Union, cast
+from typing import Optional
 
 from anyio import open_file
 from fastapi import APIRouter, Depends, HTTPException, Response
-from fps.hooks import register_router  # type: ignore
-from fps_auth_base import User, current_user  # type: ignore
 from starlette.requests import Request  # type: ignore
 
-from .models import Checkpoint, Content, CreateContent, RenameContent, SaveContent
+from fps.hooks import register_router  # type: ignore
+from fps_auth_base import User, current_user  # type: ignore
+from .models import Checkpoint, CreateContent, RenameContent, SaveContent
+from .utils import get_file_modification_time, get_available_path, read_content, write_content
 
 router = APIRouter()
 
@@ -22,7 +21,7 @@ router = APIRouter()
     status_code=201,
 )
 async def create_checkpoint(
-    path, user: User = Depends(current_user(permissions={"contents": ["write"]}))
+        path, user: User = Depends(current_user(permissions={"contents": ["write"]}))
 ):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -41,9 +40,9 @@ async def create_checkpoint(
     status_code=201,
 )
 async def create_content(
-    path: Optional[str],
-    request: Request,
-    user: User = Depends(current_user(permissions={"contents": ["write"]})),
+        path: Optional[str],
+        request: Request,
+        user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     create_content = CreateContent(**(await request.json()))
     content_path = Path(create_content.path)
@@ -75,15 +74,15 @@ async def create_content(
 
 @router.get("/api/contents")
 async def get_root_content(
-    content: int,
-    user: User = Depends(current_user(permissions={"contents": ["read"]})),
+        content: int,
+        user: User = Depends(current_user(permissions={"contents": ["read"]})),
 ):
     return await read_content("", bool(content))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
 async def get_checkpoint(
-    path, user: User = Depends(current_user(permissions={"contents": ["read"]}))
+        path, user: User = Depends(current_user(permissions={"contents": ["read"]}))
 ):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -95,19 +94,19 @@ async def get_checkpoint(
 
 @router.get("/api/contents/{path:path}")
 async def get_content(
-    path: str,
-    content: int = 0,
-    user: User = Depends(current_user(permissions={"contents": ["read"]})),
+        path: str,
+        content: int = 0,
+        user: User = Depends(current_user(permissions={"contents": ["read"]})),
 ):
     return await read_content(path, bool(content))
 
 
 @router.put("/api/contents/{path:path}")
 async def save_content(
-    path,
-    request: Request,
-    response: Response,
-    user: User = Depends(current_user(permissions={"contents": ["write"]})),
+        path,
+        request: Request,
+        response: Response,
+        user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     content = SaveContent(**(await request.json()))
     try:
@@ -122,8 +121,8 @@ async def save_content(
     status_code=204,
 )
 async def delete_content(
-    path,
-    user: User = Depends(current_user(permissions={"contents": ["write"]})),
+        path,
+        user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     p = Path(path)
     if p.exists():
@@ -136,145 +135,13 @@ async def delete_content(
 
 @router.patch("/api/contents/{path:path}")
 async def rename_content(
-    path,
-    request: Request,
-    user: User = Depends(current_user(permissions={"contents": ["write"]})),
+        path,
+        request: Request,
+        user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)
     return await read_content(rename_content.path, False)
-
-
-def get_file_modification_time(path: Path):
-    if path.exists():
-        return datetime.utcfromtimestamp(path.stat().st_mtime).isoformat() + "Z"
-
-
-def get_file_creation_time(path: Path):
-    if path.exists():
-        return datetime.utcfromtimestamp(path.stat().st_ctime).isoformat() + "Z"
-
-
-def get_file_size(path: Path) -> Optional[int]:
-    if path.exists():
-        return path.stat().st_size
-    raise HTTPException(status_code=404, detail="Item not found")
-
-
-def is_file_writable(path: Path) -> bool:
-    if path.exists():
-        if path.is_dir():
-            # FIXME
-            return True
-        else:
-            return os.access(path, os.W_OK)
-    return False
-
-
-async def read_content(path: Union[str, Path], get_content: bool, as_json: bool = False) -> Content:
-    if isinstance(path, str):
-        path = Path(path)
-    content: Optional[Union[str, Dict, List[Dict]]] = None
-    if get_content:
-        if path.is_dir():
-            content = [
-                (await read_content(subpath, get_content=False)).dict()
-                for subpath in path.iterdir()
-                if not subpath.name.startswith(".")
-            ]
-        elif path.is_file() or path.is_symlink():
-            try:
-                async with await open_file(path) as f:
-                    content = await f.read()
-                if as_json:
-                    content = json.loads(content)
-            except Exception:
-                raise HTTPException(status_code=404, detail="Item not found")
-    format: Optional[str] = None
-    if path.is_dir():
-        size = None
-        type = "directory"
-        format = "json"
-        mimetype = None
-    elif path.is_file() or path.is_symlink():
-        size = get_file_size(path)
-        if path.suffix == ".ipynb":
-            type = "notebook"
-            format = None
-            mimetype = None
-            if content is not None:
-                nb: dict
-                if as_json:
-                    content = cast(Dict, content)
-                    nb = content
-                else:
-                    content = cast(str, content)
-                    nb = json.loads(content)
-                for cell in nb["cells"]:
-                    if "metadata" not in cell:
-                        cell["metadata"] = {}
-                    cell["metadata"].update({"trusted": False})
-                if not as_json:
-                    content = json.dumps(nb)
-        elif path.suffix == ".json":
-            type = "json"
-            format = "text"
-            mimetype = "application/json"
-        else:
-            type = "file"
-            format = None
-            mimetype = "text/plain"
-    else:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    return Content(
-        **{
-            "name": path.name,
-            "path": path.as_posix(),
-            "last_modified": get_file_modification_time(path),
-            "created": get_file_creation_time(path),
-            "content": content,
-            "format": format,
-            "mimetype": mimetype,
-            "size": size,
-            "writable": is_file_writable(path),
-            "type": type,
-        }
-    )
-
-
-async def write_content(content: Union[SaveContent, Dict]) -> None:
-    if not isinstance(content, SaveContent):
-        content = SaveContent(**content)
-    async with await open_file(content.path, "w") as f:
-        if content.format == "json":
-            dict_content = cast(Dict, content.content)
-            if content.type == "notebook":
-                # see https://github.com/jupyterlab/jupyterlab/issues/11005
-                if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
-                    del dict_content["metadata"]["orig_nbformat"]
-            await f.write(json.dumps(dict_content, indent=2))
-        else:
-            content.content = cast(str, content.content)
-            await f.write(content.content)
-
-
-def get_available_path(path: Path, sep: str = ""):
-    directory = path.parent
-    name = Path(path.name)
-    i = None
-    while True:
-        if i is None:
-            i_str = ""
-            i = 1
-        else:
-            i_str = str(i)
-            i += 1
-        if i_str:
-            i_str = sep + i_str
-        available_path = directory / (name.stem + i_str + name.suffix)
-        if not available_path.exists():
-            return available_path
 
 
 r = register_router(router)

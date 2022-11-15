@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from fastapi import APIRouter, Depends, WebSocketDisconnect
 from fps.hooks import register_router  # type: ignore
-from fps_contents.routes import read_content, write_content  # type: ignore
+from fps_contents.utils import read_content, write_content  # type: ignore
 
 try:
     from fps_contents.watchfiles import awatch
