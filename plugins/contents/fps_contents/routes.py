@@ -6,12 +6,17 @@ from typing import Optional
 
 from anyio import open_file
 from fastapi import APIRouter, Depends, HTTPException, Response
-from starlette.requests import Request  # type: ignore
-
 from fps.hooks import register_router  # type: ignore
 from fps_auth_base import User, current_user  # type: ignore
+from starlette.requests import Request  # type: ignore
+
 from .models import Checkpoint, CreateContent, RenameContent, SaveContent
-from .utils import get_file_modification_time, get_available_path, read_content, write_content
+from .utils import (
+    get_available_path,
+    get_file_modification_time,
+    read_content,
+    write_content,
+)
 
 router = APIRouter()
 
@@ -21,7 +26,7 @@ router = APIRouter()
     status_code=201,
 )
 async def create_checkpoint(
-        path, user: User = Depends(current_user(permissions={"contents": ["write"]}))
+    path, user: User = Depends(current_user(permissions={"contents": ["write"]}))
 ):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -40,9 +45,9 @@ async def create_checkpoint(
     status_code=201,
 )
 async def create_content(
-        path: Optional[str],
-        request: Request,
-        user: User = Depends(current_user(permissions={"contents": ["write"]})),
+    path: Optional[str],
+    request: Request,
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     create_content = CreateContent(**(await request.json()))
     content_path = Path(create_content.path)
@@ -74,15 +79,15 @@ async def create_content(
 
 @router.get("/api/contents")
 async def get_root_content(
-        content: int,
-        user: User = Depends(current_user(permissions={"contents": ["read"]})),
+    content: int,
+    user: User = Depends(current_user(permissions={"contents": ["read"]})),
 ):
     return await read_content("", bool(content))
 
 
 @router.get("/api/contents/{path:path}/checkpoints")
 async def get_checkpoint(
-        path, user: User = Depends(current_user(permissions={"contents": ["read"]}))
+    path, user: User = Depends(current_user(permissions={"contents": ["read"]}))
 ):
     src_path = Path(path)
     dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -94,19 +99,19 @@ async def get_checkpoint(
 
 @router.get("/api/contents/{path:path}")
 async def get_content(
-        path: str,
-        content: int = 0,
-        user: User = Depends(current_user(permissions={"contents": ["read"]})),
+    path: str,
+    content: int = 0,
+    user: User = Depends(current_user(permissions={"contents": ["read"]})),
 ):
     return await read_content(path, bool(content))
 
 
 @router.put("/api/contents/{path:path}")
 async def save_content(
-        path,
-        request: Request,
-        response: Response,
-        user: User = Depends(current_user(permissions={"contents": ["write"]})),
+    path,
+    request: Request,
+    response: Response,
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     content = SaveContent(**(await request.json()))
     try:
@@ -121,8 +126,8 @@ async def save_content(
     status_code=204,
 )
 async def delete_content(
-        path,
-        user: User = Depends(current_user(permissions={"contents": ["write"]})),
+    path,
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     p = Path(path)
     if p.exists():
@@ -135,9 +140,9 @@ async def delete_content(
 
 @router.patch("/api/contents/{path:path}")
 async def rename_content(
-        path,
-        request: Request,
-        user: User = Depends(current_user(permissions={"contents": ["write"]})),
+    path,
+    request: Request,
+    user: User = Depends(current_user(permissions={"contents": ["write"]})),
 ):
     rename_content = RenameContent(**(await request.json()))
     Path(path).rename(rename_content.path)
