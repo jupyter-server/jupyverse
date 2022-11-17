@@ -4,7 +4,7 @@ import uuid
 from http import HTTPStatus
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
 from fps.hooks import register_router  # type: ignore
 from fps_auth_base import User, current_user, websocket_auth  # type: ignore
@@ -12,7 +12,9 @@ from fps_frontend.config import get_frontend_config  # type: ignore
 from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
 
+from .config import get_kernel_config
 from .kernel_driver.driver import KernelDriver  # type: ignore
+from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
 from .kernel_server.server import (  # type: ignore
     AcceptedWebSocket,
     KernelServer,
@@ -36,19 +38,21 @@ async def stop_kernels():
 @router.get("/api/kernelspecs")
 async def get_kernelspecs(
     frontend_config=Depends(get_frontend_config),
+    kernel_config=Depends(get_kernel_config),
     user: User = Depends(current_user(permissions={"kernelspecs": ["read"]})),
 ):
-    for path in (prefix_dir / "share" / "jupyter" / "kernels").glob("*/kernel.json"):
-        with open(path) as f:
-            spec = json.load(f)
-        name = path.parent.name
-        resources = {
-            f.stem: f"{frontend_config.base_url}kernelspecs/{name}/{f.name}"
-            for f in path.parent.iterdir()
-            if f.is_file() and f.name != "kernel.json"
-        }
-        kernelspecs[name] = {"name": name, "spec": spec, "resources": resources}
-    return {"default": "python3", "kernelspecs": kernelspecs}
+    for search_path in kernelspec_dirs():
+        for path in Path(search_path).glob("*/kernel.json"):
+            with open(path) as f:
+                spec = json.load(f)
+            name = path.parent.name
+            resources = {
+                f.stem: f"{frontend_config.base_url}kernelspecs/{name}/{f.name}"
+                for f in path.parent.iterdir()
+                if f.is_file() and f.name != "kernel.json"
+            }
+            kernelspecs[name] = {"name": name, "spec": spec, "resources": resources}
+    return {"default": kernel_config.default_kernel, "kernelspecs": kernelspecs}
 
 
 @router.get("/kernelspecs/{kernel_name}/{file_name}")
@@ -57,7 +61,11 @@ async def get_kernelspec(
     file_name,
     user: User = Depends(current_user()),
 ):
-    return FileResponse(prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / file_name)
+    for search_path in kernelspec_dirs():
+        file_path = Path(search_path) / kernel_name / file_name
+        if file_path.exists():
+            return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail=f"Kernelspec {kernel_name}/{file_name} not found")
 
 
 @router.get("/api/kernels")
@@ -127,9 +135,7 @@ async def create_session(
     create_session = CreateSession(**(await request.json()))
     kernel_name = create_session.kernel.name
     kernel_server = KernelServer(
-        kernelspec_path=(
-            prefix_dir / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
-        ).as_posix(),
+        kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
         kernel_cwd=str(Path(create_session.path).parent),
     )
     kernel_id = str(uuid.uuid4())
@@ -186,12 +192,9 @@ async def execute_cell(
         cell["outputs"] = []
 
         kernel = kernels[kernel_id]
-        kernelspec_path = (
-            prefix_dir / "share" / "jupyter" / "kernels" / kernel["name"] / "kernel.json"
-        ).as_posix()
         if not kernel["driver"]:
             kernel["driver"] = driver = KernelDriver(
-                kernelspec_path=kernelspec_path,
+                kernelspec_path=Path(find_kernelspec(kernel["name"])).as_posix(),
                 write_connection_file=False,
                 connection_file=kernel["server"].connection_file_path,
             )

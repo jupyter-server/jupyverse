@@ -9,7 +9,7 @@ keywords = ["jupyter", "server", "fastapi", "pluggy", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
-    "fastapi>=0.82.0",
+    "fastapi>=0.87.0",
     "fps>=0.0.19",
     "fps-uvicorn>=0.0.19",
     "fps-auth-base>=0.0.42",
@@ -57,7 +57,7 @@ pre-install-commands = [
   "pip install -e ./plugins/terminals",
   "pip install -e ./plugins/yjs",
 ]
-dependencies = ["fastapi>=0.82.0"]
+dependencies = ["fastapi>=0.87.0"]
 features = ["test"]
 
 [tool.hatch.envs.dev.overrides]
