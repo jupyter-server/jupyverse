@@ -1,14 +1,12 @@
 import asyncio
 import logging
-from pathlib import Path
 from typing import Callable, Dict, List, Optional
 from uuid import uuid4
 
 import aiosqlite
-from aiopath import AsyncPath  # type: ignore
+from anyio import Path
 from fps.logging import get_configured_logger  # type: ignore
 from watchfiles import Change, awatch
-
 
 watchfiles_logger = get_configured_logger("watchfiles.main")
 watchfiles_logger.setLevel(logging.CRITICAL)
@@ -34,7 +32,8 @@ class Watcher:
 
 
 class Singleton(type):
-    _instances = {}
+    _instances: Dict = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
@@ -72,7 +71,7 @@ class FileIdManager(metaclass=Singleton):
     async def index(self, path: str) -> Optional[str]:
         await self.initialized.wait()
         async with aiosqlite.connect(self.db_path) as db:
-            apath = AsyncPath(path)
+            apath = Path(path)
             if not await apath.exists():
                 return None
 
@@ -93,7 +92,7 @@ class FileIdManager(metaclass=Singleton):
 
         # index files
         async with aiosqlite.connect(self.db_path) as db:
-            async for path in AsyncPath().rglob("*"):
+            async for path in Path().rglob("*"):
                 idx = uuid4().hex
                 mtime = (await path.stat()).st_mtime
                 await db.execute("INSERT INTO fileids VALUES (?, ?, ?)", (idx, str(path), mtime))
@@ -105,7 +104,7 @@ class FileIdManager(metaclass=Singleton):
                 added_paths = []
                 for change, changed_path in changes:
                     # get relative path
-                    changed_path = AsyncPath(changed_path).relative_to(Path().absolute())
+                    changed_path = Path(changed_path).relative_to(await Path().absolute())
                     changed_path_str = str(changed_path)
 
                     if change == Change.deleted:
@@ -134,7 +133,9 @@ class FileIdManager(metaclass=Singleton):
                                 logger.debug("File %s is not indexed, ignoring", changed_path_str)
                                 continue
                         mtime = (await changed_path.stat()).st_mtime
-                        await db.execute("UPDATE fileids SET mtime = ? WHERE path = ?", (mtime, changed_path_str))
+                        await db.execute(
+                            "UPDATE fileids SET mtime = ? WHERE path = ?", (mtime, changed_path_str)
+                        )
 
                 for path in deleted_paths + added_paths:
                     await db.execute("DELETE FROM fileids WHERE path = ?", (path,))
@@ -143,7 +144,7 @@ class FileIdManager(metaclass=Singleton):
                 for change in changes:
                     changed_path = change[1]
                     # get relative path
-                    changed_path = str(Path(changed_path).relative_to(Path().absolute()))
+                    changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
                     for watcher in self.watchers.get(changed_path, []):
                         watcher.notify(change)
 
@@ -163,7 +164,7 @@ async def get_mtime(path, db) -> Optional[float]:
             # deleted file is not in database, shouldn't happen
             return None
     try:
-        mtime = (await AsyncPath(path).stat()).st_mtime
+        mtime = (await Path(path).stat()).st_mtime
     except FileNotFoundError:
         return None
     return mtime

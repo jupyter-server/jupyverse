@@ -239,8 +239,14 @@ class YDocWebSocketHandler:
     async def watch_file(self):
         if has_watch:
             file_format, file_type, file_path = await self.get_file_info()
-            async for changes in get_watch()(file_path):
-                await self.maybe_load_document()
+            while True:
+                async for changes in get_watch()(file_path):
+                    file_format, file_type, new_file_path = await self.get_file_info()
+                    if new_file_path != file_path:
+                        # file was renamed
+                        file_path = new_file_path
+                        break
+                    await self.maybe_load_document()
         else:
             # contents plugin doesn't provide watcher, fall back to polling
             poll_interval = 1  # FIXME: pass in config
