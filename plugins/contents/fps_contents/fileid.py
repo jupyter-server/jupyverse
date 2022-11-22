@@ -1,11 +1,18 @@
 import asyncio
+import logging
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 from uuid import uuid4
 
 import aiosqlite
 from aiopath import AsyncPath  # type: ignore
+from fps.logging import get_configured_logger  # type: ignore
 from watchfiles import Change, awatch
+
+
+watchfiles_logger = get_configured_logger("watchfiles.main")
+watchfiles_logger.setLevel(logging.CRITICAL)
+logger = get_configured_logger("contents")
 
 
 class Watcher:
@@ -26,7 +33,15 @@ class Watcher:
         self._event.set()
 
 
-class FileIdManager:
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class FileIdManager(metaclass=Singleton):
 
     db_path: str
     initialized: asyncio.Event
@@ -69,12 +84,14 @@ class FileIdManager:
 
     async def watch_files(self):
         async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("DROP TABLE IF EXISTS fileids")
             await db.execute(
-                "CREATE TABLE IF NOT EXISTS fileids "
-                "(id TEXT PRIMARY KEY, path TEXT NOT NULL, mtime REAL NOT NULL)"
+                "CREATE TABLE fileids "
+                "(id TEXT PRIMARY KEY, path TEXT NOT NULL UNIQUE, mtime REAL NOT NULL)"
             )
             await db.commit()
 
+        # index files
         async with aiosqlite.connect(self.db_path) as db:
             async for path in AsyncPath().rglob("*"):
                 idx = uuid4().hex
@@ -88,21 +105,36 @@ class FileIdManager:
                 added_paths = []
                 for change, changed_path in changes:
                     # get relative path
-                    changed_path = str(Path(changed_path).relative_to(Path().absolute()))
+                    changed_path = AsyncPath(changed_path).relative_to(Path().absolute())
+                    changed_path_str = str(changed_path)
 
                     if change == Change.deleted:
+                        logger.debug("File %s was deleted", changed_path_str)
                         async with db.execute(
-                            "SELECT * FROM fileids WHERE path = ?", (changed_path,)
+                            "SELECT COUNT(*) FROM fileids WHERE path = ?", (changed_path_str,)
                         ) as cursor:
-                            async for _ in cursor:
-                                break
-                            else:
+                            if not (await cursor.fetchone())[0]:
                                 # path is not indexed, ignore
+                                logger.debug("File %s is not indexed, ignoring", changed_path_str)
                                 continue
                         # path is indexed
-                        await maybe_rename(db, changed_path, deleted_paths, added_paths, False)
+                        await maybe_rename(db, changed_path_str, deleted_paths, added_paths, False)
                     elif change == Change.added:
-                        await maybe_rename(db, changed_path, added_paths, deleted_paths, True)
+                        logger.debug("File %s was added", changed_path_str)
+                        await maybe_rename(db, changed_path_str, added_paths, deleted_paths, True)
+                    elif change == Change.modified:
+                        logger.debug("File %s was modified", changed_path_str)
+                        if changed_path_str == self.db_path:
+                            continue
+                        async with db.execute(
+                            "SELECT COUNT(*) FROM fileids WHERE path = ?", (changed_path_str,)
+                        ) as cursor:
+                            if not (await cursor.fetchone())[0]:
+                                # path is not indexed, ignore
+                                logger.debug("File %s is not indexed, ignoring", changed_path_str)
+                                continue
+                        mtime = (await changed_path.stat()).st_mtime
+                        await db.execute("UPDATE fileids SET mtime = ? WHERE path = ?", (mtime, changed_path_str))
 
                 for path in deleted_paths + added_paths:
                     await db.execute("DELETE FROM fileids WHERE path = ?", (path,))
@@ -125,8 +157,8 @@ class FileIdManager:
 
 async def get_mtime(path, db) -> Optional[float]:
     if db:
-        async with db.execute("SELECT * FROM fileids WHERE path = ?", (path,)) as cursor:
-            async for _, _, mtime in cursor:
+        async with db.execute("SELECT mtime FROM fileids WHERE path = ?", (path,)) as cursor:
+            async for mtime, in cursor:
                 return mtime
             # deleted file is not in database, shouldn't happen
             return None
@@ -154,22 +186,12 @@ async def maybe_rename(
             path1, path2 = changed_path, other_path
             if is_added_path:
                 path1, path2 = path2, path1
-            await db.execute("UPDATE fileids SET path = REPLACE(path, ?, ?)", (path1, path2))
+            logger.debug("File %s was renamed to %s", path1, path2)
+            await db.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
             other_paths.remove(other_path)
             return
     changed_paths.append(changed_path)
 
 
-FILE_ID_MANAGER: Optional[FileIdManager] = None
-
-
-def get_file_id_manager() -> FileIdManager:
-    global FILE_ID_MANAGER
-    if FILE_ID_MANAGER is None:
-        FILE_ID_MANAGER = FileIdManager()
-    assert FILE_ID_MANAGER is not None
-    return FILE_ID_MANAGER
-
-
 def get_watch() -> Callable[[str], Watcher]:
-    return get_file_id_manager().watch
+    return FileIdManager().watch

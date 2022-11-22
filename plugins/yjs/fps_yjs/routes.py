@@ -15,7 +15,7 @@ from fastapi import (
 from fastapi.responses import PlainTextResponse
 from fps.hooks import register_router  # type: ignore
 from fps_auth_base import User, current_user
-from fps_contents.fileid import get_file_id_manager
+from fps_contents.fileid import FileIdManager
 from fps_contents.routes import read_content, write_content  # type: ignore
 
 try:
@@ -47,6 +47,12 @@ router = APIRouter()
 
 def to_datetime(iso_date: str) -> datetime:
     return datetime.fromisoformat(iso_date.rstrip("Z"))
+
+
+@router.on_event("startup")
+async def startup():
+    # start indexing in the background
+    FileIdManager()
 
 
 @router.websocket("/api/yjs/{path:path}")
@@ -143,7 +149,7 @@ class YDocWebSocketHandler:
     async def get_file_info(self) -> Tuple[str, str, str]:
         room_name = self.websocket_server.get_room_name(self.room)
         file_format, file_type, file_id = room_name.split(":", 2)
-        file_path = await get_file_id_manager().get_path(file_id)
+        file_path = await FileIdManager().get_path(file_id)
         if file_path is None:
             raise RuntimeError(f"File {self.room.document.path} cannot be found anymore")
         if file_path != self.room.document.path:
@@ -323,11 +329,11 @@ async def create_roomid(
     # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
     create_room_id = CreateRoomId(**(await request.json()))
     ws_url = f"{create_room_id.format}:{create_room_id.type}:"
-    idx = await get_file_id_manager().get_id(path)
+    idx = await FileIdManager().get_id(path)
     if idx is not None:
         return ws_url + idx
 
-    idx = await get_file_id_manager().index(path)
+    idx = await FileIdManager().index(path)
     if idx is None:
         raise HTTPException(status_code=404, detail=f"File {path} does not exist")
 
