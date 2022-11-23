@@ -1,68 +1,71 @@
+import functools
+import operator
 import os
 import sys
+from pathlib import Path
+from typing import Dict, List
 
 from .paths import jupyter_data_dir
 
 if os.name == "nt":
+    SYSTEM_JUPYTER_PATH = []
     programdata = os.environ.get("PROGRAMDATA", None)
     if programdata:
-        SYSTEM_JUPYTER_PATH = [os.path.join(programdata, "jupyter")]
-    else:  # PROGRAMDATA is not defined by default on XP
-        SYSTEM_JUPYTER_PATH = [os.path.join(sys.prefix, "share", "jupyter")]
+        SYSTEM_JUPYTER_PATH.append(Path(programdata) / "jupyter")
 else:
     SYSTEM_JUPYTER_PATH = [
-        "/usr/local/share/jupyter",
-        "/usr/share/jupyter",
+        Path("/usr/local/share/jupyter"),
+        Path("/usr/share/jupyter"),
     ]
 
-ENV_JUPYTER_PATH = [os.path.join(sys.prefix, "share", "jupyter")]
+ENV_JUPYTER_PATH = Path(sys.prefix) / "share" / "jupyter"
 
 
-def jupyter_path(*subdirs):
+def jupyter_path(*subdirs) -> List[Path]:
     paths = []
     # highest priority is env
     if os.environ.get("JUPYTER_PATH"):
-        paths.extend(p.rstrip(os.sep) for p in os.environ["JUPYTER_PATH"].split(os.pathsep))
+        paths.append(Path(os.environ["JUPYTER_PATH"]))
     # then user dir
     paths.append(jupyter_data_dir())
     # then sys.prefix
-    for p in ENV_JUPYTER_PATH:
-        if p not in SYSTEM_JUPYTER_PATH:
-            paths.append(p)
+    if ENV_JUPYTER_PATH not in SYSTEM_JUPYTER_PATH:
+        paths.append(ENV_JUPYTER_PATH)
     # finally, system
     paths.extend(SYSTEM_JUPYTER_PATH)
+    paths = [p for p in paths if p.is_dir()]
 
     # add subdir, if requested
     if subdirs:
-        paths = [os.path.join(p, *subdirs) for p in paths]
+        paths = [functools.reduce(operator.truediv, [p, *subdirs]) for p in paths]
     return paths
 
 
-def kernelspec_dirs():
+def kernelspec_dirs() -> List[Path]:
     return jupyter_path("kernels")
 
 
-def _is_kernel_dir(path):
-    return os.path.isdir(path) and os.path.isfile(os.path.join(path, "kernel.json"))
+# def _is_kernel_dir(path: Path) -> bool:
+#     return path.is_dir() and (path / "kernel.json").is_file()
 
 
-def _list_kernels_in(kernel_dir):
-    if kernel_dir is None or not os.path.isdir(kernel_dir):
+def _list_kernels_in(kernel_dir: Path) -> Dict[str, Path]:
+    if not kernel_dir.is_dir():
         return {}
     kernels = {}
-    for f in os.listdir(kernel_dir):
-        path = os.path.join(kernel_dir, f)
-        if _is_kernel_dir(path):
-            key = f.lower()
-            kernels[key] = path
+    for path in kernel_dir.glob("*/kernel.json"):
+        key = path.parent.name.lower()
+        kernels[key] = path.parent
     return kernels
 
 
-def find_kernelspec(kernel_name):
+def find_kernelspec(kernel_name: str) -> str:
     d = {}
     for kernel_dir in kernelspec_dirs():
         kernels = _list_kernels_in(kernel_dir)
         for kname, spec in kernels.items():
             if kname not in d:
-                d[kname] = os.path.join(spec, "kernel.json")
-    return d.get(kernel_name, "")
+                d[kname] = spec / "kernel.json"
+    if kernel_name in d:
+        return d[kernel_name].as_posix()
+    return ""

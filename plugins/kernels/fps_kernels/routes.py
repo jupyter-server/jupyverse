@@ -15,11 +15,8 @@ from starlette.requests import Request  # type: ignore
 from .config import get_kernel_config
 from .kernel_driver.driver import KernelDriver  # type: ignore
 from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
-from .kernel_server.server import (  # type: ignore
-    AcceptedWebSocket,
-    KernelServer,
-    kernels,
-)
+from .kernel_server.server import AcceptedWebSocket  # type: ignore
+from .kernel_server.server import KernelServer, kernels
 from .models import CreateSession, Execution, Session
 
 router = APIRouter()
@@ -65,7 +62,9 @@ async def get_kernelspec(
         file_path = Path(search_path) / kernel_name / file_name
         if file_path.exists():
             return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail=f"Kernelspec {kernel_name}/{file_name} not found")
+    raise HTTPException(
+        status_code=404, detail=f"Kernelspec {kernel_name}/{file_name} not found"
+    )
 
 
 @router.get("/api/kernels")
@@ -119,7 +118,9 @@ async def get_sessions(
         kernel_id = session["kernel"]["id"]
         kernel_server = kernels[kernel_id]["server"]
         session["kernel"]["last_activity"] = kernel_server.last_activity["date"]
-        session["kernel"]["execution_state"] = kernel_server.last_activity["execution_state"]
+        session["kernel"]["execution_state"] = kernel_server.last_activity[
+            "execution_state"
+        ]
     return list(sessions.values())
 
 
@@ -135,7 +136,7 @@ async def create_session(
     create_session = CreateSession(**(await request.json()))
     kernel_name = create_session.kernel.name
     kernel_server = KernelServer(
-        kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
+        kernelspec_path=find_kernelspec(kernel_name),
         kernel_cwd=str(Path(create_session.path).parent),
     )
     kernel_id = str(uuid.uuid4())
@@ -187,14 +188,16 @@ async def execute_cell(
     r = await request.json()
     execution = Execution(**r)
     if kernel_id in kernels:
-        ynotebook = YDocWebSocketHandler.websocket_server.get_room(execution.document_id).document
+        ynotebook = YDocWebSocketHandler.websocket_server.get_room(
+            execution.document_id
+        ).document
         cell = ynotebook.get_cell(execution.cell_idx)
         cell["outputs"] = []
 
         kernel = kernels[kernel_id]
         if not kernel["driver"]:
             kernel["driver"] = driver = KernelDriver(
-                kernelspec_path=Path(find_kernelspec(kernel["name"])).as_posix(),
+                kernelspec_path=find_kernelspec(kernel["name"]),
                 write_connection_file=False,
                 connection_file=kernel["server"].connection_file_path,
             )
