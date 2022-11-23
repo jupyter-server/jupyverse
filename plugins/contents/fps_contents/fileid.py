@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from typing import Dict, List, Optional
 from uuid import uuid4
 
@@ -8,8 +7,7 @@ from anyio import Path
 from fps.logging import get_configured_logger  # type: ignore
 from watchfiles import Change, awatch
 
-watchfiles_logger = get_configured_logger("watchfiles.main")
-watchfiles_logger.setLevel(logging.CRITICAL)
+watchfiles_logger = get_configured_logger("watchfiles.main", "warning")
 logger = get_configured_logger("contents")
 
 
@@ -150,8 +148,7 @@ class FileIdManager(metaclass=Singleton):
 
     def watch(self, path: str) -> Watcher:
         watcher = Watcher(path)
-        if path not in self.watchers:
-            self.watchers[path] = []
+        self.watchers[path] = self.watchers.get(path, [])
         self.watchers[path].append(watcher)
         return watcher
 
