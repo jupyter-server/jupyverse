@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 from uuid import uuid4
 
 import aiosqlite
@@ -151,9 +151,12 @@ class FileIdManager(metaclass=Singleton):
     def watch(self, path: str) -> Watcher:
         watcher = Watcher(path)
         if path not in self.watchers:
-            self.watchers[path] = watchers = []  # type: ignore
-        watchers.append(watcher)
+            self.watchers[path] = []
+        self.watchers[path].append(watcher)
         return watcher
+
+    def unwatch(self, path: str, watcher: Watcher):
+        self.watchers[path].remove(watcher)
 
 
 async def get_mtime(path, db) -> Optional[float]:
@@ -192,7 +195,3 @@ async def maybe_rename(
             other_paths.remove(other_path)
             return
     changed_paths.append(changed_path)
-
-
-def get_watch() -> Callable[[str], Watcher]:
-    return FileIdManager().watch

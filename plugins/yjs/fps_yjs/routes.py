@@ -14,18 +14,10 @@ from fastapi import (
 )
 from fastapi.responses import PlainTextResponse
 from fps.hooks import register_router  # type: ignore
+from fps_auth_base import websocket_auth  # type: ignore
 from fps_auth_base import User, current_user
 from fps_contents.fileid import FileIdManager
 from fps_contents.routes import read_content, write_content  # type: ignore
-
-try:
-    from fps_contents import get_watch
-
-    has_watch = True
-except ImportError:
-    has_watch = False
-
-from fps_auth_base import websocket_auth  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
@@ -237,24 +229,16 @@ class YDocWebSocketHandler:
         return skip
 
     async def watch_file(self):
-        if has_watch:
-            file_format, file_type, file_path = await self.get_file_info()
-            while True:
-                async for changes in get_watch()(file_path):
-                    file_format, file_type, new_file_path = await self.get_file_info()
-                    if new_file_path != file_path:
-                        # file was renamed
-                        file_path = new_file_path
-                        break
-                    await self.maybe_load_document()
-        else:
-            # contents plugin doesn't provide watcher, fall back to polling
-            poll_interval = 1  # FIXME: pass in config
-            if not poll_interval:
-                self.room.watcher = None
-                return
-            while True:
-                await asyncio.sleep(poll_interval)
+        file_format, file_type, file_path = await self.get_file_info()
+        while True:
+            watcher = FileIdManager().watch(file_path)
+            async for changes in watcher:
+                file_format, file_type, new_file_path = await self.get_file_info()
+                if new_file_path != file_path:
+                    # file was renamed
+                    FileIdManager().unwatch(file_path, watcher)
+                    file_path = new_file_path
+                    break
                 await self.maybe_load_document()
 
     async def maybe_load_document(self):
