@@ -1,7 +1,8 @@
 import contextlib
-from typing import Dict, List, Optional
+import json
+from typing import Dict, List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi_users.exceptions import UserAlreadyExists
 from fps.config import get_config  # type: ignore
 from fps.hooks import register_router  # type: ignore
@@ -27,7 +28,7 @@ from .db import (
     get_user_db,
     secret,
 )
-from .models import Permissions, UserCreate, UserRead, UserUpdate
+from .models import UserCreate, UserRead, UserUpdate
 
 logger = get_configured_logger("auth")
 
@@ -116,12 +117,12 @@ async def get_users(user: UserRead = Depends(current_user(permissions={"admin": 
 
 @router.get("/api/me")
 async def get_api_me(
-    permissions_to_check: Optional[Permissions] = None,
+    request: Request,
     user: UserRead = Depends(current_user()),
 ):
     checked_permissions: Dict[str, List[str]] = {}
-    if permissions_to_check is not None:
-        permissions = permissions_to_check.permissions
+    permissions = json.loads(dict(request.query_params).get("permissions", "{}").replace("'", '"'))
+    if permissions:
         user_permissions = user.permissions
         for resource, actions in permissions.items():
             user_resource_permissions = user_permissions.get(resource)
