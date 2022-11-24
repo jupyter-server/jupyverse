@@ -148,8 +148,7 @@ class FileIdManager(metaclass=Singleton):
 
     def watch(self, path: str) -> Watcher:
         watcher = Watcher(path)
-        self.watchers[path] = self.watchers.get(path, [])
-        self.watchers[path].append(watcher)
+        self.watchers.setdefault(path, []).append(watcher)
         return watcher
 
     def unwatch(self, path: str, watcher: Watcher):
