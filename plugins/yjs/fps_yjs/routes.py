@@ -191,7 +191,7 @@ class YDocWebSocketHandler:
                 self.room.document.observe(self.on_document_change)
 
         await self.websocket_server.serve(self.websocket)
-        if not self.room.is_transient and self.room.clients == [self.websocket]:
+        if not self.room.is_transient and not self.room.clients:
             # no client in this room after we disconnect
             # keep the document for a while in case someone reconnects
             self.room.cleaner = asyncio.create_task(self.clean_room())
