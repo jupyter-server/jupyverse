@@ -10,7 +10,7 @@ dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
     "fastapi>=0.87.0",
-    "fps>=0.0.19",
+    "fps>=0.0.21",
     "fps-uvicorn>=0.0.19",
     "fps-auth-base>=0.0.42",
     "fps-contents>=0.0.42",

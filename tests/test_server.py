@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sys
+from pathlib import Path
 
 import pytest
 import requests
@@ -55,21 +56,33 @@ def test_settings_persistence_get(start_jupyverse):
 async def test_rest_api(start_jupyverse):
     url = start_jupyverse
     ws_url = url.replace("http", "ws", 1)
+    name = "notebook0.ipynb"
+    path = (Path("tests") / "data" / name).as_posix()
     # create a session to launch a kernel
     response = requests.post(
         f"{url}/api/sessions",
         data=json.dumps(
             {
                 "kernel": {"name": "python3"},
-                "name": "notebook0.ipynb",
-                "path": "69e8a762-86c6-4102-a3da-a43d735fec2b",
+                "name": name,
+                "path": path,
                 "type": "notebook",
             }
         ),
     )
     r = response.json()
     kernel_id = r["kernel"]["id"]
-    document_id = "json:notebook:tests/data/notebook0.ipynb"
+    # get the room ID for the document
+    response = requests.put(
+        f"{url}/api/yjs/roomid/{path}",
+        data=json.dumps(
+            {
+                "format": "json",
+                "type": "notebook",
+            }
+        ),
+    )
+    document_id = response.text
     async with connect(f"{ws_url}/api/yjs/{document_id}") as websocket:
         # connect to the shared notebook document
         ydoc = Y.YDoc()

@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional
+import json
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import RedirectResponse
@@ -6,7 +7,7 @@ from fief_client import FiefAccessTokenInfo
 from fps.hooks import register_router
 
 from .backend import SESSION_COOKIE_NAME, auth, current_user, fief
-from .models import Permissions, UserRead
+from .models import UserRead
 
 router = APIRouter()
 
@@ -30,13 +31,13 @@ async def auth_callback(request: Request, response: Response, code: str = Query(
 
 @router.get("/api/me")
 async def get_api_me(
-    permissions_to_check: Optional[Permissions] = None,
+    request: Request,
     user: UserRead = Depends(current_user()),
     access_token_info: FiefAccessTokenInfo = Depends(auth.authenticated()),
 ):
     checked_permissions: Dict[str, List[str]] = {}
-    if permissions_to_check is not None:
-        permissions = permissions_to_check.permissions
+    permissions = json.loads(dict(request.query_params).get("permissions", "{}").replace("'", '"'))
+    if permissions:
         user_permissions = {}
         for permission in access_token_info["permissions"]:
             resource, action = permission.split(":")
