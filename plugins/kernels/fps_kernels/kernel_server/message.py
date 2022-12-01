@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from zmq.asyncio import Socket
 
-from ..kernel_driver.message import DELIM, deserialize, feed_identities, sign, unpack
+from ..kernel_driver.message import (DELIM, deserialize, feed_identities, sign,
+                                     unpack)
 
 
 def to_binary(msg: Dict[str, Any]) -> Optional[bytes]:
@@ -48,7 +49,9 @@ def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
         for i in range(offset_number)
     ]
     channel = ws_msg[offsets[0] : offsets[1]].decode("utf-8")  # noqa
-    msg_list = [ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)]  # noqa
+    msg_list = [
+        ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)
+    ]  # noqa
     return channel, msg_list
 
 

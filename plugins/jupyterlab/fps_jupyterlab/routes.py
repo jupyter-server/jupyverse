@@ -93,7 +93,9 @@ async def get_workspace(
     frontend_config=Depends(get_frontend_config),
     lab_config=Depends(get_lab_config),
 ):
-    return get_index(name, lab_config.collaborative, config.dev_mode, frontend_config.base_url)
+    return get_index(
+        name, lab_config.collaborative, config.dev_mode, frontend_config.base_url
+    )
 
 
 INDEX_HTML = """\
@@ -135,7 +137,9 @@ def get_index(workspace, collaborative, dev_mode, base_url="/"):
         main_id = path.name.split(".")[1]
         break
     vendor_id = None
-    for path in (static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
+    for path in (static_lab_dir).glob(
+        "vendors-node_modules_whatwg-fetch_fetch_js.*.js"
+    ):
         vendor_id = path.name.split(".")[1]
         break
     full_static_url = f"{base_url}static/lab"

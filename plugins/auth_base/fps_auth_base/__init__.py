@@ -2,7 +2,9 @@ import pkg_resources
 
 __version__ = "0.0.44"
 
-auth = {ep.name: ep.load() for ep in pkg_resources.iter_entry_points(group="jupyverse_auth")}
+auth = {
+    ep.name: ep.load() for ep in pkg_resources.iter_entry_points(group="jupyverse_auth")
+}
 
 try:
     User = auth["User"]

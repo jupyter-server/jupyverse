@@ -1,0 +1,18 @@
+[jupyter_config_dir]
+default = '$JUPYTER_CONFIG_DIR'
+fallback = '~/.jupyter'
+
+[jupyter_data_dir]
+default = '$JUPYTER_DATA_DIR'
+dir_dependency = 'jupyter_config_dir/data'
+[jupyter_data_dir.os_default]
+windows = '$APPDATA/jupyter'
+osx = '~/Library/Jupyter'
+linux = '$XDG_DATA_HOME/jupyter'
+[jupyter_data_dir.vars_fallback]
+XDG_DATA_HOME = '~/.local/share'
+
+[jupyter_runtime_dir]
+default = '$JUPYTER_RUNTIME_DIR'
+dir_dependency = 'jupyter_config_dir/runtime'
+

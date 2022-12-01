@@ -1,5 +1,3 @@
-import functools
-import operator
 import os
 import sys
 from pathlib import Path
@@ -37,7 +35,7 @@ def jupyter_path(*subdirs) -> List[Path]:
 
     # add subdir, if requested
     if subdirs:
-        paths = [functools.reduce(operator.truediv, [p, *subdirs]) for p in paths]
+        paths = [p.joinpath(*subdirs) for p in paths]
     return paths
 
 

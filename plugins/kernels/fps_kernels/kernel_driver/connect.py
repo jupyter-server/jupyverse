@@ -70,7 +70,10 @@ def read_connection_file(fname: str) -> cfg_t:
 
 
 async def launch_kernel(
-    kernelspec_path: str, connection_file_path: str, kernel_cwd: str, capture_output: bool
+    kernelspec_path: str,
+    connection_file_path: str,
+    kernel_cwd: str,
+    capture_output: bool,
 ) -> asyncio.subprocess.Process:
     with open(kernelspec_path) as f:
         kernelspec = json.load(f)
@@ -102,7 +105,9 @@ def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) ->
     return sock
 
 
-def connect_channel(channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
+def connect_channel(
+    channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None
+) -> Socket:
     sock = create_socket(channel_name, cfg, identity)
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")

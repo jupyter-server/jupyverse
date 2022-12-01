@@ -18,12 +18,15 @@ test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 def test_settings_persistence_put(start_jupyverse):
     url = start_jupyverse
     # get previous theme
-    response = requests.get(url + "/lab/api/settings/@jupyterlab/apputils-extension:themes")
+    response = requests.get(
+        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes"
+    )
     assert response.status_code == 200
     prev_theme["raw"] = json.loads(response.content)["raw"]
     # put new theme
     response = requests.put(
-        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes", data=json.dumps(test_theme)
+        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
+        data=json.dumps(test_theme),
     )
     assert response.status_code == 204
 

@@ -4,7 +4,8 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional, cast
 
-from .connect import cfg_t, connect_channel, launch_kernel, read_connection_file
+from .connect import (cfg_t, connect_channel, launch_kernel,
+                      read_connection_file)
 from .connect import write_connection_file as _write_connection_file
 from .kernelspec import find_kernelspec
 from .message import create_message, receive_message, send_message
@@ -28,9 +29,13 @@ class KernelDriver:
         self.kernelspec_path = kernelspec_path or find_kernelspec(kernel_name)
         self.kernel_cwd = kernel_cwd
         if not self.kernelspec_path:
-            raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
+            raise RuntimeError(
+                "Could not find a kernel, maybe you forgot to install one?"
+            )
         if write_connection_file:
-            self.connection_file_path, self.connection_cfg = _write_connection_file(connection_file)
+            self.connection_file_path, self.connection_cfg = _write_connection_file(
+                connection_file
+            )
         else:
             self.connection_file_path = connection_file
             self.connection_cfg = read_connection_file(connection_file)
@@ -47,7 +52,8 @@ class KernelDriver:
         await send_message(msg, self.control_channel, self.key, change_date_to_str=True)
         while True:
             msg = cast(
-                Dict[str, Any], await receive_message(self.control_channel, change_str_to_date=True)
+                Dict[str, Any],
+                await receive_message(self.control_channel, change_str_to_date=True),
             )
             if msg["msg_type"] == "shutdown_reply" and msg["content"]["restart"]:
                 break
@@ -55,7 +61,9 @@ class KernelDriver:
         self.channel_tasks = []
         self.listen_channels()
 
-    async def start(self, startup_timeout: float = float("inf"), connect: bool = True) -> None:
+    async def start(
+        self, startup_timeout: float = float("inf"), connect: bool = True
+    ) -> None:
         self.kernel_process = await launch_kernel(
             self.kernelspec_path,
             self.connection_file_path,
@@ -112,7 +120,10 @@ class KernelDriver:
             return
         content = {"code": cell["source"], "silent": False}
         msg = create_message(
-            "execute_request", content, session_id=self.session_id, msg_id=str(self.msg_cnt)
+            "execute_request",
+            content,
+            session_id=self.session_id,
+            msg_id=str(self.msg_cnt),
         )
         if msg_id:
             msg["header"]["msg_id"] = msg_id
@@ -160,10 +171,14 @@ class KernelDriver:
         new_timeout = timeout
         while True:
             msg = create_message(
-                "kernel_info_request", session_id=self.session_id, msg_id=str(self.msg_cnt)
+                "kernel_info_request",
+                session_id=self.session_id,
+                msg_id=str(self.msg_cnt),
             )
             self.msg_cnt += 1
-            await send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
+            await send_message(
+                msg, self.shell_channel, self.key, change_date_to_str=True
+            )
             msg = await receive_message(
                 self.shell_channel, timeout=new_timeout, change_str_to_date=True
             )
@@ -183,7 +198,9 @@ class KernelDriver:
         content = msg["content"]
         if msg_type == "stream":
             if (not outputs) or (outputs[-1]["name"] != content["name"]):
-                outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
+                outputs.append(
+                    {"name": content["name"], "output_type": msg_type, "text": []}
+                )
             outputs[-1]["text"].append(content["text"])
         elif msg_type in ("display_data", "execute_result"):
             outputs.append(

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import Depends, HTTPException, Request, Response, WebSocket, status
+from fastapi import (Depends, HTTPException, Request, Response, WebSocket,
+                     status)
 from fastapi.security import APIKeyCookie
 from fief_client import FiefAccessTokenInfo, FiefAsync, FiefUserInfo
 from fief_client.integrations.fastapi import FiefAuth
@@ -39,7 +40,9 @@ async def update_user(
     access_token_info: FiefAccessTokenInfo = Depends(auth.authenticated()),
 ):
     async def _(data: Dict[str, Any]) -> FiefUserInfo:
-        user = await fief.update_profile(access_token_info["access_token"], {"fields": data})
+        user = await fief.update_profile(
+            access_token_info["access_token"], {"fields": data}
+        )
         return user
 
     return _
@@ -62,7 +65,8 @@ def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
                     for action in actions:
                         try:
                             await fief.validate_access_token(
-                                access_token, required_permissions=[f"{resource}:{action}"]
+                                access_token,
+                                required_permissions=[f"{resource}:{action}"],
                             )
                         except BaseException:
                             pass
@@ -86,7 +90,9 @@ def current_user(permissions=None):
             for action in actions
         ]
 
-    async def _(user: FiefUserInfo = Depends(auth.current_user(permissions=permissions))):
+    async def _(
+        user: FiefUserInfo = Depends(auth.current_user(permissions=permissions)),
+    ):
         return UserRead(**user["fields"])
 
     return _

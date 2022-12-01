@@ -11,23 +11,12 @@ from fps_uvicorn.cli import add_query_params  # type: ignore
 from fps_uvicorn.config import UvicornConfig  # type: ignore
 from sqlalchemy import select  # type: ignore
 
-from .backends import (
-    cookie_authentication,
-    current_user,
-    fapi_users,
-    get_user_manager,
-    github_authentication,
-    github_cookie_authentication,
-)
+from .backends import (cookie_authentication, current_user, fapi_users,
+                       get_user_manager, github_authentication,
+                       github_cookie_authentication)
 from .config import get_auth_config
-from .db import (
-    User,
-    async_session_maker,
-    create_db_and_tables,
-    get_async_session,
-    get_user_db,
-    secret,
-)
+from .db import (User, async_session_maker, create_db_and_tables,
+                 get_async_session, get_user_db, secret)
 from .models import UserCreate, UserRead, UserUpdate
 
 logger = get_configured_logger("auth")
@@ -108,7 +97,9 @@ async def startup():
 
 
 @router.get("/auth/users")
-async def get_users(user: UserRead = Depends(current_user(permissions={"admin": ["read"]}))):
+async def get_users(
+    user: UserRead = Depends(current_user(permissions={"admin": ["read"]})),
+):
     async with async_session_maker() as session:
         statement = select(User)
         users = (await session.execute(statement)).unique().all()
@@ -121,7 +112,9 @@ async def get_api_me(
     user: UserRead = Depends(current_user()),
 ):
     checked_permissions: Dict[str, List[str]] = {}
-    permissions = json.loads(dict(request.query_params).get("permissions", "{}").replace("'", '"'))
+    permissions = json.loads(
+        dict(request.query_params).get("permissions", "{}").replace("'", '"')
+    )
     if permissions:
         user_permissions = user.permissions
         for resource, actions in permissions.items():
@@ -147,14 +140,18 @@ users_router = APIRouter()
 
 
 @users_router.get("/me")
-async def get_me(user: UserRead = Depends(current_user(permissions={"admin": ["read"]}))):
+async def get_me(
+    user: UserRead = Depends(current_user(permissions={"admin": ["read"]})),
+):
     return user
 
 
 users_router.include_router(fapi_users.get_users_router(UserRead, UserUpdate))
 
 # Cookie based auth login and logout
-r_cookie_auth = register_router(fapi_users.get_auth_router(cookie_authentication), prefix="/auth")
+r_cookie_auth = register_router(
+    fapi_users.get_auth_router(cookie_authentication), prefix="/auth"
+)
 r_register = register_router(
     fapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
@@ -164,7 +161,9 @@ r_user = register_router(users_router, prefix="/auth/user")
 
 # GitHub OAuth register router
 r_github = register_router(
-    fapi_users.get_oauth_router(github_authentication, github_cookie_authentication, secret),
+    fapi_users.get_oauth_router(
+        github_authentication, github_cookie_authentication, secret
+    ),
     prefix="/auth/github",
 )
 

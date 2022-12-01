@@ -3,15 +3,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Request,
-    Response,
-    WebSocketDisconnect,
-    status,
-)
+from fastapi import (APIRouter, Depends, HTTPException, Request, Response,
+                     WebSocketDisconnect, status)
 from fastapi.responses import PlainTextResponse
 from fps.hooks import register_router  # type: ignore
 from fps_auth_base import websocket_auth  # type: ignore
@@ -19,8 +12,10 @@ from fps_auth_base import User, current_user
 from fps_contents.fileid import FileIdManager
 from fps_contents.routes import read_content, write_content  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
-from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
-from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
+from ypy_websocket.websocket_server import (WebsocketServer,  # type: ignore
+                                            YRoom)
+from ypy_websocket.ystore import (BaseYStore, SQLiteYStore,  # type: ignore
+                                  YDocNotFound)
 from ypy_websocket.yutils import YMessageType  # type: ignore
 
 from .models import CreateRoomId
@@ -50,7 +45,9 @@ async def startup():
 @router.websocket("/api/yjs/{path:path}")
 async def websocket_endpoint(
     path,
-    websocket_permissions=Depends(websocket_auth(permissions={"yjs": ["read", "write"]})),
+    websocket_permissions=Depends(
+        websocket_auth(permissions={"yjs": ["read", "write"]})
+    ),
 ):
     if websocket_permissions is None:
         return
@@ -119,7 +116,9 @@ class JupyterWebsocketServer(WebsocketServer):
                 file_format, file_type, file_path = path.split(":", 2)
                 p = Path(file_path)
                 updates_file_path = (p.parent / f".{file_type}:{p.name}.y").as_posix()
-                ystore = JupyterSQLiteYStore(path=updates_file_path)  # FIXME: pass in config
+                ystore = JupyterSQLiteYStore(
+                    path=updates_file_path
+                )  # FIXME: pass in config
                 self.rooms[path] = DocumentRoom(file_type, ystore)
             else:
                 # it is a transient document (e.g. awareness)
@@ -143,7 +142,9 @@ class YDocWebSocketHandler:
         file_format, file_type, file_id = room_name.split(":", 2)
         file_path = await FileIdManager().get_path(file_id)
         if file_path is None:
-            raise RuntimeError(f"File {self.room.document.path} cannot be found anymore")
+            raise RuntimeError(
+                f"File {self.room.document.path} cannot be found anymore"
+            )
         if file_path != self.room.document.path:
             self.room.document.path = file_path
         return file_format, file_type, file_path
@@ -308,7 +309,9 @@ class YDocWebSocketHandler:
         self.room.document.dirty = False
 
 
-@router.put("/api/yjs/roomid/{path:path}", status_code=200, response_class=PlainTextResponse)
+@router.put(
+    "/api/yjs/roomid/{path:path}", status_code=200, response_class=PlainTextResponse
+)
 async def create_roomid(
     path,
     request: Request,

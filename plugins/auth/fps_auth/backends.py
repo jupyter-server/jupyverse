@@ -3,17 +3,10 @@ from typing import Any, Dict, Generic, List, Optional, Tuple
 
 import httpx
 from fastapi import Depends, HTTPException, Response, WebSocket, status
-from fastapi_users import (  # type: ignore
-    BaseUserManager,
-    FastAPIUsers,
-    UUIDIDMixin,
-    models,
-)
-from fastapi_users.authentication import (
-    AuthenticationBackend,
-    CookieTransport,
-    JWTStrategy,
-)
+from fastapi_users import (BaseUserManager, FastAPIUsers,  # type: ignore
+                           UUIDIDMixin, models)
+from fastapi_users.authentication import (AuthenticationBackend,
+                                          CookieTransport, JWTStrategy)
 from fastapi_users.authentication.strategy.base import Strategy
 from fastapi_users.authentication.transport.base import Transport
 from fastapi_users.db import SQLAlchemyUserDatabase
@@ -52,7 +45,9 @@ class NoAuthStrategy(Strategy, Generic[models.UP, models.ID]):
     async def read_token(
         self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
     ) -> Optional[models.UP]:
-        active_user = await user_manager.user_db.get_by_email(get_auth_config().global_email)
+        active_user = await user_manager.user_db.get_by_email(
+            get_auth_config().global_email
+        )
         return active_user
 
     async def write_token(self, user: models.UP):
@@ -108,7 +103,9 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             if oauth_account.oauth_name == "github":
                 async with httpx.AsyncClient() as client:
                     r = (
-                        await client.get(f"https://api.github.com/user/{oauth_account.account_id}")
+                        await client.get(
+                            f"https://api.github.com/user/{oauth_account.account_id}"
+                        )
                     ).json()
 
                 await self.user_db.update(
@@ -164,7 +161,9 @@ def current_user(permissions: Optional[Dict[str, List[str]]] = None):
         response: Response,
         token: Optional[str] = None,
         user: Optional[User] = Depends(
-            fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
+            fapi_users.current_user(
+                optional=True, get_enabled_backends=get_enabled_backends
+            )
         ),
         user_manager: UserManager = Depends(get_user_manager),
         auth_config=Depends(get_auth_config),
@@ -183,19 +182,29 @@ def current_user(permissions: Optional[Dict[str, List[str]]] = None):
             if lab_config.collaborative:
                 if not user and auth_config.mode == "noauth":
                     user = await create_guest(user_manager, auth_config)
-                    await cookie_authentication.login(get_jwt_strategy(), user, response)
+                    await cookie_authentication.login(
+                        get_jwt_strategy(), user, response
+                    )
 
                 elif not user and auth_config.mode == "token":
-                    global_user = await user_manager.get_by_email(auth_config.global_email)
+                    global_user = await user_manager.get_by_email(
+                        auth_config.global_email
+                    )
                     if global_user and global_user.username == token:
                         user = await create_guest(user_manager, auth_config)
-                        await cookie_authentication.login(get_jwt_strategy(), user, response)
+                        await cookie_authentication.login(
+                            get_jwt_strategy(), user, response
+                        )
             else:
                 if auth_config.mode == "token":
-                    global_user = await user_manager.get_by_email(auth_config.global_email)
+                    global_user = await user_manager.get_by_email(
+                        auth_config.global_email
+                    )
                     if global_user and global_user.username == token:
                         user = global_user
-                        await cookie_authentication.login(get_jwt_strategy(), user, response)
+                        await cookie_authentication.login(
+                            get_jwt_strategy(), user, response
+                        )
 
         if user:
             return user
@@ -259,7 +268,8 @@ def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
 
 
 async def update_user(
-    user: UserRead = Depends(current_user()), user_db: SQLAlchemyUserDatabase = Depends(get_user_db)
+    user: UserRead = Depends(current_user()),
+    user_db: SQLAlchemyUserDatabase = Depends(get_user_db),
 ):
     async def _(data: Dict[str, Any]) -> UserRead:
         await user_db.update(user, data)

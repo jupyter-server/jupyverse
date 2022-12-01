@@ -12,7 +12,8 @@ from fps.hooks import register_router  # type: ignore
 from fps_auth_base import User, current_user  # type: ignore
 from starlette.requests import Request  # type: ignore
 
-from .models import Checkpoint, Content, CreateContent, RenameContent, SaveContent
+from .models import (Checkpoint, Content, CreateContent, RenameContent,
+                     SaveContent)
 
 router = APIRouter()
 
@@ -25,7 +26,9 @@ async def create_checkpoint(
     path, user: User = Depends(current_user(permissions={"contents": ["write"]}))
 ):
     src_path = Path(path)
-    dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+    dst_path = (
+        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+    )
     try:
         dst_path.parent.mkdir(exist_ok=True)
         shutil.copyfile(src_path, dst_path)
@@ -51,10 +54,14 @@ async def create_content(
         available_path = get_available_path(content_path / "Untitled.ipynb")
         async with await open_file(available_path, "w") as f:
             await f.write(
-                json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5})
+                json.dumps(
+                    {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}
+                )
             )
         src_path = available_path
-        dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+        dst_path = (
+            Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+        )
         try:
             dst_path.parent.mkdir(exist_ok=True)
             shutil.copyfile(src_path, dst_path)
@@ -67,7 +74,9 @@ async def create_content(
         available_path.mkdir(parents=True, exist_ok=True)
     else:
         assert create_content.ext is not None
-        available_path = get_available_path(content_path / ("untitled" + create_content.ext))
+        available_path = get_available_path(
+            content_path / ("untitled" + create_content.ext)
+        )
         open(available_path, "w").close()
 
     return await read_content(available_path, False)
@@ -86,7 +95,9 @@ async def get_checkpoint(
     path, user: User = Depends(current_user(permissions={"contents": ["read"]}))
 ):
     src_path = Path(path)
-    dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+    dst_path = (
+        Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
+    )
     if not dst_path.exists():
         return []
     mtime = get_file_modification_time(dst_path)
@@ -171,7 +182,9 @@ def is_file_writable(path: Path) -> bool:
     return False
 
 
-async def read_content(path: Union[str, Path], get_content: bool, as_json: bool = False) -> Content:
+async def read_content(
+    path: Union[str, Path], get_content: bool, as_json: bool = False
+) -> Content:
     if isinstance(path, str):
         path = Path(path)
     content: Optional[Union[str, Dict, List[Dict]]] = None
@@ -251,7 +264,10 @@ async def write_content(content: Union[SaveContent, Dict]) -> None:
             dict_content = cast(Dict, content.content)
             if content.type == "notebook":
                 # see https://github.com/jupyterlab/jupyterlab/issues/11005
-                if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
+                if (
+                    "metadata" in dict_content
+                    and "orig_nbformat" in dict_content["metadata"]
+                ):
                     del dict_content["metadata"]["orig_nbformat"]
             await f.write(json.dumps(dict_content, indent=2))
         else:
