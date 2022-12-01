@@ -134,6 +134,7 @@ class YDocWebSocketHandler:
     def __init__(self, websocket, path, permissions):
         self.websocket = websocket
         self.can_write = permissions is None or "write" in permissions.get("yjs", [])
+        self.lock = asyncio.Lock()
         self.room = self.websocket_server.get_room(self.websocket.path)
         self.set_file_info(path)
 
@@ -244,7 +245,8 @@ class YDocWebSocketHandler:
 
     async def maybe_load_document(self):
         file_format, file_type, file_path = await self.get_file_info()
-        model = await read_content(file_path, False)
+        async with self.lock:
+            model = await read_content(file_path, False)
         # do nothing if the file was saved by us
         if self.last_modified < to_datetime(model.last_modified):
             is_notebook = file_type == "notebook"
@@ -286,7 +288,8 @@ class YDocWebSocketHandler:
         except Exception:
             return
         is_notebook = file_type == "notebook"
-        model = await read_content(file_path, True, as_json=is_notebook)
+        async with self.lock:
+            model = await read_content(file_path, True, as_json=is_notebook)
         if self.last_modified < to_datetime(model.last_modified):
             # file changed on disk, let's revert
             self.room.document.source = model.content
@@ -303,9 +306,10 @@ class YDocWebSocketHandler:
                 "path": file_path,
                 "type": file_type,
             }
-            await write_content(content)
-            model = await read_content(file_path, False)
-            self.last_modified = to_datetime(model.last_modified)
+            async with self.lock:
+                await write_content(content)
+                model = await read_content(file_path, False)
+                self.last_modified = to_datetime(model.last_modified)
         self.room.document.dirty = False
 
 
