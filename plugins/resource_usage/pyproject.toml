@@ -3,12 +3,12 @@ requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
-name = "fps_noauth"
-description = "An FPS plugin for an unprotected API"
-keywords = ["jupyter", "server", "fastapi", "pluggy", "plugins"]
-dynamic = ["version"]
+name = "fps_resource_usage"
+description = "An FPS plugin for the resource usage API"
+keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-
+dependencies = [ "fps >=0.0.8", "psutil >=5.9.4", "anyio >=3.6.2", ]
+dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -29,11 +29,11 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.jupyverse_auth]
-User = "fps_noauth.models:User"
-current_user = "fps_noauth.backends:current_user"
-update_user = "fps_noauth.backends:update_user"
-websocket_auth = "fps_noauth.backends:websocket_auth"
+[project.entry-points.fps_router]
+fps-resource-usage = "fps_resource_usage.routes"
+
+[project.entry-points.fps_config]
+fps-resource-usage = "fps_resource_usage.config"
 
 [tool.hatch.version]
-path = "fps_noauth/__init__.py"
+path = "fps_resource_usage/__init__.py"

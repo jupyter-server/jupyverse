@@ -1,15 +1,15 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import WebSocket
 
+from .models import User
 
-class User:
-    pass
+USER = User()
 
 
 def current_user(*args, **kwargs):
     async def _():
-        pass
+        return USER
 
     return _
 
@@ -24,7 +24,11 @@ def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
 
 
 async def update_user():
-    async def _(*args, **kwargs):
-        pass
+    async def _(data: Dict[str, Any]) -> User:
+        global USER
+        user = dict(USER)
+        user.update(data)
+        USER = User(**user)
+        return USER
 
     return _
