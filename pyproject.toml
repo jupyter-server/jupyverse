@@ -17,7 +17,8 @@ dependencies = [
     "fps-kernels>=0.0.42",
     "fps-terminals>=0.0.42",
     "fps-nbconvert>=0.0.42",
-    "fps-yjs>=0.0.42"
+    "fps-yjs>=0.0.42",
+    "fps-resource-usage>=0.0.42",
 ]
 
 [[project.authors]]
@@ -56,6 +57,7 @@ pre-install-commands = [
   "pip install -e ./plugins/nbconvert",
   "pip install -e ./plugins/terminals",
   "pip install -e ./plugins/yjs",
+  "pip install -e ./plugins/resource_usage",
 ]
 dependencies = ["fastapi>=0.87.0"]
 features = ["test"]
@@ -93,6 +95,7 @@ typecheck = [
   "mypy plugins/auth/fps_auth",
   "mypy plugins/nbconvert/fps_nbconvert",
   "mypy plugins/yjs/fps_yjs",
+  "mypy plugins/resource_usage/fps_resource_usage",
   "mypy plugins/terminals/fps_terminals",
   "mypy plugins/login/fps_login",
 ]
@@ -131,8 +134,9 @@ python_packages = [
     "plugins/retrolab:fps-retrolab",
     "plugins/terminals:fps-terminals",
     "plugins/yjs:fps-yjs",
+    "plugins/resource_usage:fps-resource-usage",
     "plugins/login:fps-login",
-    ".:jupyverse:fps-auth-base,fps-noauth,fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs"
+    ".:jupyverse:fps-auth-base,fps-noauth,fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs,fps-resource-usage"
 ]
 
 [tool.hatch.version]

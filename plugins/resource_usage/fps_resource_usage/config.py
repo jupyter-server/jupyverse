@@ -1,6 +1,6 @@
-from fps.config import PluginModel, get_config
-from fps.hooks import register_config
-from pydantic import BaseSettings
+from fps.config import PluginModel, get_config  # type: ignore
+from fps.hooks import register_config  # type: ignore
+from pydantic import BaseSettings  # type: ignore
 
 
 class ResourceUsageConfig(PluginModel, BaseSettings):

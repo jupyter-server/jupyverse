@@ -1,8 +1,8 @@
-import psutil
+import psutil  # type: ignore
 from anyio import to_thread
-from fastapi import APIRouter, Depends
-from fps.hooks import register_router
-from fps_auth_base import User, current_user
+from fastapi import APIRouter, Depends  # type: ignore
+from fps.hooks import register_router  # type: ignore
+from fps_auth_base import User, current_user  # type: ignore
 
 from .config import get_resource_usage_config
 
