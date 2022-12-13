@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.46
+
+No merged PRs
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.45
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.44...8652e430f192d2e6ebea712c7b38134da377e8d2))
@@ -26,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-23&to=2022-12-13&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ablink1073+updated%3A2022-09-23..2022-12-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-23..2022-12-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-09-23..2022-12-13&type=Issues) | [@RobertRosca](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3ARobertRosca+updated%3A2022-09-23..2022-12-13&type=Issues) | [@specter119](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aspecter119+updated%3A2022-09-23..2022-12-13&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2022-09-23..2022-12-13&type=Issues) | [@Wh1isper](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3AWh1isper+updated%3A2022-09-23..2022-12-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.44
 
