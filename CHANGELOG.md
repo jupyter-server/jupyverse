@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.45
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.44...8652e430f192d2e6ebea712c7b38134da377e8d2))
+
+### Merged PRs
+
+- Update docs and project with resource_usage [#254](https://github.com/jupyter-server/jupyverse/pull/254) ([@davidbrochart](https://github.com/davidbrochart))
+- Add resource_usage plugin [#253](https://github.com/jupyter-server/jupyverse/pull/253) ([@davidbrochart](https://github.com/davidbrochart))
+- Lock file accesses [#252](https://github.com/jupyter-server/jupyverse/pull/252) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix clean room never triggered [#250](https://github.com/jupyter-server/jupyverse/pull/250) ([@Wh1isper](https://github.com/Wh1isper))
+- Fix /api/me permissions parameters [#249](https://github.com/jupyter-server/jupyverse/pull/249) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix incomplete kernel search path [#246](https://github.com/jupyter-server/jupyverse/pull/246) ([@Wh1isper](https://github.com/Wh1isper))
+- Add kernel cwd [#245](https://github.com/jupyter-server/jupyverse/pull/245) ([@davidbrochart](https://github.com/davidbrochart))
+- Implement file ID service [#244](https://github.com/jupyter-server/jupyverse/pull/244) ([@davidbrochart](https://github.com/davidbrochart))
+- Align path format for windows. [#243](https://github.com/jupyter-server/jupyverse/pull/243) ([@specter119](https://github.com/specter119))
+- Skip test_kernel_messages on Windows [#242](https://github.com/jupyter-server/jupyverse/pull/242) ([@davidbrochart](https://github.com/davidbrochart))
+- Use system prefix instead of conda prefix for kernel test [#241](https://github.com/jupyter-server/jupyverse/pull/241) ([@RobertRosca](https://github.com/RobertRosca))
+- Use Hatch Environments and Scripts [#239](https://github.com/jupyter-server/jupyverse/pull/239) ([@RobertRosca](https://github.com/RobertRosca))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-23&to=2022-12-13&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ablink1073+updated%3A2022-09-23..2022-12-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-09-23..2022-12-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-09-23..2022-12-13&type=Issues) | [@RobertRosca](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3ARobertRosca+updated%3A2022-09-23..2022-12-13&type=Issues) | [@specter119](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Aspecter119+updated%3A2022-09-23..2022-12-13&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Awelcome+updated%3A2022-09-23..2022-12-13&type=Issues) | [@Wh1isper](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3AWh1isper+updated%3A2022-09-23..2022-12-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.44
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.43...ee5c523b7d110fb6ed7dc35816629fe52baa019f))
@@ -15,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-09-22&to=2022-09-23&type=c))
 
 [@hbcarlos](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Ahbcarlos+updated%3A2022-09-22..2022-09-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.43
 
