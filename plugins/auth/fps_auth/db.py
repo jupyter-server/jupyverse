@@ -3,16 +3,15 @@ from pathlib import Path
 from typing import AsyncGenerator, List
 
 from fastapi import Depends
-from fastapi_users.db import \
-    SQLAlchemyBaseOAuthAccountTableUUID  # type: ignore
-from fastapi_users.db import (SQLAlchemyBaseUserTableUUID,  # type: ignore
-                              SQLAlchemyUserDatabase)
+from fastapi_users.db import SQLAlchemyBaseOAuthAccountTableUUID  # type: ignore
+from fastapi_users.db import (  # type: ignore
+    SQLAlchemyBaseUserTableUUID,
+    SQLAlchemyUserDatabase,
+)
 from fps.config import get_config  # type: ignore
 from sqlalchemy import JSON, Boolean, Column, String, Text  # type: ignore
-from sqlalchemy.ext.asyncio import (AsyncSession,  # type: ignore
-                                    create_async_engine)
-from sqlalchemy.ext.declarative import (DeclarativeMeta,  # type: ignore
-                                        declarative_base)
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # type: ignore
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
 from sqlalchemy.orm import relationship, sessionmaker  # type: ignore
 
 from .config import AuthConfig

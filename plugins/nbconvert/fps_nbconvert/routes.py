@@ -13,9 +13,7 @@ router = APIRouter()
 @router.get("/api/nbconvert")
 async def get_nbconvert_formats():
     return {
-        name: {
-            "output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype
-        }
+        name: {"output_mimetype": nbconvert.exporters.get_exporter(name).output_mimetype}
         for name in nbconvert.exporters.get_export_names()
     }
 

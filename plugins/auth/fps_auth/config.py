@@ -14,9 +14,7 @@ class AuthConfig(PluginModel, BaseSettings):
     mode: str = "token"
     token: str = str(uuid4())
     global_email: str = "guest@jupyter.com"
-    cookie_secure: bool = (
-        False  # FIXME: should default to True, and set to False for tests
-    )
+    cookie_secure: bool = False  # FIXME: should default to True, and set to False for tests
     clear_users: bool = False
     test: bool = False
     login_url: Optional[str] = None

@@ -74,9 +74,7 @@ def init_router(router, redirect_after_root):
             "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/" + rest_of_path
         )
 
-    @router.get(
-        "/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json"
-    )
+    @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
     async def get_listings(user: User = Depends(current_user())):
         return {
             "blocked_extensions_uris": [],
@@ -130,9 +128,9 @@ def init_router(router, redirect_after_root):
         LOCALE = language
         package = ep.load()
         data = {}
-        for path in (
-            Path(package.__file__).parent / "locale" / language / "LC_MESSAGES"
-        ).glob("*.json"):
+        for path in (Path(package.__file__).parent / "locale" / language / "LC_MESSAGES").glob(
+            "*.json"
+        ):
             with open(path) as f:
                 data.update({path.stem: json.load(f)})
         return {"data": data, "message": ""}

@@ -36,9 +36,7 @@ async def get_api_me(
     access_token_info: FiefAccessTokenInfo = Depends(auth.authenticated()),
 ):
     checked_permissions: Dict[str, List[str]] = {}
-    permissions = json.loads(
-        dict(request.query_params).get("permissions", "{}").replace("'", '"')
-    )
+    permissions = json.loads(dict(request.query_params).get("permissions", "{}").replace("'", '"'))
     if permissions:
         user_permissions = {}
         for permission in access_token_info["permissions"]:

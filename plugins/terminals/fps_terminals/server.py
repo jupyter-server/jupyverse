@@ -13,9 +13,7 @@ def open_terminal(command="bash", columns=80, lines=24):
     pid, fd = pty.fork()
     if pid == 0:
         argv = shlex.split(command)
-        env = dict(
-            TERM="linux", LC_ALL="en_GB.UTF-8", COLUMNS=str(columns), LINES=str(lines)
-        )
+        env = dict(TERM="linux", LC_ALL="en_GB.UTF-8", COLUMNS=str(columns), LINES=str(lines))
         os.execvpe(argv[0], argv, env)
     return fd
 
@@ -45,9 +43,7 @@ class TerminalServer:
 
         self.loop.add_reader(self.p_out, on_output)
         await websocket.send_json(["setup", {}])
-        can_execute = permissions is None or "execute" in permissions.get(
-            "terminals", []
-        )
+        can_execute = permissions is None or "execute" in permissions.get("terminals", [])
         try:
             while True:
                 msg = await websocket.receive_json()

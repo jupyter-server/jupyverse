@@ -53,9 +53,7 @@ class FileIdManager(metaclass=Singleton):
     async def get_id(self, path: str) -> Optional[str]:
         await self.initialized.wait()
         async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute(
-                "SELECT id FROM fileids WHERE path = ?", (path,)
-            ) as cursor:
+            async with db.execute("SELECT id FROM fileids WHERE path = ?", (path,)) as cursor:
                 async for idx, in cursor:
                     return idx
                 return None
@@ -63,9 +61,7 @@ class FileIdManager(metaclass=Singleton):
     async def get_path(self, idx: str) -> Optional[str]:
         await self.initialized.wait()
         async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute(
-                "SELECT path FROM fileids WHERE id = ?", (idx,)
-            ) as cursor:
+            async with db.execute("SELECT path FROM fileids WHERE id = ?", (idx,)) as cursor:
                 async for path, in cursor:
                     return path
                 return None
@@ -97,9 +93,7 @@ class FileIdManager(metaclass=Singleton):
             async for path in Path().rglob("*"):
                 idx = uuid4().hex
                 mtime = (await path.stat()).st_mtime
-                await db.execute(
-                    "INSERT INTO fileids VALUES (?, ?, ?)", (idx, str(path), mtime)
-                )
+                await db.execute("INSERT INTO fileids VALUES (?, ?, ?)", (idx, str(path), mtime))
             await db.commit()
             self.initialized.set()
 
@@ -108,9 +102,7 @@ class FileIdManager(metaclass=Singleton):
                 added_paths = []
                 for change, changed_path in changes:
                     # get relative path
-                    changed_path = Path(changed_path).relative_to(
-                        await Path().absolute()
-                    )
+                    changed_path = Path(changed_path).relative_to(await Path().absolute())
                     changed_path_str = str(changed_path)
 
                     if change == Change.deleted:
@@ -121,19 +113,13 @@ class FileIdManager(metaclass=Singleton):
                         ) as cursor:
                             if not (await cursor.fetchone())[0]:
                                 # path is not indexed, ignore
-                                logger.debug(
-                                    "File %s is not indexed, ignoring", changed_path_str
-                                )
+                                logger.debug("File %s is not indexed, ignoring", changed_path_str)
                                 continue
                         # path is indexed
-                        await maybe_rename(
-                            db, changed_path_str, deleted_paths, added_paths, False
-                        )
+                        await maybe_rename(db, changed_path_str, deleted_paths, added_paths, False)
                     elif change == Change.added:
                         logger.debug("File %s was added", changed_path_str)
-                        await maybe_rename(
-                            db, changed_path_str, added_paths, deleted_paths, True
-                        )
+                        await maybe_rename(db, changed_path_str, added_paths, deleted_paths, True)
                     elif change == Change.modified:
                         logger.debug("File %s was modified", changed_path_str)
                         if changed_path_str == self.db_path:
@@ -144,9 +130,7 @@ class FileIdManager(metaclass=Singleton):
                         ) as cursor:
                             if not (await cursor.fetchone())[0]:
                                 # path is not indexed, ignore
-                                logger.debug(
-                                    "File %s is not indexed, ignoring", changed_path_str
-                                )
+                                logger.debug("File %s is not indexed, ignoring", changed_path_str)
                                 continue
                         mtime = (await changed_path.stat()).st_mtime
                         await db.execute(
@@ -161,9 +145,7 @@ class FileIdManager(metaclass=Singleton):
                 for change in changes:
                     changed_path = change[1]
                     # get relative path
-                    changed_path = str(
-                        Path(changed_path).relative_to(await Path().absolute())
-                    )
+                    changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
                     for watcher in self.watchers.get(changed_path, []):
                         watcher.notify(change)
 
@@ -178,9 +160,7 @@ class FileIdManager(metaclass=Singleton):
 
 async def get_mtime(path, db) -> Optional[float]:
     if db:
-        async with db.execute(
-            "SELECT mtime FROM fileids WHERE path = ?", (path,)
-        ) as cursor:
+        async with db.execute("SELECT mtime FROM fileids WHERE path = ?", (path,)) as cursor:
             async for mtime, in cursor:
                 return mtime
             # deleted file is not in database, shouldn't happen
@@ -214,9 +194,7 @@ async def maybe_rename(
             if is_added_path:
                 path1, path2 = path2, path1
             logger.debug("File %s was renamed to %s", path1, path2)
-            await db.execute(
-                "UPDATE fileids SET path = ? WHERE path = ?", (path2, path1)
-            )
+            await db.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
             other_paths.remove(other_path)
             return
     changed_paths.append(changed_path)

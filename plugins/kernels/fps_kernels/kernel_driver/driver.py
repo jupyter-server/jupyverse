@@ -4,8 +4,7 @@ import time
 import uuid
 from typing import Any, Dict, List, Optional, cast
 
-from .connect import (cfg_t, connect_channel, launch_kernel,
-                      read_connection_file)
+from .connect import cfg_t, connect_channel, launch_kernel, read_connection_file
 from .connect import write_connection_file as _write_connection_file
 from .kernelspec import find_kernelspec
 from .message import create_message, receive_message, send_message
@@ -29,13 +28,9 @@ class KernelDriver:
         self.kernelspec_path = kernelspec_path or find_kernelspec(kernel_name)
         self.kernel_cwd = kernel_cwd
         if not self.kernelspec_path:
-            raise RuntimeError(
-                "Could not find a kernel, maybe you forgot to install one?"
-            )
+            raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
         if write_connection_file:
-            self.connection_file_path, self.connection_cfg = _write_connection_file(
-                connection_file
-            )
+            self.connection_file_path, self.connection_cfg = _write_connection_file(connection_file)
         else:
             self.connection_file_path = connection_file
             self.connection_cfg = read_connection_file(connection_file)
@@ -61,9 +56,7 @@ class KernelDriver:
         self.channel_tasks = []
         self.listen_channels()
 
-    async def start(
-        self, startup_timeout: float = float("inf"), connect: bool = True
-    ) -> None:
+    async def start(self, startup_timeout: float = float("inf"), connect: bool = True) -> None:
         self.kernel_process = await launch_kernel(
             self.kernelspec_path,
             self.connection_file_path,
@@ -176,9 +169,7 @@ class KernelDriver:
                 msg_id=str(self.msg_cnt),
             )
             self.msg_cnt += 1
-            await send_message(
-                msg, self.shell_channel, self.key, change_date_to_str=True
-            )
+            await send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
             msg = await receive_message(
                 self.shell_channel, timeout=new_timeout, change_str_to_date=True
             )
@@ -198,9 +189,7 @@ class KernelDriver:
         content = msg["content"]
         if msg_type == "stream":
             if (not outputs) or (outputs[-1]["name"] != content["name"]):
-                outputs.append(
-                    {"name": content["name"], "output_type": msg_type, "text": []}
-                )
+                outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
             outputs[-1]["text"].append(content["text"])
         elif msg_type in ("display_data", "execute_result"):
             outputs.append(

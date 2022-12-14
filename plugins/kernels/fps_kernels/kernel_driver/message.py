@@ -35,9 +35,7 @@ def utcnow() -> datetime:
     return datetime.utcnow().replace(tzinfo=timezone.utc)
 
 
-def create_message_header(
-    msg_type: str, session_id: str, msg_id: str
-) -> Dict[str, Any]:
+def create_message_header(msg_type: str, session_id: str, msg_id: str) -> Dict[str, Any]:
     if not session_id:
         session_id = msg_id = uuid4().hex
     else:
@@ -88,9 +86,7 @@ def sign(msg_list: List[bytes], key: str) -> bytes:
     return h.hexdigest().encode()
 
 
-def serialize(
-    msg: Dict[str, Any], key: str, change_date_to_str: bool = False
-) -> List[bytes]:
+def serialize(msg: Dict[str, Any], key: str, change_date_to_str: bool = False) -> List[bytes]:
     _date_to_str = date_to_str if change_date_to_str else lambda x: x
     message = [
         pack(_date_to_str(msg["header"])),
@@ -126,9 +122,7 @@ def deserialize(
 async def send_message(
     msg: Dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False
 ) -> None:
-    await sock.send_multipart(
-        serialize(msg, key, change_date_to_str=change_date_to_str), copy=True
-    )
+    await sock.send_multipart(serialize(msg, key, change_date_to_str=change_date_to_str), copy=True)
 
 
 async def receive_message(

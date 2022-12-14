@@ -54,9 +54,7 @@ async def delete_terminal(
 @router.websocket("/terminals/websocket/{name}")
 async def terminal_websocket(
     name,
-    websocket_permissions=Depends(
-        websocket_auth(permissions={"terminals": ["read", "execute"]})
-    ),
+    websocket_permissions=Depends(websocket_auth(permissions={"terminals": ["read", "execute"]})),
 ):
     if websocket_permissions is None:
         return
