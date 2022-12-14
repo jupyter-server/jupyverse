@@ -38,7 +38,7 @@ else:
 
 def init_router(router, redirect_after_root):
     extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
-    federated_extensions, _ = get_federated_extensions(extensions_dir)
+    federated_extensions, disabled_extensions = get_federated_extensions(extensions_dir)
 
     for ext in federated_extensions:
         name = ext["name"]
@@ -84,6 +84,10 @@ def init_router(router, redirect_after_root):
             "blocked_extensions": [],
             "allowed_extensions": [],
         }
+
+    @router.get("/lab/api/extensions")
+    async def get_extensions(user: User = Depends(current_user())):
+        return federated_extensions
 
     @router.get("/lab/api/translations/")
     async def get_translations_(

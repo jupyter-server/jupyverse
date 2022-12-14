@@ -1,6 +1,6 @@
 import pkg_resources
 
-__version__ = "0.0.44"
+__version__ = "0.0.46"
 
 auth = {
     ep.name: ep.load() for ep in pkg_resources.iter_entry_points(group="jupyverse_auth")

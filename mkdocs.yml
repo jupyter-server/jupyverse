@@ -45,6 +45,7 @@ nav:
   - 'fps-kernels': plugins/kernels.md
   - 'fps-terminals': plugins/terminals.md
   - 'fps-yjs': plugins/yjs.md
+  - 'fps-resource-usage': plugins/resource_usage.md
 
 markdown_extensions:
   - admonition
