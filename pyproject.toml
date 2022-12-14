@@ -18,7 +18,6 @@ dependencies = [
     "fps-terminals>=0.0.42",
     "fps-nbconvert>=0.0.42",
     "fps-yjs>=0.0.42",
-    "fps-resource-usage>=0.0.42",
 ]
 
 [[project.authors]]
