@@ -2,11 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.47
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.46...e39fa082add25c29ac963b1c432f5599c2666869))
+
+### Merged PRs
+
+- Remove duplicate favicon.ico [#263](https://github.com/jupyter-server/jupyverse/pull/263) ([@davidbrochart](https://github.com/davidbrochart))
+- Pin ypy-websocket >=0.8.2 [#262](https://github.com/jupyter-server/jupyverse/pull/262) ([@davidbrochart](https://github.com/davidbrochart))
+- Pass environment to terminals [#261](https://github.com/jupyter-server/jupyverse/pull/261) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove fps-resource-usage dependency [#257](https://github.com/jupyter-server/jupyverse/pull/257) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-12-13&to=2023-01-06&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-12-13..2023-01-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-12-13..2023-01-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.46
 
 No merged PRs
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.45
 
