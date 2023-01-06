@@ -1,11 +1,13 @@
 import asyncio
+import os
 
 from winpty import PTY  # type: ignore
 
 
 def open_terminal(command="C:\\Windows\\System32\\cmd.exe", columns=80, lines=24):
+    env = "\0".join([f"{k}={v}" for k, v in os.environ.items()]) + "\0"
     process = PTY(columns, lines)
-    process.spawn(command)
+    process.spawn(command, env=env)
     return process
 
 
