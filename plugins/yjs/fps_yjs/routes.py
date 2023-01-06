@@ -21,7 +21,7 @@ from fps_contents.routes import read_content, write_content  # type: ignore
 from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
-from ypy_websocket.yutils import YMessageType  # type: ignore
+from ypy_websocket.yutils import YMessageType, YSyncMessageType  # type: ignore
 
 from .models import CreateRoomId
 
@@ -223,7 +223,7 @@ class YDocWebSocketHandler:
             # skip = True
             pass
         elif byte == YMessageType.SYNC:
-            if not self.can_write and msg[0] == YMessageType.SYNC_UPDATE:
+            if not self.can_write and msg[0] == YSyncMessageType.SYNC_UPDATE:
                 skip = True
         else:
             skip = True
