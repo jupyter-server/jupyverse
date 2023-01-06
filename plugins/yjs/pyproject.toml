@@ -7,7 +7,7 @@ name = "fps_yjs"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-contents", "jupyter_ydoc >=0.1.16,<0.2.0", "ypy-websocket >=0.3.2,<0.4.0",]
+dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-contents", "jupyter_ydoc >=0.1.16,<0.2.0", "ypy-websocket >=0.8.2,<1",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
