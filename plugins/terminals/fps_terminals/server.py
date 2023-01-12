@@ -2,20 +2,17 @@ import asyncio
 import fcntl
 import os
 import pty
-import shlex
 import struct
 import termios
 
 from fastapi import WebSocketDisconnect
 
 
-def open_terminal(command="bash", columns=80, lines=24):
+def open_terminal():
     pid, fd = pty.fork()
     if pid == 0:
-        argv = shlex.split(command)
-        env = os.environ.copy()
-        env.update(TERM="linux", LC_ALL="en_GB.UTF-8", COLUMNS=str(columns), LINES=str(lines))
-        os.execvpe(argv[0], argv, env)
+        cmd = os.environ["SHELL"]
+        os.execl(cmd, cmd)
     return fd
 
 
