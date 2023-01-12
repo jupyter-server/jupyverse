@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.48
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.47...487c8557a665c78cc268c87820fab64570a6b951))
+
+### Merged PRs
+
+- Don't modify terminal environment [#264](https://github.com/jupyter-server/jupyverse/pull/264) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-01-06&to=2023-01-12&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-01-06..2023-01-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.47
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.46...e39fa082add25c29ac963b1c432f5599c2666869))
@@ -18,8 +34,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2022-12-13&to=2023-01-06&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2022-12-13..2023-01-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2022-12-13..2023-01-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.46
 
