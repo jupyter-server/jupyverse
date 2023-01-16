@@ -9,12 +9,9 @@ from typing import Dict, Iterable, List, Optional, cast
 from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
 from starlette.websockets import WebSocketState
 
-from ..kernel_driver.connect import (
-    cfg_t,
-    connect_channel,
-    launch_kernel,
-    read_connection_file,
-)
+from ..kernel_driver.connect import cfg_t, connect_channel
+from ..kernel_driver.connect import launch_kernel as _launch_kernel
+from ..kernel_driver.connect import read_connection_file
 from ..kernel_driver.connect import (
     write_connection_file as _write_connection_file,  # type: ignore
 )
@@ -108,19 +105,20 @@ class KernelServer:
     def connections(self) -> int:
         return len(self.sessions)
 
-    async def start(self) -> None:
-        if not self.kernelspec_path:
-            raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
+    async def start(self, launch_kernel: bool = True) -> None:
         self.last_activity = {
             "date": datetime.utcnow().isoformat() + "Z",
             "execution_state": "starting",
         }
-        self.kernel_process = await launch_kernel(
-            self.kernelspec_path,
-            self.connection_file_path,
-            self.kernel_cwd,
-            self.capture_kernel_output,
-        )
+        if launch_kernel:
+            if not self.kernelspec_path:
+                raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
+            self.kernel_process = await _launch_kernel(
+                self.kernelspec_path,
+                self.connection_file_path,
+                self.kernel_cwd,
+                self.capture_kernel_output,
+            )
         assert self.connection_cfg is not None
         identity = uuid.uuid4().hex.encode("ascii")
         self.shell_channel = connect_channel("shell", self.connection_cfg, identity=identity)
@@ -136,17 +134,18 @@ class KernelServer:
         ]
 
     async def stop(self) -> None:
-        # FIXME: stop kernel in a better way
-        try:
-            self.kernel_process.send_signal(signal.SIGINT)
-            self.kernel_process.kill()
-            await self.kernel_process.wait()
-        except Exception:
-            pass
-        try:
-            os.remove(self.connection_file_path)
-        except Exception:
-            pass
+        if self.write_connection_file:
+            # FIXME: stop kernel in a better way
+            try:
+                self.kernel_process.send_signal(signal.SIGINT)
+                self.kernel_process.kill()
+                await self.kernel_process.wait()
+            except BaseException:
+                pass
+            try:
+                os.remove(self.connection_file_path)
+            except BaseException:
+                pass
         for task in self.channel_tasks:
             task.cancel()
         self.channel_tasks = []
@@ -266,7 +265,7 @@ class KernelServer:
             bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
             try:
                 await websocket.websocket.send_bytes(bin_msg)
-            except Exception:
+            except BaseException:
                 pass
             # FIXME: update last_activity
             # but we don't want to parse the content!

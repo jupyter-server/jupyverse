@@ -1,12 +1,15 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
-class KernelName(BaseModel):
-    name: str
+class KernelInfo(BaseModel):
+    name: Optional[str] = None
+    id: Optional[str] = None
 
 
 class CreateSession(BaseModel):
-    kernel: KernelName
+    kernel: KernelInfo
     name: str
     path: str
     type: str
