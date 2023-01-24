@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.49
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.48...c976ab4f7c7c8c416b19dc794f253ec0a2c87636))
+
+### Merged PRs
+
+- Revert terminals change [#266](https://github.com/jupyter-server/jupyverse/pull/266) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-01-12&to=2023-01-24&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-01-12..2023-01-24&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.48
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.47...487c8557a665c78cc268c87820fab64570a6b951))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-01-06&to=2023-01-12&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-01-06..2023-01-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.47
 
