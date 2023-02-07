@@ -39,7 +39,6 @@ class Singleton(type):
 
 
 class FileIdManager(metaclass=Singleton):
-
     db_path: str
     initialized: asyncio.Event
     watchers: Dict[str, List[Watcher]]
