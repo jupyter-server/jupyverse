@@ -128,7 +128,6 @@ class JupyterWebsocketServer(WebsocketServer):
 
 
 class YDocWebSocketHandler:
-
     saving_document: Optional[asyncio.Task]
     websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
 
