@@ -1,9 +1,12 @@
+import os
 import sys
 from pathlib import Path
 from time import sleep
 
 import pytest
 from fps_kernels.kernel_server.server import KernelServer, kernels
+
+os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 
 @pytest.mark.asyncio

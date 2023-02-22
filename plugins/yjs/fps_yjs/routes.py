@@ -259,14 +259,12 @@ class YDocWebSocketHandler:
         self.room.document.unobserve()
         self.websocket_server.delete_room(room=self.room)
 
-    def on_document_change(self, event):
-        try:
+    def on_document_change(self, target, event):
+        if target == "state" and "dirty" in event.keys:
             dirty = event.keys["dirty"]["newValue"]
             if not dirty:
                 # we cleared the dirty flag, nothing to save
                 return
-        except Exception:
-            pass
         # unobserve and observe again because the structure of the document may have changed
         # e.g. a new cell added to a notebook
         self.room.document.unobserve()

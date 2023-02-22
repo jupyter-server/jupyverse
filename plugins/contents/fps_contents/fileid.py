@@ -47,7 +47,7 @@ class FileIdManager(metaclass=Singleton):
         self.db_path = db_path
         self.initialized = asyncio.Event()
         self.watchers = {}
-        asyncio.create_task(self.watch_files())
+        self._watch_files_task = asyncio.create_task(self.watch_files())
 
     async def get_id(self, path: str) -> Optional[str]:
         await self.initialized.wait()
