@@ -1,8 +1,10 @@
+import asyncio
 import json
 import sys
 import uuid
 from http import HTTPStatus
 from pathlib import Path
+from typing import Dict, List, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
@@ -11,6 +13,7 @@ from fps_auth_base import User, current_user, websocket_auth  # type: ignore
 from fps_frontend.config import get_frontend_config  # type: ignore
 from fps_yjs.routes import YDocWebSocketHandler  # type: ignore
 from starlette.requests import Request  # type: ignore
+from watchfiles import Change, awatch
 
 from .config import get_kernel_config
 from .kernel_driver.driver import KernelDriver  # type: ignore
@@ -25,8 +28,65 @@ from .models import CreateSession, Execution, Session
 router = APIRouter()
 
 kernelspecs: dict = {}
+kernel_id_to_connection_file: Dict[str, str] = {}
 sessions: dict = {}
 prefix_dir: Path = Path(sys.prefix)
+
+
+async def process_connection_files(changes: Set[Tuple[Change, str]]):
+    # get rid of "simultaneously" added/deleted files
+    file_changes: Dict[str, List[Change]] = {}
+    for c in changes:
+        change, path = c
+        if path not in file_changes:
+            file_changes[path] = []
+        file_changes[path].append(change)
+    to_delete: List[str] = []
+    for p, cs in file_changes.items():
+        if Change.added in cs and Change.deleted in cs:
+            cs.remove(Change.added)
+            cs.remove(Change.deleted)
+            if not cs:
+                to_delete.append(p)
+    for p in to_delete:
+        del file_changes[p]
+    # process file changes
+    for path, cs in file_changes.items():
+        for change in cs:
+            if change == Change.deleted:
+                if path in kernels:
+                    kernel_id = list(kernel_id_to_connection_file.keys())[
+                        list(kernel_id_to_connection_file.values()).index(path)
+                    ]
+                    del kernels[kernel_id]
+            elif change == Change.added:
+                try:
+                    data = json.loads(Path(path).read_text())
+                except BaseException:
+                    continue
+                if "kernel_name" not in data or "key" not in data:
+                    continue
+                # looks like a kernel connection file
+                kernel_id = str(uuid.uuid4())
+                kernel_id_to_connection_file[kernel_id] = path
+                kernels[kernel_id] = {"name": data["kernel_name"], "server": None, "driver": None}
+
+
+async def watch_connection_files(path: Path):
+    # first time scan, treat everything as added files
+    initial_changes = {(Change.added, str(p)) for p in path.iterdir()}
+    await process_connection_files(initial_changes)
+    # then, on every change
+    async for changes in awatch(path):
+        await process_connection_files(changes)
+
+
+@router.on_event("startup")
+async def startup():
+    kernel_config = get_kernel_config()
+    if kernel_config.connection_path is not None:
+        path = Path(kernel_config.connection_path)
+        asyncio.create_task(watch_connection_files(path))
 
 
 @router.on_event("shutdown")
@@ -74,13 +134,21 @@ async def get_kernels(
 ):
     results = []
     for kernel_id, kernel in kernels.items():
+        if kernel["server"]:
+            connections = kernel["server"].connections
+            last_activity = kernel["server"].last_activity["date"]
+            execution_state = kernel["server"].last_activity["execution_state"]
+        else:
+            connections = 0
+            last_activity = ""
+            execution_state = "idle"
         results.append(
             {
                 "id": kernel_id,
                 "name": kernel["name"],
-                "connections": kernel["server"].connections,
-                "last_activity": kernel["server"].last_activity["date"],
-                "execution_state": kernel["server"].last_activity["execution_state"],
+                "connections": connections,
+                "last_activity": last_activity,
+                "execution_state": execution_state,
             }
         )
     return results
@@ -95,6 +163,8 @@ async def delete_session(
     kernel_server = kernels[kernel_id]["server"]
     await kernel_server.stop()
     del kernels[kernel_id]
+    if kernel_id in kernel_id_to_connection_file:
+        del kernel_id_to_connection_file[kernel_id]
     del sessions[session_id]
     return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
@@ -133,14 +203,28 @@ async def create_session(
     user: User = Depends(current_user(permissions={"sessions": ["write"]})),
 ):
     create_session = CreateSession(**(await request.json()))
+    kernel_id = create_session.kernel.id
     kernel_name = create_session.kernel.name
-    kernel_server = KernelServer(
-        kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
-        kernel_cwd=str(Path(create_session.path).parent),
-    )
-    kernel_id = str(uuid.uuid4())
-    kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
-    await kernel_server.start()
+    if kernel_name is not None:
+        # launch a new ("internal") kernel
+        kernel_server = KernelServer(
+            kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
+            kernel_cwd=str(Path(create_session.path).parent),
+        )
+        kernel_id = str(uuid.uuid4())
+        kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
+        await kernel_server.start()
+    elif kernel_id is not None:
+        # external kernel
+        kernel_name = kernels[kernel_id]["name"]
+        kernel_server = KernelServer(
+            connection_file=kernel_id_to_connection_file[kernel_id],
+            write_connection_file=False,
+        )
+        kernels[kernel_id]["server"] = kernel_server
+        await kernel_server.start(launch_kernel=False)
+    else:
+        return
     session_id = str(uuid.uuid4())
     session = {
         "id": session_id,
@@ -149,7 +233,7 @@ async def create_session(
         "type": create_session.type,
         "kernel": {
             "id": kernel_id,
-            "name": create_session.kernel.name,
+            "name": kernel_name,
             "connections": kernel_server.connections,
             "last_activity": kernel_server.last_activity["date"],
             "execution_state": kernel_server.last_activity["execution_state"],
@@ -240,6 +324,15 @@ async def kernel_channels(
     accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
     if kernel_id in kernels:
         kernel_server = kernels[kernel_id]["server"]
+        if kernel_server is None:
+            # this is an external kernel
+            # kernel is already launched, just start a kernel server
+            kernel_server = KernelServer(
+                connection_file=kernel_id,
+                write_connection_file=False,
+            )
+            await kernel_server.start(launch_kernel=False)
+            kernels[kernel_id]["server"] = kernel_server
         await kernel_server.serve(accepted_websocket, session_id, permissions)
 
 

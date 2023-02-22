@@ -101,7 +101,7 @@ async def test_rest_api(start_jupyverse):
                 ),
             )
         # wait for Y model to be updated
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         # retrieve cells
         cells = ydoc.get_array("cells").to_json()
         assert cells[0]["outputs"] == [
