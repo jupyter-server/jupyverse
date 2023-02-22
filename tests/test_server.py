@@ -1,6 +1,5 @@
 import asyncio
 import json
-import sys
 from pathlib import Path
 
 import pytest
@@ -49,10 +48,6 @@ def test_settings_persistence_get(start_jupyverse):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
-@pytest.mark.skipif(
-    sys.platform.startswith("win"),
-    reason="Issue with POST /api/sessions",
-)
 async def test_rest_api(start_jupyverse):
     url = start_jupyverse
     ws_url = url.replace("http", "ws", 1)

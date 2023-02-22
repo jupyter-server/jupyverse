@@ -11,10 +11,6 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-@pytest.mark.skipif(
-    sys.version_info < (3, 8) or sys.platform.startswith("win"),
-    reason="pytest-asyncio issue",
-)
 async def test_kernel_messages(client, capfd):
     kernel_id = "kernel_id_0"
     kernel_name = "python3"

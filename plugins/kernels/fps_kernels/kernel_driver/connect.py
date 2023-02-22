@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import socket
+import sys
 import tempfile
 import uuid
 from typing import Dict, Optional, Tuple, Union
@@ -75,6 +76,12 @@ async def launch_kernel(
     with open(kernelspec_path) as f:
         kernelspec = json.load(f)
     cmd = [s.format(connection_file=connection_file_path) for s in kernelspec["argv"]]
+    if cmd and cmd[0] in {
+        "python",
+        "python%i" % sys.version_info[0],
+        "python%i.%i" % sys.version_info[:2],
+    }:
+        cmd[0] = sys.executable
     if kernel_cwd:
         prev_dir = os.getcwd()
         os.chdir(kernel_cwd)
