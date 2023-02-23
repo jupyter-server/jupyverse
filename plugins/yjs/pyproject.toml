@@ -6,8 +6,15 @@ build-backend = "hatchling.build"
 name = "fps_yjs"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
-requires-python = ">=3.7"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-contents", "jupyter_ydoc >=0.1.16,<0.2.0", "ypy-websocket >=0.8.2,<1",]
+requires-python = ">=3.8"
+dependencies = [
+    "fps >=0.0.8",
+    "fps-auth-base",
+    "fps-contents",
+    "jupyter_ydoc >=0.3.0,<0.4.0",
+    "ypy-websocket >=0.8.2,<1",
+    "y-py >=0.5.9,<0.6.0",
+]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"

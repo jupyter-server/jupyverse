@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_resource_usage"
 description = "An FPS plugin for the resource usage API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [ "fps >=0.0.8", "psutil >=5.9.4", "anyio >=3.6.2", ]
 dynamic = [ "version",]
 [[project.authors]]

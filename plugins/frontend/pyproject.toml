@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_frontend"
 description = "An FPS plugin for the frontend related configuration"
 keywords = ["fastapi", "pluggy", "plugins", "fps"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = ["fps>=0.0.8"]
 dynamic = ["version"]
 

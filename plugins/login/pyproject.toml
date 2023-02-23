@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_login"
 description = "An FPS plugin for the login API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [ "fps >=0.0.8",]
 dynamic = [ "version",]
 [[project.authors]]
