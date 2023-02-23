@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.0.50
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.49...cf56682249dd5c7064d16b4a88f6f49aeb728ce1))
+
+### Merged PRs
+
+- Update python, jupyter-ydoc, y-py [#273](https://github.com/jupyter-server/jupyverse/pull/273) ([@davidbrochart](https://github.com/davidbrochart))
+- Add support for external kernels [#265](https://github.com/jupyter-server/jupyverse/pull/265) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-01-24&to=2023-02-23&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-01-24..2023-02-23&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-01-24..2023-02-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.49
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.48...c976ab4f7c7c8c416b19dc794f253ec0a2c87636))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-01-12&to=2023-01-24&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-01-12..2023-01-24&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.48
 
