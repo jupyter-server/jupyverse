@@ -1,5 +1,4 @@
 import json
-import sys
 
 import pytest
 
@@ -7,10 +6,6 @@ test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-@pytest.mark.skipif(
-    sys.platform.startswith(("linux", "darwin")) and sys.version_info < (3, 8),
-    reason="pytest-asyncio issue",
-)
 def test_settings(client):
     # get previous theme
     response = client.get("/lab/api/settings/@jupyterlab/apputils-extension:themes")
