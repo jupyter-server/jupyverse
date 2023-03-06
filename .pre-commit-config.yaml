@@ -19,19 +19,9 @@ repos:
     rev: 23.1.0
     hooks:
       - id: black
-        args: ["--line-length", "100"]
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.254
     hooks:
-      - id: isort
-        files: \.py$
-        args: [--profile=black]
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        exclude: binder
-        additional_dependencies:
-          ["flake8-implicit-str-concat==0.2.0", "flake8-pyproject"]
+      - id: ruff
+        args: ["--fix"]
