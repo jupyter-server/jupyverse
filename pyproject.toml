@@ -112,11 +112,15 @@ jupyverse = "fps_uvicorn.cli:app"
 [tool.check-manifest]
 ignore = [ ".*",]
 
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+exclude = ["binder"]
+
 [tool.jupyter-releaser]
 skip = [ "check-links", "check-manifest",]
-
-[tool.flake8]
-max-line-length = 100
 
 [tool.jupyter-releaser.options]
 python_packages = [
