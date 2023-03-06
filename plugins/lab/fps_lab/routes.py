@@ -97,17 +97,19 @@ def init_router(router, redirect_after_root):
     @router.get("/lab/api/translations")
     async def get_translations(user: User = Depends(current_user())):
         locale = Locale.parse("en")
+        display_name = (locale.get_display_name(LOCALE) or "").capitalize()
+        native_name = (locale.get_display_name() or "").capitalize()
         data = {
             "en": {
-                "displayName": locale.get_display_name(LOCALE).capitalize(),
-                "nativeName": locale.get_display_name().capitalize(),
+                "displayName": display_name,
+                "nativeName": native_name,
             }
         }
         for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
             locale = Locale.parse(ep.name)
             data[ep.name] = {
-                "displayName": locale.get_display_name(LOCALE).capitalize(),
-                "nativeName": locale.get_display_name().capitalize(),
+                "displayName": display_name,
+                "nativeName": native_name,
             }
         return {"data": data, "message": ""}
 

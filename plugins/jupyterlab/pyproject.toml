@@ -7,7 +7,7 @@ name = "fps_jupyterlab"
 description = "An FPS plugin for the JupyterLab API"
 keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
 requires-python = ">=3.8"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-frontend", "fps-lab", "jupyterlab >=4.0.0a27",]
+dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-frontend", "fps-lab", "jupyterlab >=4.0.0a35",]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
