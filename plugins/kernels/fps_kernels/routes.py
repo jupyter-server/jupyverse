@@ -306,6 +306,19 @@ async def get_kernel(
         return result
 
 
+@router.delete("/api/kernels/{kernel_id}", status_code=204)
+async def shutdown_kernel(
+    kernel_id,
+    user: User = Depends(current_user(permissions={"kernels": ["write"]})),
+):
+    if kernel_id in kernels:
+        await kernels[kernel_id]["server"].stop()
+        del kernels[kernel_id]
+    for session_id in [k for k, v in sessions.items() if v["kernel"]["id"] == kernel_id]:
+        del sessions[session_id]
+    return Response(status_code=HTTPStatus.NO_CONTENT.value)
+
+
 @router.websocket("/api/kernels/{kernel_id}/channels")
 async def kernel_channels(
     kernel_id,
