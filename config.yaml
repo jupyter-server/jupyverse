@@ -6,9 +6,9 @@ component:
       type: app
     auth:
       type: auth
-    #auth_fief:
+    #auth:
     #  type: auth_fief
-    #noauth:
+    #auth:
     #  type: noauth
     contents:
         type: contents

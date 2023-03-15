@@ -32,7 +32,8 @@ class App:
             for _router, _paths in self._router_paths.items():
                 if path in _paths:
                     raise RuntimeError(
-                        f"{_type} adds a handler for a path that is already defined in {_router}: {path}"
+                        f"{_type} adds a handler for a path that is already defined in "
+                        f"{_router}: {path}"
                     )
             logger.debug("%s added handler for path: %s", _type, path)
             new_paths.append(path)

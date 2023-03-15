@@ -92,7 +92,8 @@ class _Yjs(Yjs):
                             # the source file (no change history)
                             read_from_source = True
                         if not read_from_source:
-                            # if YStore updates and source file are out-of-sync, resync updates with source
+                            # if YStore updates and source file are out-of-sync, resync updates
+                            # with source
                             if self.room.document.source != model.content:
                                 read_from_source = True
                         if read_from_source:
@@ -122,8 +123,8 @@ class _Yjs(Yjs):
                 byte = message[0]
                 msg = message[1:]
                 if byte == RENAME_SESSION:
-                    # The client moved the document to a different location. After receiving this message,
-                    # we make the current document available under a different url.
+                    # The client moved the document to a different location. After receiving this
+                    # message, we make the current document available under a different url.
                     # The other clients are automatically notified of this change because
                     # the path is shared through the Yjs document as well.
                     new_room_name = msg.decode("utf-8")

@@ -204,10 +204,11 @@ class Backend(metaclass=Singleton):
         """
         A function returning a dependency for the WebSocket connection.
 
-        :param permissions: the permissions the user should be granted access to. The user should have
-        access to at least one of them for the WebSocket to be opened.
-        :returns: a dependency for the WebSocket connection. The dependency returns a tuple consisting
-        of the websocket and the checked user permissions if the websocket is accepted, None otherwise.
+        :param permissions: the permissions the user should be granted access to. The user should
+        have access to at least one of them for the WebSocket to be opened.
+        :returns: a dependency for the WebSocket connection. The dependency returns a tuple
+        consisting of the websocket and the checked user permissions if the websocket is accepted,
+        None otherwise.
         """
 
         async def _(

@@ -102,7 +102,8 @@ class _Auth(Backend, Auth, Router):
             }
 
         # redefine GET /me because we want our current_user dependency
-        # it is first defined in users_router and so it wins over the one in fapi_users.get_users_router
+        # it is first defined in users_router and so it wins over the one in
+        # fapi_users.get_users_router
         users_router = APIRouter()
 
         @users_router.get("/me")
