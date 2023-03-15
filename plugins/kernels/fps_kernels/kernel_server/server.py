@@ -150,6 +150,9 @@ class KernelServer:
             task.cancel()
         self.channel_tasks = []
 
+    def interrupt(self) -> None:
+        self.kernel_process.send_signal(signal.SIGINT)
+
     async def restart(self) -> None:
         await self.stop()
         self.setup_connection_file()

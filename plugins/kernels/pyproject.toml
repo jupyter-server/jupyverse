@@ -5,9 +5,14 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_kernels"
 description = "An FPS plugin for the kernels API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-frontend", "fps-yjs", "pyzmq", "websockets", "python-dateutil", "watchfiles >=0.16.1,<1"]
+dependencies = [
+    "pyzmq",
+    "websockets",
+    "python-dateutil",
+    "watchfiles >=0.16.1,<1",
+]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -29,11 +34,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-kernels = "fps_kernels.routes"
-
-[project.entry-points.fps_config]
-fps-kernels = "fps_kernels.config"
+[project.entry-points."asphalt.components"]
+kernels = "fps_kernels.main:KernelsComponent"
 
 [tool.hatch.version]
 path = "fps_kernels/__init__.py"

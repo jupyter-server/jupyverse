@@ -5,9 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_frontend"
 description = "An FPS plugin for the frontend related configuration"
-keywords = ["fastapi", "pluggy", "plugins", "fps"]
+keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
-dependencies = ["fps>=0.0.8"]
 dynamic = ["version"]
 
 [[project.authors]]
@@ -30,8 +29,8 @@ ignore = [".*"]
 [tool.jupyter-releaser]
 skip = ["check-links"]
 
-[project.entry-points.fps_config]
-fps-frontend = "fps_frontend.config"
+[project.entry-points."asphalt.components"]
+frontend = "fps_frontend.main:FrontendComponent"
 
 [tool.hatch.version]
 path = "fps_frontend/__init__.py"

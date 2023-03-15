@@ -1,53 +1,65 @@
-import psutil  # type: ignore
+import psutil
 from anyio import to_thread
-from fastapi import APIRouter, Depends  # type: ignore
-from fps.hooks import register_router  # type: ignore
-from fps_auth_base import User, current_user  # type: ignore
-
-from .config import get_resource_usage_config
-
-router = APIRouter()
+from fastapi import APIRouter, Depends
+from jupyverse_api.app import App
+from jupyverse_api.auth import Auth
+from jupyverse_api.resource_usage import ResourceUsage, ResourceUsageConfig
 
 
-@router.get("/api/metrics/v1")
-async def get_content(
-    user: User = Depends(current_user(permissions={"contents": ["read"]})),
-    config=Depends(get_resource_usage_config),
-):
-    cur_process = psutil.Process()
-    all_processes = [cur_process] + cur_process.children(recursive=True)
+class _ResourceUsage(ResourceUsage):
+    def __init__(
+        self,
+        app: App,
+        auth: Auth,
+        resource_usage_config: ResourceUsageConfig,
+    ):
+        super().__init__(app)
 
-    # Get memory information
-    rss = 0
-    for p in all_processes:
-        try:
-            rss += p.memory_info().rss
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
+        router = APIRouter()
 
-    mem_limit = config.mem_limit
+        @router.get("/api/metrics/v1")
+        async def get_metrics(
+            user: auth.User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+        ):
+            cur_process = psutil.Process()
+            all_processes = [cur_process] + cur_process.children(recursive=True)
 
-    limits = {"memory": {"rss": mem_limit}}
-    if config.mem_limit and config.mem_warning_threshold:
-        limits["memory"]["warn"] = (mem_limit - rss) < (mem_limit * config.mem_warning_threshold)
+            # Get memory information
+            rss = 0
+            for p in all_processes:
+                try:
+                    rss += p.memory_info().rss
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
 
-    metrics = {"rss": rss, "limits": limits}
+            mem_limit = resource_usage_config.mem_limit
 
-    # Optionally get CPU information
-    if config.track_cpu_percent:
-        cpu_count = psutil.cpu_count()
-        cpu_percent = await to_thread.run_sync(_get_cpu_percent, all_processes)
-
-        if config.cpu_limit:
-            limits["cpu"] = {"cpu": config.cpu_limit}
-            if config.cpu_warning_threshold:
-                limits["cpu"]["warn"] = (config.cpu_limit - cpu_percent) < (
-                    config.cpu_limit * config.cpu_warning_threshold
+            limits = {"memory": {"rss": mem_limit}}
+            if resource_usage_config.mem_limit and resource_usage_config.mem_warning_threshold:
+                limits["memory"]["warn"] = (mem_limit - rss) < (
+                    mem_limit * resource_usage_config.mem_warning_threshold
                 )
 
-        metrics.update(cpu_percent=cpu_percent, cpu_count=cpu_count)
+            metrics = {"rss": rss, "limits": limits}
 
-    return metrics
+            # Optionally get CPU information
+            if resource_usage_config.track_cpu_percent:
+                cpu_count = psutil.cpu_count()
+                cpu_percent = await to_thread.run_sync(_get_cpu_percent, all_processes)
+
+                if resource_usage_config.cpu_limit:
+                    limits["cpu"] = {"cpu": resource_usage_config.cpu_limit}
+                    if resource_usage_config.cpu_warning_threshold:
+                        limits["cpu"]["warn"] = (resource_usage_config.cpu_limit - cpu_percent) < (
+                            resource_usage_config.cpu_limit
+                            * resource_usage_config.cpu_warning_threshold
+                        )
+
+                metrics.update(cpu_percent=cpu_percent, cpu_count=cpu_count)
+
+            return metrics
+
+        self.include_router(router)
 
 
 def _get_cpu_percent(all_processes):
@@ -60,6 +72,3 @@ def _get_cpu_percent(all_processes):
             return 0
 
     return sum([get_cpu_percent(p) for p in all_processes])
-
-
-r = register_router(router)

@@ -5,9 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_nbconvert"
 description = "An FPS plugin for the nbconvert API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "nbconvert",]
+dependencies = [
+    "nbconvert",
+]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -29,8 +31,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-nbconvert = "fps_nbconvert.routes"
+[project.entry-points."asphalt.components"]
+nbconvert = "fps_nbconvert.main:NbconvertComponent"
 
 [tool.hatch.version]
 path = "fps_nbconvert/__init__.py"

@@ -1,13 +1,5 @@
-from fps.config import PluginModel, get_config  # type: ignore
-from fps.hooks import register_config  # type: ignore
+from pydantic import BaseModel
 
 
-class JupyterLabConfig(PluginModel):
+class JupyterLabConfig(BaseModel):
     dev_mode: bool = False
-
-
-def get_jlab_config():
-    return get_config(JupyterLabConfig)
-
-
-c = register_config(JupyterLabConfig)

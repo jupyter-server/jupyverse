@@ -5,12 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_auth_fief"
 description = "An FPS plugin for the authentication API, using Fief"
-keywords = ["jupyter", "server", "fastapi", "pluggy", "plugins"]
+keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
     "fief-client[fastapi]",
-    "fps >=0.0.8"
 ]
 
 [[project.authors]]
@@ -33,11 +32,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-auth-fief = "fps_auth_fief.routes"
-
-[project.entry-points.fps_config]
-fps-auth-fief = "fps_auth_fief.config"
+[project.entry-points."asphalt.components"]
+auth_fief = "fps_auth_fief.main:AuthFiefComponent"
 
 [project.entry-points.jupyverse_auth]
 User = "fps_auth_fief.models:UserRead"

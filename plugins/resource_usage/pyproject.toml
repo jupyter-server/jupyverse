@@ -5,9 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_resource_usage"
 description = "An FPS plugin for the resource usage API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
-dependencies = [ "fps >=0.0.8", "psutil >=5.9.4", "anyio >=3.6.2", ]
+dependencies = [
+    "psutil >=5.9.4",
+    "anyio >=3.6.2",
+]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -29,11 +32,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-resource-usage = "fps_resource_usage.routes"
-
-[project.entry-points.fps_config]
-fps-resource-usage = "fps_resource_usage.config"
+[project.entry-points."asphalt.components"]
+resource_usage = "fps_resource_usage.main:ResourceUsageComponent"
 
 [tool.hatch.version]
 path = "fps_resource_usage/__init__.py"

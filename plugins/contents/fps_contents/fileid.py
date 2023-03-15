@@ -1,14 +1,14 @@
 import asyncio
+import logging
 from typing import Dict, List, Optional
 from uuid import uuid4
 
 import aiosqlite
 from anyio import Path
-from fps.logging import get_configured_logger  # type: ignore
+from jupyverse_api import Singleton
 from watchfiles import Change, awatch
 
-watchfiles_logger = get_configured_logger("watchfiles.main", "warning")
-logger = get_configured_logger("contents")
+logger = logging.getLogger("contents")
 
 
 class Watcher:
@@ -27,15 +27,6 @@ class Watcher:
     def notify(self, change):
         self._change = change
         self._event.set()
-
-
-class Singleton(type):
-    _instances: Dict = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class FileIdManager(metaclass=Singleton):

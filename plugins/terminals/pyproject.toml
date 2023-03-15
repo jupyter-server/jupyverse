@@ -5,10 +5,13 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_terminals"
 description = "An FPS plugin for the terminals API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "websockets", "pywinpty;platform_system=='Windows'",]
-dynamic = [ "version",]
+dependencies = [
+    "websockets",
+    "pywinpty;platform_system=='Windows'",
+]
+dynamic = ["version"]
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -29,8 +32,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-terminals = "fps_terminals.routes"
+[project.entry-points."asphalt.components"]
+terminals = "fps_terminals.main:TerminalsComponent"
 
 [tool.hatch.version]
 path = "fps_terminals/__init__.py"
