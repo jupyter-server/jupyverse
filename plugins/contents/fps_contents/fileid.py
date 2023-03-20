@@ -40,6 +40,8 @@ class FileIdManager(metaclass=Singleton):
         self.initialized = asyncio.Event()
         self.watchers = {}
         self.watch_files_task = asyncio.create_task(self.watch_files())
+        self.stop_watching_files = asyncio.Event()
+        self.stopped_watching_files = asyncio.Event()
         self.lock = asyncio.Lock()
 
     async def get_id(self, path: str) -> Optional[str]:
@@ -68,11 +70,11 @@ class FileIdManager(metaclass=Singleton):
                 if not await apath.exists():
                     return None
 
-            idx = uuid4().hex
-            mtime = (await apath.stat()).st_mtime
-            await db.execute("INSERT INTO fileids VALUES (?, ?, ?)", (idx, path, mtime))
-            await db.commit()
-            return idx
+                idx = uuid4().hex
+                mtime = (await apath.stat()).st_mtime
+                await db.execute("INSERT INTO fileids VALUES (?, ?, ?)", (idx, path, mtime))
+                await db.commit()
+                return idx
 
     async def watch_files(self):
         async with self.lock:
@@ -96,7 +98,7 @@ class FileIdManager(metaclass=Singleton):
                 await db.commit()
                 self.initialized.set()
 
-        async for changes in awatch("."):
+        async for changes in awatch(".", stop_event=self.stop_watching_files):
             async with self.lock:
                 async with aiosqlite.connect(self.db_path) as db:
                     deleted_paths = []
@@ -155,6 +157,8 @@ class FileIdManager(metaclass=Singleton):
                 changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
                 for watcher in self.watchers.get(changed_path, []):
                     watcher.notify(change)
+
+        self.stopped_watching_files.set()
 
     def watch(self, path: str) -> Watcher:
         watcher = Watcher(path)
