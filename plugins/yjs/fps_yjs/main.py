@@ -20,4 +20,4 @@ class YjsComponent(Component):
         ctx.add_resource(yjs, types=Yjs)
 
         # start indexing in the background
-        contents.file_id_manager
+        # contents.file_id_manager

@@ -9,7 +9,7 @@ keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.8"
 dependencies = [
   "jupyterlab >=4.0.0a37,<5",
-  "jupyter_collaboration >=1.0.0a4,<2",
+  #"jupyter_collaboration >=1.0.0a4,<2",
 ]
 dynamic = [ "version",]
 [[project.authors]]
