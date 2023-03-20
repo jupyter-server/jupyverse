@@ -1,9 +1,7 @@
 import logging
-
 from collections import defaultdict
 from typing import Dict, List
 
-from asphalt.core import Component, Context
 from fastapi import FastAPI
 
 from ..exceptions import RedirectException, _redirect_exception_handler
@@ -49,14 +47,3 @@ class App:
         self._router_paths[_type].append(path)
         logger.debug("%s mounted path: %s", _type, path)
         self._app.mount(path, *args, **kwargs)
-
-
-class AppComponent(Component):
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(FastAPI)
-
-        _app = App(app)
-        ctx.add_resource(_app)

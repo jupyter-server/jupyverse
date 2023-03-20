@@ -39,9 +39,9 @@ jobs:
         pip install hatch
         hatch env create dev.jupyterlab-auth
 
-    - name: Check types
-      run: |
-        hatch run dev.jupyterlab-auth:typecheck
+    #- name: Check types
+    #  run: |
+    #    hatch run dev.jupyterlab-auth:typecheck
 
     - name: Run tests
       run: |

@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple
+from uuid import uuid4
 
 from fastapi import (
     APIRouter,
@@ -12,7 +13,6 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from fastapi.responses import PlainTextResponse
 from jupyter_ydoc import ydocs as YDOCS
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -22,11 +22,12 @@ from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignor
 from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
 from ypy_websocket.yutils import YMessageType, YSyncMessageType  # type: ignore
 
-from .models import CreateRoomId
+from .models import CreateDocumentSession
 
 YFILE = YDOCS["file"]
 AWARENESS = 1
 RENAME_SESSION = 127
+SERVER_SESSION = uuid4().hex
 
 
 class JupyterSQLiteYStore(SQLiteYStore):
@@ -56,7 +57,7 @@ class _Yjs(Yjs):
             async def get_file_info(self) -> Tuple[str, str, str]:
                 room_name = self.websocket_server.get_room_name(self.room)
                 file_format, file_type, file_id = room_name.split(":", 2)
-                file_path = await contents.FileIdManager().get_path(file_id)
+                file_path = await contents.file_id_manager.get_path(file_id)
                 if file_path is None:
                     raise RuntimeError(f"File {self.room.document.path} cannot be found anymore")
                 if file_path != self.room.document.path:
@@ -147,12 +148,12 @@ class _Yjs(Yjs):
             async def watch_file(self):
                 file_format, file_type, file_path = await self.get_file_info()
                 while True:
-                    watcher = contents.FileIdManager().watch(file_path)
+                    watcher = contents.file_id_manager.watch(file_path)
                     async for changes in watcher:
                         file_format, file_type, new_file_path = await self.get_file_info()
                         if new_file_path != file_path:
                             # file was renamed
-                            contents.FileIdManager().unwatch(file_path, watcher)
+                            contents.file_id_manager.unwatch(file_path, watcher)
                             file_path = new_file_path
                             break
                         await self.maybe_load_document()
@@ -226,18 +227,7 @@ class _Yjs(Yjs):
 
         router = APIRouter()
 
-        @router.on_event("startup")
-        async def startup():
-            # start indexing in the background
-            contents.FileIdManager()
-
-        @router.websocket("/api/yjs/{path:path}")
-        async def websocket_endpoint(
-            path,
-            websocket_permissions=Depends(
-                auth.websocket_auth(permissions={"yjs": ["read", "write"]})
-            ),
-        ):
+        async def serve_room(websocket_permissions, path):
             if websocket_permissions is None:
                 return
             websocket, permissions = websocket_permissions
@@ -245,9 +235,25 @@ class _Yjs(Yjs):
             socket = YDocWebSocketHandler(WebsocketAdapter(websocket, path), path, permissions)
             await socket.serve()
 
-        @router.put(
-            "/api/yjs/roomid/{path:path}", status_code=200, response_class=PlainTextResponse
-        )
+        @router.websocket("/api/yjs/{path:path}")
+        async def yjs_websocket(
+            path,
+            websocket_permissions=Depends(
+                auth.websocket_auth(permissions={"yjs": ["read", "write"]})
+            ),
+        ):
+            await serve_room(websocket_permissions, path)
+
+        @router.websocket("/api/collaboration/room/{path:path}")
+        async def collaboration_room_websocket(
+            path,
+            websocket_permissions=Depends(
+                auth.websocket_auth(permissions={"yjs": ["read", "write"]})
+            ),
+        ):
+            await serve_room(websocket_permissions, path)
+
+        @router.put("/api/collaboration/session/{path:path}", status_code=200)
         async def create_roomid(
             path,
             request: Request,
@@ -256,20 +262,32 @@ class _Yjs(Yjs):
         ):
             # we need to process the request manually
             # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
-            create_room_id = CreateRoomId(**(await request.json()))
-            ws_url = f"{create_room_id.format}:{create_room_id.type}:"
-            idx = await contents.FileIdManager().get_id(path)
+            create_document_session = CreateDocumentSession(**(await request.json()))
+            idx = await contents.file_id_manager.get_id(path)
+            print(idx)
             if idx is not None:
-                return ws_url + idx
+                return {
+                    "format": create_document_session.format,
+                    "type": create_document_session.type,
+                    "fileId": idx,
+                    "sessionId": SERVER_SESSION,
+                }
 
-            idx = await contents.FileIdManager().index(path)
+            idx = await contents.file_id_manager.index(path)
             if idx is None:
                 raise HTTPException(status_code=404, detail=f"File {path} does not exist")
 
             response.status_code = status.HTTP_201_CREATED
-            return ws_url + idx
+            return {
+                "format": create_document_session.format,
+                "type": create_document_session.type,
+                "fileId": idx,
+                "sessionId": SERVER_SESSION,
+            }
 
         self.include_router(router)
+
+        self.YDocWebSocketHandler = YDocWebSocketHandler
 
 
 def to_datetime(iso_date: str) -> datetime:

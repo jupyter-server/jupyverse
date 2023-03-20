@@ -1,4 +1,71 @@
+from copy import deepcopy
+from uuid import uuid4
 from typing import Dict, List, Optional
+
+
+async def authenticate_client(http, port, permissions={}):
+    # create a new user
+    username = uuid4().hex
+    # if logged in, log out
+    first_time = True
+    while True:
+        response = await http.get(f"http://127.0.0.1:{port}/api/me")
+        if response.status_code == 403:
+            break
+        assert first_time
+        response = await http.post(f"http://127.0.0.1:{port}/auth/logout")
+        assert response.status_code == 200
+        first_time = False
+
+    # register user
+    register_body = {
+        "email": f"{username}@example.com",
+        "password": username,
+        "username": username,
+        "permissions": permissions,
+    }
+    response = await http.post(f"http://127.0.0.1:{port}/auth/register", json=register_body)
+    # check that we cannot register if not logged in
+    assert response.status_code == 403
+    # log in as admin
+    login_body = {"username": "admin@jupyter.com", "password": "jupyverse"}
+    response = await http.post(f"http://127.0.0.1:{port}/auth/login", data=login_body)
+    assert response.status_code == 200
+    # register user
+    response = await http.post(f"http://127.0.0.1:{port}/auth/register", json=register_body)
+    assert response.status_code == 201
+
+    # log out
+    response = await http.post(f"http://127.0.0.1:{port}/auth/logout")
+    assert response.status_code == 200
+    # check that we can't get our identity, since we're not logged in
+    response = await http.get(f"http://127.0.0.1:{port}/api/me")
+    assert response.status_code == 403
+
+    # log in with registered user
+    login_body = {"username": f"{username}@example.com", "password": username}
+    response = await http.post(f"http://127.0.0.1:{port}/auth/login", data=login_body)
+    assert response.status_code == 200
+    # we should now have a cookie
+    assert "fastapiusersauth" in http.cookies
+    # check our identity, since we're logged in
+    response = await http.get(
+        f"http://127.0.0.1:{port}/api/me", params={"permissions": permissions}
+    )
+    assert response.status_code == 200
+    me = response.json()
+    assert me["identity"]["username"] == username
+    # check our permissions
+    assert me["permissions"] == permissions
+
+
+def configure(components, config):
+    # TODO: generalize to arbitrary nested dictionaries, not just one level
+    _components = deepcopy(components)
+    for k1, v1 in config.items():
+        for k2, v2 in v1.items():
+            _components[k1][k2] = v2
+    return _components
 
 
 def create_content(

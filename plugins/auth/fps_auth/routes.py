@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from .backends import Backend
 from .config import _AuthConfig
-from .db import Db, User
+from .db import User
 
 from .models import UserCreate, UserRead, UserUpdate
 
@@ -32,7 +32,7 @@ class _Auth(Backend, Auth, Router):
         self.auth_config = auth_config
         self.backend = backend = Backend(auth_config, frontend_config)
 
-        self.db = db = Db(auth_config)
+        db = self.db
 
         router = APIRouter()
 

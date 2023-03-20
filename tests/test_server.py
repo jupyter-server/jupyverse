@@ -69,7 +69,7 @@ async def test_rest_api(start_jupyverse):
     kernel_id = r["kernel"]["id"]
     # get the room ID for the document
     response = requests.put(
-        f"{url}/api/yjs/roomid/{path}",
+        f"{url}/api/collaboration/session/{path}",
         data=json.dumps(
             {
                 "format": "json",
@@ -77,8 +77,9 @@ async def test_rest_api(start_jupyverse):
             }
         ),
     )
-    document_id = response.text
-    async with connect(f"{ws_url}/api/yjs/{document_id}") as websocket:
+    file_id = response.json()["fileId"]
+    document_id = f"json:notebook:{file_id}"
+    async with connect(f"{ws_url}/api/collaboration/room/{document_id}") as websocket:
         # connect to the shared notebook document
         ydoc = Y.YDoc()
         WebsocketProvider(ydoc, websocket)
@@ -95,10 +96,11 @@ async def test_rest_api(start_jupyverse):
                     }
                 ),
             )
+            print(f"{url}/api/kernels/{kernel_id}/execute", response.json())
         # wait for Y model to be updated
         await asyncio.sleep(0.5)
         # retrieve cells
-        cells = ydoc.get_array("cells").to_json()
+        cells = json.loads(ydoc.get_array("cells").to_json())
         assert cells[0]["outputs"] == [
             {
                 "data": {"text/plain": ["3"]},

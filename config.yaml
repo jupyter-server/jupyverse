@@ -1,6 +1,6 @@
 ---
 component:
-  type: fastapi
+  type: jupyverse
   components:
     app:
       type: app

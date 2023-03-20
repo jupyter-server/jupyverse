@@ -9,5 +9,5 @@ class NoAuthComponent(Component):
         self,
         ctx: Context,
     ) -> None:
-        noauth = _NoAuth()
-        ctx.add_resource(noauth, types=Auth)
+        no_auth = _NoAuth()
+        ctx.add_resource(no_auth, types=Auth)

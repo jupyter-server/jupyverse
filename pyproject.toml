@@ -11,12 +11,13 @@ requires-python = ">=3.8"
 dependencies = [
     "asphalt >=4.11.0,<5",
     "asphalt-web[fastapi] >=1.1.0,<2",
-    "jupyverse-api",
+    "fastapi >=0.94.0,<0.95.0",
     "fps-contents",
     "fps-kernels",
     "fps-terminals",
     "fps-nbconvert",
     "fps-yjs",
+    "jupyverse-api",
 ]
 
 [[project.authors]]
@@ -39,7 +40,18 @@ retrolab = [ "fps-retrolab",]
 auth = [ "fps-auth",]
 auth-fief = [ "fps-auth-fief",]
 noauth = ["fps-noauth"]
-test = [ "mypy", "types-setuptools", "pytest", "pytest-asyncio", "pytest-env", "requests", "websockets", "ipykernel",]
+test = [
+    "mypy",
+    "types-setuptools",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-env",
+    "httpx",
+    "httpx-ws",
+    "requests",
+    "websockets",
+    "ipykernel",
+]
 docs = [ "mkdocs", "mkdocs-material",]
 
 [tool.hatch.envs.dev]

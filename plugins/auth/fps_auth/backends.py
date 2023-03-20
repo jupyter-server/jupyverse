@@ -18,8 +18,7 @@ from fastapi_users.authentication import (
 from fastapi_users.authentication.strategy.base import Strategy
 from fastapi_users.authentication.transport.base import Transport
 from fastapi_users.db import SQLAlchemyUserDatabase
-from httpx_oauth.clients.github import GitHubOAuth2  # type: ignore
-from jupyverse_api import Singleton
+from httpx_oauth.clients.github import GitHubOAuth2
 from jupyverse_api.exceptions import RedirectException
 from starlette.requests import Request
 
@@ -30,7 +29,7 @@ from .models import UserCreate, UserRead
 logger = logging.getLogger("auth")
 
 
-class Backend(metaclass=Singleton):
+class Backend:
     def __init__(self, auth_config, frontend_config):
         self.auth_config = auth_config
         self.frontend_config = frontend_config
@@ -122,7 +121,7 @@ class Backend(metaclass=Singleton):
     def _get_jwt_strategy(self) -> JWTStrategy:
         return JWTStrategy(secret=self.db.secret, lifetime_seconds=None)
 
-    async def _get_enabled_backends(self):
+    def _get_enabled_backends(self):
         if self.auth_config.mode == "noauth" and not self.frontend_config.collaborative:
             res = [self.noauth_authentication, self.github_cookie_authentication]
         else:
@@ -168,7 +167,7 @@ class Backend(metaclass=Singleton):
                 # "noauth" or "token" authentication
                 if self.frontend_config.collaborative:
                     if not user and self.auth_config.mode == "noauth":
-                        user = await self._create_guest(user_manager, self.auth_config)
+                        user = await self._create_guest(user_manager)
                         await self.cookie_authentication.login(
                             self._get_jwt_strategy(), user, response
                         )
@@ -176,7 +175,7 @@ class Backend(metaclass=Singleton):
                     elif not user and self.auth_config.mode == "token":
                         global_user = await user_manager.get_by_email(self.auth_config.global_email)
                         if global_user and global_user.username == token:
-                            user = await self._create_guest(user_manager, self.auth_config)
+                            user = await self._create_guest(user_manager)
                             await self.cookie_authentication.login(
                                 self._get_jwt_strategy(), user, response
                             )

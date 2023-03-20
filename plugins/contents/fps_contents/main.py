@@ -14,5 +14,6 @@ class ContentsComponent(Component):
         app: App = resource(),
     ) -> None:
         auth = await ctx.request_resource(Auth)
+
         contents = _Contents(app, auth)
         ctx.add_resource(contents, types=Contents)

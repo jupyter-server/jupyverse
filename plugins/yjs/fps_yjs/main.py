@@ -18,3 +18,6 @@ class YjsComponent(Component):
 
         yjs = _Yjs(app, auth, contents)
         ctx.add_resource(yjs, types=Yjs)
+
+        # start indexing in the background
+        contents.file_id_manager

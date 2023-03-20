@@ -1,15 +1,10 @@
 import os
-import socket
 import subprocess
 import time
 from pathlib import Path
 
 import pytest
-
-pytest_plugins = (
-    "fps.testing.fixtures",
-    "fps_auth.fixtures",
-)
+import requests
 
 
 @pytest.fixture()
@@ -17,37 +12,29 @@ def cwd():
     return Path(__file__).parents[1]
 
 
-def get_open_port():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("", 0))
-    s.listen(1)
-    port = str(s.getsockname()[1])
-    s.close()
-    return port
-
-
 @pytest.fixture()
-def start_jupyverse(auth_mode, clear_users, cwd, capfd):
+def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
     os.chdir(cwd)
-    port = get_open_port()
     command_list = [
-        "jupyverse",
-        "--no-open-browser",
-        f"--auth.mode={auth_mode}",
-        "--auth.clear_users=" + str(clear_users).lower(),
-        f"--port={port}",
+        "asphalt",
+        "run",
+        "config.yaml",
+        "--set",
+        f"component.components.auth.mode={auth_mode}",
+        "--set",
+        f"component.components.auth.clear_users={str(clear_users).lower()}",
+        "--set",
+        f"component.port={unused_tcp_port}",
     ]
-    print(" ".join(command_list))
     p = subprocess.Popen(command_list)
-    dtime, ttime, timeout = 0.1, 0, 10
+    url = f"http://127.0.0.1:{unused_tcp_port}"
     while True:
-        time.sleep(dtime)
-        ttime += dtime
-        if ttime >= timeout:
-            raise RuntimeError("Timeout while launching Jupyverse")
-        out, err = capfd.readouterr()
-        if "Application startup complete" in err:
+        try:
+            requests.get(url)
+        except requests.exceptions.ConnectionError:
+            time.sleep(0.1)
+        else:
             break
-    url = f"http://127.0.0.1:{port}"
     yield url
     p.kill()
+    p.wait()

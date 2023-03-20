@@ -5,13 +5,31 @@ from time import sleep
 
 import pytest
 from fps_kernels.kernel_server.server import KernelServer, kernels
+from asphalt.core import Context
+from asphalt.web.fastapi import FastAPIComponent
+from fastapi import FastAPI
+from httpx import AsyncClient
+from httpx_ws import aconnect_ws
+
+from utils import configure
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
+COMPONENTS = {
+    "app": {"type": "app"},
+    "auth": {"type": "auth", "test": True},
+    "contents": {"type": "contents"},
+    "frontend": {"type": "frontend"},
+    "lab": {"type": "lab"},
+    "jupyterlab": {"type": "jupyterlab"},
+    "kernels": {"type": "kernels"},
+    "yjs": {"type": "yjs"},
+}
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_kernel_messages(client, capfd):
+async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
     kernel_id = "kernel_id_0"
     kernel_name = "python3"
     kernelspec_path = (
@@ -33,46 +51,56 @@ async def test_kernel_messages(client, capfd):
         },
     }
 
-    # block msg_type_0
-    msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-    kernel_server.block_messages("msg_type_0")
-    with client.websocket_connect(
-        f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-    ) as websocket:
-        websocket.send_json(msg)
-    sleep(0.5)
-    out, err = capfd.readouterr()
-    assert not err
+    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
+    application = FastAPI()
 
-    # allow only msg_type_0
-    msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-    kernel_server.allow_messages("msg_type_0")
-    with client.websocket_connect(
-        f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-    ) as websocket:
-        websocket.send_json(msg)
-    sleep(0.5)
-    out, err = capfd.readouterr()
-    assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
+    async with Context() as ctx, AsyncClient():
+        await FastAPIComponent(
+            components=components,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
 
-    # block all messages
-    msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-    kernel_server.allow_messages([])
-    with client.websocket_connect(
-        f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-    ) as websocket:
-        websocket.send_json(msg)
-    sleep(0.5)
-    out, err = capfd.readouterr()
-    assert not err
+        # block msg_type_0
+        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+        kernel_server.block_messages("msg_type_0")
+        async with aconnect_ws(
+            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+        ) as websocket:
+            await websocket.send_json(msg)
+        sleep(0.5)
+        out, err = capfd.readouterr()
+        assert not err
 
-    # allow all messages
-    msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-    kernel_server.allow_messages()
-    with client.websocket_connect(
-        f"/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-    ) as websocket:
-        websocket.send_json(msg)
-    sleep(0.5)
-    out, err = capfd.readouterr()
-    assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
+        # allow only msg_type_0
+        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+        kernel_server.allow_messages("msg_type_0")
+        async with aconnect_ws(
+            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+        ) as websocket:
+            await websocket.send_json(msg)
+        sleep(0.5)
+        out, err = capfd.readouterr()
+        assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
+
+        # block all messages
+        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+        kernel_server.allow_messages([])
+        async with aconnect_ws(
+            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+        ) as websocket:
+            await websocket.send_json(msg)
+        sleep(0.5)
+        out, err = capfd.readouterr()
+        assert not err
+
+        # allow all messages
+        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+        kernel_server.allow_messages()
+        async with aconnect_ws(
+            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+        ) as websocket:
+            await websocket.send_json(msg)
+        sleep(0.5)
+        out, err = capfd.readouterr()
+        assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1

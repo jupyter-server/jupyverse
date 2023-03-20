@@ -9,7 +9,6 @@ from fastapi_users.db import (
     SQLAlchemyBaseUserTableUUID,
     SQLAlchemyUserDatabase,
 )
-from jupyverse_api import Singleton
 from sqlalchemy import JSON, Boolean, Column, String, Text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
@@ -19,7 +18,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 logger = logging.getLogger("auth")
 
 
-class Db(metaclass=Singleton):
+class Db:
     def __init__(self, auth_config):
         jupyter_dir = Path.home() / ".local" / "share" / "jupyter"
         jupyter_dir.mkdir(parents=True, exist_ok=True)
@@ -52,8 +51,7 @@ class Db(metaclass=Singleton):
                 yield session
 
         async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-            res = SQLAlchemyUserDatabase(session, User, OAuthAccount)
-            yield res
+            yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
 
         async def create_db_and_tables():
             async with engine.begin() as conn:
