@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
 from anyio import open_file
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Response
-from jupyverse_api.auth import Auth
+from fastapi import APIRouter, Depends, HTTPException, Response
+from jupyverse_api.app import App
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents, Content, SaveContent
 from starlette.requests import Request
 
@@ -17,7 +18,7 @@ from .models import Checkpoint, CreateContent, RenameContent
 
 
 class _Contents(Contents):
-    def __init__(self, app: FastAPI, auth: Auth):
+    def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
 
         router = APIRouter()
@@ -27,7 +28,7 @@ class _Contents(Contents):
             status_code=201,
         )
         async def create_checkpoint(
-            path, user: auth.User = Depends(auth.current_user(permissions={"contents": ["write"]}))
+            path, user: User = Depends(auth.current_user(permissions={"contents": ["write"]}))
         ):
             src_path = Path(path)
             dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -47,7 +48,7 @@ class _Contents(Contents):
         async def create_content(
             path: Optional[str],
             request: Request,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
         ):
             create_content = CreateContent(**(await request.json()))
             content_path = Path(create_content.path)
@@ -85,13 +86,13 @@ class _Contents(Contents):
         @router.get("/api/contents")
         async def get_root_content(
             content: int,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ):
             return await self.read_content("", bool(content))
 
         @router.get("/api/contents/{path:path}/checkpoints")
         async def get_checkpoint(
-            path, user: auth.User = Depends(auth.current_user(permissions={"contents": ["read"]}))
+            path, user: User = Depends(auth.current_user(permissions={"contents": ["read"]}))
         ):
             src_path = Path(path)
             dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -104,7 +105,7 @@ class _Contents(Contents):
         async def get_content(
             path: str,
             content: int = 0,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ):
             return await self.read_content(path, bool(content))
 
@@ -113,7 +114,7 @@ class _Contents(Contents):
             path,
             request: Request,
             response: Response,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
         ):
             content = SaveContent(**(await request.json()))
             try:
@@ -128,7 +129,7 @@ class _Contents(Contents):
         )
         async def delete_content(
             path,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
         ):
             p = Path(path)
             if p.exists():
@@ -142,7 +143,7 @@ class _Contents(Contents):
         async def rename_content(
             path,
             request: Request,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
         ):
             rename_content = RenameContent(**(await request.json()))
             Path(path).rename(rename_content.path)

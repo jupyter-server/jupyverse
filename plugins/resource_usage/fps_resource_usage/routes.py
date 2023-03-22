@@ -2,7 +2,7 @@ import psutil
 from anyio import to_thread
 from fastapi import APIRouter, Depends
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.resource_usage import ResourceUsage, ResourceUsageConfig
 
 
@@ -19,7 +19,7 @@ class _ResourceUsage(ResourceUsage):
 
         @router.get("/api/metrics/v1")
         async def get_metrics(
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ):
             cur_process = psutil.Process()
             all_processes = [cur_process] + cur_process.children(recursive=True)

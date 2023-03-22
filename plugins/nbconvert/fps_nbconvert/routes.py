@@ -5,7 +5,7 @@ import nbconvert
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.nbconvert import Nbconvert
 
 
@@ -31,7 +31,7 @@ class _Nbconvert(Nbconvert):
             format: str,
             path: str,
             download: bool,
-            user: auth.User = Depends(auth.current_user(permissions={"nbconvert": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"nbconvert": ["read"]})),
         ):
             exporter = nbconvert.exporters.get_exporter(format)
             if download:

@@ -7,6 +7,7 @@ import struct
 import termios
 
 from fastapi import WebSocketDisconnect
+from jupyverse_api.terminals import TerminalServer
 
 
 def open_terminal(command="bash", columns=80, lines=24):
@@ -19,7 +20,7 @@ def open_terminal(command="bash", columns=80, lines=24):
     return fd
 
 
-class TerminalServer:
+class _TerminalServer(TerminalServer):
     def __init__(self):
         self.fd = open_terminal()
         self.p_out = os.fdopen(self.fd, "w+b", 0)

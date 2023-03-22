@@ -153,7 +153,7 @@ class Backend:
                     optional=True, get_enabled_backends=self._get_enabled_backends
                 )
             ),
-            user_manager: self.UserManager = Depends(self.get_user_manager),
+            user_manager: BaseUserManager[User, models.ID] = Depends(self.get_user_manager),
         ):
             if self.auth_config.mode == "user":
                 # "user" authentication: check authorization
@@ -212,7 +212,7 @@ class Backend:
 
         async def _(
             websocket: WebSocket,
-            user_manager: self.UserManager = Depends(self.get_user_manager),
+            user_manager: BaseUserManager[models.UP, models.ID] = Depends(self.get_user_manager),
         ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
             accept_websocket = False
             checked_permissions: Optional[Dict[str, List[str]]] = None

@@ -15,7 +15,7 @@ class Backend:
             client: FiefAsync
 
             async def get_unauthorized_response(self, request: Request, response: Response):
-                redirect_uri = request.url_for("auth_callback")
+                redirect_uri = str(request.url_for("auth_callback"))
                 auth_url = await self.client.auth_url(redirect_uri, scope=["openid"])
                 raise HTTPException(
                     status_code=status.HTTP_307_TEMPORARY_REDIRECT,

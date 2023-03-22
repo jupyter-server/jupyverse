@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context, inject, resource
+from asphalt.core import Component, Context
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.contents import Contents
@@ -7,12 +7,11 @@ from .routes import _Contents
 
 
 class ContentsComponent(Component):
-    @inject
     async def start(
         self,
         ctx: Context,
-        app: App = resource(),
     ) -> None:
+        app = await ctx.request_resource(App)
         auth = await ctx.request_resource(Auth)
 
         contents = _Contents(app, auth)

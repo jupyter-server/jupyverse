@@ -2,12 +2,12 @@ import json
 from http import HTTPStatus
 from pathlib import Path
 
-import jupyterlab as jupyterlab_module
+import jupyterlab as jupyterlab_module  # type: ignore
 from fastapi import APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLab, JupyterLabConfig
 from jupyverse_api.lab import Lab
@@ -24,7 +24,7 @@ class _JupyterLab(JupyterLab):
         auth: Auth,
         frontend_config: FrontendConfig,
         lab: Lab,
-    ) -> JupyterLab:
+    ) -> None:
         super().__init__(app)
 
         router = APIRouter()
@@ -48,7 +48,7 @@ class _JupyterLab(JupyterLab):
 
         @router.get("/lab")
         async def get_lab(
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return HTMLResponse(
                 self.get_index(
@@ -73,7 +73,7 @@ class _JupyterLab(JupyterLab):
             )
 
         @router.get("/lab/api/workspaces/{name}")
-        async def get_workspace_data(user: auth.User = Depends(auth.current_user())):
+        async def get_workspace_data(user: User = Depends(auth.current_user())):
             if user:
                 return json.loads(user.workspace)
             return {}
@@ -84,7 +84,7 @@ class _JupyterLab(JupyterLab):
         )
         async def set_workspace(
             request: Request,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
             user_update=Depends(auth.update_user),
         ):
             workspace = (await request.body()).decode("utf-8")
@@ -94,7 +94,7 @@ class _JupyterLab(JupyterLab):
         @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
         async def get_workspace(
             name,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return self.get_index(
                 name,

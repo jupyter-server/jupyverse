@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+from jupyverse_api.terminals import TerminalServer
 from winpty import PTY  # type: ignore
 
 
@@ -11,7 +12,7 @@ def open_terminal(command="C:\\Windows\\System32\\cmd.exe", columns=80, lines=24
     return process
 
 
-class TerminalServer:
+class _TerminalServer(TerminalServer):
     def __init__(self):
         self.process = open_terminal()
         self.websockets = []

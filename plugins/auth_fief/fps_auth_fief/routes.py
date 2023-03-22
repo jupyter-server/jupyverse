@@ -26,7 +26,7 @@ class _AuthFief(Backend, Auth, Router):
 
         @router.get("/auth-callback", name="auth_callback")
         async def auth_callback(request: Request, response: Response, code: str = Query(...)):
-            redirect_uri = request.url_for("auth_callback")
+            redirect_uri = str(request.url_for("auth_callback"))
             tokens, _ = await self.fief.auth_callback(code, redirect_uri)
 
             response = RedirectResponse(request.url_for("root"))
@@ -51,10 +51,10 @@ class _AuthFief(Backend, Auth, Router):
                 dict(request.query_params).get("permissions", "{}").replace("'", '"')
             )
             if permissions:
-                user_permissions = {}
+                user_permissions: Dict[str, List[str]] = {}
                 for permission in access_token_info["permissions"]:
                     resource, action = permission.split(":")
-                    if resource not in user_permissions.keys():
+                    if resource not in user_permissions:
                         user_permissions[resource] = []
                     user_permissions[resource].append(action)
                 for resource, actions in permissions.items():

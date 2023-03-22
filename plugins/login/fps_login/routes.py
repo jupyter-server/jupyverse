@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional, cast
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
@@ -6,6 +7,10 @@ from fastapi.staticfiles import StaticFiles
 from jupyverse_api.app import App
 from jupyverse_api.auth import AuthConfig
 from jupyverse_api.login import Login
+
+
+class _AuthConfig(AuthConfig):
+    login_url: Optional[str] = None
 
 
 class _Login(Login):
@@ -19,6 +24,8 @@ class _Login(Login):
         router = APIRouter()
         prefix_static = Path(__file__).parent / "static"
 
+        # fps_login needs an AuthConfig that has a login_url, such as fps_auth's config
+        auth_config = cast(_AuthConfig, auth_config)
         auth_config.login_url = "/login"
 
         self.mount(

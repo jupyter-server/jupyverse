@@ -15,7 +15,7 @@ from fastapi import (
 )
 from jupyter_ydoc import ydocs as YDOCS
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
 from jupyverse_api.yjs import Yjs
 from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
@@ -258,13 +258,12 @@ class _Yjs(Yjs):
             path,
             request: Request,
             response: Response,
-            user: auth.User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ):
             # we need to process the request manually
             # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
             create_document_session = CreateDocumentSession(**(await request.json()))
             idx = await contents.file_id_manager.get_id(path)
-            print(idx)
             if idx is not None:
                 return {
                     "format": create_document_session.format,

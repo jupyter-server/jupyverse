@@ -1,48 +1,33 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from jupyverse_api import Config
+from pydantic import BaseModel
+
+
+class User(BaseModel):
+    username: str = ""
+    name: str = ""
+    display_name: str = ""
+    initials: Optional[str] = None
+    color: Optional[str] = None
+    avatar_url: Optional[str] = None
+    workspace: str = "{}"
+    settings: str = "{}"
 
 
 class Auth:
-    @property
-    def User(self):
-        raise RuntimeError("Auth.User not implemented")
+    def current_user(self, permissions: Optional[Dict[str, List[str]]] = None) -> Callable:
+        raise RuntimeError("Not implemented")
 
-    def current_user(self) -> Callable:
-        raise RuntimeError("Auth.current_user not implemented")
-
-    def update_user(self) -> Callable:
-        raise RuntimeError("Auth.update_user not implemented")
+    async def update_user(self) -> Callable:
+        raise RuntimeError("Not implemented")
 
     def websocket_auth(
         self,
         permissions: Optional[Dict[str, List[str]]] = None,
     ) -> Callable[[], Tuple[Any, Dict[str, List[str]]]]:
-        raise RuntimeError("Auth.websocket_auth not implemented")
+        raise RuntimeError("Not implemented")
 
 
 class AuthConfig(Config):
     pass
-
-
-# class Auth(metaclass=ABCMeta):
-#
-#     @property
-#     @abstractmethod
-#     def User(self):
-#         ...
-#
-#     @abstractmethod
-#     def current_user(self) -> Callable:
-#         ...
-#
-#     @abstractmethod
-#     def update_user(self) -> Callable:
-#         ...
-#
-#     @abstractmethod
-#     def websocket_auth(
-#         self,
-#         permissions: Optional[Dict[str, List[str]]] = None,
-#     ) -> Callable[[], Tuple[Any, Dict[str, List[str]]]]:
-#         ...

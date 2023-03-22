@@ -1,15 +1,14 @@
 from asphalt.core import Component, Context
 from jupyverse_api.auth import Auth
 from jupyverse_api.app import App
-from jupyverse_api.resource_usage import ResourceUsage
+from jupyverse_api.resource_usage import ResourceUsage, ResourceUsageConfig
 
-from .config import _ResourceUsageConfig
 from .routes import _ResourceUsage
 
 
 class ResourceUsageComponent(Component):
     def __init__(self, **kwargs):
-        self.resource_usage_config = _ResourceUsageConfig(**kwargs)
+        self.resource_usage_config = ResourceUsageConfig(**kwargs)
 
     async def start(
         self,

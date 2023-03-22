@@ -1,19 +1,19 @@
 import json
 from pathlib import Path
 
-import retrolab
+import retrolab  # type: ignore
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.lab import Lab
 from jupyverse_api.retrolab import RetroLab
 
 
 class _RetroLab(RetroLab):
-    def __init__(self, app: App, auth: Auth, frontend_config: FrontendConfig, lab: Lab) -> RetroLab:
+    def __init__(self, app: App, auth: Auth, frontend_config: FrontendConfig, lab: Lab) -> None:
         super().__init__(app)
 
         router = APIRouter()
@@ -40,7 +40,7 @@ class _RetroLab(RetroLab):
 
         @router.get("/retro/tree", response_class=HTMLResponse)
         async def get_tree(
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return get_index(
                 "Tree", "tree", frontend_config.collaborative, frontend_config.base_url
@@ -49,7 +49,7 @@ class _RetroLab(RetroLab):
         @router.get("/retro/notebooks/{path:path}", response_class=HTMLResponse)
         async def get_notebook(
             path,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return get_index(
                 path, "notebooks", frontend_config.collaborative, frontend_config.base_url
@@ -58,14 +58,14 @@ class _RetroLab(RetroLab):
         @router.get("/retro/edit/{path:path}", response_class=HTMLResponse)
         async def edit_file(
             path,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return get_index(path, "edit", frontend_config.collaborative, frontend_config.base_url)
 
         @router.get("/retro/consoles/{path:path}", response_class=HTMLResponse)
         async def get_console(
             path,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return get_index(
                 path, "consoles", frontend_config.collaborative, frontend_config.base_url
@@ -74,7 +74,7 @@ class _RetroLab(RetroLab):
         @router.get("/retro/terminals/{name}", response_class=HTMLResponse)
         async def get_terminal(
             name: str,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             return get_index(
                 name, "terminals", frontend_config.collaborative, frontend_config.base_url

@@ -5,19 +5,19 @@ import sys
 from glob import glob
 from http import HTTPStatus
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-import json5
+import json5  # type: ignore
 import pkg_resources
 from babel import Locale
-from fastapi import Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
 
 import jupyverse
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLabConfig
 from jupyverse_api.lab import Lab
@@ -33,14 +33,14 @@ class _Lab(Lab):
         auth: Auth,
         frontend_config: FrontendConfig,
         jupyterlab_config: Optional[JupyterLabConfig],
-    ) -> Lab:
+    ) -> None:
         super().__init__(app)
 
         self.auth = auth
         self.frontend_config = frontend_config
 
         if jupyterlab_config is not None:
-            import jupyterlab as jupyterlab_module
+            import jupyterlab as jupyterlab_module  # type: ignore
 
             jlab_dev_mode = jupyterlab_config.dev_mode
         else:
@@ -54,7 +54,9 @@ class _Lab(Lab):
         else:
             self.jlab_dir = self.prefix_dir / "share" / "jupyter" / "lab"
 
-    def init_router(self, router, redirect_after_root):
+    def init_router(
+        self, router: APIRouter, redirect_after_root: str
+    ) -> Tuple[Path, List[Dict[str, Any]]]:
         extensions_dir = self.prefix_dir / "share" / "jupyter" / "labextensions"
         federated_extensions, disabled_extensions = self.get_federated_extensions(extensions_dir)
 
@@ -75,7 +77,7 @@ class _Lab(Lab):
         @router.get("/", name="root")
         async def get_root(
             response: Response,
-            user: self.auth.User = Depends(self.auth.current_user()),
+            user: User = Depends(self.auth.current_user()),
         ):
             # auto redirect
             response.status_code = status.HTTP_302_FOUND
@@ -92,7 +94,7 @@ class _Lab(Lab):
             )
 
         @router.get("/lab/api/listings/@jupyterlab/extensionmanager-extension/listings.json")
-        async def get_listings(user: self.auth.User = Depends(self.auth.current_user())):
+        async def get_listings(user: User = Depends(self.auth.current_user())):
             return {
                 "blocked_extensions_uris": [],
                 "allowed_extensions_uris": [],
@@ -101,17 +103,17 @@ class _Lab(Lab):
             }
 
         @router.get("/lab/api/extensions")
-        async def get_extensions(user: self.auth.User = Depends(self.auth.current_user())):
+        async def get_extensions(user: User = Depends(self.auth.current_user())):
             return federated_extensions
 
         @router.get("/lab/api/translations/")
         async def get_translations_(
-            user: self.auth.User = Depends(self.auth.current_user()),
+            user: User = Depends(self.auth.current_user()),
         ):
             return RedirectResponse(f"{self.frontend_config.base_url}lab/api/translations")
 
         @router.get("/lab/api/translations")
-        async def get_translations(user: self.auth.User = Depends(self.auth.current_user())):
+        async def get_translations(user: User = Depends(self.auth.current_user())):
             locale = Locale.parse("en")
             display_name = (locale.get_display_name(self.locale) or "").capitalize()
             native_name = (locale.get_display_name() or "").capitalize()
@@ -132,7 +134,7 @@ class _Lab(Lab):
         @router.get("/lab/api/translations/{language}")
         async def get_translation(
             language,
-            user: self.auth.User = Depends(self.auth.current_user()),
+            user: User = Depends(self.auth.current_user()),
         ):
             if language == "en":
                 self.locale = language
@@ -157,7 +159,7 @@ class _Lab(Lab):
             name0,
             name1,
             name2,
-            user: self.auth.User = Depends(self.auth.current_user()),
+            user: User = Depends(self.auth.current_user()),
         ):
             with open(self.jlab_dir / "static" / "package.json") as f:
                 package = json.load(f)
@@ -192,7 +194,7 @@ class _Lab(Lab):
             request: Request,
             name0,
             name1,
-            user: self.auth.User = Depends(self.auth.current_user()),
+            user: User = Depends(self.auth.current_user()),
             user_update=Depends(self.auth.update_user),
         ):
             settings = json.loads(user.settings)
@@ -201,7 +203,7 @@ class _Lab(Lab):
             return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
         @router.get("/lab/api/settings")
-        async def get_settings(user: self.auth.User = Depends(self.auth.current_user())):
+        async def get_settings(user: User = Depends(self.auth.current_user())):
             with open(self.jlab_dir / "static" / "package.json") as f:
                 package = json.load(f)
             if user:

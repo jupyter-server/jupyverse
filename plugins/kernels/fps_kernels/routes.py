@@ -1,4 +1,3 @@
-import asyncio
 import json
 import sys
 import uuid
@@ -10,8 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
 from starlette.requests import Request
 from watchfiles import Change, awatch
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 from jupyverse_api.kernels import Kernels, KernelsConfig
+from jupyverse_api.kernels.models import CreateSession, Execution, Kernel, Notebook, Session
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.app import App
@@ -23,7 +23,6 @@ from .kernel_server.server import (
     KernelServer,
     kernels,
 )
-from .models import CreateSession, Execution, Session
 
 
 class _Kernels(Kernels):
@@ -40,74 +39,13 @@ class _Kernels(Kernels):
         router = APIRouter()
 
         kernelspecs: dict = {}
-        kernel_id_to_connection_file: Dict[str, str] = {}
-        sessions: dict = {}
+        self.kernel_id_to_connection_file: Dict[str, str] = {}
+        sessions: Dict[str, Session] = {}
         Path(sys.prefix)
-
-        async def process_connection_files(changes: Set[Tuple[Change, str]]):
-            # get rid of "simultaneously" added/deleted files
-            file_changes: Dict[str, List[Change]] = {}
-            for c in changes:
-                change, path = c
-                if path not in file_changes:
-                    file_changes[path] = []
-                file_changes[path].append(change)
-            to_delete: List[str] = []
-            for p, cs in file_changes.items():
-                if Change.added in cs and Change.deleted in cs:
-                    cs.remove(Change.added)
-                    cs.remove(Change.deleted)
-                    if not cs:
-                        to_delete.append(p)
-            for p in to_delete:
-                del file_changes[p]
-            # process file changes
-            for path, cs in file_changes.items():
-                for change in cs:
-                    if change == Change.deleted:
-                        if path in kernels:
-                            kernel_id = list(kernel_id_to_connection_file.keys())[
-                                list(kernel_id_to_connection_file.values()).index(path)
-                            ]
-                            del kernels[kernel_id]
-                    elif change == Change.added:
-                        try:
-                            data = json.loads(Path(path).read_text())
-                        except BaseException:
-                            continue
-                        if "kernel_name" not in data or "key" not in data:
-                            continue
-                        # looks like a kernel connection file
-                        kernel_id = str(uuid.uuid4())
-                        kernel_id_to_connection_file[kernel_id] = path
-                        kernels[kernel_id] = {
-                            "name": data["kernel_name"],
-                            "server": None,
-                            "driver": None,
-                        }
-
-        async def watch_connection_files(path: Path):
-            # first time scan, treat everything as added files
-            initial_changes = {(Change.added, str(p)) for p in path.iterdir()}
-            await process_connection_files(initial_changes)
-            # then, on every change
-            async for changes in awatch(path):
-                await process_connection_files(changes)
-
-        @router.on_event("startup")
-        async def startup():
-            if kernels_config.connection_path is not None:
-                path = Path(kernels_config.connection_path)
-                asyncio.create_task(watch_connection_files(path))
-
-        @router.on_event("shutdown")
-        async def stop_kernels():
-            for kernel in kernels.values():
-                await kernel["server"].stop()
 
         @router.get("/api/kernelspecs")
         async def get_kernelspecs(
-            user: auth.User = Depends(auth.current_user(permissions={"kernelspecs": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"kernelspecs": ["read"]})),
         ):
             for search_path in kernelspec_dirs():
                 for path in Path(search_path).glob("*/kernel.json"):
@@ -126,7 +64,7 @@ class _Kernels(Kernels):
         async def get_kernelspec(
             kernel_name,
             file_name,
-            user: auth.User = Depends(auth.current_user()),
+            user: User = Depends(auth.current_user()),
         ):
             for search_path in kernelspec_dirs():
                 file_path = Path(search_path) / kernel_name / file_name
@@ -138,7 +76,7 @@ class _Kernels(Kernels):
 
         @router.get("/api/kernels")
         async def get_kernels(
-            user: auth.User = Depends(auth.current_user(permissions={"kernels": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"kernels": ["read"]})),
         ):
             results = []
             for kernel_id, kernel in kernels.items():
@@ -164,39 +102,37 @@ class _Kernels(Kernels):
         @router.delete("/api/sessions/{session_id}", status_code=204)
         async def delete_session(
             session_id: str,
-            user: auth.User = Depends(auth.current_user(permissions={"sessions": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"sessions": ["write"]})),
         ):
-            kernel_id = sessions[session_id]["kernel"]["id"]
+            kernel_id = sessions[session_id].kernel.id
             kernel_server = kernels[kernel_id]["server"]
             await kernel_server.stop()
             del kernels[kernel_id]
-            if kernel_id in kernel_id_to_connection_file:
-                del kernel_id_to_connection_file[kernel_id]
+            if kernel_id in self.kernel_id_to_connection_file:
+                del self.kernel_id_to_connection_file[kernel_id]
             del sessions[session_id]
             return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
         @router.patch("/api/sessions/{session_id}")
         async def rename_session(
             request: Request,
-            user: auth.User = Depends(auth.current_user(permissions={"sessions": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"sessions": ["write"]})),
         ):
             rename_session = await request.json()
             session_id = rename_session.pop("id")
             for key, value in rename_session.items():
-                sessions[session_id][key] = value
-            return Session(**sessions[session_id])
+                setattr(sessions[session_id], key, value)
+            return sessions[session_id]
 
         @router.get("/api/sessions")
         async def get_sessions(
-            user: auth.User = Depends(auth.current_user(permissions={"sessions": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"sessions": ["read"]})),
         ):
             for session in sessions.values():
-                kernel_id = session["kernel"]["id"]
+                kernel_id = session.kernel.id
                 kernel_server = kernels[kernel_id]["server"]
-                session["kernel"]["last_activity"] = kernel_server.last_activity["date"]
-                session["kernel"]["execution_state"] = kernel_server.last_activity[
-                    "execution_state"
-                ]
+                session.kernel.last_activity = kernel_server.last_activity["date"]
+                session.kernel.execution_state = kernel_server.last_activity["execution_state"]
             return list(sessions.values())
 
         @router.post(
@@ -206,7 +142,7 @@ class _Kernels(Kernels):
         )
         async def create_session(
             request: Request,
-            user: auth.User = Depends(auth.current_user(permissions={"sessions": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"sessions": ["write"]})),
         ):
             create_session = CreateSession(**(await request.json()))
             kernel_id = create_session.kernel.id
@@ -224,7 +160,7 @@ class _Kernels(Kernels):
                 # external kernel
                 kernel_name = kernels[kernel_id]["name"]
                 kernel_server = KernelServer(
-                    connection_file=kernel_id_to_connection_file[kernel_id],
+                    connection_file=self.kernel_id_to_connection_file[kernel_id],
                     write_connection_file=False,
                 )
                 kernels[kernel_id]["server"] = kernel_server
@@ -232,27 +168,30 @@ class _Kernels(Kernels):
             else:
                 return
             session_id = str(uuid.uuid4())
-            session = {
-                "id": session_id,
-                "path": create_session.path,
-                "name": create_session.name,
-                "type": create_session.type,
-                "kernel": {
-                    "id": kernel_id,
-                    "name": kernel_name,
-                    "connections": kernel_server.connections,
-                    "last_activity": kernel_server.last_activity["date"],
-                    "execution_state": kernel_server.last_activity["execution_state"],
-                },
-                "notebook": {"path": create_session.path, "name": create_session.name},
-            }
+            session = Session(
+                id=session_id,
+                path=create_session.path,
+                name=create_session.name,
+                type=create_session.type,
+                kernel=Kernel(
+                    id=kernel_id,
+                    name=kernel_name,
+                    connections=kernel_server.connections,
+                    last_activity=kernel_server.last_activity["date"],
+                    execution_state=kernel_server.last_activity["execution_state"],
+                ),
+                notebook=Notebook(
+                    path=create_session.path,
+                    name=create_session.name,
+                ),
+            )
             sessions[session_id] = session
-            return Session(**session)
+            return session
 
         @router.post("/api/kernels/{kernel_id}/interrupt")
         async def interrupt_kernel(
             kernel_id,
-            user: auth.User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
         ):
             if kernel_id in kernels:
                 kernel = kernels[kernel_id]
@@ -269,7 +208,7 @@ class _Kernels(Kernels):
         @router.post("/api/kernels/{kernel_id}/restart")
         async def restart_kernel(
             kernel_id,
-            user: auth.User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
         ):
             if kernel_id in kernels:
                 kernel = kernels[kernel_id]
@@ -287,7 +226,7 @@ class _Kernels(Kernels):
         async def execute_cell(
             request: Request,
             kernel_id,
-            user: auth.User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
         ):
             r = await request.json()
             execution = Execution(**r)
@@ -314,7 +253,7 @@ class _Kernels(Kernels):
         @router.get("/api/kernels/{kernel_id}")
         async def get_kernel(
             kernel_id,
-            user: auth.User = Depends(auth.current_user(permissions={"kernels": ["read"]})),
+            user: User = Depends(auth.current_user(permissions={"kernels": ["read"]})),
         ):
             if kernel_id in kernels:
                 kernel = kernels[kernel_id]
@@ -330,12 +269,12 @@ class _Kernels(Kernels):
         @router.delete("/api/kernels/{kernel_id}", status_code=204)
         async def shutdown_kernel(
             kernel_id,
-            user: auth.User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
+            user: User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
         ):
             if kernel_id in kernels:
                 await kernels[kernel_id]["server"].stop()
                 del kernels[kernel_id]
-            for session_id in [k for k, v in sessions.items() if v["kernel"]["id"] == kernel_id]:
+            for session_id in [k for k, v in sessions.items() if v.kernel.id == kernel_id]:
                 del sessions[session_id]
             return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
@@ -371,3 +310,55 @@ class _Kernels(Kernels):
                 await kernel_server.serve(accepted_websocket, session_id, permissions)
 
         self.include_router(router)
+
+        self.kernels = kernels
+
+    async def watch_connection_files(self, path: Path) -> None:
+        # first time scan, treat everything as added files
+        initial_changes = {(Change.added, str(p)) for p in path.iterdir()}
+        await self.process_connection_files(initial_changes)
+        # then, on every change
+        async for changes in awatch(path):
+            await self.process_connection_files(changes)
+
+    async def process_connection_files(self, changes: Set[Tuple[Change, str]]):
+        # get rid of "simultaneously" added/deleted files
+        file_changes: Dict[str, List[Change]] = {}
+        for c in changes:
+            change, path = c
+            if path not in file_changes:
+                file_changes[path] = []
+            file_changes[path].append(change)
+        to_delete: List[str] = []
+        for p, cs in file_changes.items():
+            if Change.added in cs and Change.deleted in cs:
+                cs.remove(Change.added)
+                cs.remove(Change.deleted)
+                if not cs:
+                    to_delete.append(p)
+        for p in to_delete:
+            del file_changes[p]
+        # process file changes
+        for path, cs in file_changes.items():
+            for change in cs:
+                if change == Change.deleted:
+                    if path in kernels:
+                        kernel_id = list(self.kernel_id_to_connection_file.keys())[
+                            list(self.kernel_id_to_connection_file.values()).index(path)
+                        ]
+                        del kernels[kernel_id]
+                elif change == Change.added:
+                    try:
+                        data = json.loads(Path(path).read_text())
+                    except BaseException:
+                        continue
+                    if "kernel_name" not in data or "key" not in data:
+                        continue
+                    # looks like a kernel connection file
+                    kernel_id = str(uuid.uuid4())
+                    self.kernel_id_to_connection_file[kernel_id] = path
+                    kernels[kernel_id] = {
+                        "name": data["kernel_name"],
+                        "server": None,
+                        "driver": None,
+                    }

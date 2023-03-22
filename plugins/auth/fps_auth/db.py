@@ -9,10 +9,10 @@ from fastapi_users.db import (
     SQLAlchemyBaseUserTableUUID,
     SQLAlchemyUserDatabase,
 )
-from sqlalchemy import JSON, Boolean, Column, String, Text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy import JSON, Boolean, Column, String, Text  # type: ignore
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # type: ignore
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
+from sqlalchemy.orm import relationship, sessionmaker  # type: ignore
 
 
 logger = logging.getLogger("auth")

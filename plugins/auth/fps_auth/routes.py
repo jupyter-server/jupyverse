@@ -3,11 +3,12 @@ import json
 import logging
 from typing import Dict, List
 
-from fastapi import FastAPI, APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request
 from jupyverse_api import Router
+from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
-from sqlalchemy import select
+from sqlalchemy import select  # type: ignore
 
 from .backends import Backend
 from .config import _AuthConfig
@@ -22,10 +23,10 @@ logger = logging.getLogger("auth")
 class _Auth(Backend, Auth, Router):
     def __init__(
         self,
-        app: FastAPI,
+        app: App,
         auth_config: _AuthConfig,
         frontend_config: FrontendConfig,
-    ):
+    ) -> None:
         Router.__init__(self, app)
         Backend.__init__(self, auth_config, frontend_config)
 

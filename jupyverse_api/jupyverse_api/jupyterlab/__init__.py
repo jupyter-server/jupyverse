@@ -6,4 +6,4 @@ class JupyterLab(Router):
 
 
 class JupyterLabConfig(Config):
-    pass
+    dev_mode: bool = False
