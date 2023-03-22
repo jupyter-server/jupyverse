@@ -13,14 +13,14 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from jupyter_ydoc import ydocs as YDOCS
+from jupyter_ydoc import ydocs as YDOCS  # type: ignore
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
 from jupyverse_api.yjs import Yjs
-from ypy_websocket.websocket_server import WebsocketServer, YRoom  # type: ignore
-from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound  # type: ignore
-from ypy_websocket.yutils import YMessageType, YSyncMessageType  # type: ignore
+from ypy_websocket.websocket_server import WebsocketServer, YRoom
+from ypy_websocket.ystore import BaseYStore, SQLiteYStore, YDocNotFound
+from ypy_websocket.yutils import YMessageType, YSyncMessageType
 
 from .models import CreateDocumentSession
 

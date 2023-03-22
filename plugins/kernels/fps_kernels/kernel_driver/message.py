@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple, cast
 from uuid import uuid4
 
-from dateutil.parser import parse as dateutil_parse  # type: ignore
+from dateutil.parser import parse as dateutil_parse
 from zmq.asyncio import Socket
 from zmq.utils import jsonapi
 

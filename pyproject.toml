@@ -68,16 +68,15 @@ pre-install-commands = [
   "pip install -e ./plugins/terminals",
   "pip install -e ./plugins/yjs",
   "pip install -e ./plugins/resource_usage",
+  "pip install -e ./plugins/auth",
+  "pip install -e ./plugins/auth_fief",
+  "pip install -e ./plugins/noauth",
+  "pip install -e ./plugins/login",
 ]
 dependencies = ["fastapi>=0.87.0"]
 features = ["test"]
 
 [tool.hatch.envs.dev.overrides]
-matrix.auth.post-install-commands = [
-  { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
-  { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
-  { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
-]
 matrix.frontend.post-install-commands = [
   { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
   { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
@@ -85,7 +84,6 @@ matrix.frontend.post-install-commands = [
 
 [[tool.hatch.envs.dev.matrix]]
 frontend = ["jupyterlab", "retrolab"]
-auth = ["noauth", "auth", "auth_fief"]
 
 [tool.hatch.envs.dev.scripts]
 test = "pytest ./tests -v"

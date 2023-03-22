@@ -11,6 +11,7 @@ dependencies = [
     "pyzmq",
     "websockets",
     "python-dateutil",
+    "types-python-dateutil",
     "watchfiles >=0.16.1,<1",
 ]
 dynamic = [ "version",]
