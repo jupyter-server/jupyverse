@@ -1,18 +1,12 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import WebSocket
-from jupyverse_api.auth import Auth
-
-from .models import User
+from jupyverse_api.auth import Auth, User
 
 USER = User()
 
 
 class _NoAuth(Auth):
-    @property
-    def User(self):
-        return User
-
     def current_user(self, *args, **kwargs):
         async def _():
             return USER

@@ -11,6 +11,8 @@ logger = logging.getLogger("app")
 
 
 class App:
+    """A wrapper around FastAPI that checks for endpoint path conflicts."""
+
     _app: FastAPI
     _router_paths: Dict[str, List[str]]
 

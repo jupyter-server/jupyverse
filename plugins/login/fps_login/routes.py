@@ -10,7 +10,7 @@ from jupyverse_api.login import Login
 
 
 class _AuthConfig(AuthConfig):
-    login_url: Optional[str] = None
+    login_url: Optional[str]
 
 
 class _Login(Login):

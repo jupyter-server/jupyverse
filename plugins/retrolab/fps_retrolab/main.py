@@ -14,9 +14,9 @@ class RetroLabComponent(Component):
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
         frontend_config = await ctx.request_resource(FrontendConfig)
-        lab = await ctx.request_resource(Lab)
+        lab = await ctx.request_resource(Lab)  # type: ignore
 
         retrolab = _RetroLab(app, auth, frontend_config, lab)
         ctx.add_resource(retrolab, types=RetroLab)

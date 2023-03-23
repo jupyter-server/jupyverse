@@ -12,7 +12,7 @@ class ContentsComponent(Component):
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
 
         contents = _Contents(app, auth)
         ctx.add_resource(contents, types=Contents)

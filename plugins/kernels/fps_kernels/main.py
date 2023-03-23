@@ -3,6 +3,7 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from typing import Optional
 
 from asphalt.core import Component, Context, context_teardown
 
@@ -26,11 +27,11 @@ class KernelsComponent(Component):
     async def start(
         self,
         ctx: Context,
-    ) -> AsyncGenerator[None, BaseException | None]:
+    ) -> AsyncGenerator[None, Optional[BaseException]]:
         ctx.add_resource(self.kernels_config, types=KernelsConfig)
 
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
         frontend_config = await ctx.request_resource(FrontendConfig)
         yjs = await ctx.request_resource(Yjs)
 

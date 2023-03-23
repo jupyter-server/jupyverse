@@ -6,11 +6,10 @@ from fastapi.responses import RedirectResponse
 from fief_client import FiefAccessTokenInfo
 from jupyverse_api import Router
 from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
+from jupyverse_api.auth import Auth, User
 
 from .backend import Backend
 from .config import _AuthFiefConfig
-from .models import UserRead
 
 
 class _AuthFief(Backend, Auth, Router):
@@ -43,7 +42,7 @@ class _AuthFief(Backend, Auth, Router):
         @router.get("/api/me")
         async def get_api_me(
             request: Request,
-            user: UserRead = Depends(self.current_user()),
+            user: User = Depends(self.current_user()),
             access_token_info: FiefAccessTokenInfo = Depends(self.auth.authenticated()),
         ):
             checked_permissions: Dict[str, List[str]] = {}

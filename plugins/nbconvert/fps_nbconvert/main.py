@@ -12,7 +12,7 @@ class NbconvertComponent(Component):
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
 
         nbconvert = _Nbconvert(app, auth)
         ctx.add_resource(nbconvert, types=Nbconvert)

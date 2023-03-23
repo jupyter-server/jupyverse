@@ -14,7 +14,7 @@ class LabComponent(Component):
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
         frontend_config = await ctx.request_resource(FrontendConfig)
         jupyterlab_config = ctx.get_resource(JupyterLabConfig)
 

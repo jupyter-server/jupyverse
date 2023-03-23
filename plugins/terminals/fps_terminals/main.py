@@ -21,7 +21,7 @@ class TerminalsComponent(Component):
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
 
         terminals = _Terminals(app, auth, _TerminalServer)
         ctx.add_resource(terminals, types=Terminals)

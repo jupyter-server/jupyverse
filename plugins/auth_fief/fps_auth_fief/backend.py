@@ -4,9 +4,9 @@ from fastapi import Depends, HTTPException, Request, Response, WebSocket, status
 from fastapi.security import APIKeyCookie
 from fief_client import FiefAccessTokenInfo, FiefAsync, FiefUserInfo
 from fief_client.integrations.fastapi import FiefAuth
+from jupyverse_api.auth import User
 
 from .config import _AuthFiefConfig
-from .models import UserRead
 
 
 class Backend:
@@ -87,14 +87,10 @@ class Backend:
             async def _(
                 user: FiefUserInfo = Depends(self.auth.current_user(permissions=permissions)),
             ):
-                return UserRead(**user["fields"])
+                return User(**user["fields"])
 
             return _
 
         self.current_user = current_user
         self.update_user = update_user
         self.websocket_auth = websocket_auth
-
-    @property
-    def User(self):
-        return UserRead

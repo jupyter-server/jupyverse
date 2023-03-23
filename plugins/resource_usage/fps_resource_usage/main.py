@@ -15,7 +15,7 @@ class ResourceUsageComponent(Component):
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
 
         resource_usage = _ResourceUsage(app, auth, self.resource_usage_config)
         ctx.add_resource(resource_usage, types=ResourceUsage)

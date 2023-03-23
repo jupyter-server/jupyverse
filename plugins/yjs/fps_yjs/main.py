@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections.abc import AsyncGenerator
+from typing import Optional
 
 from asphalt.core import Component, Context, context_teardown
 from jupyverse_api.app import App
@@ -15,10 +16,10 @@ class YjsComponent(Component):
     async def start(
         self,
         ctx: Context,
-    ) -> AsyncGenerator[None, BaseException | None]:
+    ) -> AsyncGenerator[None, Optional[BaseException]]:
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
-        contents = await ctx.request_resource(Contents)
+        auth = await ctx.request_resource(Auth)  # type: ignore
+        contents = await ctx.request_resource(Contents)  # type: ignore
 
         yjs = _Yjs(app, auth, contents)
         ctx.add_resource(yjs, types=Yjs)

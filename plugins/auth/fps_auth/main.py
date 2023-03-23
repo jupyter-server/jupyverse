@@ -7,7 +7,7 @@ from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.app import App
 
 from .config import _AuthConfig
-from .routes import _Auth
+from .routes import auth_factory
 
 
 logger = logging.getLogger("auth")
@@ -26,7 +26,7 @@ class AuthComponent(Component):
         app = await ctx.request_resource(App)
         frontend_config = await ctx.request_resource(FrontendConfig)
 
-        auth = _Auth(app, self.auth_config, frontend_config)
+        auth = auth_factory(app, self.auth_config, frontend_config)
         ctx.add_resource(auth, types=Auth)
 
         await auth.db.create_db_and_tables()

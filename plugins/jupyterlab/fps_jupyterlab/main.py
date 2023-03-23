@@ -19,9 +19,9 @@ class JupyterLabComponent(Component):
         ctx.add_resource(self.jupyterlab_config, types=JupyterLabConfig)
 
         app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)
+        auth = await ctx.request_resource(Auth)  # type: ignore
         frontend_config = await ctx.request_resource(FrontendConfig)
-        lab = await ctx.request_resource(Lab)
+        lab = await ctx.request_resource(Lab)  # type: ignore
 
         jupyterlab = _JupyterLab(app, self.jupyterlab_config, auth, frontend_config, lab)
         ctx.add_resource(jupyterlab, types=JupyterLab)

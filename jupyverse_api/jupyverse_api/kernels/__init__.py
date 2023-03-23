@@ -1,12 +1,14 @@
-from typing import Optional
+from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Optional
 
 from jupyverse_api import Router, Config
 
 
-class Kernels(Router):
+class Kernels(Router, ABC):
+    @abstractmethod
     async def watch_connection_files(self, path: Path) -> None:
-        raise RuntimeError("Not implemented")
+        ...
 
 
 class KernelsConfig(Config):

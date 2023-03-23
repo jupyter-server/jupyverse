@@ -1,24 +1,13 @@
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from fastapi_users import schemas
-from pydantic import BaseModel
+from jupyverse_api.auth import User
 
 
-class Permissions(BaseModel):
-    permissions: Dict[str, List[str]]
-
-
-class JupyterUser(Permissions):
+class JupyterUser(User):
     anonymous: bool = True
-    username: str = ""
-    name: str = ""
-    display_name: str = ""
-    initials: Optional[str] = None
-    color: Optional[str] = None
-    avatar_url: Optional[str] = None
-    workspace: str = "{}"
-    settings: str = "{}"
+    permissions: Dict[str, List[str]]
 
 
 class UserRead(schemas.BaseUser[uuid.UUID], JupyterUser):
