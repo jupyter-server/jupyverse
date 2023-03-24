@@ -1,44 +1,25 @@
+import logging
 import secrets
+from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncGenerator, List
+from typing import Any, AsyncGenerator, List
 
 from fastapi import Depends
-from fastapi_users.db import SQLAlchemyBaseOAuthAccountTableUUID  # type: ignore
-from fastapi_users.db import (  # type: ignore
+from fastapi_users.db import SQLAlchemyBaseOAuthAccountTableUUID
+from fastapi_users.db import (
     SQLAlchemyBaseUserTableUUID,
     SQLAlchemyUserDatabase,
 )
-from fps.config import get_config  # type: ignore
 from sqlalchemy import JSON, Boolean, Column, String, Text  # type: ignore
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # type: ignore
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
 from sqlalchemy.orm import relationship, sessionmaker  # type: ignore
 
-from .config import AuthConfig
-
-auth_config = get_config(AuthConfig)
-
-jupyter_dir = Path.home() / ".local" / "share" / "jupyter"
-jupyter_dir.mkdir(parents=True, exist_ok=True)
-name = "jupyverse"
-if auth_config.test:
-    name += "_test"
-secret_path = jupyter_dir / f"{name}_secret"
-userdb_path = jupyter_dir / f"{name}_users.db"
-
-if auth_config.clear_users:
-    if userdb_path.is_file():
-        userdb_path.unlink()
-    if secret_path.is_file():
-        secret_path.unlink()
-
-if not secret_path.is_file():
-    secret_path.write_text(secrets.token_hex(32))
-
-secret = secret_path.read_text()
+from .config import _AuthConfig
 
 
-DATABASE_URL = f"sqlite+aiosqlite:///{userdb_path}"
+logger = logging.getLogger("auth")
+
 Base: DeclarativeMeta = declarative_base()
 
 
@@ -61,19 +42,57 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     oauth_accounts: List[OAuthAccount] = relationship("OAuthAccount", lazy="joined")
 
 
-engine = create_async_engine(DATABASE_URL)
-async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+@dataclass
+class Res:
+    User: Any
+    async_session_maker: Any
+    create_db_and_tables: Any
+    get_async_session: Any
+    get_user_db: Any
+    secret: Any
 
 
-async def create_db_and_tables():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+def get_db(auth_config: _AuthConfig) -> Res:
+    jupyter_dir = Path.home() / ".local" / "share" / "jupyter"
+    jupyter_dir.mkdir(parents=True, exist_ok=True)
+    name = "jupyverse"
+    if auth_config.test:
+        name += "_test"
+    secret_path = jupyter_dir / f"{name}_secret"
+    userdb_path = jupyter_dir / f"{name}_users.db"
 
+    if auth_config.clear_users:
+        if userdb_path.is_file():
+            userdb_path.unlink()
+        if secret_path.is_file():
+            secret_path.unlink()
 
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
-        yield session
+    if not secret_path.is_file():
+        secret_path.write_text(secrets.token_hex(32))
 
+    secret = secret_path.read_text()
 
-async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
+    database_url = f"sqlite+aiosqlite:///{userdb_path}"
+
+    engine = create_async_engine(database_url)
+    async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    async def create_db_and_tables():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+        async with async_session_maker() as session:
+            yield session
+
+    async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+        yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
+
+    return Res(
+        User=User,
+        async_session_maker=async_session_maker,
+        create_db_and_tables=create_db_and_tables,
+        get_async_session=get_async_session,
+        get_user_db=get_user_db,
+        secret=secret,
+    )

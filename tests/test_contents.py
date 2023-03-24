@@ -2,11 +2,24 @@ import os
 from pathlib import Path
 
 import pytest
-from utils import clear_content_values, create_content, sort_content_by_name
+from asphalt.core import Context
+from asphalt.web.fastapi import FastAPIComponent
+from fastapi import FastAPI
+from httpx import AsyncClient
+from utils import configure, clear_content_values, create_content, sort_content_by_name
 
 
+COMPONENTS = {
+    "app": {"type": "app"},
+    "auth": {"type": "auth", "test": True},
+    "contents": {"type": "contents"},
+    "frontend": {"type": "frontend"},
+}
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-def test_tree(client, tmp_path):
+async def test_tree(auth_mode, tmp_path, unused_tcp_port):
     prev_dir = os.getcwd()
     os.chdir(tmp_path)
     dname = Path(".")
@@ -51,12 +64,25 @@ def test_tree(client, tmp_path):
         path=dname.as_posix(),
         format="json",
     )
-    response = client.get("/api/contents", params={"content": 1})
-    actual = response.json()
-    # ignore modification and creation times
-    clear_content_values(actual, keys=["created", "last_modified"])
-    # ensure content names are ordered the same way
-    sort_content_by_name(actual)
-    sort_content_by_name(expected)
-    assert actual == expected
-    os.chdir(prev_dir)
+
+    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
+    application = FastAPI()
+
+    async with Context() as ctx, AsyncClient() as http:
+        await FastAPIComponent(
+            components=components,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        response = await http.get(
+            f"http://127.0.0.1:{unused_tcp_port}/api/contents", params={"content": 1}
+        )
+        actual = response.json()
+        # ignore modification and creation times
+        clear_content_values(actual, keys=["created", "last_modified"])
+        # ensure content names are ordered the same way
+        sort_content_by_name(actual)
+        sort_content_by_name(expected)
+        assert actual == expected
+        os.chdir(prev_dir)

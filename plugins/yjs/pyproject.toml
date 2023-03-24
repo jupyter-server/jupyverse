@@ -5,15 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_yjs"
 description = "An FPS plugin for the Yjs API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.8"
 dependencies = [
-    "fps >=0.0.8",
-    "fps-auth-base",
-    "fps-contents",
-    "jupyter_ydoc >=0.3.0,<0.4.0",
+    "jupyter_ydoc >=0.3.4,<0.4.0",
     "ypy-websocket >=0.8.2,<1",
-    "y-py >=0.5.9,<0.6.0",
+    "y-py >=0.6.0,<0.7.0",
 ]
 dynamic = [ "version",]
 [[project.authors]]
@@ -36,8 +33,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-yjs = "fps_yjs.routes"
+[project.entry-points."asphalt.components"]
+yjs = "fps_yjs.main:YjsComponent"
 
 [tool.hatch.version]
 path = "fps_yjs/__init__.py"

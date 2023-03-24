@@ -2,206 +2,176 @@ import json
 from http import HTTPStatus
 from pathlib import Path
 
-import jupyterlab  # type: ignore
+import jupyterlab as jupyterlab_module  # type: ignore
 from fastapi import APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fps.hooks import register_router  # type: ignore
-from fps_auth_base import User, current_user, update_user  # type: ignore
-from fps_frontend.config import get_frontend_config  # type: ignore
-from fps_lab.config import get_lab_config  # type: ignore
-from fps_lab.routes import init_router  # type: ignore
-from fps_lab.utils import get_federated_extensions  # type: ignore
-from starlette.requests import Request  # type: ignore
+from jupyverse_api.app import App
+from jupyverse_api.auth import Auth, User
+from jupyverse_api.frontend import FrontendConfig
+from jupyverse_api.jupyterlab import JupyterLab, JupyterLabConfig
+from jupyverse_api.lab import Lab
+from starlette.requests import Request
 
-from .config import get_jlab_config
-
-router = APIRouter()
-prefix_dir, federated_extensions = init_router(router, "lab")
-jupyterlab_dir = Path(jupyterlab.__file__).parents[1]
-
-config = get_jlab_config()
-if config.dev_mode:
-    static_lab_dir = jupyterlab_dir / "dev_mode" / "static"
-else:
-    static_lab_dir = prefix_dir / "share" / "jupyter" / "lab" / "static"
-
-router.mount(
-    "/static/lab",
-    StaticFiles(directory=static_lab_dir),
-    name="static",
-)
+from .index import INDEX_HTML
 
 
-@router.get("/lab")
-async def get_lab(
-    user: User = Depends(current_user()),
-    frontend_config=Depends(get_frontend_config),
-    lab_config=Depends(get_lab_config),
-):
-    return HTMLResponse(
-        get_index(
-            "default",
-            lab_config.collaborative,
-            config.dev_mode,
-            frontend_config.base_url,
+class _JupyterLab(JupyterLab):
+    def __init__(
+        self,
+        app: App,
+        jupyterlab_config: JupyterLabConfig,
+        auth: Auth,
+        frontend_config: FrontendConfig,
+        lab: Lab,
+    ) -> None:
+        super().__init__(app)
+
+        router = APIRouter()
+        self.prefix_dir, federated_extensions = lab.init_router(router, "lab")
+        extensions_dir = self.prefix_dir / "share" / "jupyter" / "labextensions"
+        self.federated_extensions, self.disabled_extension = lab.get_federated_extensions(
+            extensions_dir
         )
-    )
+        jupyterlab_dir = Path(jupyterlab_module.__file__).parents[1]
 
+        if jupyterlab_config.dev_mode:
+            self.static_lab_dir = jupyterlab_dir / "dev_mode" / "static"
+        else:
+            self.static_lab_dir = self.prefix_dir / "share" / "jupyter" / "lab" / "static"
 
-@router.get("/lab/tree/{path:path}")
-async def load_workspace(
-    path,
-    frontend_config=Depends(get_frontend_config),
-    lab_config=Depends(get_lab_config),
-):
-    return HTMLResponse(
-        get_index(
-            "default",
-            lab_config.collaborative,
-            config.dev_mode,
-            frontend_config.base_url,
+        self.mount(
+            "/static/lab",
+            StaticFiles(directory=self.static_lab_dir),
+            name="static",
         )
-    )
 
+        @router.get("/lab")
+        async def get_lab(
+            user: User = Depends(auth.current_user()),
+        ):
+            return HTMLResponse(
+                self.get_index(
+                    "default",
+                    frontend_config.collaborative,
+                    jupyterlab_config.dev_mode,
+                    frontend_config.base_url,
+                )
+            )
 
-@router.get("/lab/api/workspaces/{name}")
-async def get_workspace_data(user: User = Depends(current_user())):
-    if user:
-        return json.loads(user.workspace)
-    return {}
+        @router.get("/lab/tree/{path:path}")
+        async def load_workspace(
+            path,
+        ):
+            return HTMLResponse(
+                self.get_index(
+                    "default",
+                    frontend_config.collaborative,
+                    jupyterlab_config.dev_mode,
+                    frontend_config.base_url,
+                )
+            )
 
+        @router.get("/lab/api/workspaces/{name}")
+        async def get_workspace_data(user: User = Depends(auth.current_user())):
+            if user:
+                return json.loads(user.workspace)
+            return {}
 
-@router.put(
-    "/lab/api/workspaces/{name}",
-    status_code=204,
-)
-async def set_workspace(
-    request: Request,
-    user: User = Depends(current_user()),
-    user_update=Depends(update_user),
-):
-    workspace = (await request.body()).decode("utf-8")
-    await user_update({"workspace": workspace})
-    return Response(status_code=HTTPStatus.NO_CONTENT.value)
-
-
-@router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
-async def get_workspace(
-    name,
-    user: User = Depends(current_user()),
-    frontend_config=Depends(get_frontend_config),
-    lab_config=Depends(get_lab_config),
-):
-    return get_index(name, lab_config.collaborative, config.dev_mode, frontend_config.base_url)
-
-
-INDEX_HTML = """\
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>JupyterLab</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<script id="jupyter-config-data" type="application/json">PAGE_CONFIG</script>
-VENDORS_NODE_MODULES
-<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"></script>
-</head><body><script>/* Remove token from URL. */
-  (function () {
-    var location = window.location;
-    var search = location.search;
-
-    // If there is no query string, bail.
-    if (search.length <= 1) {
-      return;
-    }
-
-    // Rebuild the query string without the `token`.
-    var query = '?' + search.slice(1).split('&')
-      .filter(function (param) { return param.split('=')[0] !== 'token'; })
-      .join('&');
-
-    // Rebuild the URL with the new query string.
-    var url = location.origin + location.pathname +
-      (query !== '?' ? query : '') + location.hash;
-
-    if (url === location.href) {
-      return;
-    }
-
-    window.history.replaceState({ }, '', url);
-  })();</script></body></html>
-"""
-
-
-def get_index(workspace, collaborative, dev_mode, base_url="/"):
-    for path in (static_lab_dir).glob("main.*.js"):
-        main_id = path.name.split(".")[1]
-        break
-    vendor_id = None
-    for path in (static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
-        vendor_id = path.name.split(".")[1]
-        break
-    full_static_url = f"{base_url}static/lab"
-    extensions_dir = prefix_dir / "share" / "jupyter" / "labextensions"
-    federated_extensions, disabled_extension = get_federated_extensions(extensions_dir)
-
-    page_config = {
-        "appName": "JupyterLab",
-        "appNamespace": "lab",
-        "appUrl": "/lab",
-        "appVersion": jupyterlab.__version__,
-        "baseUrl": base_url,
-        "cacheFiles": False,
-        "collaborative": collaborative,
-        "devMode": dev_mode,
-        "disabledExtensions": disabled_extension,
-        "exposeAppInBrowser": False,
-        "extraLabextensionsPath": [],
-        "federated_extensions": federated_extensions,
-        "fullAppUrl": f"{base_url}lab",
-        "fullLabextensionsUrl": f"{base_url}lab/extensions",
-        "fullLicensesUrl": f"{base_url}lab/api/licenses",
-        "fullListingsUrl": f"{base_url}lab/api/listings",
-        "fullMathjaxUrl": f"{base_url}static/notebook/components/MathJax/MathJax.js",
-        "fullSettingsUrl": f"{base_url}lab/api/settings",
-        "fullStaticUrl": full_static_url,
-        "fullThemesUrl": f"{base_url}lab/api/themes",
-        "fullTranslationsApiUrl": f"{base_url}lab/api/translations",
-        "fullTreeUrl": f"{base_url}lab/tree",
-        "fullWorkspacesApiUrl": f"{base_url}lab/api/workspaces",
-        "ignorePlugins": [],
-        "labextensionsUrl": "/lab/extensions",
-        "licensesUrl": "/lab/api/licenses",
-        "listingsUrl": "/lab/api/listings",
-        "mathjaxConfig": "TeX-AMS-MML_HTMLorMML-full,Safe",
-        "mode": "multiple-document",
-        "notebookVersion": "[1, 9, 0]",
-        "quitButton": True,
-        "settingsUrl": "/lab/api/settings",
-        "store_id": 0,
-        "schemasDir": (prefix_dir / "share" / "jupyter" / "lab" / "schemas").as_posix(),
-        "terminalsAvailable": True,
-        "themesDir": (prefix_dir / "share" / "jupyter" / "lab" / "themes").as_posix(),
-        "themesUrl": "/lab/api/themes",
-        "token": "4e2804532de366abc81e32ab0c6bf68a73716fafbdbb2098",
-        "translationsApiUrl": "/lab/api/translations",
-        "treePath": "",
-        "workspace": workspace,
-        "treeUrl": "/lab/tree",
-        "workspacesApiUrl": "/lab/api/workspaces",
-        "wsUrl": "",
-    }
-    index = (
-        INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
-        .replace("FULL_STATIC_URL", full_static_url)
-        .replace("MAIN_ID", main_id)
-    )
-    if vendor_id:
-        index = index.replace(
-            "VENDORS_NODE_MODULES",
-            '<script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.'
-            f'{vendor_id}.js"></script>',
+        @router.put(
+            "/lab/api/workspaces/{name}",
+            status_code=204,
         )
-    else:
-        index = index.replace("VENDORS_NODE_MODULES", "")
-    return index
+        async def set_workspace(
+            request: Request,
+            user: User = Depends(auth.current_user()),
+            user_update=Depends(auth.update_user),
+        ):
+            workspace = (await request.body()).decode("utf-8")
+            await user_update({"workspace": workspace})
+            return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
+        @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
+        async def get_workspace(
+            name,
+            user: User = Depends(auth.current_user()),
+        ):
+            return self.get_index(
+                name,
+                frontend_config.collaborative,
+                jupyterlab_config.dev_mode,
+                frontend_config.base_url,
+            )
 
-r = register_router(router)
+        self.include_router(router)
+
+    def get_index(self, workspace, collaborative, dev_mode, base_url="/"):
+        for path in (self.static_lab_dir).glob("main.*.js"):
+            main_id = path.name.split(".")[1]
+            break
+        vendor_id = None
+        for path in (self.static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
+            vendor_id = path.name.split(".")[1]
+            break
+        full_static_url = f"{base_url}static/lab"
+
+        page_config = {
+            "appName": "JupyterLab",
+            "appNamespace": "lab",
+            "appUrl": "/lab",
+            "appVersion": jupyterlab_module.__version__,
+            "baseUrl": base_url,
+            "cacheFiles": False,
+            "collaborative": collaborative,
+            "devMode": dev_mode,
+            "disabledExtensions": self.disabled_extension,
+            "exposeAppInBrowser": False,
+            "extraLabextensionsPath": [],
+            "federated_extensions": self.federated_extensions,
+            "fullAppUrl": f"{base_url}lab",
+            "fullLabextensionsUrl": f"{base_url}lab/extensions",
+            "fullLicensesUrl": f"{base_url}lab/api/licenses",
+            "fullListingsUrl": f"{base_url}lab/api/listings",
+            "fullMathjaxUrl": f"{base_url}static/notebook/components/MathJax/MathJax.js",
+            "fullSettingsUrl": f"{base_url}lab/api/settings",
+            "fullStaticUrl": full_static_url,
+            "fullThemesUrl": f"{base_url}lab/api/themes",
+            "fullTranslationsApiUrl": f"{base_url}lab/api/translations",
+            "fullTreeUrl": f"{base_url}lab/tree",
+            "fullWorkspacesApiUrl": f"{base_url}lab/api/workspaces",
+            "ignorePlugins": [],
+            "labextensionsUrl": "/lab/extensions",
+            "licensesUrl": "/lab/api/licenses",
+            "listingsUrl": "/lab/api/listings",
+            "mathjaxConfig": "TeX-AMS-MML_HTMLorMML-full,Safe",
+            "mode": "multiple-document",
+            "notebookVersion": "[1, 9, 0]",
+            "quitButton": True,
+            "settingsUrl": "/lab/api/settings",
+            "store_id": 0,
+            "schemasDir": (self.prefix_dir / "share" / "jupyter" / "lab" / "schemas").as_posix(),
+            "terminalsAvailable": True,
+            "themesDir": (self.prefix_dir / "share" / "jupyter" / "lab" / "themes").as_posix(),
+            "themesUrl": "/lab/api/themes",
+            "token": "4e2804532de366abc81e32ab0c6bf68a73716fafbdbb2098",
+            "translationsApiUrl": "/lab/api/translations",
+            "treePath": "",
+            "workspace": workspace,
+            "treeUrl": "/lab/tree",
+            "workspacesApiUrl": "/lab/api/workspaces",
+            "wsUrl": "",
+        }
+        index = (
+            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
+            .replace("FULL_STATIC_URL", full_static_url)
+            .replace("MAIN_ID", main_id)
+        )
+        if vendor_id:
+            index = index.replace(
+                "VENDORS_NODE_MODULES",
+                '<script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.'
+                f'{vendor_id}.js"></script>',
+            )
+        else:
+            index = index.replace("VENDORS_NODE_MODULES", "")
+        return index

@@ -34,15 +34,15 @@ jobs:
     - name: Upgrade pip
       run: python3 -m pip install --upgrade pip
 
-    - name: Create jupyterlab-auth dev environment
+    - name: Create jupyterlab dev environment
       run: |
         pip install hatch
-        hatch env create dev.jupyterlab-auth
+        hatch env create dev.jupyterlab
 
     - name: Check types
       run: |
-        hatch run dev.jupyterlab-auth:typecheck
+        hatch run dev.jupyterlab:typecheck
 
     - name: Run tests
       run: |
-        hatch run dev.jupyterlab-auth:test
+        hatch run dev.jupyterlab:test

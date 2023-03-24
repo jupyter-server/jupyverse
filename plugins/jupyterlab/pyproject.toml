@@ -5,9 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "fps_jupyterlab"
 description = "An FPS plugin for the JupyterLab API"
-keywords = [ "jupyter", "server", "fastapi", "pluggy", "plugins",]
+keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.8"
-dependencies = [ "fps >=0.0.8", "fps-auth-base", "fps-frontend", "fps-lab", "jupyterlab >=4.0.0a35",]
+dependencies = [
+  "jupyterlab >=4.0.0a37,<5",
+  #"jupyter_collaboration >=1.0.0a4,<2",
+]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -29,11 +32,8 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points.fps_router]
-fps-jupyterlab = "fps_jupyterlab.routes"
-
-[project.entry-points.fps_config]
-fps-jupyterlab = "fps_jupyterlab.config"
+[project.entry-points."asphalt.components"]
+jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"
 
 [tool.hatch.version]
 path = "fps_jupyterlab/__init__.py"

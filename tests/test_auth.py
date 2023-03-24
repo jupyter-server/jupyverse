@@ -1,54 +1,127 @@
 import pytest
-from fps_auth.config import get_auth_config
-from starlette.websockets import WebSocketDisconnect
+from asphalt.core import Context
+from asphalt.web.fastapi import FastAPIComponent
+from fastapi import FastAPI
+from jupyverse_api.auth import AuthConfig
+from httpx import AsyncClient
+from httpx_ws import WebSocketUpgradeError, aconnect_ws
+
+from utils import authenticate_client, configure
 
 
-def test_kernel_channels_unauthenticated(client):
-    with pytest.raises(WebSocketDisconnect):
-        with client.websocket_connect(
-            "/api/kernels/kernel_id_0/channels?session_id=session_id_0",
+COMPONENTS = {
+    "app": {"type": "app"},
+    "auth": {"type": "auth", "test": True},
+    "contents": {"type": "contents"},
+    "frontend": {"type": "frontend"},
+    "lab": {"type": "lab"},
+    "jupyterlab": {"type": "jupyterlab"},
+    "kernels": {"type": "kernels"},
+    "yjs": {"type": "yjs"},
+}
+
+
+@pytest.mark.asyncio
+async def test_kernel_channels_unauthenticated(unused_tcp_port):
+    application = FastAPI()
+
+    async with Context() as ctx:
+        await FastAPIComponent(
+            components=COMPONENTS,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        with pytest.raises(WebSocketUpgradeError):
+            async with aconnect_ws(
+                f"http://127.0.0.1:{unused_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
+            ):
+                pass
+
+
+@pytest.mark.asyncio
+async def test_kernel_channels_authenticated(unused_tcp_port):
+    application = FastAPI()
+
+    async with Context() as ctx, AsyncClient() as http:
+        await FastAPIComponent(
+            components=COMPONENTS,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        await authenticate_client(http, unused_tcp_port)
+        async with aconnect_ws(
+            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
+            http,
         ):
             pass
 
 
-def test_kernel_channels_authenticated(authenticated_client):
-    with authenticated_client.websocket_connect(
-        "/api/kernels/kernel_id_0/channels?session_id=session_id_0",
-    ):
-        pass
-
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
-def test_root_auth(auth_mode, client):
-    response = client.get("/")
-    if auth_mode == "noauth":
-        expected = 200
-        content_type = "text/html; charset=utf-8"
-    elif auth_mode in ["token", "user"]:
-        expected = 403
-        content_type = "application/json"
+async def test_root_auth(auth_mode, unused_tcp_port):
+    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
+    application = FastAPI()
 
-    assert response.status_code == expected
-    assert response.headers["content-type"] == content_type
+    async with Context() as ctx, AsyncClient() as http:
+        await FastAPIComponent(
+            components=components,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
+        if auth_mode == "noauth":
+            expected = 302
+        elif auth_mode in ["token", "user"]:
+            expected = 403
+
+        assert response.status_code == expected
+        assert response.headers["content-type"] == "application/json"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-def test_no_auth(client):
-    response = client.get("/lab/api/settings")
-    assert response.status_code == 200
+async def test_no_auth(auth_mode, unused_tcp_port):
+    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
+    application = FastAPI()
+
+    async with Context() as ctx, AsyncClient() as http:
+        await FastAPIComponent(
+            components=components,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/lab")
+        assert response.status_code == 200
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("token",))
-def test_token_auth(client):
-    # no token provided, should not work
-    response = client.get("/")
-    assert response.status_code == 403
-    # token provided, should work
-    auth_config = get_auth_config()
-    response = client.get(f"/?token={auth_config.token}")
-    assert response.status_code == 200
+async def test_token_auth(auth_mode, unused_tcp_port):
+    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
+    application = FastAPI()
+
+    async with Context() as ctx, AsyncClient() as http:
+        await FastAPIComponent(
+            components=components,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        auth_config = await ctx.request_resource(AuthConfig)
+
+        # no token provided, should not work
+        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
+        assert response.status_code == 403
+        # token provided, should work
+        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/?token={auth_config.token}")
+        assert response.status_code == 302
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("user",))
 @pytest.mark.parametrize(
     "permissions",
@@ -57,11 +130,22 @@ def test_token_auth(client):
         {"admin": ["read"], "foo": ["bar", "baz"]},
     ),
 )
-def test_permissions(authenticated_client, permissions):
-    response = authenticated_client.get("/auth/user/me")
-    if "admin" in permissions.keys():
-        # we have the permissions
-        assert response.status_code == 200
-    else:
-        # we don't have the permissions
-        assert response.status_code == 403
+async def test_permissions(auth_mode, permissions, unused_tcp_port):
+    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
+    application = FastAPI()
+
+    async with Context() as ctx, AsyncClient() as http:
+        await FastAPIComponent(
+            components=components,
+            app=application,
+            port=unused_tcp_port,
+        ).start(ctx)
+
+        await authenticate_client(http, unused_tcp_port, permissions=permissions)
+        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/auth/user/me")
+        if "admin" in permissions.keys():
+            # we have the permissions
+            assert response.status_code == 200
+        else:
+            # we don't have the permissions
+            assert response.status_code == 403

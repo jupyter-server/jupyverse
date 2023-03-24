@@ -1,0 +1,52 @@
+---
+component:
+  type: jupyverse
+  components:
+    app:
+      type: app
+    auth:
+      type: auth
+    #auth:
+    #  type: auth_fief
+    #auth:
+    #  type: noauth
+    contents:
+        type: contents
+    frontend:
+      type: frontend
+    lab:
+      type: lab
+    jupyterlab:
+      type: jupyterlab
+    kernels:
+      type: kernels
+    login:
+      type: login
+    nbconvert:
+      type: nbconvert
+    resource_usage:
+      type: resource_usage
+      track_cpu_percent: true
+    #retrolab:
+    #  type: retrolab
+    terminals:
+      type: terminals
+    yjs:
+      type: yjs
+
+logging:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    default:
+      format: '[%(asctime)s %(levelname)s] %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: default
+  root:
+    handlers: [console]
+    level: INFO
+  loggers:
+    webnotifier:
+      level: DEBUG

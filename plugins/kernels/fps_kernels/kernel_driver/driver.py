@@ -89,14 +89,14 @@ class KernelDriver:
 
     async def listen_iopub(self):
         while True:
-            msg = await receive_message(self.iopub_channel, change_str_to_date=True)  # type: ignore
+            msg = await receive_message(self.iopub_channel, change_str_to_date=True)
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
                 self.execute_requests[msg_id]["iopub_msg"].set_result(msg)
 
     async def listen_shell(self):
         while True:
-            msg = await receive_message(self.shell_channel, change_str_to_date=True)  # type: ignore
+            msg = await receive_message(self.shell_channel, change_str_to_date=True)
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
                 self.execute_requests[msg_id]["shell_msg"].set_result(msg)

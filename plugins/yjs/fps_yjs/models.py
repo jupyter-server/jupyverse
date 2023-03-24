@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class CreateRoomId(BaseModel):
+class CreateDocumentSession(BaseModel):
     format: str
     type: str

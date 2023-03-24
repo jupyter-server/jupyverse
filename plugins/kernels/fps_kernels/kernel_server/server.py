@@ -6,17 +6,17 @@ import uuid
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, cast
 
-from fastapi import WebSocket, WebSocketDisconnect  # type: ignore
+from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
 from ..kernel_driver.connect import cfg_t, connect_channel
 from ..kernel_driver.connect import launch_kernel as _launch_kernel
 from ..kernel_driver.connect import read_connection_file
 from ..kernel_driver.connect import (
-    write_connection_file as _write_connection_file,  # type: ignore
+    write_connection_file as _write_connection_file,
 )
 from ..kernel_driver.message import create_message, receive_message, send_message
-from .message import (  # type: ignore
+from .message import (
     deserialize_msg_from_ws_v1,
     from_binary,
     get_msg_from_parts,
@@ -149,6 +149,9 @@ class KernelServer:
         for task in self.channel_tasks:
             task.cancel()
         self.channel_tasks = []
+
+    def interrupt(self) -> None:
+        self.kernel_process.send_signal(signal.SIGINT)
 
     async def restart(self) -> None:
         await self.stop()

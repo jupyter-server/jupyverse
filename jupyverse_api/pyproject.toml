@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jupyverse_api"
+description = "The public API for Jupyverse"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = [
+  "jupyverse", "api",
+]
+authors = [
+  { name = "Jupyter Development Team", email = "jupyter@googlegroups.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "pydantic >=1.10.6,<2",
+]
+dynamic = ["version"]
+
+[project.license]
+text = "BSD 3-Clause License"
+
+[project.urls]
+Source = "https://github.com/jupyter-server/jupyverse/api"
+
+[project.entry-points."asphalt.components"]
+app = "jupyverse_api.main:AppComponent"
+jupyverse = "jupyverse_api.main:JupyverseComponent"
+
+[tool.hatch.version]
+path = "jupyverse_api/__init__.py"
