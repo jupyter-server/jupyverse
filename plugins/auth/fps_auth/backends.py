@@ -45,8 +45,12 @@ class Res:
 
 
 def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -> Res:
+    class NoAuthScheme:
+        def __call__(self):
+            return "noauth"
+
     class NoAuthTransport(Transport):
-        scheme = None  # type: ignore
+        scheme = NoAuthScheme()  # type: ignore
 
         async def get_login_response(self, token: str, response: Response):
             pass
