@@ -31,8 +31,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-retrolab = "fps_retrolab.main:RetroLabComponent"
+[project.entry-points]
+"asphalt.components"   = {retrolab = "fps_retrolab.main:RetroLabComponent"}
+"jupyverse.components" = {retrolab = "fps_retrolab.main:RetroLabComponent"}
 
 [tool.hatch.version]
 path = "fps_retrolab/__init__.py"

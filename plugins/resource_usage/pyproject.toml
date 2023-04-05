@@ -33,8 +33,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-resource_usage = "fps_resource_usage.main:ResourceUsageComponent"
+[project.entry-points]
+"asphalt.components"   = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
+"jupyverse.components" = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
 
 [tool.hatch.version]
 path = "fps_resource_usage/__init__.py"

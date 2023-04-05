@@ -35,8 +35,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-kernels = "fps_kernels.main:KernelsComponent"
+[project.entry-points]
+"asphalt.components"   = {kernels = "fps_kernels.main:KernelsComponent"}
+"jupyverse.components" = {kernels = "fps_kernels.main:KernelsComponent"}
 
 [tool.hatch.version]
 path = "fps_kernels/__init__.py"

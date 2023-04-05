@@ -31,8 +31,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-nbconvert = "fps_nbconvert.main:NbconvertComponent"
+[project.entry-points]
+"asphalt.components"   = {nbconvert = "fps_nbconvert.main:NbconvertComponent"}
+"jupyverse.components" = {nbconvert = "fps_nbconvert.main:NbconvertComponent"}
 
 [tool.hatch.version]
 path = "fps_nbconvert/__init__.py"

@@ -23,8 +23,9 @@ text = "BSD 3-Clause License"
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[project.entry-points."asphalt.components"]
-noauth = "fps_noauth.main:NoAuthComponent"
+[project.entry-points]
+"asphalt.components"   = {noauth = "fps_noauth.main:NoAuthComponent"}
+"jupyverse.components" = {noauth = "fps_noauth.main:NoAuthComponent"}
 
 [tool.check-manifest]
 ignore = [ ".*",]

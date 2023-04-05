@@ -32,14 +32,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-auth_fief = "fps_auth_fief.main:AuthFiefComponent"
-
-[project.entry-points.jupyverse_auth]
-User = "fps_auth_fief.models:UserRead"
-current_user = "fps_auth_fief.backends:current_user"
-update_user = "fps_auth_fief.backends:update_user"
-websocket_auth = "fps_auth_fief.backends:websocket_auth"
+[project.entry-points]
+"asphalt.components"   = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
+"jupyverse.components" = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
 
 [tool.hatch.version]
 path = "fps_auth_fief/__init__.py"

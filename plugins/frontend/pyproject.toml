@@ -29,8 +29,9 @@ ignore = [".*"]
 [tool.jupyter-releaser]
 skip = ["check-links"]
 
-[project.entry-points."asphalt.components"]
-frontend = "fps_frontend.main:FrontendComponent"
+[project.entry-points]
+"asphalt.components"   = {frontend = "fps_frontend.main:FrontendComponent"}
+"jupyverse.components" = {frontend = "fps_frontend.main:FrontendComponent"}
 
 [tool.hatch.version]
 path = "fps_frontend/__init__.py"
