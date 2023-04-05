@@ -46,6 +46,25 @@ config_str = "".join(config)
 
 @click.command()
 @click.option(
+    "--open-browser",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Open a browser window.",
+)
+@click.option(
+    "--host",
+    type=str,
+    default="127.0.0.1",
+    help="The host URL.",
+)
+@click.option(
+    "--port",
+    type=int,
+    default=8000,
+    help="The host port.",
+)
+@click.option(
     "--set",
     "set_",
     multiple=True,
@@ -53,11 +72,17 @@ config_str = "".join(config)
     help="Set configuration.",
 )
 def main(
+    open_browser: bool,
+    host: str,
+    port: int,
     set_: List[str],
 ) -> None:
     set_ = list(set_)
     for i, s in enumerate(set_):
         set_[i] = f"component.components.{s}"
+    set_.append(f"component.open_browser={open_browser}")
+    set_.append(f"component.host={host}")
+    set_.append(f"component.port={port}")
     run.callback(
         unsafe=False,
         loop=None,
