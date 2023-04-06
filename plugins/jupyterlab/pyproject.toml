@@ -8,8 +8,8 @@ description = "An FPS plugin for the JupyterLab API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.8"
 dependencies = [
-  "jupyterlab >=4.0.0a37,<5",
-  #"jupyter_collaboration >=1.0.0a4,<2",
+  "jupyterlab >=4.0.0b0,<5",
+  "jupyverse-api",
 ]
 dynamic = [ "version",]
 [[project.authors]]
