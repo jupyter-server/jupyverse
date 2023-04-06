@@ -49,7 +49,7 @@ sub-environments:
 ```bash
 micromamba create -n jupyverse-dev
 micromamba activate jupyverse-dev
-micromamba install hatch
+micromamba install -c conda-forge hatch
 ```
 Entering `hatch env show` will show the available environments:
 ```text

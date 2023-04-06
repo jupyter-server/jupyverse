@@ -3,9 +3,8 @@ from pathlib import Path
 
 import pytest
 from asphalt.core import Context
-from asphalt.web.fastapi import FastAPIComponent
-from fastapi import FastAPI
 from httpx import AsyncClient
+from jupyverse_api.main import JupyverseComponent
 from utils import configure, clear_content_values, create_content, sort_content_by_name
 
 
@@ -66,12 +65,9 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
     )
 
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 

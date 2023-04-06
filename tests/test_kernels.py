@@ -6,10 +6,9 @@ from time import sleep
 import pytest
 from fps_kernels.kernel_server.server import KernelServer, kernels
 from asphalt.core import Context
-from asphalt.web.fastapi import FastAPIComponent
-from fastapi import FastAPI
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
+from jupyverse_api.main import JupyverseComponent
 
 from utils import configure
 
@@ -52,12 +51,9 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
     }
 
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient():
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 

@@ -2,9 +2,8 @@ import json
 
 import pytest
 from asphalt.core import Context
-from asphalt.web.fastapi import FastAPIComponent
-from fastapi import FastAPI
 from httpx import AsyncClient
+from jupyverse_api.main import JupyverseComponent
 
 from utils import configure
 
@@ -27,12 +26,9 @@ COMPONENTS = {
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_settings(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 

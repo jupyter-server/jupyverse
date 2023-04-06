@@ -8,8 +8,8 @@ This is why Jupyverse comes with built-in authentication. Please refer to the [a
 
 This is the default mode when launching Jupyverse, just enter in a terminal:
 ```bash
-jupyverse
-# same as: jupyverse --set auth.mode=token
+jupyverse --open-browser
+# same as: jupyverse --set auth.mode=token --open-browser
 ```
 This should open a new window in a browser, and load JupyterLab or RetroLab, depending on the front-end you chose to install (see [Install](../../install)).
 
@@ -28,5 +28,5 @@ If you trust everybody who can access the server, you can launch Jupyverse with 
 
 Enter in a terminal:
 ```bash
-jupyverse --set auth.mode=noauth
+jupyverse --set auth.mode=noauth --open-browser
 ```
