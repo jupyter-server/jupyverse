@@ -9,4 +9,5 @@ python -m pip install -e plugins/terminals
 python -m pip install -e plugins/nbconvert
 python -m pip install -e plugins/yjs
 python -m pip install -e plugins/auth
+python -m pip install -e jupyverse_api
 python -m pip install -e .
