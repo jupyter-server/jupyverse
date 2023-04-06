@@ -11,7 +11,7 @@ dependencies = [
     "watchfiles >=0.18.1,<1",
     "aiosqlite >=0.17.0,<1",
     "anyio>=3.6.2,<4",
-    "jupyverse-api",
+    "jupyverse-api >=0.1.2,<1",
 ]
 dynamic = [ "version",]
 [[project.authors]]

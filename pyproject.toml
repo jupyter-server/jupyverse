@@ -13,12 +13,14 @@ dependencies = [
     "asphalt >=4.11.0,<5",
     "asphalt-web[fastapi] >=1.1.0,<2",
     "fastapi >=0.95.0,<1",
-    "fps-contents",
-    "fps-kernels",
-    "fps-terminals",
-    "fps-nbconvert",
-    "fps-yjs",
-    "jupyverse_api",
+    "fps-contents >=0.1.2,<1",
+    "fps-kernels >=0.1.2,<1",
+    "fps-terminals >=0.1.2,<1",
+    "fps-nbconvert >=0.1.2,<1",
+    "fps-yjs >=0.1.2,<1",
+    "fps-lab >=0.1.2,<1",
+    "fps-frontend >=0.1.2,<1",
+    "jupyverse_api >=0.1.2,<1",
 ]
 
 [[project.authors]]
@@ -39,11 +41,11 @@ Homepage = "https://jupyter.org"
 jupyverse = "jupyverse.cli:main"
 
 [project.optional-dependencies]
-jupyterlab = ["fps-jupyterlab"]
-retrolab = ["fps-retrolab"]
-auth = ["fps-auth"]
-auth-fief = ["fps-auth-fief"]
-noauth = ["fps-noauth"]
+jupyterlab = ["fps-jupyterlab >=0.1.2,<1"]
+retrolab = ["fps-retrolab >=0.1.2,<1"]
+auth = ["fps-auth >=0.1.2,<1"]
+auth-fief = ["fps-auth-fief >=0.1.2,<1"]
+noauth = ["fps-noauth >=0.1.2,<1"]
 test = [
     "mypy",
     "types-setuptools",
