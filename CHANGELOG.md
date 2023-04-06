@@ -2,11 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.3
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.2...b5faf93e3296d855c7ebeda0c25e9861400ad469))
+
+### Merged PRs
+
+- Add fps-lab and fps-frontend dependencies to jupyverse [#287](https://github.com/jupyter-server/jupyverse/pull/287) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-04-06&to=2023-04-06&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-04-06..2023-04-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.2
 
 No merged PRs
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.1
 
