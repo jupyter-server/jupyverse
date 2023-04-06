@@ -18,7 +18,7 @@ dependencies = [
     "fps-terminals",
     "fps-nbconvert",
     "fps-yjs",
-    "jupyverse-api",
+    "jupyverse_api",
 ]
 
 [[project.authors]]
@@ -137,7 +137,7 @@ skip = [ "check-links", "check-manifest",]
 
 [tool.jupyter-releaser.options]
 python_packages = [
-    "jupyverse_api:jupyverse-api",
+    "jupyverse_api:jupyverse_api",
     "plugins/noauth:fps-noauth",
     "plugins/auth:fps-auth",
     "plugins/auth_fief:fps-auth-fief",
@@ -152,7 +152,7 @@ python_packages = [
     "plugins/yjs:fps-yjs",
     "plugins/resource_usage:fps-resource-usage",
     "plugins/login:fps-login",
-    ".:jupyverse:jupyverse-api,fps-noauth,fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs,fps-resource-usage"
+    ".:jupyverse:jupyverse_api,fps-noauth,fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs,fps-resource-usage"
 ]
 
 [tool.hatch.version]
