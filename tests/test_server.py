@@ -96,7 +96,6 @@ async def test_rest_api(start_jupyverse):
                     }
                 ),
             )
-            print(f"{url}/api/kernels/{kernel_id}/execute", response.json())
         # wait for Y model to be updated
         await asyncio.sleep(0.5)
         # retrieve cells

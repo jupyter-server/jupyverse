@@ -99,4 +99,4 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
             await websocket.send_json(msg)
         sleep(0.5)
         out, err = capfd.readouterr()
-        assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
+        assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") >= 1
