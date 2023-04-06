@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.0
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.50...62b06f7a05b4ba536ce1ae0f40b3643dc4b4152d))
+
+### Merged PRs
+
+- Add jupyverse_api dependency to plugins [#285](https://github.com/jupyter-server/jupyverse/pull/285) ([@davidbrochart](https://github.com/davidbrochart))
+- Update documentation, add jupyverse CLI [#283](https://github.com/jupyter-server/jupyverse/pull/283) ([@davidbrochart](https://github.com/davidbrochart))
+- Update to FastAPI 0.95 [#281](https://github.com/jupyter-server/jupyverse/pull/281) ([@davidbrochart](https://github.com/davidbrochart))
+- Drop FPS in favor of Asphalt [#277](https://github.com/jupyter-server/jupyverse/pull/277) ([@davidbrochart](https://github.com/davidbrochart))
+- Add ruff pre-commit [#275](https://github.com/jupyter-server/jupyverse/pull/275) ([@davidbrochart](https://github.com/davidbrochart))
+- Add DELETE /api/kernels/{kernel_id} (shutdown kernel) [#274](https://github.com/jupyter-server/jupyverse/pull/274) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-02-23&to=2023-04-06&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-02-23..2023-04-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-02-23..2023-04-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.50
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.0.49...cf56682249dd5c7064d16b4a88f6f49aeb728ce1))
@@ -16,8 +37,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-01-24&to=2023-02-23&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-01-24..2023-02-23&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-01-24..2023-02-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.49
 

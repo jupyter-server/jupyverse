@@ -5,7 +5,7 @@ from pydantic import BaseModel, Extra
 from .app import App
 
 
-__version__ = "0.0.50"
+__version__ = "0.1.0"
 
 
 class Singleton(type):
