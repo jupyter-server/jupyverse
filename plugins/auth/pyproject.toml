@@ -12,6 +12,7 @@ dependencies = [
     "aiosqlite",
     "fastapi-users[sqlalchemy,oauth] >=10.1.4,<11",
     "sqlalchemy >=1,<2",
+    "jupyverse-api",
 ]
 
 [[project.authors]]

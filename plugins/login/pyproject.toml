@@ -7,6 +7,9 @@ name = "fps_login"
 description = "An FPS plugin for the login API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
+dependencies = [
+  "jupyverse-api",
+]
 dynamic = [ "version",]
 [[project.authors]]
 name = "Jupyter Development Team"

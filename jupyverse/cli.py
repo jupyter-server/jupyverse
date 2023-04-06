@@ -94,5 +94,4 @@ logging:
     )
 
     config_str = "".join(config)
-    print(config_str)
     return config_str

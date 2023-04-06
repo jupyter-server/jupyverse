@@ -7,6 +7,9 @@ name = "fps_frontend"
 description = "An FPS plugin for the frontend related configuration"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
+dependencies = [
+    "jupyverse-api",
+]
 dynamic = ["version"]
 
 [[project.authors]]

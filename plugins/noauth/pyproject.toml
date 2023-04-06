@@ -8,6 +8,9 @@ description = "An FPS plugin for an unprotected API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.8"
+dependencies = [
+    "jupyverse-api",
+]
 
 [[project.authors]]
 name = "Jupyter Development Team"

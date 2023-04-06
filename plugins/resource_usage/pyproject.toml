@@ -11,6 +11,7 @@ dependencies = [
     "psutil >=5.9.4",
     "types-psutil",
     "anyio >=3.6.2",
+    "jupyverse-api",
 ]
 dynamic = [ "version",]
 [[project.authors]]
