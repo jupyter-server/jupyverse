@@ -32,8 +32,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-terminals = "fps_terminals.main:TerminalsComponent"
+[project.entry-points]
+"asphalt.components"   = {terminals = "fps_terminals.main:TerminalsComponent"}
+"jupyverse.components" = {terminals = "fps_terminals.main:TerminalsComponent"}
 
 [tool.hatch.version]
 path = "fps_terminals/__init__.py"

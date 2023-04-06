@@ -28,8 +28,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-login = "fps_login.main:LoginComponent"
+[project.entry-points]
+"asphalt.components"   = {login = "fps_login.main:LoginComponent"}
+"jupyverse.components" = {login = "fps_login.main:LoginComponent"}
 
 [tool.hatch.version]
 path = "fps_login/__init__.py"

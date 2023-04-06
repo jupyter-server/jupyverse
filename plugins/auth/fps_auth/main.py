@@ -5,6 +5,7 @@ from fastapi_users.exceptions import UserAlreadyExists
 from jupyverse_api.auth import Auth, AuthConfig
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.app import App
+from jupyverse_api.main import Host, QueryParams
 
 from .config import _AuthConfig
 from .routes import auth_factory
@@ -58,7 +59,11 @@ class AuthComponent(Component):
             )
 
         if self.auth_config.mode == "token":
+            query_params = await ctx.request_resource(QueryParams)
+            host = await ctx.request_resource(Host)
+            query_params.d["token"] = self.auth_config.token
+
             logger.info("")
             logger.info("To access the server, copy and paste this URL:")
-            logger.info(f"http://127.0.0.1:8000/?token={self.auth_config.token}")
+            logger.info(f"{host.url}?token={self.auth_config.token}")
             logger.info("")

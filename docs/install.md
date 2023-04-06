@@ -2,50 +2,56 @@ Jupyverse can be installed to run either [JupyterLab](https://jupyterlab.readthe
 
 ## With `pip`
 
-For the JupyterLab front-end:
+For the JupyterLab frontend:
 ```bash
 pip install "jupyverse[jupyterlab,auth]"
 ```
-Or for the RetroLab front-end:
+Or for the RetroLab frontend:
 ```bash
 pip install "jupyverse[retrolab,auth]"
 ```
 
-## With `mamba`
+## With `micromamba`
 
-For the JupyterLab front-end:
+We recommend using `micromamba` to manage [conda-forge](https://conda-forge.org) environments
+(see `micromamba`'s
+[installation instructions](https://mamba.readthedocs.io/en/latest/installation.html#micromamba)).
+First create an environment, here called `jupyverse`, and activate it:
 ```bash
-mamba install -c conda-forge jupyverse fps-jupyterlab fps-auth
+micromamba create -n jupyverse
+micromamba activate jupyverse
 ```
-Or for the RetroLab front-end:
-```bash
-mamba install -c conda-forge jupyverse fps-retrolab fps-auth
-```
+Then install Jupyverse and the desired plugins.
 
-!!! note
-    You cannot have both the JupyterLab and the RetroLab front-ends enabled at the same time.
-    When switching e.g. from the JupyterLab to the RetroLab front-end, you need to
-    `pip uninstall fps-jupyterlab` or launch Jupyverse with `--jupyterlab.enabled=false`.
-    More on that in the [plugins section](../plugins/jupyterlab).
+For the JupyterLab frontend:
+```bash
+micromamba install -c conda-forge jupyverse fps-jupyterlab fps-auth
+```
+Or for the RetroLab frontend:
+```bash
+micromamba install -c conda-forge jupyverse fps-retrolab fps-auth
+```
 
 ## Development install
 
 You first need to clone the repository:
-
 ```bash
 git clone https://github.com/jupyter-server/jupyverse.git
 cd jupyverse
 ```
-
-Jupyverse uses [Hatch](https://github.com/pypa/hatch) for project management,
-hatch can handle multiple environments in parallel allowing for easy development
+Jupyverse uses [Hatch](https://github.com/pypa/hatch) for project management.
+Hatch can handle multiple environments in parallel, allowing for easy development
 and testing of different frontends, authentication methods, and incompatible
 plugins.
 
-First you should [install Hatch](https://hatch.pypa.io/latest/install/), once it
-is installed you can run `hatch env show` to view the available environments.
-This will show a table like:
-
+We recommend working in an isolated conda environment, in which hatch will manage
+sub-environments:
+```bash
+micromamba create -n jupyverse-dev
+micromamba activate jupyverse-dev
+micromamba install -c conda-forge hatch
+```
+Entering `hatch env show` will show the available environments:
 ```text
                 Standalone
 ┏━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
@@ -56,42 +62,58 @@ This will show a table like:
 │ docs    │ virtual │ docs     │ build   │
 │         │         │          │ serve   │
 └─────────┴─────────┴──────────┴─────────┘
-                                       Matrices
-┏━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
-┃ Name ┃ Type    ┃ Envs                     ┃ Features ┃ Dependencies    ┃ Scripts   ┃
-┡━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
-│ dev  │ virtual │ dev.jupyterlab-noauth    │ test     │ fastapi>=0.82.0 │ jupyverse │
-│      │         │ dev.jupyterlab-auth      │          │                 │ lint      │
-│      │         │ dev.jupyterlab-auth_fief │          │                 │ test      │
-│      │         │ dev.retrolab-noauth      │          │                 │ typecheck │
-│      │         │ dev.retrolab-auth        │          │                 │           │
-│      │         │ dev.retrolab-auth_fief   │          │                 │           │
-└──────┴─────────┴──────────────────────────┴──────────┴─────────────────┴───────────┘
+                              Matrices
+┏━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ Name ┃ Type    ┃ Envs                     ┃ Features ┃ Scripts   ┃
+┡━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━┩
+│ dev  │ virtual │ dev.jupyterlab-noauth    │ test     │ lint      │
+│      │         │ dev.jupyterlab-auth      │          │ test      │
+│      │         │ dev.jupyterlab-auth_fief │          │ typecheck │
+│      │         │ dev.retrolab-noauth      │          │           │
+│      │         │ dev.retrolab-auth        │          │           │
+│      │         │ dev.retrolab-auth_fief   │          │           │
+└──────┴─────────┴──────────────────────────┴──────────┴───────────┘
+```
+!!! note
+    The `default` environment will install all the plugins from PyPI, **not** from
+    your local repository. The `dev` environment installs all plugins in editable mode
+    from your local repository. So you want to use the `dev` environment.
+
+Currently, the `dev` environment matrix consists of all combinations of frontends
+(`jupyterlab`, `retrolab`) and authentication methods (`noauth`, `auth`, `auth_fief`),
+which leads to six environments.
+
+A number of scripts are available in the `dev` environments. They can be
+executed using `hatch run {env}:{script}`. You can also execute anything that you would
+execute in your shell. For instance, to run Jupyverse for the `jupyterlab` frontend and
+without authentication, enter:
+```bash
+hatch run dev.jupyterlab-noauth:jupyverse
 ```
 
-The `default` environment will install all the plugins from pypi, **not** from
-the plugin directory, as this is what users get when they install jupyverse. The
-`dev` environment installs all plugins in editable mode from the plugin
-directory.
-
-Currently the `dev` matrix environment is made up of all combinations of
-frontends (`jupyterlab`, `retrolab`) and authentication methods (`noauth`, `auth`,
-`auth_fief`), which leads to six combinations.
-
-A number of scripts are available in the dev environments, scripts can be
-executed using `hatch run {env}:{script}`, e.g. to serve jupyverse from the
-jupyterlab noauth environment use `hatch run dev.jupyterlab-noauth:jupyverse`.
-
-Tests should normally be executed using the `dev.jupyterlab-auth` environment,
-e.g. `hatch run dev.jupyterlab-auth:test`.
-
-You can also use the `-e` flag to set an environment, which work with other
-commands like shell, so `hatch -e dev.jupyterlab-noauth shell` will spawn a
-shell with that environment activated, which is useful for interactive testing
-and development.
+Tests should be executed using the `dev.jupyterlab-auth` environment:
+```bash
+hatch run dev.jupyterlab-auth:test
+```
+Sometimes it is easier to directly be in the environment, without having to prefix everything
+with `hatch run {env}:`. To do so, just enter:
+```bash
+hatch -e dev.jupyterlab-auth shell
+```
+You can now directly enter shell commands, e.g. `jupyverse`.
+To exit the environment, just enter `exit`.
 
 As the plugins are all installed in editable mode, you could start an instance
-of jupyverse in each environment and see how code changes interact with plugins at
+of Jupyverse in each environment and see how code changes interact with plugins at
 the same time.
 
 Finally, `hatch run docs:serve` can be used to view documentation changes.
+
+If you ever need to start from a fresh environment, you can remove them individually:
+```bash
+hatch env remove dev.jupyterlab-auth
+```
+Or globally:
+```bash
+hatch env prune
+```

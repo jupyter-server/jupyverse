@@ -1,8 +1,7 @@
 import pytest
 from asphalt.core import Context
-from asphalt.web.fastapi import FastAPIComponent
-from fastapi import FastAPI
 from jupyverse_api.auth import AuthConfig
+from jupyverse_api.main import JupyverseComponent
 from httpx import AsyncClient
 from httpx_ws import WebSocketUpgradeError, aconnect_ws
 
@@ -23,12 +22,9 @@ COMPONENTS = {
 
 @pytest.mark.asyncio
 async def test_kernel_channels_unauthenticated(unused_tcp_port):
-    application = FastAPI()
-
     async with Context() as ctx:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=COMPONENTS,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 
@@ -41,12 +37,9 @@ async def test_kernel_channels_unauthenticated(unused_tcp_port):
 
 @pytest.mark.asyncio
 async def test_kernel_channels_authenticated(unused_tcp_port):
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=COMPONENTS,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 
@@ -62,12 +55,9 @@ async def test_kernel_channels_authenticated(unused_tcp_port):
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
 async def test_root_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 
@@ -85,12 +75,9 @@ async def test_root_auth(auth_mode, unused_tcp_port):
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_no_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 
@@ -102,12 +89,9 @@ async def test_no_auth(auth_mode, unused_tcp_port):
 @pytest.mark.parametrize("auth_mode", ("token",))
 async def test_token_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 
@@ -132,12 +116,9 @@ async def test_token_auth(auth_mode, unused_tcp_port):
 )
 async def test_permissions(auth_mode, permissions, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    application = FastAPI()
-
     async with Context() as ctx, AsyncClient() as http:
-        await FastAPIComponent(
+        await JupyverseComponent(
             components=components,
-            app=application,
             port=unused_tcp_port,
         ).start(ctx)
 

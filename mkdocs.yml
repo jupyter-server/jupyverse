@@ -33,19 +33,18 @@ nav:
   - usage/single_user.md
   - usage/multi_user.md
 - Plugins:
-  - 'FPS': plugins/fps.md
   - 'auth': plugins/auth.md
-  - 'fps-contents': plugins/contents.md
-  - 'fps-frontend': plugins/frontend.md
-  - 'fps-lab': plugins/lab.md
-  - 'fps-jupyterlab': plugins/jupyterlab.md
-  - 'fps-retrolab': plugins/retrolab.md
-  - 'fps-nbconvert': plugins/nbconvert.md
-  - 'fps-login': plugins/login.md
-  - 'fps-kernels': plugins/kernels.md
-  - 'fps-terminals': plugins/terminals.md
-  - 'fps-yjs': plugins/yjs.md
-  - 'fps-resource-usage': plugins/resource_usage.md
+  - 'contents': plugins/contents.md
+  - 'frontend': plugins/frontend.md
+  - 'lab': plugins/lab.md
+  - 'jupyterlab': plugins/jupyterlab.md
+  - 'retrolab': plugins/retrolab.md
+  - 'nbconvert': plugins/nbconvert.md
+  - 'login': plugins/login.md
+  - 'kernels': plugins/kernels.md
+  - 'terminals': plugins/terminals.md
+  - 'yjs': plugins/yjs.md
+  - 'resource-usage': plugins/resource_usage.md
 
 markdown_extensions:
   - admonition

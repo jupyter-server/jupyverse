@@ -34,8 +34,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-auth = "fps_auth.main:AuthComponent"
+[project.entry-points]
+"asphalt.components"   = {auth = "fps_auth.main:AuthComponent"}
+"jupyverse.components" = {auth = "fps_auth.main:AuthComponent"}
 
 [tool.hatch.version]
 path = "fps_auth/__init__.py"

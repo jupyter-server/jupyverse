@@ -33,8 +33,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-yjs = "fps_yjs.main:YjsComponent"
+[project.entry-points]
+"asphalt.components"   = {yjs = "fps_yjs.main:YjsComponent"}
+"jupyverse.components" = {yjs = "fps_yjs.main:YjsComponent"}
 
 [tool.hatch.version]
 path = "fps_yjs/__init__.py"

@@ -32,8 +32,9 @@ ignore = [ ".*",]
 [tool.jupyter-releaser]
 skip = [ "check-links",]
 
-[project.entry-points."asphalt.components"]
-jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"
+[project.entry-points]
+"asphalt.components"   = {jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"}
+"jupyverse.components" = {jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"}
 
 [tool.hatch.version]
 path = "fps_jupyterlab/__init__.py"

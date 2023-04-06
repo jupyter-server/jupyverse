@@ -1,11 +1,10 @@
 jupyverse_jlab_command = " ".join(
     [
         "jupyverse",
-        "--no-open-browser",
-        "--auth.mode=noauth",
-        "--lab.collaborative",
-        "--retrolab.enabled=false",
-        "--lab.base_url={base_url}jupyverse-jlab/",
+        "--set auth.mode=noauth",
+        "--set frontend.collaborative=true",
+        "--set frontend.base_url={base_url}jupyverse-jlab/",
+        "--disable retrolab",
         "--port={port}",
     ]
     + [">jupyverse_jlab.log 2>&1"]
@@ -15,11 +14,10 @@ jupyverse_jlab_command = " ".join(
 jupyverse_rlab_command = " ".join(
     [
         "jupyverse",
-        "--no-open-browser",
-        "--auth.mode=noauth",
-        "--lab.collaborative",
-        "--jupyterlab.enabled=false",
-        "--lab.base_url={base_url}jupyverse-rlab/",
+        "--set auth.mode=noauth",
+        "--set frontend.collaborative=true",
+        "--set frontend.base_url={base_url}jupyverse-rlab/",
+        "--disable jupyterlab",
         "--port={port}",
     ]
     + [">jupyverse_rlab.log 2>&1"]

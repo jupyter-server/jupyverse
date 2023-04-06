@@ -9,6 +9,7 @@ keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
+    "rich-click >=1.6.1,<2",
     "asphalt >=4.11.0,<5",
     "asphalt-web[fastapi] >=1.1.0,<2",
     "fastapi >=0.95.0,<1",
@@ -34,11 +35,14 @@ text = "BSD 3-Clause License"
 [project.urls]
 Homepage = "https://jupyter.org"
 
+[project.scripts]
+jupyverse = "jupyverse.cli:main"
+
 [project.optional-dependencies]
-jupyterlab = [ "fps-jupyterlab",]
-retrolab = [ "fps-retrolab",]
-auth = [ "fps-auth",]
-auth-fief = [ "fps-auth-fief",]
+jupyterlab = ["fps-jupyterlab"]
+retrolab = ["fps-retrolab"]
+auth = ["fps-auth"]
+auth-fief = ["fps-auth-fief"]
 noauth = ["fps-noauth"]
 test = [
     "mypy",
@@ -52,7 +56,7 @@ test = [
     "websockets",
     "ipykernel",
 ]
-docs = [ "mkdocs", "mkdocs-material",]
+docs = [ "mkdocs", "mkdocs-material" ]
 
 [tool.hatch.envs.dev]
 # TODO: if/when hatch gets support for defining editable dependencies, the
@@ -68,15 +72,15 @@ pre-install-commands = [
   "pip install -e ./plugins/terminals",
   "pip install -e ./plugins/yjs",
   "pip install -e ./plugins/resource_usage",
-  "pip install -e ./plugins/auth",
-  "pip install -e ./plugins/auth_fief",
-  "pip install -e ./plugins/noauth",
-  "pip install -e ./plugins/login",
 ]
-dependencies = ["fastapi>=0.87.0"]
 features = ["test"]
 
 [tool.hatch.envs.dev.overrides]
+matrix.auth.post-install-commands = [
+  { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
+  { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
+  { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
+]
 matrix.frontend.post-install-commands = [
   { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
   { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
@@ -84,6 +88,7 @@ matrix.frontend.post-install-commands = [
 
 [[tool.hatch.envs.dev.matrix]]
 frontend = ["jupyterlab", "retrolab"]
+auth = ["noauth", "auth", "auth_fief"]
 
 [tool.hatch.envs.dev.scripts]
 test = "pytest ./tests -v"
@@ -92,22 +97,22 @@ lint = [
   "isort --profile=black jupyverse ./plugins",
 ]
 typecheck = [
-  "mypy jupyverse",
-  "mypy jupyverse_api",
-  "mypy plugins/frontend/fps_frontend",
-  "mypy plugins/contents/fps_contents",
-  "mypy plugins/kernels/fps_kernels",
-  "mypy plugins/retrolab/fps_retrolab",
-  "mypy plugins/jupyterlab/fps_jupyterlab",
-  "mypy plugins/lab/fps_lab",
-  "mypy plugins/auth/fps_auth",
-  "mypy plugins/noauth/fps_noauth",
-  "mypy plugins/auth_fief/fps_auth_fief",
-  "mypy plugins/nbconvert/fps_nbconvert",
-  "mypy plugins/yjs/fps_yjs",
-  "mypy plugins/resource_usage/fps_resource_usage",
-  "mypy plugins/terminals/fps_terminals",
-  "mypy plugins/login/fps_login",
+  "mypy --no-incremental jupyverse",
+  "mypy --no-incremental jupyverse_api",
+  "mypy --no-incremental plugins/frontend/fps_frontend",
+  "mypy --no-incremental plugins/contents/fps_contents",
+  "mypy --no-incremental plugins/kernels/fps_kernels",
+  "mypy --no-incremental plugins/retrolab/fps_retrolab",
+  "mypy --no-incremental plugins/jupyterlab/fps_jupyterlab",
+  "mypy --no-incremental plugins/lab/fps_lab",
+  "mypy --no-incremental plugins/auth/fps_auth",
+  "mypy --no-incremental plugins/noauth/fps_noauth",
+  "mypy --no-incremental plugins/auth_fief/fps_auth_fief",
+  "mypy --no-incremental plugins/nbconvert/fps_nbconvert",
+  "mypy --no-incremental plugins/yjs/fps_yjs",
+  "mypy --no-incremental plugins/resource_usage/fps_resource_usage",
+  "mypy --no-incremental plugins/terminals/fps_terminals",
+  "mypy --no-incremental plugins/login/fps_login",
 ]
 
 [tool.hatch.envs.docs]
