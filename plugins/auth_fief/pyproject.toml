@@ -10,7 +10,7 @@ dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
     "fief-client[fastapi]",
-    "jupyverse-api",
+    "jupyverse-api >=0.1.2,<1",
 ]
 
 [[project.authors]]

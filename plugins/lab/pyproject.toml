@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 dependencies = [
   "babel",
   "json5",
-  "jupyverse-api",
+  "jupyverse-api >=0.1.2,<1",
 ]
 dynamic = [ "version",]
 [[project.authors]]
