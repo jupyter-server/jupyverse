@@ -3,7 +3,7 @@
 
 # jupyverse
 
-A set of [FPS](https://github.com/jupyter-server/fps) plugins implementing a Jupyter server.
+A set of [Asphalt](https://asphalt.readthedocs.io) components implementing a Jupyter server.
 
 Try it online:
 - JupyterLab frontend: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?urlpath=jupyverse-jlab)
