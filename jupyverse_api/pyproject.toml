@@ -33,7 +33,7 @@ dynamic = ["version"]
 text = "BSD 3-Clause License"
 
 [project.urls]
-Source = "https://github.com/jupyter-server/jupyverse/api"
+Source = "https://github.com/jupyter-server/jupyverse/jupyverse_api"
 
 [project.entry-points."asphalt.components"]
 app = "jupyverse_api.main:AppComponent"
