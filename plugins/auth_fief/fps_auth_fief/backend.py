@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import Depends, HTTPException, Request, Response, WebSocket, status
 from fastapi.security import APIKeyCookie
-from fief_client import FiefAccessTokenInfo, FiefAsync, FiefUserInfo  # type: ignore
-from fief_client.integrations.fastapi import FiefAuth  # type: ignore
+from fief_client import FiefAccessTokenInfo, FiefAsync, FiefUserInfo
+from fief_client.integrations.fastapi import FiefAuth
 from jupyverse_api.auth import User
 
 from .config import _AuthFiefConfig

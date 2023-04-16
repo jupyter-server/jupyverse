@@ -78,14 +78,25 @@ pre-install-commands = [
 features = ["test"]
 
 [tool.hatch.envs.dev.overrides]
+matrix.frontend.post-install-commands = [
+  { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
+  { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
+]
 matrix.auth.post-install-commands = [
   { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
   { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
   { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
 ]
-matrix.frontend.post-install-commands = [
-  { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
-  { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
+
+matrix.frontend.scripts = [
+  { key = "typecheck1", value = "typecheck0 ./plugins/jupyterlab", if = ["jupyterlab"] },
+  { key = "typecheck1", value = "typecheck0 ./plugins/retrolab", if = ["retrolab"] },
+]
+
+matrix.auth.scripts = [
+  { key = "typecheck", value = "typecheck1 ./plugins/noauth", if = ["noauth"] },
+  { key = "typecheck", value = "typecheck1 ./plugins/auth ./plugins/login", if = ["auth"] },
+  { key = "typecheck", value = "typecheck1 ./plugins/auth_fief", if = ["auth_fief"] },
 ]
 
 [[tool.hatch.envs.dev.matrix]]
@@ -98,24 +109,17 @@ lint = [
   "black --line-length 100 jupyverse ./plugins",
   "isort --profile=black jupyverse ./plugins",
 ]
-typecheck = [
-  "mypy --no-incremental jupyverse",
-  "mypy --no-incremental jupyverse_api",
-  "mypy --no-incremental plugins/frontend/fps_frontend",
-  "mypy --no-incremental plugins/contents/fps_contents",
-  "mypy --no-incremental plugins/kernels/fps_kernels",
-  "mypy --no-incremental plugins/retrolab/fps_retrolab",
-  "mypy --no-incremental plugins/jupyterlab/fps_jupyterlab",
-  "mypy --no-incremental plugins/lab/fps_lab",
-  "mypy --no-incremental plugins/auth/fps_auth",
-  "mypy --no-incremental plugins/noauth/fps_noauth",
-  "mypy --no-incremental plugins/auth_fief/fps_auth_fief",
-  "mypy --no-incremental plugins/nbconvert/fps_nbconvert",
-  "mypy --no-incremental plugins/yjs/fps_yjs",
-  "mypy --no-incremental plugins/resource_usage/fps_resource_usage",
-  "mypy --no-incremental plugins/terminals/fps_terminals",
-  "mypy --no-incremental plugins/login/fps_login",
-]
+typecheck0 = """mypy \
+./jupyverse_api \
+./plugins/contents \
+./plugins/frontend \
+./plugins/kernels \
+./plugins/lab \
+./plugins/nbconvert \
+./plugins/terminals \
+./plugins/yjs \
+./plugins/resource_usage \
+"""
 
 [tool.hatch.envs.docs]
 features = ["docs"]
