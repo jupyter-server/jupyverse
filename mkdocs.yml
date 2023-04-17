@@ -32,6 +32,7 @@ nav:
 - Usage:
   - usage/single_user.md
   - usage/multi_user.md
+  - usage/microservices.md
 - Plugins:
   - 'auth': plugins/auth.md
   - 'contents': plugins/contents.md

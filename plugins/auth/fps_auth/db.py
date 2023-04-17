@@ -53,7 +53,11 @@ class Res:
 
 
 def get_db(auth_config: _AuthConfig) -> Res:
-    jupyter_dir = Path.home() / ".local" / "share" / "jupyter"
+    jupyter_dir = (
+        Path.home() / ".local" / "share" / "jupyter"
+        if auth_config.directory is None
+        else Path(auth_config.directory)
+    )
     jupyter_dir.mkdir(parents=True, exist_ok=True)
     name = "jupyverse"
     if auth_config.test:

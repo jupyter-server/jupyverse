@@ -3,7 +3,7 @@ import sys
 import uuid
 from http import HTTPStatus
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
@@ -32,7 +32,7 @@ class _Kernels(Kernels):
         kernels_config: KernelsConfig,
         auth: Auth,
         frontend_config: FrontendConfig,
-        yjs: Yjs,
+        yjs: Optional[Yjs],
     ) -> None:
         super().__init__(app)
 
@@ -228,6 +228,9 @@ class _Kernels(Kernels):
             kernel_id,
             user: User = Depends(auth.current_user(permissions={"kernels": ["write"]})),
         ):
+            if yjs is None:
+                raise RuntimeError("Cannot execute without a Yjs plugin.")
+
             r = await request.json()
             execution = Execution(**r)
             if kernel_id in kernels:

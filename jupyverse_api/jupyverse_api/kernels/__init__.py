@@ -14,3 +14,4 @@ class Kernels(Router, ABC):
 class KernelsConfig(Config):
     default_kernel: str = "python3"
     connection_path: Optional[str] = None
+    require_yjs: bool = False

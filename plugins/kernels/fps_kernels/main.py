@@ -33,7 +33,7 @@ class KernelsComponent(Component):
         app = await ctx.request_resource(App)
         auth = await ctx.request_resource(Auth)  # type: ignore
         frontend_config = await ctx.request_resource(FrontendConfig)
-        yjs = await ctx.request_resource(Yjs)
+        yjs = await ctx.request_resource(Yjs) if self.kernels_config.require_yjs else None
 
         kernels = _Kernels(app, self.kernels_config, auth, frontend_config, yjs)
         ctx.add_resource(kernels, types=Kernels)

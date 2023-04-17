@@ -26,6 +26,9 @@ classifiers = [
 dependencies = [
   "pydantic >=1.10.6,<2",
   "fastapi >=0.95.0,<1",
+  "rich-click >=1.6.1,<2",
+  "asphalt >=4.11.0,<5",
+  "asphalt-web[fastapi] >=1.1.0,<2",
 ]
 dynamic = ["version"]
 
@@ -34,6 +37,9 @@ text = "BSD 3-Clause License"
 
 [project.urls]
 Source = "https://github.com/jupyter-server/jupyverse/jupyverse_api"
+
+[project.scripts]
+jupyverse = "jupyverse_api.cli:main"
 
 [project.entry-points."asphalt.components"]
 app = "jupyverse_api.main:AppComponent"

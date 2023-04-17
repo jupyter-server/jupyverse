@@ -24,6 +24,8 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
         "--set",
         f"component.components.auth.clear_users={str(clear_users).lower()}",
         "--set",
+        "component.components.kernels.require_yjs=true",
+        "--set",
         f"component.port={unused_tcp_port}",
     ]
     p = subprocess.Popen(command_list)
