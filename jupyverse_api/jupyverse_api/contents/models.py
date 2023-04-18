@@ -3,6 +3,11 @@ from typing import Dict, List, Optional, Union
 from pydantic import BaseModel
 
 
+class Checkpoint(BaseModel):
+    id: str
+    last_modified: str
+
+
 class Content(BaseModel):
     name: str
     path: str
@@ -16,8 +21,18 @@ class Content(BaseModel):
     type: str
 
 
+class CreateContent(BaseModel):
+    ext: Optional[str]
+    path: str
+    type: str
+
+
 class SaveContent(BaseModel):
     content: Optional[Union[str, Dict]]
     format: str
     path: str
     type: str
+
+
+class RenameContent(BaseModel):
+    path: str
