@@ -16,3 +16,4 @@ class _AuthConfig(AuthConfig):
     clear_users: bool = False
     test: bool = False
     login_url: Optional[str] = None
+    directory: Optional[str] = None

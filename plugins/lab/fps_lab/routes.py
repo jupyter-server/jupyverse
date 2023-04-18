@@ -15,7 +15,6 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
 
-import jupyverse
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
@@ -85,7 +84,7 @@ class _Lab(Lab):
 
         @router.get("/favicon.ico")
         async def get_favicon():
-            return FileResponse(Path(jupyverse.__file__).parent / "static" / "favicon.ico")
+            return FileResponse(Path(__file__).parent / "static" / "favicon.ico")
 
         @router.get("/static/notebook/components/MathJax/{rest_of_path:path}")
         async def get_mathjax(rest_of_path):

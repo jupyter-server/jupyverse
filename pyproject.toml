@@ -9,10 +9,6 @@ keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
-    "rich-click >=1.6.1,<2",
-    "asphalt >=4.11.0,<5",
-    "asphalt-web[fastapi] >=1.1.0,<2",
-    "fastapi >=0.95.0,<1",
     "fps-contents >=0.1.2,<1",
     "fps-kernels >=0.1.2,<1",
     "fps-terminals >=0.1.2,<1",
@@ -36,9 +32,6 @@ text = "BSD 3-Clause License"
 
 [project.urls]
 Homepage = "https://jupyter.org"
-
-[project.scripts]
-jupyverse = "jupyverse.cli:main"
 
 [project.optional-dependencies]
 jupyterlab = ["fps-jupyterlab >=0.1.2,<1"]
@@ -109,7 +102,7 @@ lint = [
   "black --line-length 100 jupyverse ./plugins",
   "isort --profile=black jupyverse ./plugins",
 ]
-typecheck0 = """mypy \
+typecheck0 = """mypy --no-incremental \
 ./jupyverse_api \
 ./plugins/contents \
 ./plugins/frontend \
