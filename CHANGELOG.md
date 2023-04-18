@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.4
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.3...a42f7c4d0e951d620108afb4ca25e57da5bae2a1))
+
+### Merged PRs
+
+- Move routes to jupyverse_api [#293](https://github.com/jupyter-server/jupyverse/pull/293) ([@davidbrochart](https://github.com/davidbrochart))
+- Add microservices doc, move CLI to jupyverse_api [#292](https://github.com/jupyter-server/jupyverse/pull/292) ([@davidbrochart](https://github.com/davidbrochart))
+- Don't ignore types for fief_client [#290](https://github.com/jupyter-server/jupyverse/pull/290) ([@davidbrochart](https://github.com/davidbrochart))
+- Update README [#288](https://github.com/jupyter-server/jupyverse/pull/288) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-04-06&to=2023-04-18&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-04-06..2023-04-18&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-04-06..2023-04-18&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.3
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.2...b5faf93e3296d855c7ebeda0c25e9861400ad469))
@@ -15,8 +34,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-04-06&to=2023-04-06&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-04-06..2023-04-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.2
 
