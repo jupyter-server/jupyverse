@@ -1,5 +1,6 @@
 site_name: Jupyverse
 site_description: A composable Jupyter server based on FastAPI
+repo_url: https://github.com/jupyter-server/jupyverse
 
 theme:
   name: 'material'
@@ -25,6 +26,7 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.annotate
+    - content.code.copy
 
 nav:
 - Overview: index.md

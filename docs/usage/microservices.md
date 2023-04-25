@@ -72,9 +72,9 @@ pip install fps-lab
 pip install fps-jupyterlab
 pip install fps-login
 ```
-Now just launch Jupyverse at port `8001`:
+Now we launch Jupyverse at port `8001` and pass our own authentication token. In production, you would either create your own token, or let Jupyverse create it, and copy/paste it for server 2.
 ```bash
-jupyverse --port=8001
+jupyverse --port=8001 --set auth.token=5e9b01f993bc4fb48b2bf6958fd22981
 ```
 If you open your browser at `http://127.0.0.1:8000` (the URL of the Nginx reverse proxy), you should see the JupyterLab UI you're used to. But if you look closer, you can see that there is no icon for kernels in the launcher tab. And in the terminal where you launched Jupyverse, you will see a bunch of `404` for requests at e.g. `GET /api/kernels`. This is expected, because we didn't install the kernels plugin. You can still use JupyterLab if you don't want to execute a notebook, for instance. But let's close it for now, and install the kernels plugin in another Jupyverse instance.
 
@@ -86,15 +86,15 @@ micromamba create -n jupyverse2
 micromamba activate jupyverse2
 micromamba install -c conda-forge python
 ```
-This time, we only want to install the kernels plugin. It also requires an authentication system (for the sake of simplicity we will install `fps-noauth` which gives unrestricted access) and the frontend plugin. Let's not forget to install a kernel, such as `ipykernel`:
+This time, we only want to install the kernels plugin. Let's not forget to install a kernel, such as `ipykernel`:
 ```bash
 pip install fps-kernels
-pip install fps-noauth
+pip install fps-auth
 pip install fps-frontend
 pip install ipykernel
 ```
-Launch Juyverse at port `8002`:
+Launch Juyverse at port `8002` with the same authentication token as for server 1:
 ```bash
-jupyverse --port=8002
+jupyverse --port=8002 --set auth.token=5e9b01f993bc4fb48b2bf6958fd22981
 ```
 Now if you re-open a browser at `http://127.0.0.1:8000`, you should be able to create or open a notebook, and execute it.
