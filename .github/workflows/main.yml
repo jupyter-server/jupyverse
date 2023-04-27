@@ -42,9 +42,9 @@ jobs:
     - name: Check types
       run: |
         hatch run dev.jupyterlab-noauth:typecheck
-        hatch run dev.jupyterlab-noauth:typecheck
         hatch run dev.jupyterlab-auth:typecheck
-        hatch run dev.retrolab-auth_fief:typecheck
+        hatch run dev.jupyterlab-auth_fief:typecheck
+        hatch run dev.retrolab-noauth:typecheck
         hatch run dev.retrolab-auth:typecheck
         hatch run dev.retrolab-auth_fief:typecheck
 
