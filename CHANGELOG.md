@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.5
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.4...bea8fa74efe86fa59ea6054f6e332ffd3d58b23f))
+
+### Merged PRs
+
+- Update with FastAPI-Users v11 [#296](https://github.com/jupyter-server/jupyverse/pull/296) ([@davidbrochart](https://github.com/davidbrochart))
+- Update documentation on microservices with authentication [#295](https://github.com/jupyter-server/jupyverse/pull/295) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-04-18&to=2023-04-29&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-04-18..2023-04-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-04-18..2023-04-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.4
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.3...a42f7c4d0e951d620108afb4ca25e57da5bae2a1))
@@ -18,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-04-06&to=2023-04-18&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-04-06..2023-04-18&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-04-06..2023-04-18&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.3
 
