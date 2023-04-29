@@ -1,7 +1,7 @@
 import logging
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Optional, Tuple
+from typing import Any, Dict, Generic, List, Optional, Tuple, cast
 
 import httpx
 from fastapi import Depends, HTTPException, Response, WebSocket, status
@@ -52,11 +52,11 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
     class NoAuthTransport(Transport):
         scheme = NoAuthScheme()  # type: ignore
 
-        async def get_login_response(self, token: str, response: Response):
-            pass
+        async def get_login_response(self, token: str) -> Response:
+            return Response()
 
-        async def get_logout_response(self, response: Response):
-            pass
+        async def get_logout_response(self) -> Response:
+            return Response()
 
         @staticmethod
         def get_openapi_login_responses_success():
@@ -80,10 +80,11 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
             pass
 
     class GitHubTransport(CookieTransport):
-        async def get_login_response(self, token: str, response: Response):
-            await super().get_login_response(token, response)
+        async def get_login_response(self, token: str) -> Response:
+            response = await super().get_login_response(token)
             response.status_code = status.HTTP_302_FOUND
             response.headers["Location"] = "/lab"
+            return response
 
     def get_noauth_strategy() -> NoAuthStrategy:
         return NoAuthStrategy()
@@ -190,19 +191,29 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
                 if frontend_config.collaborative:
                     if not user and auth_config.mode == "noauth":
                         user = await create_guest(user_manager)
-                        await cookie_authentication.login(get_jwt_strategy(), user, response)
+                        token = await get_jwt_strategy().write_token(user)
+                        cookie_transport = cast(CookieTransport, cookie_authentication.transport)
+                        cookie_transport._set_login_cookie(response, token)
 
                     elif not user and auth_config.mode == "token":
                         global_user = await user_manager.get_by_email(auth_config.global_email)
                         if global_user and global_user.username == token:
                             user = await create_guest(user_manager)
-                            await cookie_authentication.login(get_jwt_strategy(), user, response)
+                            token = await get_jwt_strategy().write_token(user)
+                            cookie_transport = cast(
+                                CookieTransport, cookie_authentication.transport
+                            )
+                            cookie_transport._set_login_cookie(response, token)
                 else:
                     if auth_config.mode == "token":
                         global_user = await user_manager.get_by_email(auth_config.global_email)
                         if global_user and global_user.username == token:
                             user = global_user
-                            await cookie_authentication.login(get_jwt_strategy(), user, response)
+                            token = await get_jwt_strategy().write_token(user)
+                            cookie_transport = cast(
+                                CookieTransport, cookie_authentication.transport
+                            )
+                            cookie_transport._set_login_cookie(response, token)
 
             if user:
                 return user

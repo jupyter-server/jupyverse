@@ -30,14 +30,14 @@ async def authenticate_client(http, port, permissions={}):
     # log in as admin
     login_body = {"username": "admin@jupyter.com", "password": "jupyverse"}
     response = await http.post(f"http://127.0.0.1:{port}/auth/login", data=login_body)
-    assert response.status_code == 200
+    assert response.status_code == 204
     # register user
     response = await http.post(f"http://127.0.0.1:{port}/auth/register", json=register_body)
     assert response.status_code == 201
 
     # log out
     response = await http.post(f"http://127.0.0.1:{port}/auth/logout")
-    assert response.status_code == 200
+    assert response.status_code == 204
     # check that we can't get our identity, since we're not logged in
     response = await http.get(f"http://127.0.0.1:{port}/api/me")
     assert response.status_code == 403
@@ -45,7 +45,7 @@ async def authenticate_client(http, port, permissions={}):
     # log in with registered user
     login_body = {"username": f"{username}@example.com", "password": username}
     response = await http.post(f"http://127.0.0.1:{port}/auth/login", data=login_body)
-    assert response.status_code == 200
+    assert response.status_code == 204
     # we should now have a cookie
     assert "fastapiusersauth" in http.cookies
     # check our identity, since we're logged in
