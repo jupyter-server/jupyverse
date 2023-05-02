@@ -36,7 +36,7 @@ Homepage = "https://jupyter.org"
 [project.optional-dependencies]
 jupyterlab = ["fps-jupyterlab >=0.1.2,<1"]
 retrolab = ["fps-retrolab >=0.1.2,<1"]
-auth = ["fps-auth >=0.1.2,<1"]
+auth = ["fps-auth >=0.1.2,<1", "fps-login >=0.1.2,<1"]
 auth-fief = ["fps-auth-fief >=0.1.2,<1"]
 noauth = ["fps-noauth >=0.1.2,<1"]
 test = [
