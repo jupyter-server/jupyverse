@@ -35,7 +35,7 @@ class FileIdManager(metaclass=Singleton):
     watchers: Dict[str, List[Watcher]]
     lock: asyncio.Lock
 
-    def __init__(self, db_path: str = "fileid.db"):
+    def __init__(self, db_path: str = ".fileid.db"):
         self.db_path = db_path
         self.initialized = asyncio.Event()
         self.watchers = {}

@@ -1,8 +1,12 @@
-Jupyverse supports multiple users working collaboratively. Depending on the chosen authentication method, access to the server can be finer-grained. For instance, it is possible to require users to create an account before they can log in, and to give them permissions restricting access to specific resources. It is also possible to let them log in as anonymous users. The authentication method largely depends on the level of security you want.
+Jupyverse supports multiple users working collaboratively. Depending on the chosen authentication method, access to the server can be finer-grained. For instance, it is possible to require users to create an account before they can log in, and to give them permissions restricting access to specific resources. It is also possible to let them log in as anonymous users. The authentication method largely depends on the desired level of security.
 
 ## Collaborative editing
 
-The first thing to do is to allow collaborative editing when launching Jupyverse:
+The first thing to do is to install the Jupyter collaboration package:
+```bash
+pip install jupyter-collaboration
+```
+Jupyverse must then be launched in collaborative mode:
 ```bash
 jupyverse --set frontend.collaborative=true
 ```

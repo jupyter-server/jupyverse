@@ -158,31 +158,39 @@ class _Lab(Lab):
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     async def get_settings(self, user: User):
-        with open(self.jlab_dir / "static" / "package.json") as f:
-            package = json.load(f)
         if user:
             user_settings = json.loads(user.settings)
         else:
             user_settings = {}
         settings = []
-        for path in (self.jlab_dir / "schemas" / "@jupyterlab").glob("*/*.json"):
-            with open(path) as f:
-                schema = json.load(f)
-            key = f"{path.parent.name}:{path.stem}"
-            setting = {
-                "id": f"@jupyterlab/{key}",
-                "schema": schema,
-                "version": package["version"],
-                "raw": "{}",
-                "settings": {},
-                "warning": None,
-                "last_modified": None,
-                "created": None,
-            }
-            if key in user_settings:
-                setting.update(user_settings[key])
-                setting["settings"] = json5.loads(user_settings[key]["raw"])
-            settings.append(setting)
+        schemas = [self.jlab_dir / "schemas"]
+        for d1 in self.labextensions_dir.iterdir():
+            if (d1 / "schemas").exists():
+                schemas.append(d1 / "schemas")
+            for d2 in d1.iterdir():
+                if (d2 / "schemas").exists():
+                    schemas.append(d2 / "schemas")
+        for s in schemas:
+            for d1 in s.iterdir():
+                for d2 in d1.iterdir():
+                    package = json.loads((d2 / "package.json.orig").read_text())
+                    for path in [p for p in d2.iterdir() if p.suffix == ".json"]:
+                        schema = json.loads(path.read_text())
+                        key = f"{path.parent.name}:{path.stem}"
+                        setting = {
+                            "id": f"{d1.name}/{key}",
+                            "schema": schema,
+                            "version": package["version"],
+                            "raw": "{}",
+                            "settings": {},
+                            "warning": None,
+                            "last_modified": None,
+                            "created": None,
+                        }
+                        if key in user_settings:
+                            setting.update(user_settings[key])
+                            setting["settings"] = json5.loads(user_settings[key]["raw"])
+                        settings.append(setting)
         return {"settings": settings}
 
     def get_federated_extensions(self, extensions_dir: Path) -> Tuple[List, List]:

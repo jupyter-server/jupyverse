@@ -15,6 +15,7 @@ from ..app import App
 class Lab(Router, ABC):
     prefix_dir: Path
     jlab_dir: Path
+    labextensions_dir: Path
     extensions_dir: Path
     redirect_after_root: str
 
@@ -36,6 +37,7 @@ class Lab(Router, ABC):
             self.jlab_dir = Path(jupyterlab_module.__file__).parents[1] / "dev_mode"
         else:
             self.jlab_dir = self.prefix_dir / "share" / "jupyter" / "lab"
+        self.labextensions_dir = self.prefix_dir / "share" / "jupyter" / "labextensions"
         for ext in self.federated_extensions:
             name = ext["name"]
             self.mount(
