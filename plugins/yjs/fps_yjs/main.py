@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections.abc import AsyncGenerator
 from typing import Optional
 
@@ -29,5 +30,6 @@ class YjsComponent(Component):
 
         yield
 
+        yjs.room_manager.stop()
         contents.file_id_manager.stop_watching_files.set()
         await contents.file_id_manager.stopped_watching_files.wait()

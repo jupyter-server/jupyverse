@@ -1,6 +1,5 @@
 from __future__ import annotations
 import asyncio
-import logging
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Optional
@@ -14,9 +13,6 @@ from jupyverse_api.yjs import Yjs
 from jupyverse_api.app import App
 
 from .routes import _Kernels
-
-
-logger = logging.getLogger("kernels")
 
 
 class KernelsComponent(Component):

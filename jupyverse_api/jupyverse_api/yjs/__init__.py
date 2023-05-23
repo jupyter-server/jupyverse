@@ -16,15 +16,6 @@ class Yjs(Router, ABC):
 
         router = APIRouter()
 
-        @router.websocket("/api/yjs/{path:path}")
-        async def yjs_websocket(
-            path,
-            websocket_permissions=Depends(
-                auth.websocket_auth(permissions={"yjs": ["read", "write"]})
-            ),
-        ):
-            return await self.yjs_websocket(path, websocket_permissions)
-
         @router.websocket("/api/collaboration/room/{path:path}")
         async def collaboration_room_websocket(
             path,
@@ -46,14 +37,6 @@ class Yjs(Router, ABC):
         self.include_router(router)
 
     @abstractmethod
-    async def yjs_websocket(
-        self,
-        path,
-        websocket_permissions,
-    ):
-        ...
-
-    @abstractmethod
     async def collaboration_room_websocket(
         self,
         path,
@@ -68,5 +51,12 @@ class Yjs(Router, ABC):
         request: Request,
         response: Response,
         user: User,
+    ):
+        ...
+
+    @abstractmethod
+    def get_document(
+        self,
+        document_id: str,
     ):
         ...

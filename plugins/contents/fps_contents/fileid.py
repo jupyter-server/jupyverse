@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
 import aiosqlite
@@ -101,8 +101,8 @@ class FileIdManager(metaclass=Singleton):
         async for changes in awatch(".", stop_event=self.stop_watching_files):
             async with self.lock:
                 async with aiosqlite.connect(self.db_path) as db:
-                    deleted_paths = []
-                    added_paths = []
+                    deleted_paths = set()
+                    added_paths = set()
                     for change, changed_path in changes:
                         # get relative path
                         changed_path = Path(changed_path).relative_to(await Path().absolute())
@@ -147,16 +147,18 @@ class FileIdManager(metaclass=Singleton):
                                 (mtime, changed_path_str),
                             )
 
-                    for path in deleted_paths + added_paths:
+                    for path in deleted_paths - added_paths:
+                        logger.debug("Unindexing file %s ", path)
                         await db.execute("DELETE FROM fileids WHERE path = ?", (path,))
                     await db.commit()
 
             for change in changes:
                 changed_path = change[1]
                 # get relative path
-                changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
-                for watcher in self.watchers.get(changed_path, []):
-                    watcher.notify(change)
+                relative_changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
+                relative_change = (change[0], relative_changed_path)
+                for watcher in self.watchers.get(relative_changed_path, []):
+                    watcher.notify(relative_change)
 
         self.stopped_watching_files.set()
 
@@ -184,7 +186,7 @@ async def get_mtime(path, db) -> Optional[float]:
 
 
 async def maybe_rename(
-    db, changed_path: str, changed_paths: List[str], other_paths: List[str], is_added_path
+    db, changed_path: str, changed_paths: Set[str], other_paths: Set[str], is_added_path: bool
 ) -> None:
     # check if the same file was added/deleted, this would be a rename
     db_or_fs1, db_or_fs2 = db, None
@@ -204,4 +206,4 @@ async def maybe_rename(
             await db.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
             other_paths.remove(other_path)
             return
-    changed_paths.append(changed_path)
+    changed_paths.add(changed_path)

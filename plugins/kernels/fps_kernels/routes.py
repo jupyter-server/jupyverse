@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from http import HTTPStatus
 from pathlib import Path
@@ -22,6 +23,9 @@ from .kernel_server.server import (
     KernelServer,
     kernels,
 )
+
+
+logger = logging.getLogger("kernels")
 
 
 class _Kernels(Kernels):
@@ -146,9 +150,14 @@ class _Kernels(Kernels):
         kernel_name = create_session.kernel.name
         if kernel_name is not None:
             # launch a new ("internal") kernel
+            kernel_cwd = Path(create_session.path).parent
+            while True:
+                if kernel_cwd.is_dir():
+                    break
+                kernel_cwd = kernel_cwd.parent
             kernel_server = KernelServer(
                 kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
-                kernel_cwd=str(Path(create_session.path).parent),
+                kernel_cwd=str(kernel_cwd),
             )
             kernel_id = str(uuid.uuid4())
             kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
@@ -231,7 +240,7 @@ class _Kernels(Kernels):
         r = await request.json()
         execution = Execution(**r)
         if kernel_id in kernels:
-            ynotebook = self.yjs.websocket_server.get_room(execution.document_id).document
+            ynotebook = self.yjs.get_document(execution.document_id)
             cell = ynotebook.get_cell(execution.cell_idx)
             cell["outputs"] = []
 
