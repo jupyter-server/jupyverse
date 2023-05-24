@@ -70,6 +70,9 @@ def get_db(auth_config: _AuthConfig) -> Res:
             userdb_path.unlink()
         if secret_path.is_file():
             secret_path.unlink()
+    if auth_config.mode == "token":
+        if secret_path.is_file():
+            secret_path.unlink()
 
     if not secret_path.is_file():
         secret_path.write_text(secrets.token_hex(32))

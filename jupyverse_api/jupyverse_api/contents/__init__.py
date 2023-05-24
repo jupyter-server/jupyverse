@@ -23,6 +23,12 @@ class FileIdManager(ABC):
     async def get_id(self, file_path: str) -> str:
         ...
 
+    def watch(self, path: str):
+        ...
+
+    def unwatch(self, path: str, watcher):
+        ...
+
 
 class Contents(Router, ABC):
     def __init__(self, app: App, auth: Auth):
