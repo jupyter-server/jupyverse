@@ -4,7 +4,7 @@ import logging
 import random
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from jupyverse_api import Router
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -71,16 +71,18 @@ def auth_factory(
 
             @router.get("/api/me")
             async def get_api_me(
-                request: Request,
+                permissions: Optional[str] = None,
                 user: UserRead = Depends(backend.current_user()),
             ):
                 checked_permissions: Dict[str, List[str]] = {}
-                permissions = json.loads(
-                    dict(request.query_params).get("permissions", "{}").replace("'", '"')
-                )
-                if permissions:
+                if permissions is None:
+                    permissions = "{}"
+                else:
+                    permissions = permissions.replace("'", '"')
+                permissions_dict = json.loads(permissions)
+                if permissions_dict:
                     user_permissions = user.permissions
-                    for resource, actions in permissions.items():
+                    for resource, actions in permissions_dict.items():
                         user_resource_permissions = user_permissions.get(resource)
                         if user_resource_permissions is None:
                             continue
