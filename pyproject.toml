@@ -67,6 +67,7 @@ pre-install-commands = [
   "pip install -e ./plugins/terminals",
   "pip install -e ./plugins/yjs",
   "pip install -e ./plugins/resource_usage",
+  "pip install -e ./plugins/webdav[test]",
 ]
 features = ["test"]
 
@@ -97,7 +98,7 @@ frontend = ["jupyterlab", "retrolab"]
 auth = ["noauth", "auth", "auth_fief"]
 
 [tool.hatch.envs.dev.scripts]
-test = "pytest ./tests -v"
+test = "pytest ./tests plugins/webdav/tests -v"
 lint = [
   "black --line-length 100 jupyverse ./plugins",
   "isort --profile=black jupyverse ./plugins",
@@ -112,6 +113,7 @@ typecheck0 = """mypy --no-incremental \
 ./plugins/terminals \
 ./plugins/yjs \
 ./plugins/resource_usage \
+./plugins/webdav \
 """
 
 [tool.hatch.envs.docs]
