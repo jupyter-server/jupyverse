@@ -49,3 +49,6 @@ class App:
         self._router_paths[_type].append(path)
         logger.debug("%s mounted path: %s", _type, path)
         self._app.mount(path, *args, **kwargs)
+
+    def add_middleware(self, middleware, *args, **kwargs) -> None:
+        self._app.add_middleware(middleware, *args, **kwargs)

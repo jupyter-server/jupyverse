@@ -40,3 +40,6 @@ class Router:
 
     def mount(self, path: str, *args, **kwargs) -> None:
         self._app._mount(path, self._type, *args, **kwargs)
+
+    def add_middleware(self, middleware, *args, **kwargs) -> None:
+        self._app.add_middleware(middleware, *args, **kwargs)
