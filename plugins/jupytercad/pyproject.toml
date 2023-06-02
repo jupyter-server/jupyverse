@@ -1,0 +1,39 @@
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project]
+name = "fps_jupytercad"
+description = "An FPS plugin for the JupyterCAD API"
+keywords = ["jupyter", "server", "fastapi", "plugins"]
+requires-python = ">=3.8"
+dependencies = [
+    "jupyverse-api >=0.1.2,<1",
+]
+dynamic = [ "version" ]
+[[project.authors]]
+name = "Jupyter Development Team"
+email = "jupyter@googlegroups.com"
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+text = "BSD 3-Clause License"
+
+[project.urls]
+Homepage = "https://jupyter.org"
+
+[tool.check-manifest]
+ignore = [ ".*" ]
+
+[tool.jupyter-releaser]
+skip = [ "check-links" ]
+
+[project.entry-points]
+"asphalt.components"   = {jupytercad = "fps_jupytercad.main:JupyterCADComponent"}
+"jupyverse.components" = {jupytercad = "fps_jupytercad.main:JupyterCADComponent"}
+
+[tool.hatch.version]
+path = "fps_jupytercad/__init__.py"
