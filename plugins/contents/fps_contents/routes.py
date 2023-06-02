@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import shutil
@@ -137,7 +138,7 @@ class _Contents(Contents):
         return await self.read_content(rename_content.path, False)
 
     async def read_content(
-        self, path: Union[str, Path], get_content: bool, as_json: bool = False
+        self, path: Union[str, Path], get_content: bool, file_format: Optional[str] = None
     ) -> Content:
         if isinstance(path, str):
             path = Path(path)
@@ -151,10 +152,14 @@ class _Contents(Contents):
                 ]
             elif path.is_file() or path.is_symlink():
                 try:
-                    async with await open_file(path) as f:
-                        content = await f.read()
-                    if as_json:
-                        content = json.loads(content)
+                    async with await open_file(path, mode="rb") as f:
+                        content_bytes = await f.read()
+                    if file_format == "base64":
+                        content = base64.b64encode(content_bytes).decode("ascii")
+                    elif file_format == "json":
+                        content = json.loads(content_bytes)
+                    else:
+                        content = content_bytes.decode()
                 except Exception:
                     raise HTTPException(status_code=404, detail="Item not found")
         format: Optional[str] = None
@@ -171,7 +176,7 @@ class _Contents(Contents):
                 mimetype = None
                 if content is not None:
                     nb: dict
-                    if as_json:
+                    if file_format == "json":
                         content = cast(Dict, content)
                         nb = content
                     else:
@@ -181,7 +186,7 @@ class _Contents(Contents):
                         if "metadata" not in cell:
                             cell["metadata"] = {}
                         cell["metadata"].update({"trusted": False})
-                    if not as_json:
+                    if file_format != "json":
                         content = json.dumps(nb)
             elif path.suffix == ".json":
                 type = "json"
@@ -212,24 +217,33 @@ class _Contents(Contents):
     async def write_content(self, content: Union[SaveContent, Dict]) -> None:
         if not isinstance(content, SaveContent):
             content = SaveContent(**content)
-        async with await open_file(content.path, "w") as f:
-            if content.format == "json":
-                dict_content = cast(Dict, content.content)
-                if content.type == "notebook":
-                    # see https://github.com/jupyterlab/jupyterlab/issues/11005
-                    if "metadata" in dict_content and "orig_nbformat" in dict_content["metadata"]:
-                        del dict_content["metadata"]["orig_nbformat"]
-                await f.write(json.dumps(dict_content, indent=2))
-            else:
+        if content.format == "base64":
+            async with await open_file(content.path, "wb") as f:
                 content.content = cast(str, content.content)
-                await f.write(content.content)
+                content_bytes = content.content.encode("ascii")
+                await f.write(content_bytes)
+        else:
+            async with await open_file(content.path, "wt") as f:
+                if content.format == "json":
+                    dict_content = cast(Dict, content.content)
+                    if content.type == "notebook":
+                        # see https://github.com/jupyterlab/jupyterlab/issues/11005
+                        if (
+                            "metadata" in dict_content
+                            and "orig_nbformat" in dict_content["metadata"]
+                        ):
+                            del dict_content["metadata"]["orig_nbformat"]
+                    await f.write(json.dumps(dict_content, indent=2))
+                else:
+                    content.content = cast(str, content.content)
+                    await f.write(content.content)
 
     @property
     def file_id_manager(self):
         return FileIdManager()
 
 
-def get_available_path(path: Path, sep: str = ""):
+def get_available_path(path: Path, sep: str = "") -> Path:
     directory = path.parent
     name = Path(path.name)
     i = None

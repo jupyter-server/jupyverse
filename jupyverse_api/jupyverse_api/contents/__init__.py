@@ -113,7 +113,7 @@ class Contents(Router, ABC):
 
     @abstractmethod
     async def read_content(
-        self, path: Union[str, Path], get_content: bool, as_json: bool = False
+        self, path: Union[str, Path], get_content: bool, file_format: Optional[str] = None
     ) -> Content:
         ...
 

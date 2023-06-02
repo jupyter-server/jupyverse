@@ -175,9 +175,8 @@ class RoomManager:
                 logger.info(f"Opening collaboration room: {websocket.path} ({file_path})")
                 document = YDOCS.get(file_type, YFILE)(room.ydoc)
                 self.documents[websocket.path] = document
-                is_notebook = file_type == "notebook"
                 async with self.lock:
-                    model = await self.contents.read_content(file_path, True, as_json=is_notebook)
+                    model = await self.contents.read_content(file_path, True, file_format)
                 assert model.last_modified is not None
                 self.last_modified[file_id] = to_datetime(model.last_modified)
                 if not room.ready:
@@ -201,11 +200,13 @@ class RoomManager:
                     document.dirty = False
                     room.ready = True
                     # save the document to file when changed
-                    document.observe(partial(self.on_document_change, file_id, file_type, document))
+                    document.observe(
+                        partial(self.on_document_change, file_id, file_type, file_format, document)
+                    )
                     # update the document when file changes
                     if file_id not in self.watchers:
                         self.watchers[file_id] = asyncio.create_task(
-                            self.watch_file(file_type, file_id, document)
+                            self.watch_file(file_format, file_id, document)
                         )
 
         await self.websocket_server.serve(websocket)
@@ -245,7 +246,7 @@ class RoomManager:
             document.path = file_path
         return file_path
 
-    async def watch_file(self, file_type: str, file_id: str, document: YBaseDoc) -> None:
+    async def watch_file(self, file_format: str, file_id: str, document: YBaseDoc) -> None:
         file_path = await self.get_file_path(file_id, document)
         assert file_path is not None
         logger.debug(f"Watching file: {file_path}")
@@ -260,18 +261,17 @@ class RoomManager:
                     self.contents.file_id_manager.unwatch(file_path, watcher)
                     file_path = new_file_path
                     # break
-                await self.maybe_load_file(file_type, file_path, file_id)
+                await self.maybe_load_file(file_format, file_path, file_id)
 
-    async def maybe_load_file(self, file_type: str, file_path: str, file_id: str) -> None:
+    async def maybe_load_file(self, file_format: str, file_path: str, file_id: str) -> None:
         async with self.lock:
             model = await self.contents.read_content(file_path, False)
         # do nothing if the file was saved by us
         assert model.last_modified is not None
         if self.last_modified[file_id] < to_datetime(model.last_modified):
             # the file was not saved by us, update the shared document(s)
-            is_notebook = file_type == "notebook"
             async with self.lock:
-                model = await self.contents.read_content(file_path, True, as_json=is_notebook)
+                model = await self.contents.read_content(file_path, True, file_format)
             assert model.last_modified is not None
             documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
             for document in documents:
@@ -279,7 +279,7 @@ class RoomManager:
             self.last_modified[file_id] = to_datetime(model.last_modified)
 
     def on_document_change(
-        self, file_id: str, file_type: str, document: YBaseDoc, target, event
+        self, file_id: str, file_type: str, file_format: str, document: YBaseDoc, target, event
     ) -> None:
         if target == "state" and "dirty" in event.keys:
             dirty = event.keys["dirty"]["newValue"]
@@ -289,14 +289,18 @@ class RoomManager:
         # unobserve and observe again because the structure of the document may have changed
         # e.g. a new cell added to a notebook
         document.unobserve()
-        document.observe(partial(self.on_document_change, file_id, file_type, document))
+        document.observe(
+            partial(self.on_document_change, file_id, file_type, file_format, document)
+        )
         if file_id in self.savers:
             self.savers[file_id].cancel()
         self.savers[file_id] = asyncio.create_task(
-            self.maybe_save_document(file_id, file_type, document)
+            self.maybe_save_document(file_id, file_type, file_format, document)
         )
 
-    async def maybe_save_document(self, file_id: str, file_type: str, document: YBaseDoc) -> None:
+    async def maybe_save_document(
+        self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
+    ) -> None:
         # save after 1 second of inactivity to prevent too frequent saving
         await asyncio.sleep(1)  # FIXME: pass in config
         # if the room cannot be found, don't save
@@ -305,9 +309,8 @@ class RoomManager:
         except BaseException:
             return
         assert file_path is not None
-        is_notebook = file_type == "notebook"
         async with self.lock:
-            model = await self.contents.read_content(file_path, True, as_json=is_notebook)
+            model = await self.contents.read_content(file_path, True, file_format)
         assert model.last_modified is not None
         if self.last_modified[file_id] < to_datetime(model.last_modified):
             # file changed on disk, let's revert
@@ -318,10 +321,9 @@ class RoomManager:
             # don't save if not needed
             # this also prevents the dirty flag from bouncing between windows of
             # the same document opened as different types (e.g. notebook/text editor)
-            format = "json" if file_type == "notebook" else "text"
             content = {
                 "content": document.source,
-                "format": format,
+                "format": file_format,
                 "path": file_path,
                 "type": file_type,
             }
