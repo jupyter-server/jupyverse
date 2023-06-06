@@ -2,11 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.9
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.8...ab09a2ea41fcdab226ec55541a26329c3d5b7583))
+
+### Merged PRs
+
+- Fix fps-webdav logging config [#317](https://github.com/jupyter-server/jupyverse/pull/317) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix fps-auth-fief [#316](https://github.com/jupyter-server/jupyverse/pull/316) ([@davidbrochart](https://github.com/davidbrochart))
+- Handle binary (base64-encoded) files [#315](https://github.com/jupyter-server/jupyverse/pull/315) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-05-31&to=2023-06-06&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-05-31..2023-06-06&type=Issues) | [@trungleduc](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Atrungleduc+updated%3A2023-05-31..2023-06-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.8
 
 No merged PRs
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.7
 
