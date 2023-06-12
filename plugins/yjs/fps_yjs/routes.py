@@ -148,6 +148,7 @@ class RoomManager:
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
+        self.websocket_server_task = asyncio.create_task(self.websocket_server.start())
         self.lock = asyncio.Lock()
 
     def stop(self):
@@ -157,9 +158,10 @@ class RoomManager:
             saver.cancel()
         for cleaner in self.cleaners.values():
             cleaner.cancel()
+        self.websocket_server.stop()
 
     async def serve(self, websocket: YpyWebsocket, permissions) -> None:
-        room = self.websocket_server.get_room(websocket.path)
+        room = await self.websocket_server.get_room(websocket.path)
         can_write = permissions is None or "write" in permissions.get("yjs", [])
         room.on_message = partial(self.filter_message, can_write)
         is_stored_document = websocket.path.count(":") >= 2
@@ -209,6 +211,7 @@ class RoomManager:
                             self.watch_file(file_format, file_id, document)
                         )
 
+        await self.websocket_server.started.wait()
         await self.websocket_server.serve(websocket)
 
         if is_stored_document and not room.clients:
@@ -354,7 +357,7 @@ class RoomManager:
 
 
 class JupyterWebsocketServer(WebsocketServer):
-    def get_room(self, ws_path: str) -> YRoom:
+    async def get_room(self, ws_path: str) -> YRoom:
         if ws_path not in self.rooms:
             if ws_path.count(":") >= 2:
                 # it is a stored document (e.g. a notebook)
@@ -365,4 +368,6 @@ class JupyterWebsocketServer(WebsocketServer):
             else:
                 # it is a transient document (e.g. awareness)
                 self.rooms[ws_path] = YRoom()
-        return self.rooms[ws_path]
+        room = self.rooms[ws_path]
+        await self.start_room(room)
+        return room
