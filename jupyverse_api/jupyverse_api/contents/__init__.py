@@ -189,3 +189,17 @@ class Contents(Router, ABC):
         user: User,
     ) -> Content:
         ...
+
+    @abstractmethod
+    async def is_dir(
+        self,
+        path: str,
+    ) -> bool:
+        ...
+
+    @abstractmethod
+    async def is_file(
+        self,
+        path: str,
+    ) -> bool:
+        ...

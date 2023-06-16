@@ -1,13 +1,13 @@
 import base64
 import json
 import os
+import pathlib
 import shutil
 from datetime import datetime
 from http import HTTPStatus
-from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
-from anyio import open_file
+from anyio import Path, open_file, to_thread
 from fastapi import HTTPException, Response
 from jupyverse_api.auth import User
 from jupyverse_api.contents import Contents
@@ -32,12 +32,12 @@ class _Contents(Contents):
         src_path = Path(path)
         dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
         try:
-            dst_path.parent.mkdir(exist_ok=True)
-            shutil.copyfile(src_path, dst_path)
+            await dst_path.parent.mkdir(exist_ok=True)
+            await to_thread.run_sync(shutil.copyfile, src_path, dst_path)
         except Exception:
             # FIXME: return error code?
             return []
-        mtime = get_file_modification_time(dst_path)
+        mtime = await get_file_modification_time(dst_path)
         return Checkpoint(**{"id": "checkpoint", "last_modified": mtime})
 
     async def create_content(
@@ -49,7 +49,7 @@ class _Contents(Contents):
         create_content = CreateContent(**(await request.json()))
         content_path = Path(create_content.path)
         if create_content.type == "notebook":
-            available_path = get_available_path(content_path / "Untitled.ipynb")
+            available_path = await get_available_path(content_path / "Untitled.ipynb")
             async with await open_file(available_path, "w") as f:
                 await f.write(
                     json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5})
@@ -57,21 +57,24 @@ class _Contents(Contents):
             src_path = available_path
             dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
             try:
-                dst_path.parent.mkdir(exist_ok=True)
-                shutil.copyfile(src_path, dst_path)
+                await dst_path.parent.mkdir(exist_ok=True)
+                await to_thread.run_sync(shutil.copyfile, src_path, dst_path)
             except Exception:
                 # FIXME: return error code?
                 pass
         elif create_content.type == "directory":
             name = "Untitled Folder"
-            available_path = get_available_path(content_path / name, sep=" ")
-            available_path.mkdir(parents=True, exist_ok=True)
+            available_path = await get_available_path(content_path / name, sep=" ")
+            await available_path.mkdir(parents=True, exist_ok=True)
         else:
             assert create_content.ext is not None
-            available_path = get_available_path(content_path / ("untitled" + create_content.ext))
-            open(available_path, "w").close()
+            available_path = await get_available_path(
+                content_path / ("untitled" + create_content.ext)
+            )
+            async with await open_file(available_path, "w") as f:
+                pass
 
-        return await self.read_content(available_path, False)
+        return await self.read_content(pathlib.Path(available_path), False)
 
     async def get_root_content(
         self,
@@ -87,9 +90,9 @@ class _Contents(Contents):
     ):
         src_path = Path(path)
         dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-        if not dst_path.exists():
+        if not await dst_path.exists():
             return []
-        mtime = get_file_modification_time(dst_path)
+        mtime = await get_file_modification_time(dst_path)
         return [Checkpoint(**{"id": "checkpoint", "last_modified": mtime})]
 
     async def get_content(
@@ -120,11 +123,11 @@ class _Contents(Contents):
         user: User,
     ):
         p = Path(path)
-        if p.exists():
-            if p.is_dir():
-                shutil.rmtree(p)
+        if await p.exists():
+            if await p.is_dir():
+                await to_thread.run_sync(shutil.rmtree, p)
             else:
-                p.unlink()
+                await p.unlink()
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     async def rename_content(
@@ -134,25 +137,24 @@ class _Contents(Contents):
         user: User,
     ):
         rename_content = RenameContent(**(await request.json()))
-        Path(path).rename(rename_content.path)
+        await Path(path).rename(rename_content.path)
         return await self.read_content(rename_content.path, False)
 
     async def read_content(
-        self, path: Union[str, Path], get_content: bool, file_format: Optional[str] = None
+        self, path: Union[str, pathlib.Path], get_content: bool, file_format: Optional[str] = None
     ) -> Content:
-        if isinstance(path, str):
-            path = Path(path)
+        apath = Path(path)
         content: Optional[Union[str, Dict, List[Dict]]] = None
         if get_content:
-            if path.is_dir():
+            if await apath.is_dir():
                 content = [
-                    (await self.read_content(subpath, get_content=False)).dict()
-                    for subpath in path.iterdir()
+                    (await self.read_content(pathlib.Path(subpath), get_content=False)).dict()
+                    async for subpath in apath.iterdir()
                     if not subpath.name.startswith(".")
                 ]
-            elif path.is_file() or path.is_symlink():
+            elif await apath.is_file() or await apath.is_symlink():
                 try:
-                    async with await open_file(path, mode="rb") as f:
+                    async with await open_file(apath, mode="rb") as f:
                         content_bytes = await f.read()
                     if file_format == "base64":
                         content = base64.b64encode(content_bytes).decode("ascii")
@@ -163,14 +165,14 @@ class _Contents(Contents):
                 except Exception:
                     raise HTTPException(status_code=404, detail="Item not found")
         format: Optional[str] = None
-        if path.is_dir():
+        if await apath.is_dir():
             size = None
             type = "directory"
             format = "json"
             mimetype = None
-        elif path.is_file() or path.is_symlink():
-            size = get_file_size(path)
-            if path.suffix == ".ipynb":
+        elif await apath.is_file() or await apath.is_symlink():
+            size = await get_file_size(apath)
+            if apath.suffix == ".ipynb":
                 type = "notebook"
                 format = None
                 mimetype = None
@@ -188,7 +190,7 @@ class _Contents(Contents):
                         cell["metadata"].update({"trusted": False})
                     if file_format != "json":
                         content = json.dumps(nb)
-            elif path.suffix == ".json":
+            elif apath.suffix == ".json":
                 type = "json"
                 format = "text"
                 mimetype = "application/json"
@@ -201,15 +203,15 @@ class _Contents(Contents):
 
         return Content(
             **{
-                "name": path.name,
-                "path": path.as_posix(),
-                "last_modified": get_file_modification_time(path),
-                "created": get_file_creation_time(path),
+                "name": apath.name,
+                "path": apath.as_posix(),
+                "last_modified": await get_file_modification_time(apath),
+                "created": await get_file_creation_time(apath),
                 "content": content,
                 "format": format,
                 "mimetype": mimetype,
                 "size": size,
-                "writable": is_file_writable(path),
+                "writable": await is_file_writable(apath),
                 "type": type,
             }
         )
@@ -242,8 +244,20 @@ class _Contents(Contents):
     def file_id_manager(self):
         return FileIdManager()
 
+    async def is_dir(
+        self,
+        path: str,
+    ) -> bool:
+        return await Path(path).is_dir()
 
-def get_available_path(path: Path, sep: str = "") -> Path:
+    async def is_file(
+        self,
+        path: str,
+    ) -> bool:
+        return await Path(path).is_file()
+
+
+async def get_available_path(path: Path, sep: str = "") -> Path:
     directory = path.parent
     name = Path(path.name)
     i = None
@@ -257,31 +271,31 @@ def get_available_path(path: Path, sep: str = "") -> Path:
         if i_str:
             i_str = sep + i_str
         available_path = directory / (name.stem + i_str + name.suffix)
-        if not available_path.exists():
+        if not await available_path.exists():
             return available_path
 
 
-def get_file_modification_time(path: Path):
-    if path.exists():
-        return datetime.utcfromtimestamp(path.stat().st_mtime).isoformat() + "Z"
+async def get_file_modification_time(path: Path):
+    if await path.exists():
+        return datetime.utcfromtimestamp((await path.stat()).st_mtime).isoformat() + "Z"
 
 
-def get_file_creation_time(path: Path):
-    if path.exists():
-        return datetime.utcfromtimestamp(path.stat().st_ctime).isoformat() + "Z"
+async def get_file_creation_time(path: Path):
+    if await path.exists():
+        return datetime.utcfromtimestamp((await path.stat()).st_ctime).isoformat() + "Z"
 
 
-def get_file_size(path: Path) -> Optional[int]:
-    if path.exists():
-        return path.stat().st_size
+async def get_file_size(path: Path) -> Optional[int]:
+    if await path.exists():
+        return (await path.stat()).st_size
     raise HTTPException(status_code=404, detail="Item not found")
 
 
-def is_file_writable(path: Path) -> bool:
-    if path.exists():
-        if path.is_dir():
+async def is_file_writable(path: Path) -> bool:
+    if await path.exists():
+        if await path.is_dir():
             # FIXME
             return True
         else:
-            return os.access(path, os.W_OK)
+            return await to_thread.run_sync(os.access, path, os.W_OK)
     return False
