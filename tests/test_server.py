@@ -79,10 +79,11 @@ async def test_rest_api(start_jupyverse):
     )
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
-    async with connect(f"{ws_url}/api/collaboration/room/{document_id}") as websocket:
+    ydoc = Y.YDoc()
+    async with connect(
+        f"{ws_url}/api/collaboration/room/{document_id}"
+    ) as websocket, WebsocketProvider(ydoc, websocket):
         # connect to the shared notebook document
-        ydoc = Y.YDoc()
-        WebsocketProvider(ydoc, websocket)
         # wait for file to be loaded and Y model to be created in server and client
         await asyncio.sleep(0.5)
         # execute notebook
