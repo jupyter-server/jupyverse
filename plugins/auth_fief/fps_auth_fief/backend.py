@@ -15,7 +15,7 @@ class CustomFiefAuth(FiefAuth):
 
     async def get_unauthorized_response(self, request: Request, response: Response):
         redirect_uri = str(request.url_for("auth_callback"))
-        auth_url = await self.client.auth_url(redirect_uri, scope=["openid"])
+        auth_url = await self.client.auth_url(redirect_uri, scope=["openid", "offline_access"])
         raise HTTPException(
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             headers={"Location": auth_url},

@@ -1,6 +1,7 @@
 import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+import httpx
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import RedirectResponse
 from fief_client import FiefAccessTokenInfo
@@ -25,9 +26,85 @@ def auth_factory(
             router = APIRouter()
 
             @router.get("/auth-callback", name="auth_callback")
-            async def auth_callback(request: Request, response: Response, code: str = Query(...)):
+            async def auth_callback(
+                request: Request,
+                response: Response,
+                code: str = Query(...),
+            ):
                 redirect_uri = str(request.url_for("auth_callback"))
-                tokens, _ = await backend.fief.auth_callback(code, redirect_uri)
+                tokens, user_info = await backend.fief.auth_callback(code, redirect_uri)
+
+                user_id = user_info["sub"]
+                async with httpx.AsyncClient() as client:
+                    headers = {"Authorization": f"Bearer {auth_fief_config.admin_api_key}"}
+                    r = await client.get(
+                        f"{auth_fief_config.base_url}/admin/api/oauth-providers/{auth_fief_config.oauth_provider_id}/access-token/{user_id}",
+                        headers=headers,
+                    )
+
+                # FIXME: this is hard-coded for GitHub authentication
+                access_token = r.json()["access_token"]
+                async with httpx.AsyncClient() as client:
+                    headers = {
+                        "Authorization": f"Bearer {access_token}",
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": "2022-11-28",
+                    }
+                    r = await client.get("https://api.github.com/user", headers=headers)
+
+                d = r.json()
+                data = {
+                    "username": d["login"],
+                    "name": d["name"],
+                    "display_name": d["name"],
+                    "initials": "".join([word[0] for word in d["name"].split()]),
+                    "avatar_url": d["avatar_url"],
+                }
+                await backend.fief.update_profile(tokens["access_token"], {"fields": data})
+
+                # set permissions
+                async with httpx.AsyncClient() as client:
+                    headers = {
+                        "Authorization": f"Bearer {auth_fief_config.admin_api_key}",
+                        "accept": "application/json",
+                    }
+                    skip = 0
+                    nb = 100
+                    count = None
+                    got = 0
+                    while True:
+                        params = {"limit": nb, "skip": skip}
+                        r = await client.get(
+                            f"{auth_fief_config.base_url}/admin/api/permissions/",
+                            headers=headers,
+                            params=params,
+                        )
+                        d = r.json()
+                        if count is None:
+                            count = d["count"]
+
+                        permission_id = {
+                            result["codename"]: result["id"] for result in d["results"]
+                        }
+
+                        headers = {"Authorization": f"Bearer {auth_fief_config.admin_api_key}"}
+                        for permission, id in permission_id.items():
+                            data = {"id": id}
+                            await client.post(
+                                f"{auth_fief_config.base_url}/admin/api/users/{user_id}/permissions",
+                                headers=headers,
+                                json=data,
+                            )
+
+                        got += len(d["results"])
+                        if got < count:
+                            skip += nb
+                        else:
+                            break
+
+                refresh_token = tokens["refresh_token"]
+                assert refresh_token is not None
+                tokens, user_info = await backend.fief.auth_refresh_token(refresh_token)
 
                 response = RedirectResponse(request.url_for("root"))
                 response.set_cookie(
