@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.10
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.9...e15a7e4091cfa94dff41b05cf273ed92438ad299))
+
+### Merged PRs
+
+- Pin ypy-websocket \<0.11 [#325](https://github.com/jupyter-server/jupyverse/pull/325) ([@davidbrochart](https://github.com/davidbrochart))
+- Add GitHub authentication with fps-auth-fief [#324](https://github.com/jupyter-server/jupyverse/pull/324) ([@davidbrochart](https://github.com/davidbrochart))
+- Support ypy-websocket v0.12 [#320](https://github.com/jupyter-server/jupyverse/pull/320) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-06-06&to=2023-07-05&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-06-06..2023-07-05&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-06-06..2023-07-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.9
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.8...ab09a2ea41fcdab226ec55541a26329c3d5b7583))
@@ -17,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-05-31&to=2023-06-06&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-05-31..2023-06-06&type=Issues) | [@trungleduc](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Atrungleduc+updated%3A2023-05-31..2023-06-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.8
 
