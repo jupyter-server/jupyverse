@@ -10,29 +10,31 @@ from jupyverse_api.auth import User
 from .config import _AuthFiefConfig
 
 
-class CustomFiefAuth(FiefAuth):
-    client: FiefAsync
-
-    async def get_unauthorized_response(self, request: Request, response: Response):
-        redirect_uri = str(request.url_for("auth_callback"))
-        auth_url = await self.client.auth_url(redirect_uri, scope=["openid", "offline_access"])
-        raise HTTPException(
-            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-            headers={"Location": auth_url},
-        )
-
-
 @dataclass
 class Res:
     fief: FiefAsync
     session_cookie_name: str
-    auth: CustomFiefAuth
+    auth: FiefAuth
     current_user: Any
     update_user: Any
     websocket_auth: Any
 
 
 def get_backend(auth_fief_config: _AuthFiefConfig) -> Res:
+    class CustomFiefAuth(FiefAuth):
+        client: FiefAsync
+
+        async def get_unauthorized_response(self, request: Request, response: Response):
+            if auth_fief_config.callback_url:
+                redirect_uri = auth_fief_config.callback_url
+            else:
+                redirect_uri = str(request.url_for("auth_callback"))
+            auth_url = await self.client.auth_url(redirect_uri, scope=["openid", "offline_access"])
+            raise HTTPException(
+                status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+                headers={"Location": auth_url},
+            )
+
     fief = FiefAsync(
         auth_fief_config.base_url,
         auth_fief_config.client_id,

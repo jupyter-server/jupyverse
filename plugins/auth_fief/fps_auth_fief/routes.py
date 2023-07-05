@@ -31,7 +31,10 @@ def auth_factory(
                 response: Response,
                 code: str = Query(...),
             ):
-                redirect_uri = str(request.url_for("auth_callback"))
+                if auth_fief_config.callback_url:
+                    redirect_uri = auth_fief_config.callback_url
+                else:
+                    redirect_uri = str(request.url_for("auth_callback"))
                 tokens, user_info = await backend.fief.auth_callback(code, redirect_uri)
 
                 user_id = user_info["sub"]
