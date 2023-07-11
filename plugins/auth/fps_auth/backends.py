@@ -114,7 +114,7 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
 
     class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         async def on_after_register(self, user: User, request: Optional[Request] = None):
-            for oauth_account in user.oauth_accounts:
+            for oauth_account in await user.awaitable_attrs.oauth_accounts:
                 if oauth_account.oauth_name == "github":
                     async with httpx.AsyncClient() as client:
                         r = (

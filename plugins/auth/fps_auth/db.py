@@ -11,7 +11,7 @@ from fastapi_users.db import (
     SQLAlchemyUserDatabase,
 )
 from sqlalchemy import JSON, Boolean, Column, String, Text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
 
 from .config import _AuthConfig
@@ -20,7 +20,7 @@ from .config import _AuthConfig
 logger = logging.getLogger("auth")
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
