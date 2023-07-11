@@ -10,8 +10,7 @@ dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
     "aiosqlite",
-    "fastapi-users[sqlalchemy,oauth] >=11,<12",
-    "sqlalchemy >=1,<2",
+    "fastapi-users[sqlalchemy,oauth] >=12,<13",
     "jupyverse-api >=0.1.2,<1",
 ]
 
