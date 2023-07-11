@@ -5,7 +5,7 @@ import rich_click as click
 from asphalt.core.cli import run
 
 
-@click.command()
+@click.command()  # type: ignore
 @click.option(
     "--open-browser",
     is_flag=True,
