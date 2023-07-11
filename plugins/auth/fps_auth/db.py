@@ -30,7 +30,6 @@ class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     anonymous = Column(Boolean, default=True, nullable=False)
-    email = Column(String(length=32), nullable=False, unique=True)
     username = Column(String(length=32), nullable=False, unique=True)
     name = Column(String(length=32), default="")
     display_name = Column(String(length=32), default="")
