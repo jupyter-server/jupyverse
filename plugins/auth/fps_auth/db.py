@@ -10,17 +10,18 @@ from fastapi_users.db import (
     SQLAlchemyBaseUserTableUUID,
     SQLAlchemyUserDatabase,
 )
-from sqlalchemy import JSON, Boolean, Column, String, Text  # type: ignore
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # type: ignore
-from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base  # type: ignore
-from sqlalchemy.orm import relationship, sessionmaker  # type: ignore
+from sqlalchemy import JSON, Boolean, Column, String, Text
+from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
 
 from .config import _AuthConfig
 
 
 logger = logging.getLogger("auth")
 
-Base: DeclarativeMeta = declarative_base()
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
 
 
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
@@ -29,7 +30,6 @@ class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     anonymous = Column(Boolean, default=True, nullable=False)
-    email = Column(String(length=32), nullable=False, unique=True)
     username = Column(String(length=32), nullable=False, unique=True)
     name = Column(String(length=32), default="")
     display_name = Column(String(length=32), default="")
@@ -39,7 +39,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     workspace = Column(Text(), default="{}", nullable=False)
     settings = Column(Text(), default="{}", nullable=False)
     permissions = Column(JSON, default={}, nullable=False)
-    oauth_accounts: List[OAuthAccount] = relationship("OAuthAccount", lazy="joined")
+    oauth_accounts: Mapped[List[OAuthAccount]] = relationship("OAuthAccount", lazy="joined")
 
 
 @dataclass
@@ -82,7 +82,7 @@ def get_db(auth_config: _AuthConfig) -> Res:
     database_url = f"sqlite+aiosqlite:///{userdb_path}"
 
     engine = create_async_engine(database_url)
-    async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
     async def create_db_and_tables():
         async with engine.begin() as conn:
