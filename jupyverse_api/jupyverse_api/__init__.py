@@ -1,6 +1,6 @@
 from typing import Dict
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 
 from .app import App
 
@@ -18,8 +18,7 @@ class Singleton(type):
 
 
 class Config(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = {"extra": "forbid"}
 
 
 class Router:

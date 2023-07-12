@@ -146,7 +146,7 @@ class _Contents(Contents):
         if get_content:
             if path.is_dir():
                 content = [
-                    (await self.read_content(subpath, get_content=False)).dict()
+                    (await self.read_content(subpath, get_content=False)).model_dump()
                     for subpath in path.iterdir()
                     if not subpath.name.startswith(".")
                 ]
