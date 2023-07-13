@@ -45,6 +45,7 @@ test = [
     "pytest",
     "pytest-asyncio",
     "pytest-rerunfailures",
+    "pytest-timeout",
     "pytest-env",
     "httpx",
     "httpx-ws",
@@ -99,7 +100,7 @@ frontend = ["jupyterlab", "retrolab"]
 auth = ["noauth", "auth", "auth_fief"]
 
 [tool.hatch.envs.dev.scripts]
-test = "pytest ./tests plugins/webdav/tests -v --reruns 5"
+test = "pytest ./tests plugins/webdav/tests -v --reruns 5 --timeout=60"
 lint = [
   "black --line-length 100 jupyverse ./plugins",
   "isort --profile=black jupyverse ./plugins",
