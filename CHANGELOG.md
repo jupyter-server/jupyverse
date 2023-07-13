@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.0
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.10...ebf0e6d40a593eccccaf3ae2753e6ad272135e3b))
+
+### Merged PRs
+
+- Rerun flaky tests [#331](https://github.com/jupyter-server/jupyverse/pull/331) ([@davidbrochart](https://github.com/davidbrochart))
+- Use pydantic v2 [#330](https://github.com/jupyter-server/jupyverse/pull/330) ([@davidbrochart](https://github.com/davidbrochart))
+- Update fastapi-users v12 [#329](https://github.com/jupyter-server/jupyverse/pull/329) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-07-05&to=2023-07-13&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-07-05..2023-07-13&type=Issues) | [@frankie567](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Afrankie567+updated%3A2023-07-05..2023-07-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-07-05..2023-07-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.10
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.9...e15a7e4091cfa94dff41b05cf273ed92438ad299))
@@ -17,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-06-06&to=2023-07-05&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-06-06..2023-07-05&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-06-06..2023-07-05&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.9
 
