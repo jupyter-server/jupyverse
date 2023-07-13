@@ -35,6 +35,8 @@ nav:
   - usage/single_user.md
   - usage/multi_user.md
   - usage/microservices.md
+- Turorials:
+  - tutorials/deployment.md
 - Plugins:
   - 'auth': plugins/auth.md
   - 'contents': plugins/contents.md
