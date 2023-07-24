@@ -135,9 +135,10 @@ class _Kernels(Kernels):
     ):
         for session in self.sessions.values():
             kernel_id = session.kernel.id
-            kernel_server = kernels[kernel_id]["server"]
-            session.kernel.last_activity = kernel_server.last_activity["date"]
-            session.kernel.execution_state = kernel_server.last_activity["execution_state"]
+            if kernel_id in kernels:
+                kernel_server = kernels[kernel_id]["server"]
+                session.kernel.last_activity = kernel_server.last_activity["date"]
+                session.kernel.execution_state = kernel_server.last_activity["execution_state"]
         return list(self.sessions.values())
 
     async def create_session(
@@ -307,7 +308,7 @@ class _Kernels(Kernels):
                 # this is an external kernel
                 # kernel is already launched, just start a kernel server
                 kernel_server = KernelServer(
-                    connection_file=kernel_id,
+                    connection_file=self.kernel_id_to_connection_file[kernel_id],
                     write_connection_file=False,
                 )
                 await kernel_server.start(launch_kernel=False)
@@ -343,15 +344,16 @@ class _Kernels(Kernels):
         for path, cs in file_changes.items():
             for change in cs:
                 if change == Change.deleted:
-                    if path in kernels:
+                    if path in self.kernel_id_to_connection_file.values():
                         kernel_id = list(self.kernel_id_to_connection_file.keys())[
                             list(self.kernel_id_to_connection_file.values()).index(path)
                         ]
+                        del self.kernel_id_to_connection_file[kernel_id]
                         del kernels[kernel_id]
                 elif change == Change.added:
                     try:
                         data = json.loads(Path(path).read_text())
-                    except BaseException:
+                    except Exception:
                         continue
                     if "kernel_name" not in data or "key" not in data:
                         continue
