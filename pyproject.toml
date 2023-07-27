@@ -38,6 +38,7 @@ jupyterlab = ["fps-jupyterlab >=0.1.2,<1"]
 retrolab = ["fps-retrolab >=0.1.2,<1"]
 auth = ["fps-auth >=0.1.2,<1", "fps-login >=0.1.2,<1"]
 auth-fief = ["fps-auth-fief >=0.1.2,<1"]
+auth-jupyterhub = ["fps-auth-jupyterhub >=0.1.2,<1"]
 noauth = ["fps-noauth >=0.1.2,<1"]
 test = [
     "mypy",
@@ -82,6 +83,7 @@ matrix.auth.post-install-commands = [
   { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
   { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
   { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
+  { value = "pip install -e ./plugins/auth_jupyterhub", if = ["auth_jupyterhub"] },
 ]
 
 matrix.frontend.scripts = [
@@ -93,11 +95,12 @@ matrix.auth.scripts = [
   { key = "typecheck", value = "typecheck1 ./plugins/noauth", if = ["noauth"] },
   { key = "typecheck", value = "typecheck1 ./plugins/auth ./plugins/login", if = ["auth"] },
   { key = "typecheck", value = "typecheck1 ./plugins/auth_fief", if = ["auth_fief"] },
+  { key = "typecheck", value = "typecheck1 ./plugins/auth_jupyterhub", if = ["auth_jupyterhub"] },
 ]
 
 [[tool.hatch.envs.dev.matrix]]
 frontend = ["jupyterlab", "retrolab"]
-auth = ["noauth", "auth", "auth_fief"]
+auth = ["noauth", "auth", "auth_fief", "auth_jupyterhub"]
 
 [tool.hatch.envs.dev.scripts]
 test = "pytest ./tests plugins/webdav/tests -v --reruns 5 --timeout=60"
@@ -144,6 +147,7 @@ python_packages = [
     "plugins/noauth:fps-noauth",
     "plugins/auth:fps-auth",
     "plugins/auth_fief:fps-auth-fief",
+    "plugins/auth_jupyterhub:fps-auth-jupyterhub",
     "plugins/contents:fps-contents",
     "plugins/frontend:fps-frontend",
     "plugins/jupyterlab:fps-jupyterlab",
@@ -156,7 +160,7 @@ python_packages = [
     "plugins/resource_usage:fps-resource-usage",
     "plugins/login:fps-login",
     "plugins/webdav:fps-webdav",
-    ".:jupyverse:jupyverse_api,fps-noauth,fps-auth,fps-auth-fief,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs,fps-resource-usage,fps-webdav"
+    ".:jupyverse:jupyverse_api,fps-noauth,fps-auth,fps-auth-fief,fps-auth-jupyterhub,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs,fps-resource-usage,fps-webdav"
 ]
 
 [tool.hatch.version]

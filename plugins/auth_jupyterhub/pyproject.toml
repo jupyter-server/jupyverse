@@ -1,0 +1,43 @@
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project]
+name = "fps_auth_jupyterhub"
+description = "An FPS plugin for the authentication API, using JupyterHbu"
+keywords = ["jupyter", "server", "fastapi", "plugins"]
+dynamic = ["version"]
+requires-python = ">=3.8"
+dependencies = [
+    "asphalt-sqlalchemy >=5.0.1,<6",
+    "httpx >=0.24.1,<1",
+    "jupyterhub >=4.0.1,<5",
+    "jupyverse-api >=0.1.2,<1",
+]
+
+[[project.authors]]
+name = "Jupyter Development Team"
+email = "jupyter@googlegroups.com"
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+text = "BSD 3-Clause License"
+
+[project.urls]
+Homepage = "https://jupyter.org"
+
+[tool.check-manifest]
+ignore = [ ".*",]
+
+[tool.jupyter-releaser]
+skip = [ "check-links" ]
+
+[project.entry-points]
+"asphalt.components"   = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubComponent"}
+"jupyverse.components" = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubComponent"}
+
+[tool.hatch.version]
+path = "fps_auth_jupyterhub/__init__.py"
