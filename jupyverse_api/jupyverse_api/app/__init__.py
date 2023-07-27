@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from typing import Dict, List
@@ -16,8 +18,13 @@ class App:
     _app: FastAPI
     _router_paths: Dict[str, List[str]]
 
-    def __init__(self, app: FastAPI):
-        self._app = app
+    def __init__(self, app: FastAPI, mount_path: str | None = None):
+        if mount_path is None:
+            self._app = app
+        else:
+            subapi = FastAPI()
+            app.mount(mount_path, subapi)
+            self._app = subapi
         app.add_exception_handler(RedirectException, _redirect_exception_handler)
         self._router_paths = defaultdict(list)
 

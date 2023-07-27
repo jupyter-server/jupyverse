@@ -13,13 +13,21 @@ from ..app import App
 
 
 class AppComponent(Component):
+    def __init__(
+        self,
+        *,
+        mount_path: str | None = None,
+    ) -> None:
+        super().__init__()
+        self.mount_path = mount_path
+
     async def start(
         self,
         ctx: Context,
     ) -> None:
         app = await ctx.request_resource(FastAPI)
 
-        _app = App(app)
+        _app = App(app, mount_path=self.mount_path)
         ctx.add_resource(_app)
 
 
