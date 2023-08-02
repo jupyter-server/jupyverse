@@ -1,4 +1,4 @@
-In this tutorial, we will deploy Jupyverse on a public [OVHcloud](https://www.ovhcloud.com) instance using [Fief](https://fief.dev), and allow authentication using a [GitHub](https://github.com) account.
+In this tutorial, we will deploy Jupyverse as a standalone server on a public [OVHcloud](https://www.ovhcloud.com) instance using [Fief](https://fief.dev), and allow authentication using a [GitHub](https://github.com) account.
 
 ## OVH setup
 
