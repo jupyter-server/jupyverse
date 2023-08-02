@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.1
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.0...dbd047377e6d7f16c235795da578813cf274651f))
+
+### Merged PRs
+
+- Add fps_auth_jupyterhub plugin [#335](https://github.com/jupyter-server/jupyverse/pull/335) ([@davidbrochart](https://github.com/davidbrochart))
+- Add mount_path for mounting app at sub-path [#334](https://github.com/jupyter-server/jupyverse/pull/334) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix external kernels [#333](https://github.com/jupyter-server/jupyverse/pull/333) ([@davidbrochart](https://github.com/davidbrochart))
+- Add documentation on deployment [#327](https://github.com/jupyter-server/jupyverse/pull/327) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-07-13&to=2023-08-02&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-07-13..2023-08-02&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-07-13..2023-08-02&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.2.0
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.1.10...ebf0e6d40a593eccccaf3ae2753e6ad272135e3b))
@@ -17,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-07-05&to=2023-07-13&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-07-05..2023-07-13&type=Issues) | [@frankie567](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Afrankie567+updated%3A2023-07-05..2023-07-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-07-05..2023-07-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.10
 
