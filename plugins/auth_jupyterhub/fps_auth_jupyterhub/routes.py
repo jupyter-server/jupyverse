@@ -52,7 +52,7 @@ def auth_factory(
                     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
                 token = self.hub_auth.token_for_code(code)
-                hub_user = self.hub_auth.user_for_token(token)
+                hub_user = await self.hub_auth.user_for_token(token, use_cache=False, sync=False)
                 async with self.db_lock:
                     db_session.add(
                         UserDB(
@@ -101,6 +101,16 @@ def auth_factory(
                 jupyverse_jupyterhub_token: Annotated[Union[str, None], Cookie()] = None,
             ):
                 if jupyverse_jupyterhub_token is not None:
+                    hub_user = await self.hub_auth.user_for_token(
+                        jupyverse_jupyterhub_token, use_cache=False, sync=False
+                    )
+                    scopes = self.hub_auth.check_scopes(self.hub_auth.access_scopes, hub_user)
+                    if not scopes:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User {hub_user['name']} cannot access this server",
+                        )
+
                     async with self.db_lock:
                         user_db = await db_session.scalar(
                             select(UserDB).filter_by(token=jupyverse_jupyterhub_token)
@@ -124,6 +134,11 @@ def auth_factory(
                         self.background_tasks.add(task)
                         task.add_done_callback(self.background_tasks.discard)
                     return user
+
+                if permissions:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                    )
 
                 state = self.hub_auth.generate_state(next_url=str(request.url))
                 raise HTTPException(
