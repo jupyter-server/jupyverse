@@ -16,6 +16,12 @@ class Kernels(Router, ABC):
 
         router = APIRouter()
 
+        @router.get("/api/status")
+        async def get_status(
+            user: User = Depends(auth.current_user(permissions={"status": ["read"]})),
+        ):
+            return await self.get_status(user)
+
         @router.get("/api/kernelspecs")
         async def get_kernelspecs(
             user: User = Depends(auth.current_user(permissions={"kernelspecs": ["read"]})),
@@ -117,6 +123,13 @@ class Kernels(Router, ABC):
 
     @abstractmethod
     async def watch_connection_files(self, path: Path) -> None:
+        ...
+
+    @abstractmethod
+    async def get_status(
+        self,
+        user: User,
+    ):
         ...
 
     @abstractmethod

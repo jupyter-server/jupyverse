@@ -46,6 +46,23 @@ class _Kernels(Kernels):
         self.kernel_id_to_connection_file: Dict[str, str] = {}
         self.sessions: Dict[str, Session] = {}
         self.kernels = kernels
+        self._app = app
+
+    async def get_status(
+        self,
+        user: User,
+    ):
+        started = self._app.started_time.isoformat().replace("+00:00", "Z")
+        last_activity = self._app.last_activity.isoformat().replace("+00:00", "Z")
+        connections = sum(
+            [kernel["server"].connections for kernel in kernels.values() if "server" in kernel]
+        )
+        return {
+            "started": started,
+            "last_activity": last_activity,
+            "kernels": len(kernels),
+            "connections": connections,
+        }
 
     async def get_kernelspecs(
         self,

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from collections import defaultdict
 from typing import Dict, List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from ..exceptions import RedirectException, _redirect_exception_handler
 
@@ -27,6 +28,21 @@ class App:
             self._app = subapi
         app.add_exception_handler(RedirectException, _redirect_exception_handler)
         self._router_paths = defaultdict(list)
+        self._started_time = datetime.now(timezone.utc)
+        self._last_activity = self._started_time
+
+        @app.middleware("http")
+        async def get_last_activity(request: Request, call_next):
+            self._last_activity = datetime.now(timezone.utc)
+            return await call_next(request)
+
+    @property
+    def started_time(self) -> datetime:
+        return self._started_time
+
+    @property
+    def last_activity(self) -> datetime:
+        return self._last_activity
 
     @property
     def _paths(self):
