@@ -26,7 +26,7 @@ def str_to_date(obj: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def date_to_str(obj: Dict[str, Any]):
-    if "date" in obj and type(obj["date"]) is not str:
+    if "date" in obj and not isinstance(obj["date"], str):
         obj["date"] = obj["date"].isoformat().replace("+00:00", "Z")
     return obj
 
