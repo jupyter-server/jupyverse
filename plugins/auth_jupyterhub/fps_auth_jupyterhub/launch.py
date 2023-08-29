@@ -1,11 +1,11 @@
 import os
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from jupyverse_api.cli import main
 
 
 def launch():
-    service_url = os.environ.get("JUPYTERHUB_SERVICE_URL")
+    service_url = unquote(os.environ.get("JUPYTERHUB_SERVICE_URL"))
     url = urlparse(service_url)
     try:
         return main.callback(
