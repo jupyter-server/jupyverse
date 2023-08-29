@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.2
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.1...cca0480530ca9fd6ce09d4d7901e8a3ffa0e55d2))
+
+### Merged PRs
+
+- Fix fps_auth_jupyterhub [#338](https://github.com/jupyter-server/jupyverse/pull/338) ([@davidbrochart](https://github.com/davidbrochart))
+- Add GET /api/status [#337](https://github.com/jupyter-server/jupyverse/pull/337) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-08-02&to=2023-08-29&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-08-02..2023-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-08-02..2023-08-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.2.1
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.0...dbd047377e6d7f16c235795da578813cf274651f))
@@ -18,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-07-13&to=2023-08-02&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-07-13..2023-08-02&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-07-13..2023-08-02&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.2.0
 
