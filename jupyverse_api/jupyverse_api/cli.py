@@ -26,6 +26,12 @@ from asphalt.core.cli import run
     help="The host port.",
 )
 @click.option(
+    "--allow-origin",
+    multiple=True,
+    type=str,
+    help="The origin to allow.",
+)
+@click.option(
     "--set",
     "set_",
     multiple=True,
@@ -44,6 +50,7 @@ def main(
     port: int,
     set_: List[str],
     disable: List[str],
+    allow_origin: List[str],
 ) -> None:
     set_ = list(set_)
     for i, s in enumerate(set_):
@@ -51,6 +58,7 @@ def main(
     set_.append(f"component.open_browser={open_browser}")
     set_.append(f"component.host={host}")
     set_.append(f"component.port={port}")
+    set_.append(f"component.allow_origin={allow_origin}")
     config = get_config(disable)
     run.callback(
         unsafe=False,

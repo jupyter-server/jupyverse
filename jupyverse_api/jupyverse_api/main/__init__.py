@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import webbrowser
-from typing import Any, Callable, Dict, Sequence
+from typing import Any, Callable, Dict, Sequence, Tuple
 
 from asgiref.typing import ASGI3Application
 from asphalt.core import Component, Context
 from asphalt.web.fastapi import FastAPIComponent
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from ..app import App
@@ -39,11 +40,21 @@ class JupyverseComponent(FastAPIComponent):
         app: FastAPI | str | None = None,
         host: str = "127.0.0.1",
         port: int = 8000,
+        allow_origin: Tuple = (),
         open_browser: bool = False,
         query_params: Dict[str, Any] | None = None,
         debug: bool | None = None,
         middlewares: Sequence[Callable[..., ASGI3Application] | dict[str, Any]] = (),
     ) -> None:
+        if allow_origin:
+            middleware = {
+                "type": CORSMiddleware,
+                "allow_origins": allow_origin,
+                "allow_credentials": True,
+                "allow_methods": ["*"],
+                "allow_headers": ["*"],
+            }
+            middlewares = list(middlewares) + [middleware]
         super().__init__(
             components,  # type: ignore
             app=app,
