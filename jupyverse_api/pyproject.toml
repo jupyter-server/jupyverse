@@ -29,6 +29,7 @@ dependencies = [
   "rich-click >=1.6.1,<2",
   "asphalt >=4.11.0,<5",
   "asphalt-web[fastapi] >=1.1.0,<2",
+  "anyio>=3.6.2,<5",
 ]
 dynamic = ["version"]
 

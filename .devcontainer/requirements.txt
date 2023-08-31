@@ -10,4 +10,3 @@
 fps[unicorn] >=0.0.10
 mypy
 pytest
-pytest-asyncio

@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
 import aiosqlite
-from anyio import Path
+from anyio import Event, Lock, Path
 from jupyverse_api import Singleton
 from watchfiles import Change, awatch
 
@@ -14,7 +14,7 @@ logger = logging.getLogger("contents")
 class Watcher:
     def __init__(self, path: str) -> None:
         self.path = path
-        self._event = asyncio.Event()
+        self._event = Event()
 
     def __aiter__(self):
         return self
@@ -31,18 +31,18 @@ class Watcher:
 
 class FileIdManager(metaclass=Singleton):
     db_path: str
-    initialized: asyncio.Event
+    initialized: Event
     watchers: Dict[str, List[Watcher]]
-    lock: asyncio.Lock
+    lock: Lock
 
     def __init__(self, db_path: str = ".fileid.db"):
         self.db_path = db_path
-        self.initialized = asyncio.Event()
+        self.initialized = Event()
         self.watchers = {}
         self.watch_files_task = asyncio.create_task(self.watch_files())
-        self.stop_watching_files = asyncio.Event()
-        self.stopped_watching_files = asyncio.Event()
-        self.lock = asyncio.Lock()
+        self.stop_watching_files = Event()
+        self.stopped_watching_files = Event()
+        self.lock = Lock()
 
     async def get_id(self, path: str) -> Optional[str]:
         await self.initialized.wait()

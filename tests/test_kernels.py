@@ -26,7 +26,7 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
     kernel_id = "kernel_id_0"

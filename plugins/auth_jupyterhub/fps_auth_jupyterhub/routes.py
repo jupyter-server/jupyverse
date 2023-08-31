@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 import httpx
+from anyio import Lock
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
 from jupyterhub.services.auth import HubOAuth
@@ -31,7 +32,7 @@ def auth_factory(
         def __init__(self) -> None:
             super().__init__(app)
             self.hub_auth = HubOAuth()
-            self.db_lock = asyncio.Lock()
+            self.db_lock = Lock()
             self.activity_url = os.environ.get("JUPYTERHUB_ACTIVITY_URL")
             self.server_name = os.environ.get("JUPYTERHUB_SERVER_NAME")
             self.background_tasks = set()

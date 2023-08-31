@@ -1,10 +1,10 @@
-import asyncio
 import json
 from pathlib import Path
 
 import pytest
 import requests
 import y_py as Y
+from anyio import sleep
 from websockets import connect
 from ypy_websocket import WebsocketProvider
 
@@ -45,7 +45,7 @@ def test_settings_persistence_get(start_jupyverse):
     assert response.status_code == 204
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
 async def test_rest_api(start_jupyverse):
@@ -85,7 +85,7 @@ async def test_rest_api(start_jupyverse):
     ) as websocket, WebsocketProvider(ydoc, websocket):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
         # execute notebook
         for cell_idx in range(3):
             response = requests.post(
@@ -98,7 +98,7 @@ async def test_rest_api(start_jupyverse):
                 ),
             )
         # wait for Y model to be updated
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
         # retrieve cells
         cells = json.loads(ydoc.get_array("cells").to_json())
         assert cells[0]["outputs"] == [

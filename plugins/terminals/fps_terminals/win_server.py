@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+from anyio import sleep
 from jupyverse_api.terminals import TerminalServer
 from winpty import PTY  # type: ignore
 
@@ -36,7 +37,7 @@ class _TerminalServer(TerminalServer):
                 await self.websocket.send_json(["disconnect", 1])
                 return
             if not data:
-                await asyncio.sleep(0.1)
+                await sleep(0.1)
             else:
                 for websocket in self.websockets:
                     await websocket.send_json(["stdout", data])

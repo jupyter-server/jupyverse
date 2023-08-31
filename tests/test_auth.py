@@ -20,7 +20,7 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_kernel_channels_unauthenticated(unused_tcp_port):
     async with Context() as ctx:
         await JupyverseComponent(
@@ -35,7 +35,7 @@ async def test_kernel_channels_unauthenticated(unused_tcp_port):
                 pass
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_kernel_channels_authenticated(unused_tcp_port):
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(
@@ -51,7 +51,7 @@ async def test_kernel_channels_authenticated(unused_tcp_port):
             pass
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
 async def test_root_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
@@ -71,7 +71,7 @@ async def test_root_auth(auth_mode, unused_tcp_port):
         assert response.headers["content-type"] == "application/json"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_no_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
@@ -85,7 +85,7 @@ async def test_no_auth(auth_mode, unused_tcp_port):
         assert response.status_code == 200
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("token",))
 async def test_token_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
@@ -105,7 +105,7 @@ async def test_token_auth(auth_mode, unused_tcp_port):
         assert response.status_code == 302
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("user",))
 @pytest.mark.parametrize(
     "permissions",
