@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.4
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.3...5f49cddd48ea1344f21acc79b4a07ba2068ade51))
+
+### Merged PRs
+
+- Pin anyio\<5 [#344](https://github.com/jupyter-server/jupyverse/pull/344) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-08-30&to=2023-08-31&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-08-30..2023-08-31&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.2.3
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.2...861ae2c7b123e1fca13d4ef5fd50cc3472ea744e))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-08-29&to=2023-08-30&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-08-29..2023-08-30&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.2.2
 
