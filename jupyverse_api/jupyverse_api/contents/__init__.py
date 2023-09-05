@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, Depends, Request, Response
-from jupyverse_api import Router
+from jupyverse_api import Router, Config
 
 from .models import Checkpoint, Content, SaveContent
 from ..auth import Auth, User
@@ -30,81 +30,87 @@ class FileIdManager(ABC):
         ...
 
 
+class ContentsConfig(Config):
+    include_router: bool = True
+    prefix: str = ""
+
+
 class Contents(Router, ABC):
-    def __init__(self, app: App, auth: Auth):
+    def __init__(self, app: App, auth: Auth, contents_config: ContentsConfig):
         super().__init__(app=app)
 
-        router = APIRouter()
+        if contents_config.include_router:
+            router = APIRouter()
 
-        @router.post(
-            "/api/contents/{path:path}/checkpoints",
-            status_code=201,
-        )
-        async def create_checkpoint(
-            path, user: User = Depends(auth.current_user(permissions={"contents": ["write"]}))
-        ) -> Checkpoint:
-            return await self.create_checkpoint(path, user)
+            @router.post(
+                "/api/contents/{path:path}/checkpoints",
+                status_code=201,
+            )
+            async def create_checkpoint(
+                path, user: User = Depends(auth.current_user(permissions={"contents": ["write"]}))
+            ) -> Checkpoint:
+                return await self.create_checkpoint(path, user)
 
-        @router.post(
-            "/api/contents{path:path}",
-            status_code=201,
-        )
-        async def create_content(
-            path: Optional[str],
-            request: Request,
-            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
-        ) -> Content:
-            return await self.create_content(path, request, user)
+            @router.post(
+                "/api/contents{path:path}",
+                status_code=201,
+            )
+            async def create_content(
+                path: Optional[str],
+                request: Request,
+                user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            ) -> Content:
+                return await self.create_content(path, request, user)
 
-        @router.get("/api/contents")
-        async def get_root_content(
-            content: int,
-            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
-        ) -> Content:
-            return await self.get_root_content(content, user)
+            @router.get("/api/contents")
+            async def get_root_content(
+                content: int,
+                user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+            ) -> Content:
+                return await self.get_root_content(content, user)
 
-        @router.get("/api/contents/{path:path}/checkpoints")
-        async def get_checkpoint(
-            path, user: User = Depends(auth.current_user(permissions={"contents": ["read"]}))
-        ) -> List[Checkpoint]:
-            return await self.get_checkpoint(path, user)
+            @router.get("/api/contents/{path:path}/checkpoints")
+            async def get_checkpoint(
+                path, user: User = Depends(auth.current_user(permissions={"contents": ["read"]}))
+            ) -> List[Checkpoint]:
+                return await self.get_checkpoint(path, user)
 
-        @router.get("/api/contents/{path:path}")
-        async def get_content(
-            path: str,
-            content: int = 0,
-            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
-        ) -> Content:
-            return await self.get_content(path, content, user)
+            @router.get("/api/contents/{path:path}")
+            async def get_content(
+                path: str,
+                content: int = 0,
+                user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+            ) -> Content:
+                return await self.get_content(path, content, user)
 
-        @router.put("/api/contents/{path:path}")
-        async def save_content(
-            path,
-            request: Request,
-            response: Response,
-            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
-        ) -> Content:
-            return await self.save_content(path, request, response, user)
+            @router.put("/api/contents/{path:path}")
+            async def save_content(
+                path,
+                request: Request,
+                response: Response,
+                user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            ) -> Content:
+                return await self.save_content(path, request, response, user)
 
-        @router.delete(
-            "/api/contents/{path:path}",
-            status_code=204,
-        )
-        async def delete_content(
-            path,
-            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
-        ):
-            return await self.delete_content(path, user)
+            @router.delete(
+                "/api/contents/{path:path}",
+                status_code=204,
+            )
+            async def delete_content(
+                path,
+                user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            ):
+                return await self.delete_content(path, user)
 
-        @router.patch("/api/contents/{path:path}")
-        async def rename_content(
-            path,
-            request: Request,
-            user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
-        ) -> Content:
-            return await self.rename_content(path, request, user)
+            @router.patch("/api/contents/{path:path}")
+            async def rename_content(
+                path,
+                request: Request,
+                user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
+            ) -> Content:
+                return await self.rename_content(path, request, user)
 
-        self.include_router(router)
+            self.include_router(router, prefix=contents_config.prefix)
 
     @property
     @abstractmethod

@@ -37,7 +37,7 @@ class _Kernels(Kernels):
         frontend_config: FrontendConfig,
         yjs: Optional[Yjs],
     ) -> None:
-        super().__init__(app=app, auth=auth)
+        super().__init__(app=app, auth=auth, kernels_config=kernels_config)
         self.kernels_config = kernels_config
         self.frontend_config = frontend_config
         self.yjs = yjs

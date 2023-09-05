@@ -16,7 +16,7 @@ from .routes import _Kernels
 
 
 class KernelsComponent(Component):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.kernels_config = KernelsConfig(**kwargs)
 
     @context_teardown
