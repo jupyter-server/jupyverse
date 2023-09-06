@@ -12,10 +12,10 @@ def launch():
             open_browser=True,
             host=url.hostname,
             port=url.port,
-            set_=[
+            set_=(
                 f"frontend.base_url={url.path}",
                 f"app.mount_path={url.path}",
-            ],
+            ),
             disable=[],
         )
     except Exception:
