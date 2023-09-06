@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.5
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.4...18f312eb8b3dee262fb512af7e7ec3996674c4d4))
+
+### Merged PRs
+
+- Add default values to CLI callback [#349](https://github.com/jupyter-server/jupyverse/pull/349) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-08-31&to=2023-09-06&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-08-31..2023-09-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-08-31..2023-09-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.2.4
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.3...5f49cddd48ea1344f21acc79b4a07ba2068ade51))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-08-30&to=2023-08-31&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-08-30..2023-08-31&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.2.3
 
