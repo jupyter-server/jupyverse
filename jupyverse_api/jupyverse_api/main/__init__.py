@@ -40,7 +40,7 @@ class JupyverseComponent(FastAPIComponent):
         app: FastAPI | str | None = None,
         host: str = "127.0.0.1",
         port: int = 8000,
-        allow_origin: Tuple = (),
+        allow_origin: Tuple[str, ...] = (),
         open_browser: bool = False,
         query_params: Dict[str, Any] | None = None,
         debug: bool | None = None,

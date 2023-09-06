@@ -1,5 +1,5 @@
 import pkg_resources
-from typing import List
+from typing import List, Tuple
 
 import rich_click as click
 from asphalt.core.cli import run
@@ -45,31 +45,31 @@ from asphalt.core.cli import run
     help="Disable plugin.",
 )
 def main(
-    open_browser: bool,
-    host: str,
-    port: int,
-    set_: List[str],
-    disable: List[str],
-    allow_origin: List[str],
+    open_browser: bool = False,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+    set_: Tuple[str, ...] = (),
+    disable: Tuple[str, ...] = (),
+    allow_origin: Tuple[str, ...] = (),
 ) -> None:
-    set_ = list(set_)
-    for i, s in enumerate(set_):
-        set_[i] = f"component.components.{s}"
-    set_.append(f"component.open_browser={open_browser}")
-    set_.append(f"component.host={host}")
-    set_.append(f"component.port={port}")
-    set_.append(f"component.allow_origin={allow_origin}")
+    set_list: List[str] = list(set_)
+    for i, s in enumerate(set_list):
+        set_list[i] = f"component.components.{s}"
+    set_list.append(f"component.open_browser={open_browser}")
+    set_list.append(f"component.host={host}")
+    set_list.append(f"component.port={port}")
+    set_list.append(f"component.allow_origin={allow_origin}")
     config = get_config(disable)
     run.callback(
         unsafe=False,
         loop=None,
-        set_=set_,
+        set_=set_list,
         service=None,
         configfile=[config],
     )  # type: ignore
 
 
-def get_config(disable: List[str]) -> str:
+def get_config(disable: Tuple[str, ...]) -> str:
     jupyverse_components = [
         ep.name
         for ep in pkg_resources.iter_entry_points(group="jupyverse.components")
