@@ -49,7 +49,7 @@ test = [
     "pytest-timeout",
     "pytest-env",
     "httpx",
-    "httpx-ws",
+    "httpx-ws >=0.4.1",
     "requests",
     "websockets",
     "ipykernel",
