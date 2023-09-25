@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Request
 from jupyverse_api import Router, Config
+from pydantic import Field
 
 from ..app import App
 from ..auth import Auth, User
@@ -239,5 +240,19 @@ class Kernels(Router, ABC):
 
 class KernelsConfig(Config):
     default_kernel: str = "python3"
-    connection_path: Optional[str] = None
+    allow_external_kernels: bool = Field(
+        description=(
+            "Whether or not to allow external kernels, whose connection files are placed in "
+            "external_connection_dir."
+        ),
+        default=False,
+    )
+    external_connection_dir: Optional[str] = Field(
+        description=(
+            "The directory to look at for external kernel connection files, if "
+            "allow_external_kernels is True. Defaults to Jupyter runtime_dir/external_kernels. "
+            "Make sure that this directory is not filled with left-over connection files."
+        ),
+        default=None,
+    )
     require_yjs: bool = False

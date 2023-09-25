@@ -12,6 +12,7 @@ from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.app import App
 
+from .kernel_driver.paths import jupyter_runtime_dir
 from .routes import _Kernels
 
 
@@ -38,13 +39,17 @@ class KernelsComponent(Component):
         kernels = _Kernels(app, self.kernels_config, auth, frontend_config, yjs)
         ctx.add_resource(kernels, types=Kernels)
 
-        if self.kernels_config.connection_path is not None:
-            path = Path(self.kernels_config.connection_path)
+        if self.kernels_config.allow_external_kernels:
+            external_connection_dir = self.kernels_config.external_connection_dir
+            if external_connection_dir is None:
+                path = Path(jupyter_runtime_dir()) / "external_kernels"
+            else:
+                path = Path(external_connection_dir)
             task = asyncio.create_task(kernels.watch_connection_files(path))
 
         yield
 
-        if self.kernels_config.connection_path is not None:
+        if self.kernels_config.allow_external_kernels:
             task.cancel()
         for kernel in kernels.kernels.values():
             await kernel["server"].stop()
