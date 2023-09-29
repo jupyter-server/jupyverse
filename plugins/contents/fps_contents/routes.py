@@ -186,6 +186,10 @@ class _Contents(Contents):
                         if "metadata" not in cell:
                             cell["metadata"] = {}
                         cell["metadata"].update({"trusted": False})
+                        if cell["cell_type"] == "code":
+                            cell_source = cell["source"]
+                            if not isinstance(cell_source, str):
+                                cell["source"] = "".join(cell_source)
                     if file_format != "json":
                         content = json.dumps(nb)
             elif path.suffix == ".json":
