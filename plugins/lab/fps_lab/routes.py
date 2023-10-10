@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import json5  # type: ignore
+
 if sys.version_info >= (3, 10):
     from importlib.metadata import entry_points
 else:

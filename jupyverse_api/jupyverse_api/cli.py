@@ -76,11 +76,7 @@ def main(
 
 def get_config(disable: Tuple[str, ...]) -> str:
     group = entry_points().select(group="jupyverse.components")
-    jupyverse_components = [
-        ep.name
-        for ep in group
-        if ep.name not in disable
-    ]
+    jupyverse_components = [ep.name for ep in group if ep.name not in disable]
 
     config = ["component:\n  type: jupyverse\n  components:\n"]
     for component in jupyverse_components:
