@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.3.0
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.5...88f061e58d22963f7b195b5677c983a7b1056b94))
+
+### Merged PRs
+
+- Send notebook cell source as string when type is list [#354](https://github.com/jupyter-server/jupyverse/pull/354) ([@davidbrochart](https://github.com/davidbrochart))
+- Align external kernel connections with jupyter-server [#352](https://github.com/jupyter-server/jupyverse/pull/352) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-09-06&to=2023-10-10&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-09-06..2023-10-10&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-09-06..2023-10-10&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.2.5
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.4...18f312eb8b3dee262fb512af7e7ec3996674c4d4))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-08-31&to=2023-09-06&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-08-31..2023-09-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-08-31..2023-09-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.2.4
 
