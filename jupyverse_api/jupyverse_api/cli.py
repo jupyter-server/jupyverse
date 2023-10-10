@@ -1,5 +1,10 @@
-import pkg_resources
+import sys
 from typing import List, Tuple
+
+if sys.version_info >= (3, 10):
+    from importlib.metadata import entry_points
+else:
+    from importlib_metadata import entry_points
 
 import rich_click as click
 from asphalt.core.cli import run
@@ -70,9 +75,10 @@ def main(
 
 
 def get_config(disable: Tuple[str, ...]) -> str:
+    group = entry_points().select(group="jupyverse.components")
     jupyverse_components = [
         ep.name
-        for ep in pkg_resources.iter_entry_points(group="jupyverse.components")
+        for ep in group
         if ep.name not in disable
     ]
 
