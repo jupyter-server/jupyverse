@@ -11,24 +11,24 @@ class Checkpoint(BaseModel):
 class Content(BaseModel):
     name: str
     path: str
-    last_modified: Optional[str]
-    created: Optional[str]
-    content: Optional[Union[List[Dict], str, Dict]]
-    format: Optional[str]
-    mimetype: Optional[str]
-    size: Optional[int]
+    last_modified: Optional[str] = None
+    created: Optional[str] = None
+    content: Optional[Union[List[Dict], str, Dict]] = None
+    format: Optional[str] = None
+    mimetype: Optional[str] = None
+    size: Optional[int] = None
     writable: bool
     type: str
 
 
 class CreateContent(BaseModel):
-    ext: Optional[str]
+    ext: Optional[str] = None
     path: str
     type: str
 
 
 class SaveContent(BaseModel):
-    content: Optional[Union[str, Dict]]
+    content: Optional[Union[str, Dict]] = None
     format: str
     path: str
     type: str
