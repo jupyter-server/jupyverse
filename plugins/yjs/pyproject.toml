@@ -8,9 +8,7 @@ description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.8"
 dependencies = [
-    "jupyter_ydoc >=1,<2",
-    "ypy-websocket >=0.12.1,<0.13.0",
-    "y-py >=0.6.0,<0.7.0",
+    "pycrdt >=0.3.4,<0.4.0",
     "jupyverse-api >=0.1.2,<1",
 ]
 dynamic = [ "version",]
@@ -37,6 +35,12 @@ skip = [ "check-links",]
 [project.entry-points]
 "asphalt.components"   = {yjs = "fps_yjs.main:YjsComponent"}
 "jupyverse.components" = {yjs = "fps_yjs.main:YjsComponent"}
+
+[project.entry-points.jupyverse_ydoc]
+blob = "fps_yjs.ydocs.yblob:YBlob"
+file = "fps_yjs.ydocs.yfile:YFile"
+unicode = "fps_yjs.ydocs.yunicode:YUnicode"
+notebook = "fps_yjs.ydocs.ynotebook:YNotebook"
 
 [tool.hatch.version]
 path = "fps_yjs/__init__.py"
