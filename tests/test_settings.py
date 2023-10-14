@@ -22,7 +22,7 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_settings(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})

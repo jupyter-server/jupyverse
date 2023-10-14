@@ -9,7 +9,7 @@ from jupyverse_api.main import JupyverseComponent
 from utils import configure
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize(
     "mount_path",
     (

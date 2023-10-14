@@ -6,6 +6,7 @@ import shlex
 import struct
 import termios
 
+from anyio import Event
 from fastapi import WebSocketDisconnect
 from jupyverse_api.terminals import TerminalServer
 
@@ -29,7 +30,7 @@ class _TerminalServer(TerminalServer):
     async def serve(self, websocket, permissions):
         self.websocket = websocket
         self.websockets.append(websocket)
-        self.event = asyncio.Event()
+        self.event = Event()
         self.loop = asyncio.get_event_loop()
 
         task = asyncio.create_task(self.send_data())

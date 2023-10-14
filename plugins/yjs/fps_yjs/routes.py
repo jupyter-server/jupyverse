@@ -7,6 +7,7 @@ from functools import partial
 from typing import Dict
 from uuid import uuid4
 
+from anyio import Lock, sleep
 from fastapi import (
     HTTPException,
     Request,
@@ -138,7 +139,7 @@ class RoomManager:
     cleaners: Dict[YRoom, asyncio.Task]
     last_modified: Dict[str, datetime]
     websocket_server: JupyterWebsocketServer
-    lock: asyncio.Lock
+    lock: Lock
 
     def __init__(self, contents: Contents):
         self.contents = contents
@@ -149,7 +150,7 @@ class RoomManager:
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
         self.websocket_server_task = asyncio.create_task(self.websocket_server.start())
-        self.lock = asyncio.Lock()
+        self.lock = Lock()
 
     def stop(self):
         for watcher in self.watchers.values():
@@ -305,7 +306,7 @@ class RoomManager:
         self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
     ) -> None:
         # save after 1 second of inactivity to prevent too frequent saving
-        await asyncio.sleep(1)  # FIXME: pass in config
+        await sleep(1)  # FIXME: pass in config
         # if the room cannot be found, don't save
         try:
             file_path = await self.get_file_path(file_id, document)
@@ -342,7 +343,7 @@ class RoomManager:
     async def maybe_clean_room(self, room, ws_path: str) -> None:
         file_id = ws_path.split(":", 2)[2]
         # keep the document for a while in case someone reconnects
-        await asyncio.sleep(60)  # FIXME: pass in config
+        await sleep(60)  # FIXME: pass in config
         document = self.documents[ws_path]
         document.unobserve()
         del self.documents[ws_path]

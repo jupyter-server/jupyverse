@@ -16,7 +16,7 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_tree(auth_mode, tmp_path, unused_tcp_port):
     prev_dir = os.getcwd()

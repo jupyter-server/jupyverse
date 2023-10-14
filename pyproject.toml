@@ -43,8 +43,8 @@ noauth = ["fps-noauth >=0.1.2,<1"]
 test = [
     "mypy",
     "types-setuptools",
+    "anyio>=3.6.2,<5",
     "pytest",
-    "pytest-asyncio",
     "pytest-rerunfailures",
     "pytest-timeout",
     "pytest-env",

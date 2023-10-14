@@ -24,7 +24,7 @@ def configure(components, config):
     return _components
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python >=3.10")
 async def test_webdav(unused_tcp_port):
     components = configure(
