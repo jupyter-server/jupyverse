@@ -3,10 +3,9 @@ import json
 import pytest
 from asphalt.core import Context
 from httpx import AsyncClient
-from jupyverse_api.main import JupyverseComponent
-
 from utils import configure
 
+from jupyverse_api.main import JupyverseComponent
 
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 

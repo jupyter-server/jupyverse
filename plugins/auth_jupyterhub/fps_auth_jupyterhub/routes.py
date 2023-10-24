@@ -5,18 +5,19 @@ import json
 import os
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from typing_extensions import Annotated
 
 import httpx
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
 from jupyterhub.services.auth import HubOAuth
 from jupyterhub.utils import isoformat
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from typing_extensions import Annotated
+
 from jupyverse_api import Router
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from .db import UserDB
 from .models import JupyterHubUser

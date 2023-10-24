@@ -9,6 +9,8 @@ from typing import Dict, List, Optional, Union, cast
 
 from anyio import open_file
 from fastapi import HTTPException, Response
+from starlette.requests import Request
+
 from jupyverse_api.auth import User
 from jupyverse_api.contents import Contents
 from jupyverse_api.contents.models import (
@@ -18,7 +20,6 @@ from jupyverse_api.contents.models import (
     RenameContent,
     SaveContent,
 )
-from starlette.requests import Request
 
 from .fileid import FileIdManager
 

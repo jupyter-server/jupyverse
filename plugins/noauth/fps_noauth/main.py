@@ -1,4 +1,5 @@
 from asphalt.core import Component, Context
+
 from jupyverse_api.auth import Auth
 
 from .backends import _NoAuth

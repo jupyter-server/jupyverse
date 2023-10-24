@@ -5,9 +5,9 @@ from functools import partial
 from pathlib import Path
 
 from asgi_middleware_static_file import ASGIMiddlewareStaticFile  # type: ignore
-from asgi_webdav.middleware.cors import ASGIMiddlewareCORS  # type: ignore
 from asgi_webdav import __name__ as app_name  # type: ignore
 from asgi_webdav import __version__  # type: ignore
+from asgi_webdav.middleware.cors import ASGIMiddlewareCORS  # type: ignore
 
 try:
     from asgi_webdav.config import (  # type: ignore
@@ -24,7 +24,6 @@ except BaseException:
 from jupyverse_api.app import App
 
 from .config import WebDAVConfig
-
 
 logger = logging.getLogger("webdav")
 

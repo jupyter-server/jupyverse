@@ -1,6 +1,7 @@
 from asphalt.core import Component, Context
-from jupyverse_api.auth import Auth
+
 from jupyverse_api.app import App
+from jupyverse_api.auth import Auth
 from jupyverse_api.nbconvert import Nbconvert
 
 from .routes import _Nbconvert

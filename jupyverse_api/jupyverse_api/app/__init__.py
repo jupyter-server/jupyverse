@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from collections import defaultdict
+from datetime import datetime, timezone
 from typing import Dict, List
 
 from fastapi import FastAPI, Request
 
 from ..exceptions import RedirectException, _redirect_exception_handler
-
 
 logger = logging.getLogger("app")
 

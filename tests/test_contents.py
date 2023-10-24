@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 from asphalt.core import Context
 from httpx import AsyncClient
-from jupyverse_api.main import JupyverseComponent
-from utils import configure, clear_content_values, create_content, sort_content_by_name
+from utils import clear_content_values, configure, create_content, sort_content_by_name
 
+from jupyverse_api.main import JupyverseComponent
 
 COMPONENTS = {
     "app": {"type": "app"},

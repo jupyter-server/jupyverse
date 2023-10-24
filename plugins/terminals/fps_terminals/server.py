@@ -7,6 +7,7 @@ import struct
 import termios
 
 from fastapi import WebSocketDisconnect
+
 from jupyverse_api.terminals import TerminalServer
 
 

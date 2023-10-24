@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import asyncio
 from collections.abc import AsyncGenerator
 from pathlib import Path
@@ -6,11 +7,11 @@ from typing import Optional
 
 from asphalt.core import Component, Context, context_teardown
 
+from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.yjs import Yjs
-from jupyverse_api.app import App
 
 from .kernel_driver.paths import jupyter_runtime_dir
 from .routes import _Kernels

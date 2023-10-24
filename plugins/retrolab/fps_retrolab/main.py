@@ -1,9 +1,10 @@
 from asphalt.core import Component, Context
+
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.retrolab import RetroLab
 from jupyverse_api.lab import Lab
+from jupyverse_api.retrolab import RetroLab
 
 from .routes import _RetroLab
 

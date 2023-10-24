@@ -9,9 +9,8 @@ from typing import Dict, Iterable, List, Optional, cast
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
-from ..kernel_driver.connect import cfg_t, connect_channel
+from ..kernel_driver.connect import cfg_t, connect_channel, read_connection_file
 from ..kernel_driver.connect import launch_kernel as _launch_kernel
-from ..kernel_driver.connect import read_connection_file
 from ..kernel_driver.connect import (
     write_connection_file as _write_connection_file,
 )

@@ -19,7 +19,6 @@ from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLabConfig
 from jupyverse_api.lab import Lab
 
-
 logger = logging.getLogger("lab")
 
 

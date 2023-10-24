@@ -5,18 +5,17 @@ import random
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select  # type: ignore
+
 from jupyverse_api import Router
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
-from sqlalchemy import select  # type: ignore
 
 from .backends import get_backend
 from .config import _AuthConfig
 from .db import get_db
-
 from .models import UserCreate, UserRead, UserUpdate
-
 
 logger = logging.getLogger("auth")
 
