@@ -2,9 +2,10 @@ import os
 from typing import Type
 
 from asphalt.core import Component, Context
+
+from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.terminals import Terminals, TerminalServer
-from jupyverse_api.app import App
 
 from .routes import _Terminals
 

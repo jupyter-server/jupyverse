@@ -41,6 +41,7 @@ auth-fief = ["fps-auth-fief >=0.1.2,<1"]
 auth-jupyterhub = ["fps-auth-jupyterhub >=0.1.2,<1"]
 noauth = ["fps-noauth >=0.1.2,<1"]
 test = [
+    "ruff >=0.1.2",
     "mypy",
     "types-setuptools",
     "pytest",
@@ -105,8 +106,8 @@ auth = ["noauth", "auth", "auth_fief", "auth_jupyterhub"]
 [tool.hatch.envs.dev.scripts]
 test = "pytest ./tests plugins/webdav/tests -v --reruns 5 --timeout=60"
 lint = [
-  "black --line-length 100 jupyverse ./plugins",
-  "isort --profile=black jupyverse ./plugins",
+  "ruff format jupyverse jupyverse_api notebooks plugins tests",
+  "ruff check jupyverse jupyverse_api notebooks plugins tests --fix",
 ]
 typecheck0 = """mypy --no-incremental \
 ./jupyverse_api \
@@ -131,8 +132,21 @@ serve = "mkdocs serve --dev-addr localhost:8000"
 [tool.check-manifest]
 ignore = [ ".*",]
 
-[tool.black]
-line-length = 100
+[tool.ruff.lint]
+select = [
+  # pycodestyle
+  "E",
+  # Pyflakes
+  "F",
+  # pyupgrade
+  # "UP",
+  # flake8-bugbear
+  # "B",
+  # flake8-simplify
+  # "SIM",
+  # isort
+  "I",
+]
 
 [tool.ruff]
 line-length = 100

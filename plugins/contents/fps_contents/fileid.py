@@ -5,8 +5,9 @@ from uuid import uuid4
 
 import aiosqlite
 from anyio import Path
-from jupyverse_api import Singleton
 from watchfiles import Change, awatch
+
+from jupyverse_api import Singleton
 
 logger = logging.getLogger("contents")
 
@@ -49,7 +50,7 @@ class FileIdManager(metaclass=Singleton):
         async with self.lock:
             async with aiosqlite.connect(self.db_path) as db:
                 async with db.execute("SELECT id FROM fileids WHERE path = ?", (path,)) as cursor:
-                    async for idx, in cursor:
+                    async for (idx,) in cursor:
                         return idx
                     return None
 
@@ -58,7 +59,7 @@ class FileIdManager(metaclass=Singleton):
         async with self.lock:
             async with aiosqlite.connect(self.db_path) as db:
                 async with db.execute("SELECT path FROM fileids WHERE id = ?", (idx,)) as cursor:
-                    async for path, in cursor:
+                    async for (path,) in cursor:
                         return path
                     return None
 
@@ -174,7 +175,7 @@ class FileIdManager(metaclass=Singleton):
 async def get_mtime(path, db) -> Optional[float]:
     if db:
         async with db.execute("SELECT mtime FROM fileids WHERE path = ?", (path,)) as cursor:
-            async for mtime, in cursor:
+            async for (mtime,) in cursor:
                 return mtime
             # deleted file is not in database, shouldn't happen
             return None

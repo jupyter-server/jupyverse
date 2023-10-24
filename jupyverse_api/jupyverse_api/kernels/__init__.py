@@ -3,8 +3,9 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Request
-from jupyverse_api import Router, Config
 from pydantic import Field
+
+from jupyverse_api import Config, Router
 
 from ..app import App
 from ..auth import Auth, User

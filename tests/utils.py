@@ -1,6 +1,6 @@
 from copy import deepcopy
-from uuid import uuid4
 from typing import Dict, List, Optional
+from uuid import uuid4
 
 
 async def authenticate_client(http, port, permissions={}):

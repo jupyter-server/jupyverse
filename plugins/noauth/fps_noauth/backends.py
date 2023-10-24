@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import WebSocket
+
 from jupyverse_api.auth import Auth, User
 
 USER = User()

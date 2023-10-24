@@ -1,7 +1,8 @@
 from asphalt.core import Component, Context
+
+from jupyverse_api.app import App
 from jupyverse_api.auth import AuthConfig
 from jupyverse_api.login import Login
-from jupyverse_api.app import App
 
 from .routes import _Login
 

@@ -2,14 +2,14 @@ import logging
 
 from asphalt.core import Component, Context
 from fastapi_users.exceptions import UserAlreadyExists
+
+from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, AuthConfig
 from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.app import App
 from jupyverse_api.main import Host, QueryParams
 
 from .config import _AuthConfig
 from .routes import auth_factory
-
 
 logger = logging.getLogger("auth")
 

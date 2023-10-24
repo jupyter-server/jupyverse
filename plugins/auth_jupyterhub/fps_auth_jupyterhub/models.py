@@ -1,7 +1,8 @@
 from typing import Dict, List
 
-from jupyverse_api.auth import User
 from pydantic import ConfigDict
+
+from jupyverse_api.auth import User
 
 
 class JupyterHubUser(User):

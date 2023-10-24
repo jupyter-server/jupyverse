@@ -1,6 +1,7 @@
 from asphalt.core import Component, Context
-from jupyverse_api.auth import Auth
+
 from jupyverse_api.app import App
+from jupyverse_api.auth import Auth
 from jupyverse_api.resource_usage import ResourceUsage, ResourceUsageConfig
 
 from .routes import _ResourceUsage

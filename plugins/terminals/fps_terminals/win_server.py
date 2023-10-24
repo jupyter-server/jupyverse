@@ -1,8 +1,9 @@
 import asyncio
 import os
 
-from jupyverse_api.terminals import TerminalServer
 from winpty import PTY  # type: ignore
+
+from jupyverse_api.terminals import TerminalServer
 
 
 def open_terminal(command="C:\\Windows\\System32\\cmd.exe", columns=80, lines=24):

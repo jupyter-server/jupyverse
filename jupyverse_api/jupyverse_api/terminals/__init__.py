@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from fastapi import APIRouter, Depends
+
 from jupyverse_api import Router
 
-from .models import Terminal
 from ..app import App
 from ..auth import Auth, User
+from .models import Terminal
 
 
 class Terminals(Router, ABC):

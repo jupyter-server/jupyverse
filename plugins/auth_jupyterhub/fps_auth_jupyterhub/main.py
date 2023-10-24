@@ -1,8 +1,9 @@
 import httpx
 from asphalt.core import Component, ContainerComponent, Context, context_teardown
-from jupyverse_api.auth import Auth, AuthConfig
-from jupyverse_api.app import App
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+
+from jupyverse_api.app import App
+from jupyverse_api.auth import Auth, AuthConfig
 
 from .config import AuthJupyterHubConfig
 from .db import Base

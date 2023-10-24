@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 
 from fastapi import APIRouter, Depends
-from jupyverse_api import Router, Config
 
-from ..auth import Auth, User
+from jupyverse_api import Config, Router
+
 from ..app import App
+from ..auth import Auth, User
 
 
 class ResourceUsage(Router, ABC):

@@ -5,11 +5,12 @@ from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.staticfiles import StaticFiles
+
 from jupyverse_api import Router
 from jupyverse_api.jupyterlab import JupyterLabConfig
 
-from ..auth import Auth, User
 from ..app import App
+from ..auth import Auth, User
 
 
 class Lab(Router, ABC):

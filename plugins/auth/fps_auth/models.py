@@ -2,6 +2,7 @@ import uuid
 from typing import Dict, List
 
 from fastapi_users import schemas
+
 from jupyverse_api.auth import User
 
 

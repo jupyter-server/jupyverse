@@ -1,6 +1,6 @@
-import pkg_resources
 from typing import List, Tuple
 
+import pkg_resources
 import rich_click as click
 from asphalt.core.cli import run
 

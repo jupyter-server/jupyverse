@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from fastapi import APIRouter, Depends
+
 from jupyverse_api import Router
 
 from ..app import App

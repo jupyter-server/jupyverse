@@ -1,12 +1,11 @@
 import pytest
 from asphalt.core import Context
-from jupyverse_api.auth import AuthConfig
-from jupyverse_api.main import JupyverseComponent
 from httpx import AsyncClient
 from httpx_ws import WebSocketUpgradeError, aconnect_ws
-
 from utils import authenticate_client, configure
 
+from jupyverse_api.auth import AuthConfig
+from jupyverse_api.main import JupyverseComponent
 
 COMPONENTS = {
     "app": {"type": "app"},

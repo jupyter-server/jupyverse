@@ -7,8 +7,8 @@ import easywebdav  # type: ignore
 import pytest
 from anyio import to_thread
 from asphalt.core import Context
-from jupyverse_api.main import JupyverseComponent
 
+from jupyverse_api.main import JupyverseComponent
 
 COMPONENTS = {
     "app": {"type": "app"},

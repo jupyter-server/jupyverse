@@ -9,12 +9,13 @@ from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from starlette.requests import Request
 from watchfiles import Change, awatch
+
+from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
+from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.kernels.models import CreateSession, Execution, Kernel, Notebook, Session
-from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.yjs import Yjs
-from jupyverse_api.app import App
 
 from .kernel_driver.driver import KernelDriver
 from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
@@ -23,7 +24,6 @@ from .kernel_server.server import (
     KernelServer,
     kernels,
 )
-
 
 logger = logging.getLogger("kernels")
 

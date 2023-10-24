@@ -4,13 +4,13 @@ from pathlib import Path
 from time import sleep
 
 import pytest
-from fps_kernels.kernel_server.server import KernelServer, kernels
 from asphalt.core import Context
+from fps_kernels.kernel_server.server import KernelServer, kernels
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
-from jupyverse_api.main import JupyverseComponent
-
 from utils import configure
+
+from jupyverse_api.main import JupyverseComponent
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 

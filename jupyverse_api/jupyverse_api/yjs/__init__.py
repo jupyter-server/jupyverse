@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request, Response
+
 from jupyverse_api import Router
 
-from ..auth import Auth, User
 from ..app import App
+from ..auth import Auth, User
 
 
 class Yjs(Router, ABC):
