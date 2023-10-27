@@ -14,18 +14,19 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from jupyter_ydoc import ydocs as YDOCS
-from jupyter_ydoc.ybasedoc import YBaseDoc
 from websockets.exceptions import ConnectionClosedOK
-from ypy_websocket.websocket_server import WebsocketServer, YRoom
-from ypy_websocket.ystore import SQLiteYStore, YDocNotFound
-from ypy_websocket.yutils import YMessageType, YSyncMessageType
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
+
+from .ydocs import ydocs as YDOCS
+from .ydocs.ybasedoc import YBaseDoc
+from .ywebsocket.websocket_server import WebsocketServer, YRoom
+from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
+from .ywebsocket.yutils import YMessageType, YSyncMessageType
 
 YFILE = YDOCS["file"]
 AWARENESS = 1
@@ -57,8 +58,8 @@ class _Yjs(Yjs):
             return
         websocket, permissions = websocket_permissions
         await websocket.accept()
-        ypy_websocket = YpyWebsocket(websocket, path)
-        await self.room_manager.serve(ypy_websocket, permissions)
+        ywebsocket = YWebsocket(websocket, path)
+        await self.room_manager.serve(ywebsocket, permissions)
 
     async def create_roomid(
         self,
@@ -96,8 +97,8 @@ def to_datetime(iso_date: str) -> datetime:
     return datetime.fromisoformat(iso_date.rstrip("Z"))
 
 
-class YpyWebsocket:
-    """An wrapper to make a Starlette's WebSocket look like a ypy-websocket's WebSocket"""
+class YWebsocket:
+    """An wrapper to make a Starlette's WebSocket look like a ywebsocket's WebSocket"""
 
     def __init__(self, websocket, path: str):
         self._websocket = websocket
@@ -161,7 +162,7 @@ class RoomManager:
             cleaner.cancel()
         self.websocket_server.stop()
 
-    async def serve(self, websocket: YpyWebsocket, permissions) -> None:
+    async def serve(self, websocket: YWebsocket, permissions) -> None:
         room = await self.websocket_server.get_room(websocket.path)
         can_write = permissions is None or "write" in permissions.get("yjs", [])
         room.on_message = partial(self.filter_message, can_write)
@@ -310,7 +311,7 @@ class RoomManager:
         # if the room cannot be found, don't save
         try:
             file_path = await self.get_file_path(file_id, document)
-        except BaseException:
+        except Exception:
             return
         assert file_path is not None
         async with self.lock:

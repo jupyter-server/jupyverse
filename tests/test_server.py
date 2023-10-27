@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 import requests
-import y_py as Y
+from fps_yjs.ywebsocket import WebsocketProvider
+from pycrdt import Array, Doc
 from websockets import connect
-from ypy_websocket import WebsocketProvider
 
 prev_theme = {}
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
@@ -79,7 +79,7 @@ async def test_rest_api(start_jupyverse):
     )
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
-    ydoc = Y.YDoc()
+    ydoc = Doc()
     async with connect(
         f"{ws_url}/api/collaboration/room/{document_id}"
     ) as websocket, WebsocketProvider(ydoc, websocket):
@@ -100,7 +100,9 @@ async def test_rest_api(start_jupyverse):
         # wait for Y model to be updated
         await asyncio.sleep(0.5)
         # retrieve cells
-        cells = json.loads(ydoc.get_array("cells").to_json())
+        array = Array()
+        ydoc["cells"] = array
+        cells = json.loads(str(array))
         assert cells[0]["outputs"] == [
             {
                 "data": {"text/plain": ["3"]},
