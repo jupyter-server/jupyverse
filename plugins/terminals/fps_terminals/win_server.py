@@ -2,9 +2,9 @@ import asyncio
 import os
 from functools import partial
 
+from anyio import to_thread
 from winpty import PTY  # type: ignore
 
-from anyio import to_thread
 from jupyverse_api.terminals import TerminalServer
 
 
