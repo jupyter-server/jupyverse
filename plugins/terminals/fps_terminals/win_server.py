@@ -1,6 +1,8 @@
 import asyncio
 import os
+from functools import partial
 
+from anyio import to_thread
 from winpty import PTY  # type: ignore
 
 from jupyverse_api.terminals import TerminalServer
@@ -32,12 +34,10 @@ class _TerminalServer(TerminalServer):
     async def send_data(self):
         while True:
             try:
-                data = self.process.read(blocking=False)
+                data = await to_thread.run_sync(partial(self.process.read, blocking=True))
             except Exception:
                 await self.websocket.send_json(["disconnect", 1])
                 return
-            if not data:
-                await asyncio.sleep(0.1)
             else:
                 for websocket in self.websockets:
                     await websocket.send_json(["stdout", data])
