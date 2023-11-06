@@ -44,7 +44,7 @@ class KernelDriver:
         self.session_id = uuid.uuid4().hex
         self.msg_cnt = 0
         self.execute_requests: Dict[str, Dict[str, asyncio.Queue]] = {}
-        self.comm_messages = asyncio.Queue()
+        self.comm_messages: asyncio.Queue = asyncio.Queue()
         self.tasks: List[asyncio.Task] = []
 
     async def restart(self, startup_timeout: float = float("inf")) -> None:
@@ -176,15 +176,18 @@ class KernelDriver:
                 ycell["execution_count"] = msg["content"]["execution_count"]
 
     async def _handle_comms(self) -> None:
+        if self.yjs is None:
+            return
+
         while True:
             msg = await self.comm_messages.get()
             msg_type = msg["header"]["msg_type"]
             if msg_type == "comm_open":
                 comm_id = msg["content"]["comm_id"]
                 comm = Comm(comm_id, self.shell_channel, self.session_id, self.key)
-                self.yjs.widgets.comm_open(msg, comm)
+                self.yjs.widgets.comm_open(msg, comm)  # type: ignore
             elif msg_type == "comm_msg":
-                self.yjs.widgets.comm_msg(msg)
+                self.yjs.widgets.comm_msg(msg)  # type: ignore
 
     async def _wait_for_ready(self, timeout):
         deadline = time.time() + timeout
@@ -213,18 +216,18 @@ class KernelDriver:
         msg_type = msg["header"]["msg_type"]
         content = msg["content"]
         if msg_type == "stream":
-            if (not outputs) or (outputs[-1]["name"] != content["name"]):
+            if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
                 outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
-            outputs[-1]["text"].append(content["text"])
+            outputs[-1]["text"].append(content["text"])  # type: ignore
         elif msg_type in ("display_data", "execute_result"):
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
                 # this is a collaborative widget
                 model_id = content["data"]["application/vnd.jupyter.ywidget-view+json"]["model_id"]
                 if self.yjs is not None:
-                    if model_id in self.yjs.widgets.widgets:
-                        doc = self.yjs.widgets.widgets[model_id]["model"].ydoc
+                    if model_id in self.yjs.widgets.widgets:  # type: ignore
+                        doc = self.yjs.widgets.widgets[model_id]["model"].ydoc  # type: ignore
                         path = f"ywidget:{doc.guid}"
-                        await self.yjs.room_manager.websocket_server.get_room(path, ydoc=doc)
+                        await self.yjs.room_manager.websocket_server.get_room(path, ydoc=doc)  # type: ignore
                         outputs.append(doc)
             else:
                 outputs.append(

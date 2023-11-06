@@ -1,6 +1,6 @@
 import pkg_resources
 from pycrdt import TransactionEvent
-from ypywidgets.utils import (
+from ypywidgets.utils import (  # type: ignore
     YMessageType,
     YSyncMessageType,
     create_update_message,
@@ -44,7 +44,7 @@ class Widgets:
                 ydoc.observe(self._send)
 
     def _send(self, event: TransactionEvent):
-        update = event.get_update()
+        update = event.get_update()  # type: ignore
         message = create_update_message(update)
         try:
             self.comm.send(buffers=[message])
