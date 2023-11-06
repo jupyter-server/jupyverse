@@ -14,6 +14,7 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+from pycrdt import Doc
 from websockets.exceptions import ConnectionClosedOK
 
 from jupyverse_api.app import App
@@ -27,6 +28,7 @@ from .ydocs.ybasedoc import YBaseDoc
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywebsocket.yutils import YMessageType, YSyncMessageType
+from .ywidgets import Widgets
 
 YFILE = YDOCS["file"]
 AWARENESS = 1
@@ -48,6 +50,7 @@ class _Yjs(Yjs):
         super().__init__(app=app, auth=auth)
         self.contents = contents
         self.room_manager = RoomManager(contents)
+        self.widgets = Widgets()
 
     async def collaboration_room_websocket(
         self,
@@ -359,17 +362,17 @@ class RoomManager:
 
 
 class JupyterWebsocketServer(WebsocketServer):
-    async def get_room(self, ws_path: str) -> YRoom:
+    async def get_room(self, ws_path: str, ydoc: Doc | None = None) -> YRoom:
         if ws_path not in self.rooms:
             if ws_path.count(":") >= 2:
                 # it is a stored document (e.g. a notebook)
                 file_format, file_type, file_id = ws_path.split(":", 2)
                 updates_file_path = f".{file_type}:{file_id}.y"
                 ystore = JupyterSQLiteYStore(path=updates_file_path)  # FIXME: pass in config
-                self.rooms[ws_path] = YRoom(ready=False, ystore=ystore)
+                self.rooms[ws_path] = YRoom(ydoc=ydoc, ready=False, ystore=ystore)
             else:
                 # it is a transient document (e.g. awareness)
-                self.rooms[ws_path] = YRoom()
+                self.rooms[ws_path] = YRoom(ydoc=ydoc)
         room = self.rooms[ws_path]
         await self.start_room(room)
         return room

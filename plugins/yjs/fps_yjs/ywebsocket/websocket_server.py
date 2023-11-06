@@ -5,6 +5,7 @@ from logging import Logger, getLogger
 
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskGroup, TaskStatus
+from pycrdt import Doc
 
 from .websocket import Websocket
 from .yroom import YRoom
@@ -57,7 +58,7 @@ class WebsocketServer:
             self._started = Event()
         return self._started
 
-    async def get_room(self, name: str) -> YRoom:
+    async def get_room(self, name: str, ydoc: Doc | None = None) -> YRoom:
         """Get or create a room with the given name, and start it.
 
         Arguments:
@@ -67,7 +68,7 @@ class WebsocketServer:
             The room with the given name, or a new one if no room with that name was found.
         """
         if name not in self.rooms.keys():
-            self.rooms[name] = YRoom(ready=self.rooms_ready, log=self.log)
+            self.rooms[name] = YRoom(ydoc=ydoc, ready=self.rooms_ready, log=self.log)
         room = self.rooms[name]
         await self.start_room(room)
         return room

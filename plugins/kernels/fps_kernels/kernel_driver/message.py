@@ -56,6 +56,7 @@ def create_message(
     content: Dict = {},
     session_id: str = "",
     msg_id: str = "",
+    buffers: List = [],
 ) -> Dict[str, Any]:
     header = create_message_header(msg_type, session_id, msg_id)
     msg = {
@@ -65,7 +66,7 @@ def create_message(
         "parent_header": {},
         "content": content,
         "metadata": {},
-        "buffers": [],
+        "buffers": buffers,
     }
     return msg
 

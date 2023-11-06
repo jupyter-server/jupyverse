@@ -259,8 +259,8 @@ class _Kernels(Kernels):
         execution = Execution(**r)
         if kernel_id in kernels:
             ynotebook = self.yjs.get_document(execution.document_id)
-            cell = ynotebook.get_cell(execution.cell_idx)
-            cell["outputs"] = []
+            ycell = ynotebook.ycells[execution.cell_idx]
+            del ycell["outputs"][:]
 
             kernel = kernels[kernel_id]
             if not kernel["driver"]:
@@ -268,12 +268,12 @@ class _Kernels(Kernels):
                     kernelspec_path=Path(find_kernelspec(kernel["name"])).as_posix(),
                     write_connection_file=False,
                     connection_file=kernel["server"].connection_file_path,
+                    yjs=self.yjs,
                 )
                 await driver.connect()
             driver = kernel["driver"]
 
-            await driver.execute(cell)
-            ynotebook.set_cell(execution.cell_idx, cell)
+            await driver.execute(ycell, wait_for_executed=False)
 
     async def get_kernel(
         self,
