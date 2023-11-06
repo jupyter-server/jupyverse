@@ -55,6 +55,7 @@ test = [
     "websockets",
     "ipykernel",
     "ypywidgets >=0.5.0,<0.6.0",
+    "ypywidgets-textual",
 ]
 docs = [ "mkdocs", "mkdocs-material" ]
 

@@ -175,7 +175,7 @@ async def test_ywidgets(start_jupyverse):
         # wait for file to be loaded and Y model to be created in server and client
         await asyncio.sleep(0.5)
         # execute notebook
-        for cell_idx in range(3):
+        for cell_idx in range(2):
             response = requests.post(
                 f"{url}/api/kernels/{kernel_id}/execute",
                 data=json.dumps(
@@ -200,7 +200,7 @@ async def test_ywidgets(start_jupyverse):
             data=json.dumps(
                 {
                     "document_id": document_id,
-                    "cell_idx": 3,
+                    "cell_idx": 2,
                 }
             ),
         )

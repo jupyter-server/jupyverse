@@ -55,7 +55,6 @@ class Websocket:
         return bytes(b)
 
 
-@pytest.mark.skip(reason="FIXME")
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_execute(auth_mode, unused_tcp_port):
@@ -109,7 +108,7 @@ async def test_execute(auth_mode, unused_tcp_port):
             # wait for file to be loaded and Y model to be created in server and client
             await asyncio.sleep(0.5)
             # execute notebook
-            for cell_idx in range(3):
+            for cell_idx in range(2):
                 response = await http.post(
                     f"{url}/api/kernels/{kernel_id}/execute",
                     json={
@@ -131,7 +130,7 @@ async def test_execute(auth_mode, unused_tcp_port):
                 f"{url}/api/kernels/{kernel_id}/execute",
                 json={
                     "document_id": document_id,
-                    "cell_idx": 3,
+                    "cell_idx": 2,
                 }
             )
             await task

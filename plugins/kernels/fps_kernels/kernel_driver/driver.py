@@ -216,9 +216,19 @@ class KernelDriver:
         msg_type = msg["header"]["msg_type"]
         content = msg["content"]
         if msg_type == "stream":
-            if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
-                outputs.append({"name": content["name"], "output_type": msg_type, "text": []})
-            outputs[-1]["text"].append(content["text"])  # type: ignore
+            with outputs.doc.transaction():
+                if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
+                    outputs.append(
+                        Map(
+                            {
+                                "name": content["name"],
+                                "output_type": msg_type,
+                                "text": Array([content["text"]]),
+                            }
+                        )
+                    )
+                else:
+                    outputs[-1]["text"].append(content["text"])  # type: ignore
         elif msg_type in ("display_data", "execute_result"):
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
                 # this is a collaborative widget
