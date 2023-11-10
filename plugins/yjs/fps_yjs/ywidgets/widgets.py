@@ -24,7 +24,7 @@ class Widgets:
         name = msg["metadata"]["ymodel_name"]
         comm_id = msg["content"]["comm_id"]
         self.comm = comm
-        model = self.ydocs[name](primary=False)
+        model = self.ydocs[f"{name}Model"]()
         self.widgets[comm_id] = {"model": model, "comm": comm}
         msg = sync(model.ydoc)
         comm.send(**msg)

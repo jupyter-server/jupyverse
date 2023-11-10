@@ -38,6 +38,7 @@ class YNotebook(YBaseDoc):
     def get_cell(self, index: int) -> Dict[str, Any]:
         meta = json.loads(str(self._ymeta))
         cell = json.loads(str(self._ycells[index]))
+        cell.pop("execution_status", None)
         cast_all(cell, float, int)  # cells coming from Yjs have e.g. execution_count as float
         if "id" in cell and meta["nbformat"] == 4 and meta["nbformat_minor"] <= 4:
             # strip cell IDs if we have notebook format 4.0-4.4
@@ -73,6 +74,7 @@ class YNotebook(YBaseDoc):
                 del cell["attachments"]
         elif cell_type == "code":
             cell["outputs"] = Array(cell.get("outputs", []))
+            cell["execution_status"] = "idle"
 
         return Map(cell)
 

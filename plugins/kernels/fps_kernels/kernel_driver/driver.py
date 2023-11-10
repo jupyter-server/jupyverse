@@ -120,6 +120,7 @@ class KernelDriver:
     ) -> None:
         if ycell["cell_type"] != "code":
             return
+        ycell["execution_state"] = "busy"
         content = {"code": str(ycell["source"]), "silent": False}
         msg = create_message(
             "execute_request", content, session_id=self.session_id, msg_id=str(self.msg_cnt)
@@ -159,7 +160,9 @@ class KernelDriver:
             except asyncio.TimeoutError:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
-            ycell["execution_count"] = msg["content"]["execution_count"]
+            with ycell.doc.transaction():
+                ycell["execution_count"] = msg["content"]["execution_count"]
+                ycell["execution_state"] = "idle"
             del self.execute_requests[msg_id]
         else:
             self.tasks.append(asyncio.create_task(self._handle_iopub(msg_id, ycell)))
@@ -173,7 +176,9 @@ class KernelDriver:
                 and msg["content"]["execution_state"] == "idle")
             ):
                 msg = await self.execute_requests[msg_id]["shell_msg"].get()
-                ycell["execution_count"] = msg["content"]["execution_count"]
+                with ycell.doc.transaction():
+                    ycell["execution_count"] = msg["content"]["execution_count"]
+                    ycell["execution_state"] = "idle"
 
     async def _handle_comms(self) -> None:
         if self.yjs is None:
