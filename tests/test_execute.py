@@ -113,7 +113,7 @@ async def test_execute(auth_mode, unused_tcp_port):
                     f"{url}/api/kernels/{kernel_id}/execute",
                     json={
                         "document_id": document_id,
-                        "cell_idx": cell_idx,
+                        "cell_id": ynb.ycells[cell_idx]["id"],
                     }
                 )
             while True:
@@ -130,7 +130,7 @@ async def test_execute(auth_mode, unused_tcp_port):
                 f"{url}/api/kernels/{kernel_id}/execute",
                 json={
                     "document_id": document_id,
-                    "cell_idx": 2,
+                    "cell_id": ynb.ycells[2]["id"],
                 }
             )
             await task

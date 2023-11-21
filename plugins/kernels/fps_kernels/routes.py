@@ -259,7 +259,11 @@ class _Kernels(Kernels):
         execution = Execution(**r)
         if kernel_id in kernels:
             ynotebook = self.yjs.get_document(execution.document_id)
-            ycell = ynotebook.ycells[execution.cell_idx]
+            ycells = [ycell for ycell in ynotebook.ycells if ycell["id"] == execution.cell_id]
+            if not ycells:
+                return  # FIXME
+
+            ycell = ycells[0]
             del ycell["outputs"][:]
 
             kernel = kernels[kernel_id]

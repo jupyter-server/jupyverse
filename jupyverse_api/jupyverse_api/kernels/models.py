@@ -39,4 +39,4 @@ class Session(BaseModel):
 
 class Execution(BaseModel):
     document_id: str
-    cell_idx: int
+    cell_id: str

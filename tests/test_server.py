@@ -88,6 +88,7 @@ async def test_rest_api(start_jupyverse):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
         await asyncio.sleep(0.5)
+        ydoc["cells"] = ycells = Array()
         # execute notebook
         for cell_idx in range(3):
             response = requests.post(
@@ -95,16 +96,14 @@ async def test_rest_api(start_jupyverse):
                 data=json.dumps(
                     {
                         "document_id": document_id,
-                        "cell_idx": cell_idx,
+                        "cell_id": ycells[cell_idx]["id"],
                     }
                 ),
             )
         # wait for Y model to be updated
         await asyncio.sleep(0.5)
         # retrieve cells
-        array = Array()
-        ydoc["cells"] = array
-        cells = json.loads(str(array))
+        cells = json.loads(str(ycells))
         assert cells[0]["outputs"] == [
             {
                 "data": {"text/plain": ["3"]},
@@ -181,7 +180,7 @@ async def test_ywidgets(start_jupyverse):
                 data=json.dumps(
                     {
                         "document_id": document_id,
-                        "cell_idx": cell_idx,
+                        "cell_id": ynb.ycells[cell_idx]["id"],
                     }
                 ),
             )
@@ -200,7 +199,7 @@ async def test_ywidgets(start_jupyverse):
             data=json.dumps(
                 {
                     "document_id": document_id,
-                    "cell_idx": 2,
+                    "cell_id": ynb.ycells[2]["id"],
                 }
             ),
         )
