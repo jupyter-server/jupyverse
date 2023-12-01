@@ -181,6 +181,7 @@ class RoomManager:
                 file_path = await self.contents.file_id_manager.get_path(file_id)
                 logger.info(f"Opening collaboration room: {websocket.path} ({file_path})")
                 document = YDOCS.get(file_type, YFILE)(room.ydoc)
+                document.file_id = file_id
                 self.documents[websocket.path] = document
                 async with self.lock:
                     model = await self.contents.read_content(file_path, True, file_format)

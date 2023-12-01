@@ -44,7 +44,7 @@ class Widgets:
                 ydoc.observe(self._send)
 
     def _send(self, event: TransactionEvent):
-        update = event.get_update()  # type: ignore
+        update = event.update  # type: ignore
         message = create_update_message(update)
         try:
             self.comm.send(buffers=[message])

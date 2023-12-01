@@ -51,6 +51,14 @@ class YBaseDoc(ABC):
     def path(self, value: str) -> None:
         self._ystate["path"] = value
 
+    @property
+    def file_id(self) -> Optional[str]:
+        return self._ystate.get("file_id")
+
+    @file_id.setter
+    def file_id(self, value: str) -> None:
+        self._ystate["file_id"] = value
+
     @abstractmethod
     def get(self) -> Any:
         ...

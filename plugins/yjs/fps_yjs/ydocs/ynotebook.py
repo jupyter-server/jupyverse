@@ -125,7 +125,7 @@ class YNotebook(YBaseDoc):
             # clear document
             self._ymeta.clear()
             self._ycells.clear()
-            for key in [k for k in self._ystate.keys() if k not in ("dirty", "path")]:
+            for key in [k for k in self._ystate.keys() if k not in ("dirty", "path", "file_id")]:
                 del self._ystate[key]
 
             # initialize document
