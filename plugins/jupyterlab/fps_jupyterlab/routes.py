@@ -58,6 +58,7 @@ class _JupyterLab(JupyterLab):
             self.get_index(
                 "default",
                 self.frontend_config.collaborative,
+                self.jupyterlab_config.server_side_execution,
                 self.jupyterlab_config.dev_mode,
                 self.frontend_config.base_url,
             )
@@ -71,6 +72,7 @@ class _JupyterLab(JupyterLab):
             self.get_index(
                 "default",
                 self.frontend_config.collaborative,
+                self.jupyterlab_config.server_side_execution,
                 self.jupyterlab_config.dev_mode,
                 self.frontend_config.base_url,
             )
@@ -99,11 +101,12 @@ class _JupyterLab(JupyterLab):
         return self.get_index(
             name,
             self.frontend_config.collaborative,
+            self.jupyterlab_config.server_side_execution,
             self.jupyterlab_config.dev_mode,
             self.frontend_config.base_url,
         )
 
-    def get_index(self, workspace, collaborative, dev_mode, base_url="/"):
+    def get_index(self, workspace, collaborative, server_side_execution, dev_mode, base_url="/"):
         for path in (self.static_lab_dir).glob("main.*.js"):
             main_id = path.name.split(".")[1]
             break
@@ -121,6 +124,7 @@ class _JupyterLab(JupyterLab):
             "baseUrl": base_url,
             "cacheFiles": False,
             "collaborative": collaborative,
+            "serverSideExecution": server_side_execution,
             "devMode": dev_mode,
             "disabledExtensions": self.disabled_extension,
             "exposeAppInBrowser": False,
