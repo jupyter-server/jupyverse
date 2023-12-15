@@ -41,7 +41,11 @@ class YRoom:
     _starting: bool
 
     def __init__(
-        self, ready: bool = True, ystore: BaseYStore | None = None, log: Logger | None = None
+        self,
+        ydoc: Doc | None = None,
+        ready: bool = True,
+        ystore: BaseYStore | None = None,
+        log: Logger | None = None,
     ):
         """Initialize the object.
 
@@ -63,7 +67,7 @@ class YRoom:
             ystore: An optional store in which to persist document updates.
             log: An optional logger.
         """
-        self.ydoc = Doc()
+        self.ydoc = Doc() if ydoc is None else ydoc
         self.awareness = Awareness(self.ydoc)
         self._update_send_stream, self._update_receive_stream = create_memory_object_stream(
             max_buffer_size=65536

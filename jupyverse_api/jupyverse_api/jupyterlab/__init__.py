@@ -89,3 +89,4 @@ class JupyterLab(Router, ABC):
 
 class JupyterLabConfig(Config):
     dev_mode: bool = False
+    server_side_execution: bool = False
