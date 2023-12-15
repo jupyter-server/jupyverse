@@ -1,0 +1,66 @@
+name: test
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  types:
+    name: Types
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - name: Install hatch
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install hatch
+    - name: Check types
+      run: |
+        hatch run dev.jupyterlab-noauth:typecheck
+        hatch run dev.jupyterlab-auth:typecheck
+        hatch run dev.jupyterlab-auth_fief:typecheck
+        hatch run dev.retrolab-noauth:typecheck
+        hatch run dev.retrolab-auth:typecheck
+        hatch run dev.retrolab-auth_fief:typecheck
+
+  test:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install hatch
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install hatch
+
+    - name: Create jupyterlab-auth dev environment
+      run: hatch env create dev.jupyterlab-auth
+
+    - name: Run tests
+      run: hatch run dev.jupyterlab-auth:test
