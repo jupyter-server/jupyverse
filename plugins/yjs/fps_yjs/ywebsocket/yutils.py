@@ -98,7 +98,7 @@ class Decoder:
 
 
 def put_updates(update_send_stream: MemoryObjectSendStream, event: TransactionEvent) -> None:
-    update = event.get_update()  # type: ignore
+    update = event.update  # type: ignore
     update_send_stream.send_nowait(update)
 
 
