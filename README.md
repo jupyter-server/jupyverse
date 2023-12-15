@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/jupyter-server/jupyverse/workflows/CI/badge.svg)](https://github.com/jupyter-server/jupyverse/actions)
+[![Build Status](https://github.com/jupyter-server/jupyverse/workflows/test/badge.svg)](https://github.com/jupyter-server/jupyverse/actions)
 
 # jupyverse
 
