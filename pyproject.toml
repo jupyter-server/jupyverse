@@ -104,7 +104,7 @@ frontend = ["jupyterlab", "retrolab"]
 auth = ["noauth", "auth", "auth_fief", "auth_jupyterhub"]
 
 [tool.hatch.envs.dev.scripts]
-test = "pytest ./tests plugins/webdav/tests -v --reruns 5 --timeout=60"
+test = "pytest ./tests plugins/webdav/tests -v --reruns 5 --timeout=60 --color=yes"
 lint = [
   "ruff format jupyverse jupyverse_api notebooks plugins tests",
   "ruff check jupyverse jupyverse_api notebooks plugins tests --fix",
