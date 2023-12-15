@@ -35,9 +35,11 @@ class FileIdManager(metaclass=Singleton):
     initialized: asyncio.Event
     watchers: Dict[str, List[Watcher]]
     lock: asyncio.Lock
+    Change = Change
 
-    def __init__(self, db_path: str = ".fileid.db"):
+    def __init__(self, db_path: str = ".fileid.db", root_dir: str = "."):
         self.db_path = db_path
+        self.root_dir = Path(root_dir)
         self.initialized = asyncio.Event()
         self.watchers = {}
         self.watch_files_task = asyncio.create_task(self.watch_files())
@@ -78,6 +80,7 @@ class FileIdManager(metaclass=Singleton):
                 return idx
 
     async def watch_files(self):
+        self.root_dir = await self.root_dir.resolve()
         async with self.lock:
             async with aiosqlite.connect(self.db_path) as db:
                 await db.execute("DROP TABLE IF EXISTS fileids")
@@ -90,7 +93,7 @@ class FileIdManager(metaclass=Singleton):
         # index files
         async with self.lock:
             async with aiosqlite.connect(self.db_path) as db:
-                async for path in Path().rglob("*"):
+                async for path in self.root_dir.rglob("*"):
                     idx = uuid4().hex
                     mtime = (await path.stat()).st_mtime
                     await db.execute(
@@ -99,14 +102,16 @@ class FileIdManager(metaclass=Singleton):
                 await db.commit()
                 self.initialized.set()
 
-        async for changes in awatch(".", stop_event=self.stop_watching_files):
+        async for changes in awatch(self.root_dir, stop_event=self.stop_watching_files):
             async with self.lock:
                 async with aiosqlite.connect(self.db_path) as db:
                     deleted_paths = set()
                     added_paths = set()
                     for change, changed_path in changes:
                         # get relative path
-                        changed_path = Path(changed_path).relative_to(await Path().absolute())
+                        changed_path = Path(changed_path).relative_to(
+                            await self.root_dir.absolute()
+                        )
                         changed_path_str = str(changed_path)
 
                         if change == Change.deleted:
@@ -156,9 +161,16 @@ class FileIdManager(metaclass=Singleton):
             for change in changes:
                 changed_path = change[1]
                 # get relative path
-                relative_changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
+                relative_changed_path = Path(changed_path).relative_to(
+                    await self.root_dir.absolute()
+                )
                 relative_change = (change[0], relative_changed_path)
-                for watcher in self.watchers.get(relative_changed_path, []):
+                all_watchers = []
+                for path, watchers in self.watchers.items():
+                    p = Path(path)
+                    if p == relative_changed_path or p in relative_changed_path.parents:
+                        all_watchers += watchers
+                for watcher in all_watchers:
                     watcher.notify(relative_change)
 
         self.stopped_watching_files.set()
