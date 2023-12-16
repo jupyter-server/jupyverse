@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.4.0
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.3.0...73a16c326e333838aaa8ec2321c40d5d13a96f05))
+
+### Merged PRs
+
+- Check types in a separate CI job [#373](https://github.com/jupyter-server/jupyverse/pull/373) ([@davidbrochart](https://github.com/davidbrochart))
+- Add pytest color [#372](https://github.com/jupyter-server/jupyverse/pull/372) ([@davidbrochart](https://github.com/davidbrochart))
+- Update pycrdt v0.7.2 [#371](https://github.com/jupyter-server/jupyverse/pull/371) ([@davidbrochart](https://github.com/davidbrochart))
+- Implement server-side ypywidgets rendering [#364](https://github.com/jupyter-server/jupyverse/pull/364) ([@davidbrochart](https://github.com/davidbrochart))
+- Improve data read [#362](https://github.com/jupyter-server/jupyverse/pull/362) ([@davidbrochart](https://github.com/davidbrochart))
+- Replace black with ruff formatter [#361](https://github.com/jupyter-server/jupyverse/pull/361) ([@davidbrochart](https://github.com/davidbrochart))
+- Replace Ypy with pycrdt [#359](https://github.com/jupyter-server/jupyverse/pull/359) ([@davidbrochart](https://github.com/davidbrochart))
+- Set optional contents API model fields to None by default [#358](https://github.com/jupyter-server/jupyverse/pull/358) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-10-10&to=2023-12-16&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-10-10..2023-12-16&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-10-10..2023-12-16&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.3.0
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.2.5...88f061e58d22963f7b195b5677c983a7b1056b94))
@@ -16,8 +39,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2023-09-06&to=2023-10-10&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2023-09-06..2023-10-10&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2023-09-06..2023-10-10&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.2.5
 
