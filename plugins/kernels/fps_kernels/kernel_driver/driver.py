@@ -181,7 +181,7 @@ class KernelDriver:
                     ycell["execution_state"] = "idle"
 
     async def _handle_comms(self) -> None:
-        if self.yjs is None:
+        if self.yjs is None or self.yjs.widgets is None:  # type: ignore
             return
 
         while True:
@@ -247,7 +247,7 @@ class KernelDriver:
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
                 # this is a collaborative widget
                 model_id = content["data"]["application/vnd.jupyter.ywidget-view+json"]["model_id"]
-                if self.yjs is not None:
+                if self.yjs is not None and self.yjs.widgets is not None:  # type: ignore
                     if model_id in self.yjs.widgets.widgets:  # type: ignore
                         doc = self.yjs.widgets.widgets[model_id]["model"].ydoc  # type: ignore
                         path = f"ywidget:{doc.guid}"

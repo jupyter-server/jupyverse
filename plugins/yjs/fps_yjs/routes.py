@@ -50,7 +50,10 @@ class _Yjs(Yjs):
         super().__init__(app=app, auth=auth)
         self.contents = contents
         self.room_manager = RoomManager(contents)
-        self.widgets = Widgets()
+        if Widgets is None:
+            self.widgets = None
+        else:
+            self.widgets = Widgets()  # type: ignore
 
     async def collaboration_room_websocket(
         self,
