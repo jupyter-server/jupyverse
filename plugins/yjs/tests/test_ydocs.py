@@ -57,6 +57,25 @@ async def test_ydrive():
                 await ydrive.ls("doesnt_exist")
             assert str(exc_info.value) == "404: Item not found"
 
+            # remote ydrive.ls()
+            assert not ydrive._ycontent["populate"]
+            assert ydrive._ycontent["content"] is None
+            ydrive._ycontent["populate"] = True
+            await assert_with_timeout(lambda: ydrive._ycontent["content"] is not None)
+            assert "file0" in ydrive._ycontent["content"]
+            assert "file1" in ydrive._ycontent["content"]
+            assert "dir0" in ydrive._ycontent["content"]
+            assert "dir1" in ydrive._ycontent["content"]
+
+            assert not ydrive._ycontent["content"]["dir0"]["populate"]
+            assert ydrive._ycontent["content"]["dir0"]["content"] is None
+            ydrive._ycontent["content"]["dir0"]["populate"] = True
+            await assert_with_timeout(
+                lambda: ydrive._ycontent["content"]["dir0"]["content"] is not None
+            )
+            assert len(ydrive._ycontent["content"]["dir0"]["content"]) == 1
+            assert "file2" in ydrive._ycontent["content"]["dir0"]["content"]
+
             root_dir = await ydrive.ls()
             assert "file0" in root_dir
             assert "file1" in root_dir

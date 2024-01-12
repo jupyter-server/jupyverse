@@ -83,8 +83,8 @@ class YDrive(YBaseDoc):
         for event in events:
             if isinstance(event, MapEvent):
                 current = self._ycontent
-                for path in event.path:
-                    current = current[path]
+                for p in event.path:
+                    current = current[p]
                 for key, val in event.keys.items():
                     action = val.get("action")
                     if action == "delete":
@@ -101,13 +101,17 @@ class YDrive(YBaseDoc):
                             self._task_group.start_soon(self._try_create_directory, path)
                         else:
                             self._task_group.start_soon(self._try_create_file, path)
+                    elif action == "update":
+                        if key == "populate" and not val["oldValue"] and val["newValue"]:
+                            path = "/".join(event.path[1::2])
+                            self._task_group.start_soon(self.ls, path)
 
     @property
     def version(self) -> str:
         return "1.0.0"
 
     def _new_dir_content(self) -> Map:
-        return Map({"is_dir": True, "content": None})
+        return Map({"is_dir": True, "populate": False, "content": None})
 
     def _new_file_content(self, content: Content | None = None) -> Map:
         if content is None:
@@ -153,7 +157,10 @@ class YDrive(YBaseDoc):
 
     async def _maybe_populate_dir(self, path: Path, content: Map):
         if content["content"] is None:
-            content["content"] = await self._get_directory_content(path)
+            with content.doc.transaction():
+                content["content"] = await self._get_directory_content(path)
+                if not content["populate"]:
+                    content["populate"] = True
 
     async def _get(self, path: Path | str | None = None) -> Map:
         path = Path() if path is None else Path(path)
