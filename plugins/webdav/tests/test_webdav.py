@@ -24,17 +24,17 @@ def configure(components, config):
     return _components
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python >=3.10")
 async def test_webdav(unused_tcp_port):
     components = configure(
         COMPONENTS, {"webdav": {"account_mapping": [{"username": "foo", "password": "bar"}]}}
     )
-    async with Context() as ctx:
+    async with Context():
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         webdav = easywebdav.connect(
             "127.0.0.1", port=unused_tcp_port, path="webdav", username="foo", password="bar"

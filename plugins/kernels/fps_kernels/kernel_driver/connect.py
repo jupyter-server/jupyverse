@@ -1,14 +1,17 @@
-import asyncio
+from __future__ import annotations
+
 import json
 import os
 import socket
+import subprocess
 import sys
 import tempfile
 import uuid
 from typing import Dict, Optional, Tuple, Union
 
 import zmq
-import zmq.asyncio
+from anyio import open_process
+from anyio.abc import Process
 from zmq.asyncio import Socket
 
 channel_socket_types = {
@@ -71,8 +74,8 @@ def read_connection_file(fname: str) -> cfg_t:
 
 
 async def launch_kernel(
-    kernelspec_path: str, connection_file_path: str, kernel_cwd: str, capture_output: bool
-) -> asyncio.subprocess.Process:
+    kernelspec_path: str, connection_file_path: str, kernel_cwd: str | None, capture_output: bool
+) -> Process:
     with open(kernelspec_path) as f:
         kernelspec = json.load(f)
     cmd = [s.format(connection_file=connection_file_path) for s in kernelspec["argv"]]
@@ -82,18 +85,16 @@ async def launch_kernel(
         "python%i.%i" % sys.version_info[:2],
     }:
         cmd[0] = sys.executable
-    if kernel_cwd:
-        prev_dir = os.getcwd()
-        os.chdir(kernel_cwd)
     if capture_output:
-        p = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.STDOUT
-        )
+        stdout = subprocess.DEVNULL
+        stderr = subprocess.STDOUT
     else:
-        p = await asyncio.create_subprocess_exec(*cmd)
-    if kernel_cwd:
-        os.chdir(prev_dir)
-    return p
+        stdout = None
+        stderr = None
+    if not kernel_cwd:
+        kernel_cwd = None
+    process = await open_process(cmd, stdout=stdout, stderr=stderr, cwd=kernel_cwd)
+    return process
 
 
 def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:

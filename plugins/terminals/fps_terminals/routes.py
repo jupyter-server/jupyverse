@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any, Dict, Type
 
+from anyio import Event, create_task_group
 from fastapi import Response
 
 from jupyverse_api.app import App
@@ -15,6 +16,16 @@ class _Terminals(Terminals):
     def __init__(self, app: App, auth: Auth, _TerminalServer: Type[TerminalServer]) -> None:
         super().__init__(app=app, auth=auth)
         self.TerminalServer = _TerminalServer
+        self.stop_event = Event()
+
+    async def start(self):
+        await self.stop_event.wait()
+
+    async def stop(self):
+        async with create_task_group() as tg:
+            for terminal in TERMINALS.values():
+                tg.start_soon(terminal["server"].stop)
+        self.stop_event.set()
 
     async def get_terminals(
         self,
@@ -34,7 +45,7 @@ class _Terminals(Terminals):
         name = str(name_int)
         terminal = Terminal(
             name=name,
-            last_activity=datetime.utcnow().isoformat() + "Z",
+            last_activity=datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
         )
         server = self.TerminalServer()
         TERMINALS[name] = {"info": terminal, "server": server}

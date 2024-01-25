@@ -32,7 +32,7 @@ def date_to_str(obj: Dict[str, Any]):
 
 
 def utcnow() -> datetime:
-    return datetime.utcnow().replace(tzinfo=timezone.utc)
+    return datetime.now(tz=timezone.utc)
 
 
 def create_message_header(msg_type: str, session_id: str, msg_id: str) -> Dict[str, Any]:

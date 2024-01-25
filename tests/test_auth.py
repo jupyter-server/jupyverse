@@ -1,5 +1,5 @@
 import pytest
-from asphalt.core import Context
+from asphalt.core import Context, get_resource
 from httpx import AsyncClient
 from httpx_ws import WebSocketUpgradeError, aconnect_ws
 from utils import authenticate_client, configure
@@ -19,13 +19,13 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_kernel_channels_unauthenticated(unused_tcp_port):
-    async with Context() as ctx:
+    async with Context():
         await JupyverseComponent(
             components=COMPONENTS,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         with pytest.raises(WebSocketUpgradeError):
             async with aconnect_ws(
@@ -34,13 +34,13 @@ async def test_kernel_channels_unauthenticated(unused_tcp_port):
                 pass
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_kernel_channels_authenticated(unused_tcp_port):
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=COMPONENTS,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         await authenticate_client(http, unused_tcp_port)
         async with aconnect_ws(
@@ -50,15 +50,15 @@ async def test_kernel_channels_authenticated(unused_tcp_port):
             pass
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
 async def test_root_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
         if auth_mode == "noauth":
@@ -70,31 +70,31 @@ async def test_root_auth(auth_mode, unused_tcp_port):
         assert response.headers["content-type"] == "application/json"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_no_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/lab")
         assert response.status_code == 200
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("token",))
 async def test_token_auth(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
-        auth_config = await ctx.request_resource(AuthConfig)
+        auth_config = await get_resource(AuthConfig, wait=True)
 
         # no token provided, should not work
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
@@ -104,7 +104,7 @@ async def test_token_auth(auth_mode, unused_tcp_port):
         assert response.status_code == 302
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("user",))
 @pytest.mark.parametrize(
     "permissions",
@@ -115,11 +115,11 @@ async def test_token_auth(auth_mode, unused_tcp_port):
 )
 async def test_permissions(auth_mode, permissions, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         await authenticate_client(http, unused_tcp_port, permissions=permissions)
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/auth/user/me")

@@ -42,7 +42,7 @@ auth-jupyterhub = ["fps-auth-jupyterhub >=0.1.2,<1"]
 noauth = ["fps-noauth >=0.1.2,<1"]
 test = [
     "ruff >=0.1.2",
-    "mypy",
+    "mypy !=1.10.0",  # see https://github.com/python/mypy/issues/17166
     "types-setuptools",
     "pytest",
     "pytest-asyncio",
@@ -64,6 +64,12 @@ docs = [ "mkdocs", "mkdocs-material" ]
 # pre-install commands here and post-install commands in the matrix can be moved
 # to the dependencies section
 pre-install-commands = [
+  "pip install git+https://github.com/asphalt-framework/asphalt.git@5.0",
+  "pip install git+https://github.com/asphalt-framework/asphalt-web.git@asphalt5",
+  "pip install asgiref",
+  "pip install fastapi",
+  "pip install hypercorn",
+
   "pip install -e ./jupyverse_api",
   "pip install -e ./plugins/contents",
   "pip install -e ./plugins/frontend",
@@ -87,6 +93,7 @@ matrix.frontend.scripts = [
   { key = "typecheck1", value = "typecheck0 ./plugins/jupyterlab", if = ["jupyterlab"] },
   { key = "typecheck1", value = "typecheck0 ./plugins/notebook", if = ["notebook"] },
 ]
+
 matrix.auth.post-install-commands = [
   { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
   { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
@@ -181,6 +188,3 @@ python_packages = [
 
 [tool.hatch.version]
 path = "jupyverse/__init__.py"
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"

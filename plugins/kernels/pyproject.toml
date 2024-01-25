@@ -14,6 +14,7 @@ dependencies = [
     "types-python-dateutil",
     "watchfiles >=0.16.1,<1",
     "jupyverse-api >=0.1.2,<1",
+    "anyio",
 ]
 dynamic = [ "version",]
 [[project.authors]]

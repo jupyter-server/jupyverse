@@ -1,10 +1,17 @@
 import os
+import signal
 import subprocess
 import time
 from pathlib import Path
 
 import pytest
 import requests
+
+
+@pytest.fixture
+def anyio_backend():
+    # at least, SQLAlchemy doesn't support anything else than asyncio
+    return "asyncio"
 
 
 @pytest.fixture()
@@ -38,5 +45,5 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
         else:
             break
     yield url
-    p.kill()
+    os.kill(p.pid, signal.SIGINT)
     p.wait()

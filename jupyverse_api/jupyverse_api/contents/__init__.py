@@ -1,11 +1,12 @@
-import asyncio
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from jupyverse_api import Router
+from jupyverse_api import ResourceLock, Router
 
 from ..app import App
 from ..auth import Auth, User
@@ -13,8 +14,13 @@ from .models import Checkpoint, Content, SaveContent
 
 
 class FileIdManager(ABC):
-    stop_watching_files: asyncio.Event
-    stopped_watching_files: asyncio.Event
+    @abstractmethod
+    async def start(self) -> None:
+        ...
+
+    @abstractmethod
+    async def stop(self) -> None:
+        ...
 
     @abstractmethod
     async def get_path(self, file_id: str) -> str:
@@ -32,8 +38,12 @@ class FileIdManager(ABC):
 
 
 class Contents(Router, ABC):
+    file_lock: ResourceLock
+
     def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
+
+        self.file_lock = ResourceLock()
 
         router = APIRouter()
 

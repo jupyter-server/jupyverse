@@ -1,10 +1,13 @@
 import json
 import logging
 import uuid
+from functools import partial
 from http import HTTPStatus
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group
+from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from starlette.requests import Request
@@ -15,10 +18,12 @@ from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.kernels.models import CreateSession, Execution, Kernel, Notebook, Session
+from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 
 from .kernel_driver.driver import KernelDriver
 from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
+from .kernel_driver.paths import jupyter_runtime_dir
 from .kernel_server.server import (
     AcceptedWebSocket,
     KernelServer,
@@ -36,17 +41,50 @@ class _Kernels(Kernels):
         auth: Auth,
         frontend_config: FrontendConfig,
         yjs: Optional[Yjs],
+        lifespan: Lifespan,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.kernels_config = kernels_config
         self.frontend_config = frontend_config
         self.yjs = yjs
+        self.lifespan = lifespan
 
         self.kernelspecs: dict = {}
         self.kernel_id_to_connection_file: Dict[str, str] = {}
         self.sessions: Dict[str, Session] = {}
         self.kernels = kernels
         self._app = app
+        self.stop_event = Event()
+
+    async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        async with create_task_group() as tg:
+            self.task_group = tg
+            if self.kernels_config.allow_external_kernels:
+                external_connection_dir = self.kernels_config.external_connection_dir
+                if external_connection_dir is None:
+                    path = Path(jupyter_runtime_dir()) / "external_kernels"
+                else:
+                    path = Path(external_connection_dir)
+                tg.start_soon(lambda: self.watch_connection_files(path))
+            tg.start_soon(self.on_shutdown)
+            task_status.started()
+            await self.stop_event.wait()
+
+    async def stop(self) -> None:
+        if self.stop_event.is_set():
+            return
+
+        async with create_task_group():
+            for kernel in self.kernels.values():
+                self.task_group.start_soon(kernel["server"].stop)
+                if kernel["driver"] is not None:
+                    self.task_group.start_soon(kernel["driver"].stop)
+        self.stop_event.set()
+        self.task_group.cancel_scope.cancel()
+
+    async def on_shutdown(self):
+        await self.lifespan.shutdown_request.wait()
+        await self.stop()
 
     async def get_status(
         self,
@@ -179,7 +217,7 @@ class _Kernels(Kernels):
             )
             kernel_id = str(uuid.uuid4())
             kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
-            await kernel_server.start()
+            await self.task_group.start(kernel_server.start)
         elif kernel_id is not None:
             # external kernel
             kernel_name = kernels[kernel_id]["name"]
@@ -188,7 +226,7 @@ class _Kernels(Kernels):
                 write_connection_file=False,
             )
             kernels[kernel_id]["server"] = kernel_server
-            await kernel_server.start(launch_kernel=False)
+            await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
         else:
             return
         session_id = str(uuid.uuid4())
@@ -236,7 +274,7 @@ class _Kernels(Kernels):
     ):
         if kernel_id in kernels:
             kernel = kernels[kernel_id]
-            await kernel["server"].restart()
+            await self.task_group.start(kernel["server"].restart)
             result = {
                 "id": kernel_id,
                 "name": kernel["name"],
@@ -274,7 +312,7 @@ class _Kernels(Kernels):
                     connection_file=kernel["server"].connection_file_path,
                     yjs=self.yjs,
                 )
-                await driver.connect()
+                await self.task_group.start(driver.start)
             driver = kernel["driver"]
 
             await driver.execute(ycell, wait_for_executed=False)
@@ -332,16 +370,18 @@ class _Kernels(Kernels):
                     connection_file=self.kernel_id_to_connection_file[kernel_id],
                     write_connection_file=False,
                 )
-                await kernel_server.start(launch_kernel=False)
+                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
                 kernels[kernel_id]["server"] = kernel_server
-            await kernel_server.serve(accepted_websocket, session_id, permissions)
+            await kernel_server.serve(
+                accepted_websocket, session_id, permissions, self.lifespan.shutdown_request
+            )
 
     async def watch_connection_files(self, path: Path) -> None:
         # first time scan, treat everything as added files
         initial_changes = {(Change.added, str(p)) for p in path.iterdir()}
         await self.process_connection_files(initial_changes)
         # then, on every change
-        async for changes in awatch(path):
+        async for changes in awatch(path, stop_event=self.stop_event):
             await self.process_connection_files(changes)
 
     async def process_connection_files(self, changes: Set[Tuple[Change, str]]):

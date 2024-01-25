@@ -25,8 +25,6 @@ from .yutils import (
 
 
 class WebsocketProvider:
-    """WebSocket provider."""
-
     _ydoc: Doc
     _update_send_stream: MemoryObjectSendStream
     _update_receive_stream: MemoryObjectReceiveStream
@@ -35,26 +33,6 @@ class WebsocketProvider:
     _task_group: TaskGroup | None
 
     def __init__(self, ydoc: Doc, websocket: Websocket, log: Logger | None = None) -> None:
-        """Initialize the object.
-
-        The WebsocketProvider instance should preferably be used as an async context manager:
-        ```py
-        async with websocket_provider:
-            ...
-        ```
-        However, a lower-level API can also be used:
-        ```py
-        task = asyncio.create_task(websocket_provider.start())
-        await websocket_provider.started.wait()
-        ...
-        websocket_provider.stop()
-        ```
-
-        Arguments:
-            ydoc: The YDoc to connect through the WebSocket.
-            websocket: The WebSocket through which to connect the YDoc.
-            log: An optional logger.
-        """
         self._ydoc = ydoc
         self._websocket = websocket
         self.log = log or getLogger(__name__)
@@ -68,7 +46,6 @@ class WebsocketProvider:
 
     @property
     def started(self) -> Event:
-        """An async event that is set when the WebSocket provider has started."""
         if self._started is None:
             self._started = Event()
         return self._started
@@ -111,11 +88,6 @@ class WebsocketProvider:
                     pass
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED):
-        """Start the WebSocket provider.
-
-        Arguments:
-            task_status: The status to set when the task has started.
-        """
         if self._starting:
             return
         else:
@@ -131,7 +103,6 @@ class WebsocketProvider:
             task_status.started()
 
     def stop(self):
-        """Stop the WebSocket provider."""
         if self._task_group is None:
             raise RuntimeError("WebsocketProvider not running")
 

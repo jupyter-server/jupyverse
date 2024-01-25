@@ -1,10 +1,10 @@
-import asyncio
 import json
 from functools import partial
 from pathlib import Path
 
 import pytest
 import requests
+from anyio import create_memory_object_stream, create_task_group, sleep
 from fps_yjs.ydocs import ydocs
 from fps_yjs.ywebsocket import WebsocketProvider
 from pycrdt import Array, Doc, Map, Text
@@ -47,7 +47,7 @@ def test_settings_persistence_get(start_jupyverse):
     assert response.status_code == 204
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
 async def test_rest_api(start_jupyverse):
@@ -87,7 +87,7 @@ async def test_rest_api(start_jupyverse):
     ) as websocket, WebsocketProvider(ydoc, websocket):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
         ydoc["cells"] = ycells = Array()
         # execute notebook
         for cell_idx in range(3):
@@ -101,7 +101,7 @@ async def test_rest_api(start_jupyverse):
                 ),
             )
         # wait for Y model to be updated
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
         # retrieve cells
         cells = json.loads(str(ycells))
         assert cells[0]["outputs"] == [
@@ -125,7 +125,7 @@ async def test_rest_api(start_jupyverse):
         ]
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
 async def test_ywidgets(start_jupyverse):
@@ -139,7 +139,6 @@ async def test_ywidgets(start_jupyverse):
         data=json.dumps(
             {
                 "kernel": {"name": "python3"},
-                #"kernel": {"name": "akernel"},
                 "name": name,
                 "path": path,
                 "type": "notebook",
@@ -161,18 +160,18 @@ async def test_ywidgets(start_jupyverse):
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
     ynb = ydocs["notebook"]()
-    def callback(aevent, events, event):
+    def callback(event_stream_send, events, event):
         events.append(event)
-        aevent.set()
-    aevent = asyncio.Event()
+        event_stream_send.send_nowait(None)
+    event_stream_send, event_stream_recv = create_memory_object_stream[None](1)
     events = []
-    ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
+    ynb.ydoc.observe_subdocs(partial(callback, event_stream_send, events))
     async with connect(
         f"{ws_url}/api/collaboration/room/{document_id}"
     ) as websocket, WebsocketProvider(ynb.ydoc, websocket):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
         # execute notebook
         for cell_idx in range(2):
             response = requests.post(
@@ -185,25 +184,24 @@ async def test_ywidgets(start_jupyverse):
                 ),
             )
         while True:
-            await aevent.wait()
-            aevent.clear()
+            await event_stream_recv.receive()
             guid = None
             for event in events:
                 if event.added:
                     guid = event.added[0]
             if guid is not None:
                 break
-        task = asyncio.create_task(connect_ywidget(ws_url, guid))
-        response = requests.post(
-            f"{url}/api/kernels/{kernel_id}/execute",
-            data=json.dumps(
-                {
-                    "document_id": document_id,
-                    "cell_id": ynb.ycells[2]["id"],
-                }
-            ),
-        )
-        await task
+        async with create_task_group() as tg:
+            tg.start_soon(connect_ywidget, ws_url, guid)
+            response = requests.post(
+                f"{url}/api/kernels/{kernel_id}/execute",
+                data=json.dumps(
+                    {
+                        "document_id": document_id,
+                        "cell_id": ynb.ycells[2]["id"],
+                    }
+                ),
+            )
 
 
 async def connect_ywidget(ws_url, guid):
@@ -211,7 +209,7 @@ async def connect_ywidget(ws_url, guid):
     async with connect(
         f"{ws_url}/api/collaboration/room/ywidget:{guid}"
     ) as websocket, WebsocketProvider(ywidget_doc, websocket):
-        await asyncio.sleep(0.5)
+        await sleep(0.5)
         attrs = Map()
         model_name = Text()
         ywidget_doc["_attrs"] = attrs

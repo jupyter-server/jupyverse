@@ -21,15 +21,15 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_settings(auth_mode, unused_tcp_port):
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         # get previous theme
         response = await http.get(
@@ -40,7 +40,7 @@ async def test_settings(auth_mode, unused_tcp_port):
         # put new theme
         response = await http.put(
             f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
-            data=json.dumps(test_theme),
+            content=json.dumps(test_theme),
         )
         assert response.status_code == 204
         # get new theme
@@ -52,6 +52,6 @@ async def test_settings(auth_mode, unused_tcp_port):
         # put previous theme back
         response = await http.put(
             f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
-            data=json.dumps(theme),
+            content=json.dumps(theme),
         )
         assert response.status_code == 204

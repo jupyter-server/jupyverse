@@ -16,7 +16,7 @@ COMPONENTS = {
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_tree(auth_mode, tmp_path, unused_tcp_port):
     prev_dir = os.getcwd()
@@ -65,11 +65,11 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
     )
 
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
+    async with Context(), AsyncClient() as http:
         await JupyverseComponent(
             components=components,
             port=unused_tcp_port,
-        ).start(ctx)
+        ).start()
 
         response = await http.get(
             f"http://127.0.0.1:{unused_tcp_port}/api/contents", params={"content": 1}

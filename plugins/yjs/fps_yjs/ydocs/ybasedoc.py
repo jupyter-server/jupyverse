@@ -16,8 +16,7 @@ class YBaseDoc(ABC):
 
     @property
     @abstractmethod
-    def version(self) -> str:
-        ...
+    def version(self) -> str: ...
 
     @property
     def ystate(self) -> Map:
@@ -60,16 +59,13 @@ class YBaseDoc(ABC):
         self._ystate["file_id"] = value
 
     @abstractmethod
-    def get(self) -> Any:
-        ...
+    def get(self) -> Any: ...
 
     @abstractmethod
-    def set(self, value: Any) -> None:
-        ...
+    def set(self, value: Any) -> None: ...
 
     @abstractmethod
-    def observe(self, callback: Callable[[str, Any], None]) -> None:
-        ...
+    def observe(self, callback: Callable[[str, Any], None]) -> None: ...
 
     def unobserve(self) -> None:
         for k, v in self._subscriptions.items():

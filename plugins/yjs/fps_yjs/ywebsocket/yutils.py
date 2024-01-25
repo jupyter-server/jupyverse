@@ -4,6 +4,7 @@ from enum import IntEnum
 from pathlib import Path
 
 import anyio
+from anyio import BrokenResourceError
 from anyio.streams.memory import MemoryObjectSendStream
 from pycrdt import Doc, TransactionEvent
 
@@ -99,7 +100,10 @@ class Decoder:
 
 def put_updates(update_send_stream: MemoryObjectSendStream, event: TransactionEvent) -> None:
     update = event.update  # type: ignore
-    update_send_stream.send_nowait(update)
+    try:
+        update_send_stream.send_nowait(update)
+    except BrokenResourceError:
+        pass
 
 
 async def process_sync_message(message: bytes, ydoc: Doc, websocket, log) -> None:
