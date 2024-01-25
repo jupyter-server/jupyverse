@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from asphalt.core import Context
 from fastapi import APIRouter
@@ -17,7 +19,8 @@ from jupyverse_api.main import JupyverseComponent
         "/foo",
     ),
 )
-async def test_mount_path(mount_path, unused_tcp_port):
+async def test_mount_path(mount_path, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     components = configure({"app": {"type": "app"}}, {"app": {"mount_path": mount_path}})
 
     async with Context() as ctx, AsyncClient() as http:

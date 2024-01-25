@@ -95,6 +95,26 @@ class _Yjs(Yjs):
         res["fileId"] = idx
         return res
 
+    async def fork_room(
+        self,
+        roomid: str,
+        user: User,
+    ):
+        idx = uuid4().hex
+
+        root_room = await self.room_manager.websocket_server.get_room(roomid)
+        update = root_room.ydoc.get_update()
+        new_ydoc = Doc()
+        new_ydoc.apply_update(update)
+        new_room = await self.room_manager.websocket_server.get_room(idx, new_ydoc)
+        root_room.local_clients.add(new_room)
+
+        res = {
+            "sessionId": SERVER_SESSION,
+            "roomId": idx,
+        }
+        return res
+
     def get_document(self, document_id: str) -> YBaseDoc:
         return self.room_manager.documents[document_id]
 
@@ -223,7 +243,7 @@ class RoomManager:
         await self.websocket_server.started.wait()
         await self.websocket_server.serve(websocket)
 
-        if is_stored_document and not room.clients:
+        if is_stored_document and not room.remote_clients:
             # no client in this room after we disconnect
             self.cleaners[room] = asyncio.create_task(self.maybe_clean_room(room, websocket.path))
 

@@ -29,7 +29,8 @@ from .yutils import (
 
 
 class YRoom:
-    clients: list
+    remote_clients: set
+    local_clients: set[YRoom]
     ydoc: Doc
     ystore: BaseYStore | None
     _on_message: Callable[[bytes], Awaitable[bool] | bool] | None
@@ -76,7 +77,8 @@ class YRoom:
         self.ready = ready
         self.ystore = ystore
         self.log = log or getLogger(__name__)
-        self.clients = []
+        self.remote_clients = set()
+        self.local_clients = set()
         self._on_message = None
         self._started = None
         self._starting = False
@@ -133,10 +135,15 @@ class YRoom:
                     return
                 # broadcast internal ydoc's update to all clients, that includes changes from the
                 # clients and changes from the backend (out-of-band changes)
-                for client in self.clients:
-                    self.log.debug("Sending Y update to client with endpoint: %s", client.path)
+                for client in self.local_clients:
+                    client.ydoc.apply_update(update)
+                if self.remote_clients:
                     message = create_update_message(update)
-                    self._task_group.start_soon(client.send, message)
+                    for client in self.remote_clients:
+                        self.log.debug(
+                            "Sending Y update to remote client with endpoint: %s", client.path
+                        )
+                        self._task_group.start_soon(client.send, message)
                 if self.ystore:
                     self.log.debug("Writing Y update to YStore")
                     self._task_group.start_soon(self.ystore.write, update)
@@ -197,7 +204,7 @@ class YRoom:
             websocket: The WebSocket through which to serve the client.
         """
         async with create_task_group() as tg:
-            self.clients.append(websocket)
+            self.remote_clients.add(websocket)
             await sync(self.ydoc, websocket, self.log)
             try:
                 async for message in websocket:
@@ -224,7 +231,7 @@ class YRoom:
                             YMessageType.AWARENESS.name,
                             websocket.path,
                         )
-                        for client in self.clients:
+                        for client in self.remote_clients:
                             self.log.debug(
                                 "Sending Y awareness from client with endpoint "
                                 "%s to client with endpoint: %s",
@@ -236,4 +243,4 @@ class YRoom:
                 self.log.debug("Error serving endpoint: %s", websocket.path, exc_info=e)
 
             # remove this client
-            self.clients = [c for c in self.clients if c != websocket]
+            self.remote_clients.remove(websocket)

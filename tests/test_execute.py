@@ -2,6 +2,7 @@ import asyncio
 import os
 from functools import partial
 from pathlib import Path
+from shutil import copytree, rmtree
 
 import pytest
 from asphalt.core import Context
@@ -26,6 +27,8 @@ COMPONENTS = {
     "kernels": {"type": "kernels"},
     "yjs": {"type": "yjs"},
 }
+
+HERE = Path(__file__).parent
 
 
 class Websocket:
@@ -57,7 +60,11 @@ class Websocket:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_execute(auth_mode, unused_tcp_port):
+async def test_execute(auth_mode, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
+    if Path("data").exists():
+        rmtree("data")
+    copytree(HERE / "data", "data")
     url = f"http://127.0.0.1:{unused_tcp_port}"
     components = configure(COMPONENTS, {
         "auth": {"mode": auth_mode},
@@ -71,7 +78,7 @@ async def test_execute(auth_mode, unused_tcp_port):
 
         ws_url = url.replace("http", "ws", 1)
         name = "notebook1.ipynb"
-        path = (Path("tests") / "data" / name).as_posix()
+        path = (Path("data") / name).as_posix()
         # create a session to launch a kernel
         response = await http.post(
             f"{url}/api/sessions",
@@ -92,7 +99,8 @@ async def test_execute(auth_mode, unused_tcp_port):
                 "type": "notebook",
             }
         )
-        file_id = response.json()["fileId"]
+        r = response.json()
+        file_id = r["fileId"]
         document_id = f"json:notebook:{file_id}"
         ynb = ydocs["notebook"]()
         def callback(aevent, events, event):

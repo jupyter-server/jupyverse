@@ -151,7 +151,7 @@ class WebsocketServer:
         await self.start_room(room)
         await room.serve(websocket)
 
-        if self.auto_clean_rooms and not room.clients:
+        if self.auto_clean_rooms and not room.remote_clients:
             self.delete_room(room=room)
         tg.cancel_scope.cancel()
 

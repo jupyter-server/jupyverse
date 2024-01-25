@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 from asphalt.core import Context
@@ -23,7 +24,8 @@ COMPONENTS = {
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_settings(auth_mode, unused_tcp_port):
+async def test_settings(auth_mode, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(

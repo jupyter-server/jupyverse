@@ -19,7 +19,6 @@ COMPONENTS = {
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_tree(auth_mode, tmp_path, unused_tcp_port):
-    prev_dir = os.getcwd()
     os.chdir(tmp_path)
     dname = Path(".")
     expected = []
@@ -81,4 +80,3 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
         sort_content_by_name(actual)
         sort_content_by_name(expected)
         assert actual == expected
-        os.chdir(prev_dir)

@@ -35,6 +35,13 @@ class Yjs(Router, ABC):
         ):
             return await self.create_roomid(path, request, response, user)
 
+        @router.put("/api/collaboration/room/{roomid}", status_code=201)
+        async def fork_room(
+            roomid,
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+        ):
+            return await self.fork_room(roomid, user)
+
         self.include_router(router)
 
     @abstractmethod
@@ -51,6 +58,14 @@ class Yjs(Router, ABC):
         path,
         request: Request,
         response: Response,
+        user: User,
+    ):
+        ...
+
+    @abstractmethod
+    async def fork_room(
+        self,
+        roomid,
         user: User,
     ):
         ...
