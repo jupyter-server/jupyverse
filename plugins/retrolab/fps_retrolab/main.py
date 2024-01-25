@@ -20,4 +20,4 @@ class RetroLabComponent(Component):
         lab = await ctx.request_resource(Lab)  # type: ignore
 
         retrolab = _RetroLab(app, auth, frontend_config, lab)
-        ctx.add_resource(retrolab, types=RetroLab)
+        await ctx.add_resource(retrolab, types=RetroLab)

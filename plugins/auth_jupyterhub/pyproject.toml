@@ -13,6 +13,7 @@ dependencies = [
     "httpx >=0.24.1,<1",
     "jupyterhub >=4.0.1,<5",
     "jupyverse-api >=0.1.2,<1",
+    "anyio",
 ]
 
 [[project.authors]]

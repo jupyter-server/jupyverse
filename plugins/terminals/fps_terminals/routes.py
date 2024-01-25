@@ -2,6 +2,7 @@ from datetime import datetime
 from http import HTTPStatus
 from typing import Any, Dict, Type
 
+from anyio import Event
 from fastapi import Response
 
 from jupyverse_api.app import App
@@ -15,6 +16,16 @@ class _Terminals(Terminals):
     def __init__(self, app: App, auth: Auth, _TerminalServer: Type[TerminalServer]) -> None:
         super().__init__(app=app, auth=auth)
         self.TerminalServer = _TerminalServer
+        self.stopped = Event()
+
+    async def start(self):
+        await self.stopped.wait()
+
+    async def stop(self):
+        print(f"stopping {TERMINALS}")
+        for terminal in TERMINALS.values():
+            await terminal["server"].stop()
+        self.stopped.set()
 
     async def get_terminals(
         self,

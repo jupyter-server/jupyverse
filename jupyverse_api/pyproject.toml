@@ -27,8 +27,8 @@ dependencies = [
   "pydantic >=2,<3",
   "fastapi >=0.95.0,<1",
   "rich-click >=1.6.1,<2",
-  "asphalt >=4.11.0,<5",
-  "asphalt-web[fastapi] >=1.1.0,<2",
+  #"asphalt >=4.11.0,<5",
+  #"asphalt-web[fastapi] >=1.1.0,<2",
 ]
 dynamic = ["version"]
 

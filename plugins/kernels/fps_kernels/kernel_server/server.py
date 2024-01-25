@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import signal
@@ -6,6 +5,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, cast
 
+from anyio import TASK_STATUS_IGNORED, create_task_group
+from anyio.abc import TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
@@ -62,7 +63,6 @@ class KernelServer:
         self.connection_cfg = connection_cfg
         self.connection_file = connection_file
         self.write_connection_file = write_connection_file
-        self.channel_tasks: List[asyncio.Task] = []
         self.sessions: Dict[str, AcceptedWebSocket] = {}
         # blocked messages and allowed messages are mutually exclusive
         self.blocked_messages: List[str] = []
@@ -104,7 +104,7 @@ class KernelServer:
     def connections(self) -> int:
         return len(self.sessions)
 
-    async def start(self, launch_kernel: bool = True) -> None:
+    async def start(self, launch_kernel: bool = True, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         self.last_activity = {
             "date": datetime.utcnow().isoformat() + "Z",
             "execution_state": "starting",
@@ -125,37 +125,36 @@ class KernelServer:
         self.control_channel = connect_channel("control", self.connection_cfg, identity=identity)
         self.iopub_channel = connect_channel("iopub", self.connection_cfg)
         await self._wait_for_ready()
-        self.channel_tasks += [
-            asyncio.create_task(self.listen("shell")),
-            asyncio.create_task(self.listen("stdin")),
-            asyncio.create_task(self.listen("control")),
-            asyncio.create_task(self.listen("iopub")),
-        ]
+        async with create_task_group() as self.task_group:
+            self.task_group.start_soon(self.listen, "shell")
+            self.task_group.start_soon(self.listen, "stdin")
+            self.task_group.start_soon(self.listen, "control")
+            self.task_group.start_soon(self.listen, "iopub")
+            task_status.started()
 
     async def stop(self) -> None:
+        self.task_group.cancel_scope.cancel()
         if self.write_connection_file:
             # FIXME: stop kernel in a better way
             try:
                 self.kernel_process.send_signal(signal.SIGINT)
                 self.kernel_process.kill()
                 await self.kernel_process.wait()
+                await self.kernel_process.aclose()
             except BaseException:
                 pass
             try:
                 os.remove(self.connection_file_path)
             except BaseException:
                 pass
-        for task in self.channel_tasks:
-            task.cancel()
-        self.channel_tasks = []
 
     def interrupt(self) -> None:
         self.kernel_process.send_signal(signal.SIGINT)
 
-    async def restart(self) -> None:
+    async def restart(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         await self.stop()
         self.setup_connection_file()
-        await self.start()
+        await partial(self.start, task_status=task_status)
 
     async def serve(
         self,
@@ -264,7 +263,7 @@ class KernelServer:
                         "execution_state": msg["content"]["execution_state"],
                     }
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
-            bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
+            bin_msg = b"".join(serialize_msg_to_ws_v1(parts, channel_name))
             try:
                 await websocket.websocket.send_bytes(bin_msg)
             except BaseException:

@@ -64,6 +64,12 @@ docs = [ "mkdocs", "mkdocs-material" ]
 # pre-install commands here and post-install commands in the matrix can be moved
 # to the dependencies section
 pre-install-commands = [
+  "pip install git+https://github.com/asphalt-framework/asphalt.git@5.0",
+  "pip install git+https://github.com/davidbrochart/asphalt-web.git@asphalt-v5",
+  "pip install asgiref",
+  "pip install fastapi",
+  "pip install uvicorn",
+
   "pip install -e ./jupyverse_api",
   "pip install -e ./plugins/contents",
   "pip install -e ./plugins/frontend",
