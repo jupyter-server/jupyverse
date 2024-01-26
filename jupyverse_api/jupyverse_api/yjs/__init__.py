@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, Request, Response
 
 from jupyverse_api import Router
 
-from .models import MergeRoom
 from ..app import App
 from ..auth import Auth, User
+from .models import MergeRoom
 
 
 class Yjs(Router, ABC):
