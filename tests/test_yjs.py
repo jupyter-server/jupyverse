@@ -10,7 +10,7 @@ from httpx_ws import aconnect_ws
 from pycrdt import Doc, Text
 
 from jupyverse_api.main import JupyverseComponent
-from jupyverse_api.yjs.models import CreateDocumentSession
+from jupyverse_api.yjs.models import CreateDocumentSession, MergeRoom
 
 
 @pytest.mark.asyncio
@@ -52,25 +52,42 @@ async def test_fork_room(tmp_path, unused_tcp_port):
                 await sleep(0.1)
                 assert str(root_ytext) == "Hello"
                 # fork room
+                root_roomid = f"text:file:{file_id}"
                 response = await http.put(
-                    f"http://127.0.0.1:{unused_tcp_port}/api/collaboration/room/text:file:{file_id}"
+                    f"http://127.0.0.1:{unused_tcp_port}/api/collaboration/fork_room/{root_roomid}"
                 )
                 r = response.json()
-                fork_room_id = r["roomId"]
+                fork_roomid = r["roomId"]
                 # connect to forked room
                 async with aconnect_ws(
-                    f"http://127.0.0.1:{unused_tcp_port}/api/collaboration/room/{fork_room_id}"
+                    f"http://127.0.0.1:{unused_tcp_port}/api/collaboration/room/{fork_roomid}"
                 ) as fork_ws:
                     # create a forked room client
                     fork_ydoc = Doc()
                     fork_ydoc["source"] = fork_ytext = Text()
-                    async with WebsocketProvider(fork_ydoc, Websocket(fork_ws, fork_room_id)):
+                    async with WebsocketProvider(fork_ydoc, Websocket(fork_ws, fork_roomid)):
                         await sleep(0.1)
                         assert str(fork_ytext) == "Hello"
+                        # check that the forked room is synced with the root room
                         root_ytext += ", World!"
                         await sleep(0.1)
                         assert str(root_ytext) == "Hello, World!"
                         assert str(fork_ytext) == "Hello, World!"
+                        # check that the root room is not synced with the forked room
+                        fork_ytext += " Bye!"
+                        await sleep(0.1)
+                        assert str(root_ytext) == "Hello, World!"
+                        assert str(fork_ytext) == "Hello, World! Bye!"
+                        # merge forked room into root room
+                        merge_room = MergeRoom(fork_roomid=fork_roomid, root_roomid=root_roomid)
+                        response = await http.put(
+                            f"http://127.0.0.1:{unused_tcp_port}/api/collaboration/merge_room",
+                            json=merge_room.model_dump(),
+                        )
+                        # check that the root room is synced with the forked room
+                        await sleep(0.1)
+                        assert str(root_ytext) == "Hello, World! Bye!"
+                        assert str(fork_ytext) == "Hello, World! Bye!"
 
 
 class Websocket:

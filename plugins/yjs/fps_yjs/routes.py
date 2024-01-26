@@ -21,7 +21,7 @@ from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
 from jupyverse_api.yjs import Yjs
-from jupyverse_api.yjs.models import CreateDocumentSession
+from jupyverse_api.yjs.models import CreateDocumentSession, MergeRoom
 
 from .ydocs import ydocs as YDOCS
 from .ydocs.ybasedoc import YBaseDoc
@@ -104,16 +104,26 @@ class _Yjs(Yjs):
 
         root_room = await self.room_manager.websocket_server.get_room(roomid)
         update = root_room.ydoc.get_update()
-        new_ydoc = Doc()
-        new_ydoc.apply_update(update)
-        new_room = await self.room_manager.websocket_server.get_room(idx, new_ydoc)
-        root_room.local_clients.add(new_room)
+        fork_ydoc = Doc()
+        fork_ydoc.apply_update(update)
+        fork_room = await self.room_manager.websocket_server.get_room(idx, fork_ydoc)
+        root_room.local_clients.add(fork_room)
 
         res = {
             "sessionId": SERVER_SESSION,
             "roomId": idx,
         }
         return res
+
+    async def merge_room(
+        self,
+        merge_room: MergeRoom,
+        user: User,
+    ):
+        fork_room = await self.room_manager.websocket_server.get_room(merge_room.fork_roomid)
+        root_room = await self.room_manager.websocket_server.get_room(merge_room.root_roomid)
+        update = fork_room.ydoc.get_update()
+        root_room.ydoc.apply_update(update)
 
     def get_document(self, document_id: str) -> YBaseDoc:
         return self.room_manager.documents[document_id]
