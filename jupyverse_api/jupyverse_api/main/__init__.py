@@ -4,7 +4,7 @@ import webbrowser
 from typing import Any, Callable, Dict, Sequence, Tuple
 
 from asgiref.typing import ASGI3Application
-from asphalt.core import Component, Context, add_resource, request_resource
+from asphalt.core import Component, add_resource, request_resource
 from asphalt.web.fastapi import FastAPIComponent
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

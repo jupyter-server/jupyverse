@@ -1,6 +1,6 @@
 import logging
 
-from asphalt.core import Component, Context, add_resource, request_resource
+from asphalt.core import Component, add_resource, request_resource
 from fastapi_users.exceptions import UserAlreadyExists
 
 from jupyverse_api.app import App

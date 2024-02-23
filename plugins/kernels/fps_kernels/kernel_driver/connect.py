@@ -1,8 +1,8 @@
 import json
 import os
 import socket
-import sys
 import subprocess
+import sys
 import tempfile
 import uuid
 from typing import Dict, Optional, Tuple, Union
@@ -10,7 +10,7 @@ from typing import Dict, Optional, Tuple, Union
 import zmq
 from anyio import open_process
 from anyio.abc import Process
-from zmq.asyncio import Context, Socket
+from zmq.asyncio import Socket
 
 channel_socket_types = {
     "hb": zmq.REQ,

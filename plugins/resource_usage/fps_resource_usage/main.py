@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context, add_resource, request_resource
+from asphalt.core import Component, add_resource, request_resource
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth

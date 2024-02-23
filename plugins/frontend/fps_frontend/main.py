@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context, add_resource
+from asphalt.core import Component, add_resource
 
 from jupyverse_api.frontend import FrontendConfig
 

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from functools import partial
-from pathlib import Path
 from typing import Optional
 
-from asphalt.core import Component, Context, add_resource, request_resource, start_background_task
+from asphalt.core import Component, add_resource, request_resource, start_background_task
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth

@@ -6,7 +6,6 @@ from datetime import datetime
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import httpx
 from anyio import Event, Lock, create_task_group
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse

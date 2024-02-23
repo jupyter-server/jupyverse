@@ -6,7 +6,6 @@ import shlex
 import struct
 import termios
 from functools import partial
-from pathlib import Path
 
 from anyio import create_memory_object_stream, create_task_group, from_thread, to_thread
 from anyio.abc import ByteReceiveStream, ByteSendStream

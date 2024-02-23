@@ -1,4 +1,4 @@
-from asphalt.core import Component, ContainerComponent, Context, context_teardown
+from asphalt.core import Component, ContainerComponent, Context
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from jupyverse_api.app import App

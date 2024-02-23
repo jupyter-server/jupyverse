@@ -1,7 +1,7 @@
 import os
 import time
 import uuid
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 from anyio import create_memory_object_stream, create_task_group, fail_after
 from anyio.streams.stapled import StapledObjectStream

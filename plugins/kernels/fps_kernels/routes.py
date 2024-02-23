@@ -5,7 +5,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
-from anyio import Event, TASK_STATUS_IGNORED, create_task_group
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
