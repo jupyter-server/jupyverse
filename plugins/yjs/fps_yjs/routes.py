@@ -154,14 +154,14 @@ class YWebsocket:
     async def __anext__(self):
         try:
             message = await self._websocket.receive_bytes()
-        except WebSocketDisconnect:
+        except (ConnectionClosedOK, WebSocketDisconnect):
             raise StopAsyncIteration()
         return message
 
     async def send(self, message):
         try:
             await self._websocket.send_bytes(message)
-        except ConnectionClosedOK:
+        except (ConnectionClosedOK, WebSocketDisconnect):
             return
 
     async def recv(self):
