@@ -117,9 +117,12 @@ class _Yjs(Yjs):
 
     async def merge_room(
         self,
-        merge_room: MergeRoom,
+        request: Request,
         user: User,
     ):
+        # we need to process the request manually
+        # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
+        merge_room = MergeRoom(**(await request.json()))
         fork_room = await self.room_manager.websocket_server.get_room(merge_room.fork_roomid)
         root_room = await self.room_manager.websocket_server.get_room(merge_room.root_roomid)
         update = fork_room.ydoc.get_update()

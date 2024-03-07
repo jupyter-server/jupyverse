@@ -9,7 +9,6 @@ from jupyverse_api import Router
 
 from ..app import App
 from ..auth import Auth, User
-from .models import MergeRoom
 
 
 class Yjs(Router, ABC):
@@ -47,10 +46,10 @@ class Yjs(Router, ABC):
 
         @router.put("/api/collaboration/merge_room", status_code=200)
         async def merge_room(
-            merge_room: MergeRoom,
+            request: Request,
             user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ):
-            return await self.merge_room(merge_room, user)
+            return await self.merge_room(request, user)
 
         self.include_router(router)
 
@@ -83,7 +82,7 @@ class Yjs(Router, ABC):
     @abstractmethod
     async def merge_room(
         self,
-        merge_room: MergeRoom,
+        request: Request,
         user: User,
     ):
         ...
