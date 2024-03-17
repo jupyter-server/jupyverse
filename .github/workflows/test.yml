@@ -59,8 +59,12 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install hatch
 
-    - name: Create jupyterlab-auth dev environment
-      run: hatch env create dev.jupyterlab-auth
+    - name: Create jupyterlab-auth and jupyterlab-noauth dev environments
+      run: |
+        hatch env create dev.jupyterlab-auth
+        hatch env create dev.jupyterlab-noauth
 
     - name: Run tests
-      run: hatch run dev.jupyterlab-auth:test
+      run: |
+        hatch run dev.jupyterlab-noauth:pytest plugins/yjs/tests -v --color=yes
+        hatch run dev.jupyterlab-auth:test

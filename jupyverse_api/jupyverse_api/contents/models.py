@@ -27,6 +27,10 @@ class CreateContent(BaseModel):
     type: str
 
 
+class CopyContent(BaseModel):
+    copy_from: str
+
+
 class SaveContent(BaseModel):
     content: Optional[Union[str, Dict]] = None
     format: str

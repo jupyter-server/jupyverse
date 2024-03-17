@@ -92,7 +92,8 @@ async def test_execute(auth_mode, unused_tcp_port):
                 "type": "notebook",
             }
         )
-        file_id = response.json()["fileId"]
+        r = response.json()
+        file_id = r["fileId"]
         document_id = f"json:notebook:{file_id}"
         ynb = ydocs["notebook"]()
         def callback(aevent, events, event):
