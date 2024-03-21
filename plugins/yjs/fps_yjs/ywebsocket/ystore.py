@@ -381,7 +381,7 @@ class SQLiteYStore(BaseYStore):
         try:
             async with self.lock:
                 cursor = await self._db.cursor()
-                cursor.execute(
+                await cursor.execute(
                     "SELECT yupdate, metadata, timestamp FROM yupdates WHERE path = ?",
                     (self.path,),
                 )
