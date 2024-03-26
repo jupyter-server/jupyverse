@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import pkg_resources
 import rich_click as click
-from asphalt.core.cli import run
+from asphalt.core._cli import run
 
 
 @click.command()  # type: ignore
@@ -61,8 +61,6 @@ def main(
     set_list.append(f"component.allow_origin={allow_origin}")
     config = get_config(disable)
     run.callback(
-        unsafe=False,
-        loop=None,
         set_=set_list,
         service=None,
         configfile=[config],

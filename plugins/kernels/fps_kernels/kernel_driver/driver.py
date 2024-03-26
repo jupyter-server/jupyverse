@@ -1,9 +1,10 @@
-import asyncio
 import os
 import time
 import uuid
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, Optional, cast
 
+from anyio import create_memory_object_stream, create_task_group, fail_after
+from anyio.streams.stapled import StapledObjectStream
 from pycrdt import Array, Map
 
 from jupyverse_api.yjs import Yjs
@@ -43,13 +44,11 @@ class KernelDriver:
         self.key = cast(str, self.connection_cfg["key"])
         self.session_id = uuid.uuid4().hex
         self.msg_cnt = 0
-        self.execute_requests: Dict[str, Dict[str, asyncio.Queue]] = {}
-        self.comm_messages: asyncio.Queue = asyncio.Queue()
-        self.tasks: List[asyncio.Task] = []
+        self.execute_requests: Dict[str, Dict[str, StapledObjectStream]] = {}
+        self.comm_messages: StapledObjectStream = StapledObjectStream(create_memory_object_stream[dict](max_buffer_size=1024))
 
     async def restart(self, startup_timeout: float = float("inf")) -> None:
-        for task in self.tasks:
-            task.cancel()
+        self.task_group.cancel_scope.cancel()
         msg = create_message("shutdown_request", content={"restart": True})
         await send_message(msg, self.control_channel, self.key, change_date_to_str=True)
         while True:
@@ -59,24 +58,25 @@ class KernelDriver:
             if msg["msg_type"] == "shutdown_reply" and msg["content"]["restart"]:
                 break
         await self._wait_for_ready(startup_timeout)
-        self.tasks = []
-        self.listen_channels()
+        async with create_task_group() as self.task_group:
+            self.listen_channels()
 
     async def start(self, startup_timeout: float = float("inf"), connect: bool = True) -> None:
-        self.kernel_process = await launch_kernel(
-            self.kernelspec_path,
-            self.connection_file_path,
-            self.kernel_cwd,
-            self.capture_kernel_output,
-        )
-        if connect:
-            await self.connect(startup_timeout)
+        async with create_task_group() as self.task_group:
+            self.kernel_process = await launch_kernel(
+                self.kernelspec_path,
+                self.connection_file_path,
+                self.kernel_cwd,
+                self.capture_kernel_output,
+            )
+            if connect:
+                await self.connect(startup_timeout)
 
     async def connect(self, startup_timeout: float = float("inf")) -> None:
         self.connect_channels()
         await self._wait_for_ready(startup_timeout)
         self.listen_channels()
-        self.tasks.append(asyncio.create_task(self._handle_comms()))
+        self.task_group.start_soon(self._handle_comms)
 
     def connect_channels(self, connection_cfg: Optional[cfg_t] = None):
         connection_cfg = connection_cfg or self.connection_cfg
@@ -85,31 +85,31 @@ class KernelDriver:
         self.iopub_channel = connect_channel("iopub", connection_cfg)
 
     def listen_channels(self):
-        self.tasks.append(asyncio.create_task(self.listen_iopub()))
-        self.tasks.append(asyncio.create_task(self.listen_shell()))
+        self.task_group.start_soon(self.listen_iopub)
+        self.task_group.start_soon(self.listen_shell)
 
     async def stop(self) -> None:
         self.kernel_process.kill()
         await self.kernel_process.wait()
+        await self.kernel_process.aclose()
         os.remove(self.connection_file_path)
-        for task in self.tasks:
-            task.cancel()
+        self.task_group.cancel_scope.cancel()
 
     async def listen_iopub(self):
         while True:
             msg = await receive_message(self.iopub_channel, change_str_to_date=True)
             parent_id = msg["parent_header"].get("msg_id")
             if msg["msg_type"] in ("comm_open", "comm_msg"):
-                self.comm_messages.put_nowait(msg)
+                await self.comm_messages.send(msg)
             elif parent_id in self.execute_requests.keys():
-                self.execute_requests[parent_id]["iopub_msg"].put_nowait(msg)
+                await self.execute_requests[parent_id]["iopub_msg"].send(msg)
 
     async def listen_shell(self):
         while True:
             msg = await receive_message(self.shell_channel, change_str_to_date=True)
             msg_id = msg["parent_header"].get("msg_id")
             if msg_id in self.execute_requests.keys():
-                self.execute_requests[msg_id]["shell_msg"].put_nowait(msg)
+                await self.execute_requests[msg_id]["shell_msg"].send(msg)
 
     async def execute(
         self,
@@ -132,18 +132,16 @@ class KernelDriver:
         self.msg_cnt += 1
         await send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
         self.execute_requests[msg_id] = {
-            "iopub_msg": asyncio.Queue(),
-            "shell_msg": asyncio.Queue(),
+            "iopub_msg": StapledObjectStream(create_memory_object_stream[dict](max_buffer_size=1024)),
+            "shell_msg": StapledObjectStream(create_memory_object_stream[dict](max_buffer_size=1024)),
         }
         if wait_for_executed:
             deadline = time.time() + timeout
             while True:
                 try:
-                    msg = await asyncio.wait_for(
-                        self.execute_requests[msg_id]["iopub_msg"].get(),
-                        deadline_to_timeout(deadline),
-                    )
-                except asyncio.TimeoutError:
+                    with fail_after(deadline_to_timeout(deadline)):
+                        msg = await self.execute_requests[msg_id]["iopub_msg"].receive()
+                except TimeoutError:
                     error_message = f"Kernel didn't respond in {timeout} seconds"
                     raise RuntimeError(error_message)
                 await self._handle_outputs(ycell["outputs"], msg)
@@ -153,11 +151,9 @@ class KernelDriver:
                 ):
                     break
             try:
-                msg = await asyncio.wait_for(
-                    self.execute_requests[msg_id]["shell_msg"].get(),
-                    deadline_to_timeout(deadline),
-                )
-            except asyncio.TimeoutError:
+                with fail_after(deadline_to_timeout(deadline)):
+                    msg = await self.execute_requests[msg_id]["shell_msg"].get()
+            except TimeoutError:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
             with ycell.doc.transaction():
@@ -165,17 +161,17 @@ class KernelDriver:
                 ycell["execution_state"] = "idle"
             del self.execute_requests[msg_id]
         else:
-            self.tasks.append(asyncio.create_task(self._handle_iopub(msg_id, ycell)))
+            self.task_group.start_soon(self._handle_iopub, msg_id, ycell)
 
     async def _handle_iopub(self, msg_id: str, ycell: Map) -> None:
         while True:
-            msg = await self.execute_requests[msg_id]["iopub_msg"].get()
+            msg = await self.execute_requests[msg_id]["iopub_msg"].receive()
             await self._handle_outputs(ycell["outputs"], msg)
             if (
                 (msg["header"]["msg_type"] == "status"
                 and msg["content"]["execution_state"] == "idle")
             ):
-                msg = await self.execute_requests[msg_id]["shell_msg"].get()
+                msg = await self.execute_requests[msg_id]["shell_msg"].receive()
                 with ycell.doc.transaction():
                     ycell["execution_count"] = msg["content"]["execution_count"]
                     ycell["execution_state"] = "idle"
@@ -185,7 +181,7 @@ class KernelDriver:
             return
 
         while True:
-            msg = await self.comm_messages.get()
+            msg = await self.comm_messages.receive()
             msg_type = msg["header"]["msg_type"]
             if msg_type == "comm_open":
                 comm_id = msg["content"]["comm_id"]
@@ -290,6 +286,4 @@ class Comm:
             buffers=buffers,
         )
         self.msg_cnt += 1
-        asyncio.create_task(
-            send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
-        )
+        self.task_group.start_soon(partial(send_message, msg, self.shell_channel, self.key, change_date_to_str=True))

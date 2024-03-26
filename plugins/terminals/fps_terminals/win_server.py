@@ -1,4 +1,3 @@
-import asyncio
 import os
 from functools import partial
 
@@ -26,10 +25,9 @@ class _TerminalServer(TerminalServer):
 
         await websocket.send_json(["setup", {}])
 
-        self.send_task = asyncio.create_task(self.send_data())
-        self.recv_task = asyncio.create_task(self.recv_data())
-
-        await asyncio.gather(self.send_task, self.recv_task)
+        async with create_task_group() as self.task_group:
+            self.task_group.start_soon(self.send_data)
+            self.task_group.start_soon(self.recv_data)
 
     async def send_data(self):
         while True:
@@ -56,6 +54,5 @@ class _TerminalServer(TerminalServer):
     def quit(self, websocket):
         self.websockets.remove(websocket)
         if not self.websockets:
-            self.send_task.cancel()
-            self.recv_task.cancel()
+            self.task_group.cancel_scope.cancel()
             del self.process

@@ -4,7 +4,7 @@ import webbrowser
 from typing import Any, Callable, Dict, Sequence, Tuple
 
 from asgiref.typing import ASGI3Application
-from asphalt.core import Component, Context
+from asphalt.core import Component, add_resource, request_resource
 from asphalt.web.fastapi import FastAPIComponent
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,14 +22,11 @@ class AppComponent(Component):
         super().__init__()
         self.mount_path = mount_path
 
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(FastAPI)
+    async def start(self) -> None:
+        app = await request_resource(FastAPI)
 
         _app = App(app, mount_path=self.mount_path)
-        ctx.add_resource(_app)
+        await add_resource(_app)
 
 
 class JupyverseComponent(FastAPIComponent):
@@ -68,19 +65,16 @@ class JupyverseComponent(FastAPIComponent):
         self.open_browser = open_browser
         self.query_params = query_params
 
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
+    async def start(self) -> None:
         query_params = QueryParams(d={})
         host = self.host
         if not host.startswith("http"):
             host = f"http://{host}"
         host_url = Host(url=f"{host}:{self.port}/")
-        ctx.add_resource(query_params)
-        ctx.add_resource(host_url)
+        await add_resource(query_params)
+        await add_resource(host_url)
 
-        await super().start(ctx)
+        await super().start()
 
         # at this point, the server has started
         if self.open_browser:

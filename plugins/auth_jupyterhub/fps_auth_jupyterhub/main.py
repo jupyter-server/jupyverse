@@ -1,5 +1,4 @@
-import httpx
-from asphalt.core import Component, ContainerComponent, Context, context_teardown
+from asphalt.core import Component, ContainerComponent, Context
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from jupyverse_api.app import App
@@ -11,7 +10,7 @@ from .routes import auth_factory
 
 
 class _AuthJupyterHubComponent(Component):
-    @context_teardown
+    #@context_teardown
     async def start(
         self,
         ctx: Context,
@@ -21,15 +20,16 @@ class _AuthJupyterHubComponent(Component):
         db_engine = await ctx.request_resource(AsyncEngine)
 
         http_client = httpx.AsyncClient()
-        auth_jupyterhub = auth_factory(app, db_session, http_client)
-        ctx.add_resource(auth_jupyterhub, types=Auth)
+        auth_jupyterhub = auth_factory(app, db_session)
+        await ctx.start_background_task(auth_jupyterhub.start, "JupyterHub Auth", auth_jupyterhub.stop)
+        await ctx.add_resource(auth_jupyterhub, types=Auth)
 
         async with db_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-        yield
+        #yield
 
-        await http_client.aclose()
+        #await auth_jupyerhub.stop()
 
 
 class AuthJupyterHubComponent(ContainerComponent):
@@ -41,7 +41,7 @@ class AuthJupyterHubComponent(ContainerComponent):
         self,
         ctx: Context,
     ) -> None:
-        ctx.add_resource(self.auth_jupyterhub_config, types=AuthConfig)
+        await ctx.add_resource(self.auth_jupyterhub_config, types=AuthConfig)
         self.add_component(
             "sqlalchemy",
             url=self.auth_jupyterhub_config.db_url,

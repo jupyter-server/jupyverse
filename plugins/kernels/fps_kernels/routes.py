@@ -5,6 +5,8 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group
+from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from starlette.requests import Request
@@ -19,6 +21,7 @@ from jupyverse_api.yjs import Yjs
 
 from .kernel_driver.driver import KernelDriver
 from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
+from .kernel_driver.paths import jupyter_runtime_dir
 from .kernel_server.server import (
     AcceptedWebSocket,
     KernelServer,
@@ -47,6 +50,29 @@ class _Kernels(Kernels):
         self.sessions: Dict[str, Session] = {}
         self.kernels = kernels
         self._app = app
+        self.stop_watching_files = Event()
+        self.stopped_watching_files = Event()
+        self.stop_event = Event()
+
+    async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        async with create_task_group() as self.task_group:
+            if self.kernels_config.allow_external_kernels:
+                external_connection_dir = self.kernels_config.external_connection_dir
+                if external_connection_dir is None:
+                    path = Path(jupyter_runtime_dir()) / "external_kernels"
+                else:
+                    path = Path(external_connection_dir)
+                self.task_group.start_soon(self.watch_connection_files, path)
+            task_status.started()
+            await self.stop_event.wait()
+
+    async def stop(self) -> None:
+        for kernel in self.kernels.values():
+            await kernel["server"].stop()
+        if self.kernels_config.allow_external_kernels:
+            self.stop_watching_files.set()
+            await self.stopped_watching_files.wait()
+        self.stop_event.set()
 
     async def get_status(
         self,
@@ -179,7 +205,7 @@ class _Kernels(Kernels):
             )
             kernel_id = str(uuid.uuid4())
             kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
-            await kernel_server.start()
+            await self.task_group.start(kernel_server.start)
         elif kernel_id is not None:
             # external kernel
             kernel_name = kernels[kernel_id]["name"]
@@ -188,7 +214,7 @@ class _Kernels(Kernels):
                 write_connection_file=False,
             )
             kernels[kernel_id]["server"] = kernel_server
-            await kernel_server.start(launch_kernel=False)
+            await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
         else:
             return
         session_id = str(uuid.uuid4())
@@ -236,7 +262,7 @@ class _Kernels(Kernels):
     ):
         if kernel_id in kernels:
             kernel = kernels[kernel_id]
-            await kernel["server"].restart()
+            await self.task_group.start(kernel["server"].restart)
             result = {
                 "id": kernel_id,
                 "name": kernel["name"],
@@ -332,7 +358,7 @@ class _Kernels(Kernels):
                     connection_file=self.kernel_id_to_connection_file[kernel_id],
                     write_connection_file=False,
                 )
-                await kernel_server.start(launch_kernel=False)
+                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
                 kernels[kernel_id]["server"] = kernel_server
             await kernel_server.serve(accepted_websocket, session_id, permissions)
 
@@ -341,8 +367,9 @@ class _Kernels(Kernels):
         initial_changes = {(Change.added, str(p)) for p in path.iterdir()}
         await self.process_connection_files(initial_changes)
         # then, on every change
-        async for changes in awatch(path):
+        async for changes in awatch(path, stop_event=self.stop_watching_files):
             await self.process_connection_files(changes)
+        self.stopped_watching_files.set()
 
     async def process_connection_files(self, changes: Set[Tuple[Change, str]]):
         # get rid of "simultaneously" added/deleted files

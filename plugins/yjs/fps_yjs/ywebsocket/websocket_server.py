@@ -183,8 +183,8 @@ class WebsocketServer:
         """
         if self._starting:
             return
-        else:
-            self._starting = True
+
+        self._starting = True
 
         if self._task_group is not None:
             raise RuntimeError("WebsocketServer already running")
@@ -196,7 +196,7 @@ class WebsocketServer:
             self._starting = False
             task_status.started()
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop the WebSocket server."""
         if self._task_group is None:
             raise RuntimeError("WebsocketServer not running")

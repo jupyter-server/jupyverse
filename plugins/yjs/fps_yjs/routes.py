@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime
 from functools import partial
 from typing import Dict
 from uuid import uuid4
 
+from anyio import Event, Lock, create_task_group, sleep
+from anyio.abc import TaskGroup
 from fastapi import (
     HTTPException,
     Request,
@@ -141,12 +142,13 @@ class YWebsocket:
 class RoomManager:
     contents: Contents
     documents: Dict[str, YBaseDoc]
-    watchers: Dict[str, asyncio.Task]
-    savers: Dict[str, asyncio.Task]
-    cleaners: Dict[YRoom, asyncio.Task]
+    watchers: Dict[str, Task]
+    savers: Dict[str, Task]
+    cleaners: Dict[YRoom, Task]
     last_modified: Dict[str, datetime]
     websocket_server: JupyterWebsocketServer
-    lock: asyncio.Lock
+    lock: Lock
+    _task_group: TaskGroup
 
     def __init__(self, contents: Contents):
         self.contents = contents
@@ -156,17 +158,20 @@ class RoomManager:
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
-        self.websocket_server_task = asyncio.create_task(self.websocket_server.start())
-        self.lock = asyncio.Lock()
+        self.lock = Lock()
 
-    def stop(self):
-        for watcher in self.watchers.values():
-            watcher.cancel()
-        for saver in self.savers.values():
-            saver.cancel()
-        for cleaner in self.cleaners.values():
-            cleaner.cancel()
-        self.websocket_server.stop()
+    async def start(self):
+        async with create_task_group() as self._task_group:
+            await self._task_group.start(self.websocket_server.start)
+
+    async def stop(self):
+        #for watcher in self.watchers.values():
+        #    watcher.cancel()
+        #for saver in self.savers.values():
+        #    saver.cancel()
+        #for cleaner in self.cleaners.values():
+        #    cleaner.cancel()
+        await self.websocket_server.stop()
 
     async def serve(self, websocket: YWebsocket, permissions) -> None:
         room = await self.websocket_server.get_room(websocket.path)
@@ -216,16 +221,14 @@ class RoomManager:
                     )
                     # update the document when file changes
                     if file_id not in self.watchers:
-                        self.watchers[file_id] = asyncio.create_task(
-                            self.watch_file(file_format, file_id, document)
-                        )
+                        self.watchers[file_id] = Task(self.watch_file(file_format, file_id, document), self._task_group)
 
         await self.websocket_server.started.wait()
         await self.websocket_server.serve(websocket)
 
         if is_stored_document and not room.clients:
             # no client in this room after we disconnect
-            self.cleaners[room] = asyncio.create_task(self.maybe_clean_room(room, websocket.path))
+            self.cleaners[room] = Task(self.maybe_clean_room(room, websocket.path), self._task_group)
 
     async def filter_message(self, can_write: bool, message: bytes) -> bool:
         """
@@ -262,18 +265,18 @@ class RoomManager:
         file_path = await self.get_file_path(file_id, document)
         assert file_path is not None
         logger.debug(f"Watching file: {file_path}")
-        while True:
-            watcher = self.contents.file_id_manager.watch(file_path)
-            async for changes in watcher:
-                new_file_path = await self.get_file_path(file_id, document)
-                if new_file_path is None:
-                    continue
-                if new_file_path != file_path:
-                    # file was renamed
-                    self.contents.file_id_manager.unwatch(file_path, watcher)
-                    file_path = new_file_path
-                    # break
-                await self.maybe_load_file(file_format, file_path, file_id)
+        # FIXME: handle file rename/move?
+        watcher = self.contents.file_id_manager.watch(file_path)
+        async for changes in watcher:
+            new_file_path = await self.get_file_path(file_id, document)
+            if new_file_path is None:
+                continue
+            if new_file_path != file_path:
+                # file was renamed
+                self.contents.file_id_manager.unwatch(file_path, watcher)
+                file_path = new_file_path
+                # break
+            await self.maybe_load_file(file_format, file_path, file_id)
 
     async def maybe_load_file(self, file_format: str, file_path: str, file_id: str) -> None:
         async with self.lock:
@@ -306,15 +309,13 @@ class RoomManager:
         )
         if file_id in self.savers:
             self.savers[file_id].cancel()
-        self.savers[file_id] = asyncio.create_task(
-            self.maybe_save_document(file_id, file_type, file_format, document)
-        )
+        self.savers[file_id] = Task(self.maybe_save_document(file_id, file_type, file_format, document), self._task_group)
 
     async def maybe_save_document(
         self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
     ) -> None:
         # save after 1 second of inactivity to prevent too frequent saving
-        await asyncio.sleep(1)  # FIXME: pass in config
+        await sleep(1)  # FIXME: pass in config
         # if the room cannot be found, don't save
         try:
             file_path = await self.get_file_path(file_id, document)
@@ -351,7 +352,7 @@ class RoomManager:
     async def maybe_clean_room(self, room, ws_path: str) -> None:
         file_id = ws_path.split(":", 2)[2]
         # keep the document for a while in case someone reconnects
-        await asyncio.sleep(60)  # FIXME: pass in config
+        await sleep(60)  # FIXME: pass in config
         document = self.documents[ws_path]
         document.unobserve()
         del self.documents[ws_path]
@@ -380,3 +381,26 @@ class JupyterWebsocketServer(WebsocketServer):
         room = self.rooms[ws_path]
         await self.start_room(room)
         return room
+
+
+class Task:
+    def __init__(self, coro, task_group: TaskGroup):
+        self._coro = coro
+        self._stop_event = Event()
+        task_group.start_soon(self.run)
+
+    def cancel(self):
+        self._stop_event.set()
+
+    async def run(self):
+        async with create_task_group() as tg:
+            tg.start_soon(self._run, tg)
+            tg.start_soon(self._check_stop, tg)
+
+    async def _run(self, tg: TaskGroup):
+        await self._coro
+        tg.cancel_scope.cancel()
+
+    async def _check_stop(self, tg: TaskGroup):
+        await self._stop_event.wait()
+        tg.cancel_scope.cancel()

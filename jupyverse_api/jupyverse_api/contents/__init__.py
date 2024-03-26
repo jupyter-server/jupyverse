@@ -1,8 +1,8 @@
-import asyncio
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+from anyio import Event
 from fastapi import APIRouter, Depends, Request, Response
 
 from jupyverse_api import Router
@@ -13,8 +13,8 @@ from .models import Checkpoint, Content, SaveContent
 
 
 class FileIdManager(ABC):
-    stop_watching_files: asyncio.Event
-    stopped_watching_files: asyncio.Event
+    stop_watching_files: Event
+    stopped_watching_files: Event
 
     @abstractmethod
     async def get_path(self, file_id: str) -> str:

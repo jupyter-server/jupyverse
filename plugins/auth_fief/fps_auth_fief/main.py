@@ -15,9 +15,9 @@ class AuthFiefComponent(Component):
         self,
         ctx: Context,
     ) -> None:
-        ctx.add_resource(self.auth_fief_config, types=AuthConfig)
+        await ctx.add_resource(self.auth_fief_config, types=AuthConfig)
 
         app = await ctx.request_resource(App)
 
         auth_fief = auth_factory(app, self.auth_fief_config)
-        ctx.add_resource(auth_fief, types=Auth)
+        await ctx.add_resource(auth_fief, types=Auth)
