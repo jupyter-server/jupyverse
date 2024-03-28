@@ -7,8 +7,6 @@ import aiosqlite
 from anyio import Path
 from watchfiles import Change, awatch
 
-from jupyverse_api import Singleton
-
 logger = logging.getLogger("contents")
 
 
@@ -30,7 +28,7 @@ class Watcher:
         self._event.set()
 
 
-class FileIdManager(metaclass=Singleton):
+class FileIdManager:
     db_path: str
     initialized: asyncio.Event
     watchers: Dict[str, List[Watcher]]

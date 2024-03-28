@@ -28,7 +28,8 @@ COMPONENTS = {
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
+async def test_kernel_messages(auth_mode, capfd, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     kernel_id = "kernel_id_0"
     kernel_name = "python3"
     kernelspec_path = (

@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from asphalt.core import Context
 from httpx import AsyncClient
@@ -20,7 +22,8 @@ COMPONENTS = {
 
 
 @pytest.mark.asyncio
-async def test_kernel_channels_unauthenticated(unused_tcp_port):
+async def test_kernel_channels_unauthenticated(unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     async with Context() as ctx:
         await JupyverseComponent(
             components=COMPONENTS,
@@ -35,7 +38,8 @@ async def test_kernel_channels_unauthenticated(unused_tcp_port):
 
 
 @pytest.mark.asyncio
-async def test_kernel_channels_authenticated(unused_tcp_port):
+async def test_kernel_channels_authenticated(unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(
             components=COMPONENTS,
@@ -52,7 +56,8 @@ async def test_kernel_channels_authenticated(unused_tcp_port):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
-async def test_root_auth(auth_mode, unused_tcp_port):
+async def test_root_auth(auth_mode, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(
@@ -72,7 +77,8 @@ async def test_root_auth(auth_mode, unused_tcp_port):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_no_auth(auth_mode, unused_tcp_port):
+async def test_no_auth(auth_mode, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(
@@ -86,7 +92,8 @@ async def test_no_auth(auth_mode, unused_tcp_port):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("token",))
-async def test_token_auth(auth_mode, unused_tcp_port):
+async def test_token_auth(auth_mode, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(
@@ -113,7 +120,8 @@ async def test_token_auth(auth_mode, unused_tcp_port):
         {"admin": ["read"], "foo": ["bar", "baz"]},
     ),
 )
-async def test_permissions(auth_mode, permissions, unused_tcp_port):
+async def test_permissions(auth_mode, permissions, unused_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
     async with Context() as ctx, AsyncClient() as http:
         await JupyverseComponent(

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import json
 import os
@@ -25,6 +27,8 @@ from .fileid import FileIdManager
 
 
 class _Contents(Contents):
+    _file_id_manager: FileIdManager | None = None
+
     async def create_checkpoint(
         self,
         path,
@@ -245,7 +249,9 @@ class _Contents(Contents):
 
     @property
     def file_id_manager(self):
-        return FileIdManager()
+        if self._file_id_manager is None:
+            self._file_id_manager = FileIdManager()
+        return self._file_id_manager
 
 
 def get_available_path(path: Path, sep: str = "") -> Path:

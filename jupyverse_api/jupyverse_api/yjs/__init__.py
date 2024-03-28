@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -35,6 +37,20 @@ class Yjs(Router, ABC):
         ):
             return await self.create_roomid(path, request, response, user)
 
+        @router.put("/api/collaboration/fork_room/{roomid}", status_code=201)
+        async def fork_room(
+            roomid,
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+        ):
+            return await self.fork_room(roomid, user)
+
+        @router.put("/api/collaboration/merge_room", status_code=200)
+        async def merge_room(
+            request: Request,
+            user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
+        ):
+            return await self.merge_room(request, user)
+
         self.include_router(router)
 
     @abstractmethod
@@ -51,6 +67,22 @@ class Yjs(Router, ABC):
         path,
         request: Request,
         response: Response,
+        user: User,
+    ):
+        ...
+
+    @abstractmethod
+    async def fork_room(
+        self,
+        roomid,
+        user: User,
+    ):
+        ...
+
+    @abstractmethod
+    async def merge_room(
+        self,
+        request: Request,
         user: User,
     ):
         ...

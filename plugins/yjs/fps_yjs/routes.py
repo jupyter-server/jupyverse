@@ -21,7 +21,7 @@ from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
 from jupyverse_api.yjs import Yjs
-from jupyverse_api.yjs.models import CreateDocumentSession
+from jupyverse_api.yjs.models import CreateDocumentSession, MergeRoom
 
 from .ydocs import ydocs as YDOCS
 from .ydocs.ybasedoc import YBaseDoc
@@ -95,6 +95,39 @@ class _Yjs(Yjs):
         res["fileId"] = idx
         return res
 
+    async def fork_room(
+        self,
+        roomid: str,
+        user: User,
+    ):
+        idx = uuid4().hex
+
+        root_room = await self.room_manager.websocket_server.get_room(roomid)
+        update = root_room.ydoc.get_update()
+        fork_ydoc = Doc()
+        fork_ydoc.apply_update(update)
+        await self.room_manager.websocket_server.get_room(idx, ydoc=fork_ydoc)
+        root_room.fork_ydocs.add(fork_ydoc)
+
+        res = {
+            "sessionId": SERVER_SESSION,
+            "roomId": idx,
+        }
+        return res
+
+    async def merge_room(
+        self,
+        request: Request,
+        user: User,
+    ):
+        # we need to process the request manually
+        # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
+        merge_room = MergeRoom(**(await request.json()))
+        fork_room = await self.room_manager.websocket_server.get_room(merge_room.fork_roomid)
+        root_room = await self.room_manager.websocket_server.get_room(merge_room.root_roomid)
+        update = fork_room.ydoc.get_update()
+        root_room.ydoc.apply_update(update)
+
     def get_document(self, document_id: str) -> YBaseDoc:
         return self.room_manager.documents[document_id]
 
@@ -124,14 +157,14 @@ class YWebsocket:
     async def __anext__(self):
         try:
             message = await self._websocket.receive_bytes()
-        except WebSocketDisconnect:
+        except (ConnectionClosedOK, WebSocketDisconnect):
             raise StopAsyncIteration()
         return message
 
     async def send(self, message):
         try:
             await self._websocket.send_bytes(message)
-        except ConnectionClosedOK:
+        except (ConnectionClosedOK, WebSocketDisconnect):
             return
 
     async def recv(self):

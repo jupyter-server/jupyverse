@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from functools import partial
 from pathlib import Path
 
@@ -16,7 +17,8 @@ test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
-def test_settings_persistence_put(start_jupyverse):
+def test_settings_persistence_put(start_jupyverse, tmp_path):
+    os.chdir(tmp_path)
     url = start_jupyverse
     # get previous theme
     response = requests.get(url + "/lab/api/settings/@jupyterlab/apputils-extension:themes")
@@ -31,7 +33,8 @@ def test_settings_persistence_put(start_jupyverse):
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
-def test_settings_persistence_get(start_jupyverse):
+def test_settings_persistence_get(start_jupyverse, tmp_path):
+    os.chdir(tmp_path)
     url = start_jupyverse
     # get new theme
     response = requests.get(
@@ -50,7 +53,8 @@ def test_settings_persistence_get(start_jupyverse):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
-async def test_rest_api(start_jupyverse):
+async def test_rest_api(start_jupyverse, tmp_path):
+    os.chdir(tmp_path)
     url = start_jupyverse
     ws_url = url.replace("http", "ws", 1)
     name = "notebook0.ipynb"
@@ -128,7 +132,8 @@ async def test_rest_api(start_jupyverse):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
-async def test_ywidgets(start_jupyverse):
+async def test_ywidgets(start_jupyverse, tmp_path):
+    os.chdir(tmp_path)
     url = start_jupyverse
     ws_url = url.replace("http", "ws", 1)
     name = "notebook1.ipynb"
