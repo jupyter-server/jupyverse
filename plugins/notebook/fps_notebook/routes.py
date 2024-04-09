@@ -1,43 +1,34 @@
 import json
 from pathlib import Path
 
-import retrolab  # type: ignore
+import notebook  # type: ignore
 from fastapi.staticfiles import StaticFiles
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.lab import Lab
-from jupyverse_api.retrolab import RetroLab
+from jupyverse_api.notebook import Notebook
 
 
-class _RetroLab(RetroLab):
+class _Notebook(Notebook):
     def __init__(self, app: App, auth: Auth, frontend_config: FrontendConfig, lab: Lab) -> None:
         super().__init__(app, auth, lab)
         self.frontend_config = frontend_config
         self.lab = lab
-        self.lab.redirect_after_root = "retro/tree"
+        self.lab.redirect_after_root = "tree"
 
-        self.retrolab_dir = Path(retrolab.__file__).parent
+        extensions_dir = lab.prefix_dir / "share" / "jupyter" / "labextensions"
+        self.federated_extensions, self.disabled_extensions = lab.get_federated_extensions(
+            extensions_dir
+        )
+        self.notebook_dir = Path(notebook.__file__).parent
 
         self.mount(
-            "/static/retro",
-            StaticFiles(directory=self.retrolab_dir / "static"),
+            "/static/notebook",
+            StaticFiles(directory=self.notebook_dir / "static"),
             name="static",
         )
-
-        for path in (self.retrolab_dir / "labextension" / "static").glob("remoteEntry.*.js"):
-            load = f"static/{path.name}"
-            break
-
-        self.retro_federated_extensions = [
-            {
-                "extension": "./extension",
-                "load": load,
-                "name": "@retrolab/lab-extension",
-                "style": "./style",
-            }
-        ]
 
     async def get_tree(
         self,
@@ -45,8 +36,9 @@ class _RetroLab(RetroLab):
     ):
         return get_index(
             self.lab,
-            self.retrolab_dir,
-            self.retro_federated_extensions,
+            self.notebook_dir,
+            self.federated_extensions,
+            self.disabled_extensions,
             "Tree",
             "tree",
             self.frontend_config.collaborative,
@@ -60,8 +52,9 @@ class _RetroLab(RetroLab):
     ):
         return get_index(
             self.lab,
-            self.retrolab_dir,
-            self.retro_federated_extensions,
+            self.notebook_dir,
+            self.federated_extensions,
+            self.disabled_extensions,
             path,
             "notebooks",
             self.frontend_config.collaborative,
@@ -75,8 +68,9 @@ class _RetroLab(RetroLab):
     ):
         return get_index(
             self.lab,
-            self.retrolab_dir,
-            self.retro_federated_extensions,
+            self.notebook_dir,
+            self.federated_extensions,
+            self.disabled_extensions,
             path,
             "edit",
             self.frontend_config.collaborative,
@@ -90,8 +84,9 @@ class _RetroLab(RetroLab):
     ):
         return get_index(
             self.lab,
-            self.retrolab_dir,
-            self.retro_federated_extensions,
+            self.notebook_dir,
+            self.federated_extensions,
+            self.disabled_extensions,
             path,
             "consoles",
             self.frontend_config.collaborative,
@@ -105,8 +100,9 @@ class _RetroLab(RetroLab):
     ):
         return get_index(
             self.lab,
-            self.retrolab_dir,
-            self.retro_federated_extensions,
+            self.notebook_dir,
+            self.federated_extensions,
+            self.disabled_extensions,
             name,
             "terminals",
             self.frontend_config.collaborative,
@@ -120,7 +116,7 @@ INDEX_HTML = """\
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RetroLab - DOC_NAME</title>
+  <title>Notebook - DOC_NAME</title>
   <link rel="icon" type="image/x-icon" href="/static/favicons/favicon-notebook.ico"
     class="favicon">
 </head>
@@ -128,7 +124,7 @@ INDEX_HTML = """\
   <script id="jupyter-config-data" type="application/json">
     PAGE_CONFIG
   </script>
-  <script src="BASE_URLstatic/retro/bundle.js" main="index"></script>
+  <script src="BASE_URLstatic/notebook/bundle.js" main="index"></script>
   <script type="text/javascript">
     /* Remove token from URL. */
     (function () {
@@ -145,30 +141,35 @@ INDEX_HTML = """\
 
 
 def get_index(
-    lab, retrolab_dir, retro_federated_extensions, doc_name, retro_page, collaborative, base_url="/"
+    lab,
+    notebook_dir,
+    federated_extensions,
+    disabled_extensions,
+    doc_name,
+    notebook_page,
+    collaborative,
+    base_url="/",
 ):
-    extensions_dir = lab.prefix_dir / "share" / "jupyter" / "labextensions"
-    federated_extensions, disabled_extension = lab.get_federated_extensions(extensions_dir)
     page_config = {
-        "appName": "RetroLab",
-        "appNamespace": "retro",
+        "appName": "Notebook",
+        "appNamespace": "notebook",
         "appSettingsDir": (lab.prefix_dir / "share" / "jupyter" / "lab" / "settings").as_posix(),
         "appUrl": "/lab",
-        "appVersion": retrolab.__version__,
+        "appVersion": notebook.__version__,
         "baseUrl": base_url,
         "cacheFiles": True,
         "collaborative": collaborative,
-        "disabledExtensions": disabled_extension,
+        "disabledExtensions": disabled_extensions,
         "extraLabextensionsPath": [],
-        "federated_extensions": retro_federated_extensions + federated_extensions,
-        "frontendUrl": "/retro/",
+        "federated_extensions": federated_extensions,
+        "frontendUrl": "/notebook/",
         "fullAppUrl": f"{base_url}lab",
         "fullLabextensionsUrl": f"{base_url}lab/extensions",
         "fullLicensesUrl": f"{base_url}lab/api/licenses",
         "fullListingsUrl": f"{base_url}lab/api/listings",
         "fullMathjaxUrl": f"{base_url}static/notebook/components/MathJax/MathJax.js",
         "fullSettingsUrl": f"{base_url}lab/api/settings",
-        "fullStaticUrl": f"{base_url}static/retro",
+        "fullStaticUrl": f"{base_url}static/notebook",
         "fullThemesUrl": f"{base_url}lab/api/themes",
         "fullTranslationsApiUrl": f"{base_url}lab/api/translations",
         "fullTreeUrl": f"{base_url}lab/tree",
@@ -178,12 +179,12 @@ def get_index(
         "licensesUrl": "/lab/api/licenses",
         "listingsUrl": "/lab/api/listings",
         "mathjaxConfig": "TeX-AMS-MML_HTMLorMML-full,Safe",
-        "retroLogo": False,
-        "retroPage": retro_page,
+        "notebookLogo": False,
+        "notebookPage": notebook_page,
         "schemasDir": (lab.prefix_dir / "share" / "jupyter" / "lab" / "schemas").as_posix(),
         "settingsUrl": "/lab/api/settings",
-        "staticDir": (retrolab_dir / "static").as_posix(),
-        "templatesDir": (retrolab_dir / "templates").as_posix(),
+        "staticDir": (notebook_dir / "static").as_posix(),
+        "templatesDir": (notebook_dir / "templates").as_posix(),
         "terminalsAvailable": True,
         "themesDir": (lab.prefix_dir / "share" / "jupyter" / "lab" / "themes").as_posix(),
         "themesUrl": "/lab/api/themes",

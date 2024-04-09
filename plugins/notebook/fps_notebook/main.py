@@ -4,12 +4,12 @@ from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.lab import Lab
-from jupyverse_api.retrolab import RetroLab
+from jupyverse_api.notebook import Notebook
 
-from .routes import _RetroLab
+from .routes import _Notebook
 
 
-class RetroLabComponent(Component):
+class NotebookComponent(Component):
     async def start(
         self,
         ctx: Context,
@@ -19,5 +19,5 @@ class RetroLabComponent(Component):
         frontend_config = await ctx.request_resource(FrontendConfig)
         lab = await ctx.request_resource(Lab)  # type: ignore
 
-        retrolab = _RetroLab(app, auth, frontend_config, lab)
-        ctx.add_resource(retrolab, types=RetroLab)
+        notebook = _Notebook(app, auth, frontend_config, lab)
+        ctx.add_resource(notebook, types=Notebook)

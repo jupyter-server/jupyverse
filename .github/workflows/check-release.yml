@@ -47,7 +47,7 @@ jobs:
           pip install -e jupyverse_api
           pip install -e plugins/frontend
           pip install -e plugins/jupyterlab
-          pip install -e plugins/retrolab
+          pip install -e plugins/notebook
           pip install -e plugins/contents
           pip install -e plugins/kernels
           pip install -e plugins/terminals

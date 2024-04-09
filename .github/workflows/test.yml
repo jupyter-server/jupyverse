@@ -32,9 +32,9 @@ jobs:
         hatch run dev.jupyterlab-noauth:typecheck
         hatch run dev.jupyterlab-auth:typecheck
         hatch run dev.jupyterlab-auth_fief:typecheck
-        hatch run dev.retrolab-noauth:typecheck
-        hatch run dev.retrolab-auth:typecheck
-        hatch run dev.retrolab-auth_fief:typecheck
+        hatch run dev.notebook-noauth:typecheck
+        hatch run dev.notebook-auth:typecheck
+        hatch run dev.notebook-auth_fief:typecheck
 
   test:
     name: Tests

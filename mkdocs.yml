@@ -44,7 +44,7 @@ nav:
   - 'frontend': plugins/frontend.md
   - 'lab': plugins/lab.md
   - 'jupyterlab': plugins/jupyterlab.md
-  - 'retrolab': plugins/retrolab.md
+  - 'notebook': plugins/notebook.md
   - 'nbconvert': plugins/nbconvert.md
   - 'login': plugins/login.md
   - 'kernels': plugins/kernels.md

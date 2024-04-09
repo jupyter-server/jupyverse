@@ -1,4 +1,4 @@
-Jupyverse can be installed to run either [JupyterLab](https://jupyterlab.readthedocs.io) or [RetroLab](https://github.com/jupyterlab/retrolab).
+Jupyverse can be installed to run either [JupyterLab](https://jupyterlab.readthedocs.io) or [Jupyter Notebook](https://jupyter-notebook.readthedocs.io).
 
 ## With `pip`
 
@@ -6,9 +6,9 @@ For the JupyterLab frontend:
 ```bash
 pip install "jupyverse[jupyterlab,auth]"
 ```
-Or for the RetroLab frontend:
+Or for the Jupyter Notebook frontend:
 ```bash
-pip install "jupyverse[retrolab,auth]"
+pip install "jupyverse[notebook,auth]"
 ```
 
 ## With `micromamba`
@@ -27,9 +27,9 @@ For the JupyterLab frontend:
 ```bash
 micromamba install -c conda-forge jupyverse fps-jupyterlab fps-auth
 ```
-Or for the RetroLab frontend:
+Or for the Jupyter Notebook frontend:
 ```bash
-micromamba install -c conda-forge jupyverse fps-retrolab fps-auth
+micromamba install -c conda-forge jupyverse fps-notebook fps-auth
 ```
 
 ## Development install
@@ -69,9 +69,9 @@ Entering `hatch env show` will show the available environments:
 │ dev  │ virtual │ dev.jupyterlab-noauth    │ test     │ lint      │
 │      │         │ dev.jupyterlab-auth      │          │ test      │
 │      │         │ dev.jupyterlab-auth_fief │          │ typecheck │
-│      │         │ dev.retrolab-noauth      │          │           │
-│      │         │ dev.retrolab-auth        │          │           │
-│      │         │ dev.retrolab-auth_fief   │          │           │
+│      │         │ dev.notebook-noauth      │          │           │
+│      │         │ dev.notebook-auth        │          │           │
+│      │         │ dev.notebook-auth_fief   │          │           │
 └──────┴─────────┴──────────────────────────┴──────────┴───────────┘
 ```
 !!! note
@@ -80,7 +80,7 @@ Entering `hatch env show` will show the available environments:
     from your local repository. So you want to use the `dev` environment.
 
 Currently, the `dev` environment matrix consists of all combinations of frontends
-(`jupyterlab`, `retrolab`) and authentication methods (`noauth`, `auth`, `auth_fief`),
+(`jupyterlab`, `notebook`) and authentication methods (`noauth`, `auth`, `auth_fief`),
 which leads to six environments.
 
 A number of scripts are available in the `dev` environments. They can be
