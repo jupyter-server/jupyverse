@@ -35,7 +35,7 @@ Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
 jupyterlab = ["fps-jupyterlab >=0.1.2,<1"]
-retrolab = ["fps-retrolab >=0.1.2,<1"]
+notebook = ["fps-notebook>=0.1.2,<1"]
 auth = ["fps-auth >=0.1.2,<1", "fps-login >=0.1.2,<1"]
 auth-fief = ["fps-auth-fief >=0.1.2,<1"]
 auth-jupyterhub = ["fps-auth-jupyterhub >=0.1.2,<1"]
@@ -80,18 +80,18 @@ features = ["test"]
 [tool.hatch.envs.dev.overrides]
 matrix.frontend.post-install-commands = [
   { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
-  { value = "pip install -e ./plugins/retrolab", if = ["retrolab"]},
+  { value = "pip install -e ./plugins/notebook", if = ["notebook"]},
+]
+
+matrix.frontend.scripts = [
+  { key = "typecheck1", value = "typecheck0 ./plugins/jupyterlab", if = ["jupyterlab"] },
+  { key = "typecheck1", value = "typecheck0 ./plugins/notebook", if = ["notebook"] },
 ]
 matrix.auth.post-install-commands = [
   { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
   { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
   { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
   { value = "pip install -e ./plugins/auth_jupyterhub", if = ["auth_jupyterhub"] },
-]
-
-matrix.frontend.scripts = [
-  { key = "typecheck1", value = "typecheck0 ./plugins/jupyterlab", if = ["jupyterlab"] },
-  { key = "typecheck1", value = "typecheck0 ./plugins/retrolab", if = ["retrolab"] },
 ]
 
 matrix.auth.scripts = [
@@ -102,7 +102,7 @@ matrix.auth.scripts = [
 ]
 
 [[tool.hatch.envs.dev.matrix]]
-frontend = ["jupyterlab", "retrolab"]
+frontend = ["jupyterlab", "notebook"]
 auth = ["noauth", "auth", "auth_fief", "auth_jupyterhub"]
 
 [tool.hatch.envs.dev.scripts]
@@ -170,13 +170,13 @@ python_packages = [
     "plugins/kernels:fps-kernels",
     "plugins/lab:fps-lab",
     "plugins/nbconvert:fps-nbconvert",
-    "plugins/retrolab:fps-retrolab",
+    "plugins/notebook:fps-notebook",
     "plugins/terminals:fps-terminals",
     "plugins/yjs:fps-yjs",
     "plugins/resource_usage:fps-resource-usage",
     "plugins/login:fps-login",
     "plugins/webdav:fps-webdav",
-    ".:jupyverse:jupyverse_api,fps-noauth,fps-auth,fps-auth-fief,fps-auth-jupyterhub,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-retrolab,fps-terminals,fps-yjs,fps-resource-usage,fps-webdav"
+    ".:jupyverse:jupyverse_api,fps-noauth,fps-auth,fps-auth-fief,fps-auth-jupyterhub,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-notebook,fps-terminals,fps-yjs,fps-resource-usage,fps-webdav"
 ]
 
 [tool.hatch.version]
@@ -184,3 +184,12 @@ path = "jupyverse/__init__.py"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
+
+[tool.pixi.project]
+name = ""
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.dependencies]
+pip = ">=24.0,<25"
+python = "<3.12"

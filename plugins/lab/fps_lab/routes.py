@@ -120,7 +120,7 @@ class _Lab(Lab):
     ):
         with open(self.jlab_dir / "static" / "package.json") as f:
             package = json.load(f)
-        if name0 in ["@jupyterlab", "@retrolab"]:
+        if name0 in ["@jupyterlab", "@notebook"]:
             schemas_parent = self.jlab_dir
         else:
             schemas_parent = self.extensions_dir / name0 / name1

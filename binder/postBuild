@@ -2,7 +2,7 @@
 
 python -m pip install -e plugins/lab
 python -m pip install -e plugins/jupyterlab
-python -m pip install -e plugins/retrolab
+python -m pip install -e plugins/notebook
 python -m pip install -e plugins/contents
 python -m pip install -e plugins/kernels
 python -m pip install -e plugins/terminals

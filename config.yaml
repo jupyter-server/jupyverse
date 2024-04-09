@@ -27,8 +27,8 @@ component:
     resource_usage:
       type: resource_usage
       track_cpu_percent: true
-    #retrolab:
-    #  type: retrolab
+    #notebook:
+    #  type: notebook
     terminals:
       type: terminals
     yjs:

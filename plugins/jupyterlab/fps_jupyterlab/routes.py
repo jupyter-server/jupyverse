@@ -34,7 +34,7 @@ class _JupyterLab(JupyterLab):
         lab.redirect_after_root = "lab"
 
         extensions_dir = lab.prefix_dir / "share" / "jupyter" / "labextensions"
-        self.federated_extensions, self.disabled_extension = lab.get_federated_extensions(
+        self.federated_extensions, self.disabled_extensions = lab.get_federated_extensions(
             extensions_dir
         )
         jupyterlab_dir = Path(jupyterlab_module.__file__).parents[1]
@@ -126,7 +126,7 @@ class _JupyterLab(JupyterLab):
             "collaborative": collaborative,
             "serverSideExecution": server_side_execution,
             "devMode": dev_mode,
-            "disabledExtensions": self.disabled_extension,
+            "disabledExtensions": self.disabled_extensions,
             "exposeAppInBrowser": False,
             "extraLabextensionsPath": [],
             "federated_extensions": self.federated_extensions,

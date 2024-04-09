@@ -11,7 +11,7 @@ This is the default mode when launching Jupyverse, just enter in a terminal:
 jupyverse --open-browser
 # same as: jupyverse --set auth.mode=token --open-browser
 ```
-This should open a new window in a browser, and load JupyterLab or RetroLab, depending on the front-end you chose to install (see [Install](../../install)).
+This should open a new window in a browser, and load JupyterLab or Jupyter Notebook, depending on the front-end you chose to install (see [Install](../../install)).
 
 If you look at the terminal, you should see among other things:
 ```
