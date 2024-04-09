@@ -1,13 +1,13 @@
 import json
 import logging
 import os
+import sys
 from glob import glob
 from http import HTTPStatus
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import json5  # type: ignore
-import pkg_resources
 from babel import Locale
 from fastapi import Response, status
 from fastapi.responses import FileResponse, RedirectResponse
@@ -18,6 +18,11 @@ from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLabConfig
 from jupyverse_api.lab import Lab
+
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 logger = logging.getLogger("lab")
 
@@ -79,7 +84,7 @@ class _Lab(Lab):
                 "nativeName": native_name,
             }
         }
-        for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
+        for ep in entry_points(group="jupyterlab.languagepack"):
             locale = Locale.parse(ep.name)
             data[ep.name] = {
                 "displayName": display_name,
@@ -96,7 +101,7 @@ class _Lab(Lab):
             self.locale = language
             return {}
 
-        for ep in pkg_resources.iter_entry_points(group="jupyterlab.languagepack"):
+        for ep in entry_points(group="jupyterlab.languagepack"):
             if ep.name == language:
                 break
         else:

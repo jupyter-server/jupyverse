@@ -1,6 +1,6 @@
+import sys
 from typing import Any
 
-import pkg_resources
 from pycrdt import TransactionEvent
 
 try:
@@ -15,6 +15,11 @@ try:
 except ImportError:
     ypywidgets_installed = False
 
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
+
 
 Widgets: Any
 
@@ -22,7 +27,7 @@ if ypywidgets_installed:
     class Widgets:  # type: ignore
         def __init__(self):
             self.ydocs = {
-                ep.name: ep.load() for ep in pkg_resources.iter_entry_points(group="ypywidgets")
+                ep.name: ep.load() for ep in entry_points(group="ypywidgets")
             }
             self.widgets = {}
 
