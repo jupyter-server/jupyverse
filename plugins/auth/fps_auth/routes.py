@@ -72,6 +72,7 @@ def auth_factory(
             async def get_api_me(
                 permissions: Optional[str] = None,
                 user: UserRead = Depends(backend.current_user()),
+                update_user = Depends(backend.update_user),
             ):
                 checked_permissions: Dict[str, List[str]] = {}
                 if permissions is None:
@@ -96,6 +97,14 @@ def auth_factory(
                     moon = get_anonymous_username()
                     identity["name"] = f"Anonymous {moon}"
                     identity["display_name"] = f"Anonymous {moon}"
+                    identity["initials"] = f"A{moon[0]}"
+                    await update_user(
+                        dict(
+                            name=identity["name"],
+                            display_name=identity["display_name"],
+                            permissions=checked_permissions,
+                        )
+                    )
                 return {
                     "identity": identity,
                     "permissions": checked_permissions,
