@@ -223,6 +223,9 @@ class KernelDriver:
         if msg_type == "stream":
             with outputs.doc.transaction():
                 # TODO: uncomment when changes are made in jupyter-ydoc
+                text = content["text"]
+                if text.endswith((os.linesep, "\n")):
+                    text = text[:-1]
                 if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
                     outputs.append(
                         #Map(
@@ -235,13 +238,13 @@ class KernelDriver:
                         {
                             "name": content["name"],
                             "output_type": msg_type,
-                            "text": [content["text"]],
+                            "text": [text],
                         }
                     )
                 else:
                     #outputs[-1]["text"].append(content["text"])  # type: ignore
                     last_output = outputs[-1]
-                    last_output["text"].append(content["text"])  # type: ignore
+                    last_output["text"].append(text)  # type: ignore
                     outputs[-1] = last_output
         elif msg_type in ("display_data", "execute_result"):
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
