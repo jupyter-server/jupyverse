@@ -9,7 +9,9 @@ from watchfiles import Change, awatch
 
 from jupyverse_api import Singleton
 
-logger = logging.getLogger("contents")
+contents_logger = logging.getLogger("contents")
+watchfiles_logger = logging.getLogger("watchfiles")
+watchfiles_logger.setLevel(logging.WARNING)
 
 
 class Watcher:
@@ -110,13 +112,13 @@ class FileIdManager(metaclass=Singleton):
                         changed_path_str = str(changed_path)
 
                         if change == Change.deleted:
-                            logger.debug("File %s was deleted", changed_path_str)
+                            contents_logger.debug("File %s was deleted", changed_path_str)
                             async with db.execute(
                                 "SELECT COUNT(*) FROM fileids WHERE path = ?", (changed_path_str,)
                             ) as cursor:
                                 if not (await cursor.fetchone())[0]:
                                     # path is not indexed, ignore
-                                    logger.debug(
+                                    contents_logger.debug(
                                         "File %s is not indexed, ignoring", changed_path_str
                                     )
                                     continue
@@ -125,12 +127,12 @@ class FileIdManager(metaclass=Singleton):
                                 db, changed_path_str, deleted_paths, added_paths, False
                             )
                         elif change == Change.added:
-                            logger.debug("File %s was added", changed_path_str)
+                            contents_logger.debug("File %s was added", changed_path_str)
                             await maybe_rename(
                                 db, changed_path_str, added_paths, deleted_paths, True
                             )
                         elif change == Change.modified:
-                            logger.debug("File %s was modified", changed_path_str)
+                            contents_logger.debug("File %s was modified", changed_path_str)
                             if changed_path_str == self.db_path:
                                 continue
                             async with db.execute(
@@ -138,7 +140,7 @@ class FileIdManager(metaclass=Singleton):
                             ) as cursor:
                                 if not (await cursor.fetchone())[0]:
                                     # path is not indexed, ignore
-                                    logger.debug(
+                                    contents_logger.debug(
                                         "File %s is not indexed, ignoring", changed_path_str
                                     )
                                     continue
@@ -149,7 +151,7 @@ class FileIdManager(metaclass=Singleton):
                             )
 
                     for path in deleted_paths - added_paths:
-                        logger.debug("Unindexing file %s ", path)
+                        contents_logger.debug("Unindexing file %s ", path)
                         await db.execute("DELETE FROM fileids WHERE path = ?", (path,))
                     await db.commit()
 
@@ -203,7 +205,7 @@ async def maybe_rename(
             path1, path2 = changed_path, other_path
             if is_added_path:
                 path1, path2 = path2, path1
-            logger.debug("File %s was renamed to %s", path1, path2)
+            contents_logger.debug("File %s was renamed to %s", path1, path2)
             await db.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
             other_paths.remove(other_path)
             return
