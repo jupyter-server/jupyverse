@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.5.1
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.5.0...4ddd9ab118c9ed47340d44b6eb57b68894b1bcc5))
+
+### Merged PRs
+
+- Check terminal websocket before removing it [#405](https://github.com/jupyter-server/jupyverse/pull/405) ([@davidbrochart](https://github.com/davidbrochart))
+- Update documentation URL [#404](https://github.com/jupyter-server/jupyverse/pull/404) ([@davidbrochart](https://github.com/davidbrochart))
+- Set watchfiles log level to WARNING [#403](https://github.com/jupyter-server/jupyverse/pull/403) ([@davidbrochart](https://github.com/davidbrochart))
+- Update ypywidgets v0.7.0 for tests [#400](https://github.com/jupyter-server/jupyverse/pull/400) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove output trailing newline [#399](https://github.com/jupyter-server/jupyverse/pull/399) ([@davidbrochart](https://github.com/davidbrochart))
+- Save anonymous user info in database [#397](https://github.com/jupyter-server/jupyverse/pull/397) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2024-04-12&to=2024-04-29&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2024-04-12..2024-04-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2024-04-12..2024-04-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.5.0
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.4.2...66aac71cf07cbc14c5196cc1c144b9965fec7d2c))
@@ -16,8 +37,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2024-01-02&to=2024-04-12&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2024-01-02..2024-04-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2024-01-02..2024-04-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.4.2
 
