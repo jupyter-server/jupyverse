@@ -184,12 +184,3 @@ path = "jupyverse/__init__.py"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
-
-[tool.pixi.project]
-name = ""
-channels = ["conda-forge"]
-platforms = ["linux-64"]
-
-[tool.pixi.dependencies]
-pip = ">=24.0,<25"
-python = "<3.12"
