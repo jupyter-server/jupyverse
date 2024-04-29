@@ -1,0 +1,1203 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A composable Jupyter server based on FastAPI">
+      
+      
+      
+      
+        <link rel="prev" href="../standalone_jupyverse_deployment/">
+      
+      
+        <link rel="next" href="../../plugins/auth/">
+      
+      
+      <link rel="icon" href="../../jupyter.svg">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.19">
+    
+    
+      
+        <title>Jupyterhub jupyverse deployment - Jupyverse</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.66ac8b77.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="black">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ovh-setup" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Jupyverse" class="md-header__button md-logo" aria-label="Jupyverse" data-md-component="logo">
+      
+  <img src="../../jupyter.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Jupyverse
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Jupyterhub jupyverse deployment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jupyter-server/jupyverse" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Jupyverse" class="md-nav__button md-logo" aria-label="Jupyverse" data-md-component="logo">
+      
+  <img src="../../jupyter.svg" alt="logo">
+
+    </a>
+    Jupyverse
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jupyter-server/jupyverse" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Usage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/single_user/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Single user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/multi_user/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Multi user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/microservices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Microservices
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Turorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Turorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standalone_jupyverse_deployment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Standalone jupyverse deployment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Jupyterhub jupyverse deployment
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Jupyterhub jupyverse deployment
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ovh-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      OVH setup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OVH setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-and-connect-to-a-public-instance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create and connect to a public instance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-up-the-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Set up the environment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-up-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      Set up HTTPS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-github-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a GitHub App
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run the server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run the server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configure-jupyterhub" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure JupyterHub
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#launch-jupyterhub" class="md-nav__link">
+    <span class="md-ellipsis">
+      Launch JupyterHub
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Plugins
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Plugins
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/auth/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    auth
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/contents/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    contents
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/frontend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    frontend
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/lab/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    lab
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/jupyterlab/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    jupyterlab
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/notebook/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    notebook
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/nbconvert/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nbconvert
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/login/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    login
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/kernels/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    kernels
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/terminals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    terminals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/yjs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    yjs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/resource_usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    resource-usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ovh-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      OVH setup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OVH setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-and-connect-to-a-public-instance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create and connect to a public instance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-up-the-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Set up the environment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-up-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      Set up HTTPS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-github-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a GitHub App
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run the server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run the server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configure-jupyterhub" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure JupyterHub
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#launch-jupyterhub" class="md-nav__link">
+    <span class="md-ellipsis">
+      Launch JupyterHub
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>Jupyterhub jupyverse deployment</h1>
+
+<p>In this tutorial, we will deploy Jupyverse through JupyterHub on a public <a href="https://www.ovhcloud.com">OVHcloud</a> instance, and allow authentication using a <a href="https://github.com">GitHub</a> account.</p>
+<h2 id="ovh-setup">OVH setup</h2>
+<h3 id="create-and-connect-to-a-public-instance">Create and connect to a public instance</h3>
+<p>Let's follow the guide on <a href="https://help.ovhcloud.com/csm/en-public-cloud-compute-getting-started?id=kb_article_view&amp;sysparm_article=KB0051009">Creating and connecting to your first Public Cloud instance</a>. We first need to create SSH keys, so that we can connect to our instance using SSH. Enter in a terminal:</p>
+<div class="highlight"><pre><span></span><code>ssh-keygen<span class="w"> </span>-b<span class="w"> </span><span class="m">4096</span>
+<span class="c1"># Generating public/private rsa key pair.</span>
+<span class="c1"># Enter file in which to save the key (/home/user/.ssh/id_rsa):</span>
+</code></pre></div>
+<p>You can hit <em>Enter</em>. You are then asked to enter a passphrase, we will need it later.</p>
+<p>The public key can be accessed with:</p>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>~/.ssh/id_rsa.pub
+</code></pre></div>
+<p>Copy this public key into your clipboard.</p>
+<p>In the OVHcloud Control Panel, click on "Instances" and then "Create an instance". Choose the "B2-7" model, which is a light and general use instance, and click "Next".</p>
+<p>Select a region of you choice and click "Next".</p>
+<p>Select the "Ubuntu 23.04" image and click "Add a key" under "SSH key". Give it a name an paste your public key, then click "Next". Your instance should already be configured, you can click "Next" again. In the network configuration, make sure "Public mode" is checked, and click "Next". Then select your preferred billing period and click "Create an instance".</p>
+<p>Your instance should activate shortly. You can see it has a public IP, something like <code>1.2.3.4</code>. Let's connect to the instance using this IP address:</p>
+<p><div class="highlight"><pre><span></span><code>ssh<span class="w"> </span>ubuntu@1.2.3.4
+<span class="c1"># The authenticity of host &#39;1.2.3.4 (1.2.3.4)&#39; can&#39;t be established.</span>
+<span class="c1"># ED25519 key fingerprint is SHA256:Q1&amp;tbgX3fp9+7J90zyK0ctuKe1aqPoEY76Qi58uoSnA.</span>
+<span class="c1"># This key is not known by any other names</span>
+<span class="c1"># Are you sure you want to continue connecting (yes/no/[fingerprint])?</span>
+</code></pre></div>
+Enter "yes", then enter your passphrase. You should now be connected to your instance.</p>
+<h3 id="set-up-the-environment">Set up the environment</h3>
+<p>Let's install <a href="https://mamba.readthedocs.io/en/latest/installation.html#micromamba">micromamba</a> and configure it:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>bzip2
+curl<span class="w"> </span>-Ls<span class="w"> </span>https://micro.mamba.pm/api/micromamba/linux-64/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>-xvj<span class="w"> </span>bin/micromamba
+bin/micromamba<span class="w"> </span>shell<span class="w"> </span>init<span class="w"> </span>--shell<span class="w"> </span>bash<span class="w"> </span>--root-prefix<span class="o">=</span>~/micromamba
+<span class="nb">exec</span><span class="w"> </span>bash
+</code></pre></div>
+<p>Now create a conda environment and install Python and Node.js:</p>
+<div class="highlight"><pre><span></span><code>micromamba<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>jupyterhub
+micromamba<span class="w"> </span>activate<span class="w"> </span>jupyterhub
+micromamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>python<span class="w"> </span>nodejs
+</code></pre></div>
+<p>And install JupyterHub and Jupyverse:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>jupyverse<span class="o">[</span>jupyterlab,auth-jupyterhub<span class="o">]</span>
+pip<span class="w"> </span>install<span class="w"> </span>jupyter-collaboration
+pip<span class="w"> </span>install<span class="w"> </span>oauthenticator
+pip<span class="w"> </span>install<span class="w"> </span>https://github.com/davidbrochart/jupyterhub/archive/jupyverse.zip
+npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>configurable-http-proxy
+</code></pre></div>
+<h3 id="set-up-https">Set up HTTPS</h3>
+<p>For this you will need a domain name, like <a href="https://my.jupyverse.com">https://my.jupyverse.com</a>, that must point to your instance through its IP address.</p>
+<p>We'll use the <a href="https://certbot.eff.org">Certbot</a> ACME client to manage SSL/TLS certificates. Enter in a terminal:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>snap<span class="w"> </span>install<span class="w"> </span>--classic<span class="w"> </span>certbot
+sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/snap/bin/certbot<span class="w"> </span>/usr/bin/certbot
+sudo<span class="w"> </span>certbot<span class="w"> </span>certonly<span class="w"> </span>--standalone
+</code></pre></div>
+<h2 id="create-a-github-app">Create a GitHub App</h2>
+<p>We'll <a href="https://github.com/settings/apps/new">register a new GitHub App</a>. In the "GitHub App name", enter "JupyterHub-Jupyverse". In "Homepage URL", enter the URL of your public instance, <a href="https://my.jupyverse.com">https://my.jupyverse.com</a>. In "Callback URL", enter <a href="https://my.jupyverse.com/hub/oauth_callback">https://my.jupyverse.com/hub/oauth_callback</a>. Make sure "Expire user authorization tokens" and "Request user authorization (OAuth) during installation" are checked. Uncheck "Active" for "Webhook". In "Account permissions", give "Read-only" access to "Email addresses". Finally, hit the "Create GitHub App" button at the bottom.</p>
+<p>If this was successful, you can now generate a private key. Click on "Generate a new client secret", and copy it somewhere safe. Let's also copy the client ID shown on the same page.</p>
+<h2 id="run-the-server">Run the server</h2>
+<h3 id="configure-jupyterhub">Configure JupyterHub</h3>
+<p>Let's create a JupyterHub configuration file. Fill in the <code>allowed_users</code> and <code>admin_users</code> as you like.</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/etc/jupyterhub
+sudo<span class="w"> </span>vim<span class="w"> </span>/etc/jupyterhub/jupyterhub_config.py
+</code></pre></div>
+<p>With the following content:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># jupyterhub_config.py file</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">pjoin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span>
+
+<span class="n">runtime_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/srv/jupyterhub&#39;</span><span class="p">)</span>
+
+<span class="c1"># Allows multiple single-server per user</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">allow_named_servers</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># https on :443</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="mi">443</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">ssl_key</span> <span class="o">=</span> <span class="s1">&#39;/etc/letsencrypt/live/jupyterhub.quantstack.net/privkey.pem&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">ssl_cert</span> <span class="o">=</span> <span class="s1">&#39;/etc/letsencrypt/live/jupyterhub.quantstack.net/cert.pem&#39;</span>
+
+<span class="c1"># put the JupyterHub cookie secret and state db</span>
+<span class="c1"># in /var/run/jupyterhub</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">cookie_secret_file</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">runtime_dir</span><span class="p">,</span> <span class="s1">&#39;cookie_secret&#39;</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">db_url</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">runtime_dir</span><span class="p">,</span> <span class="s1">&#39;jupyterhub.sqlite&#39;</span><span class="p">)</span>
+<span class="c1"># or `--db=/path/to/jupyterhub.sqlite` on the command-line</span>
+
+<span class="c1"># use GitHub OAuthenticator for local users</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s1">&#39;oauthenticator.LocalGitHubOAuthenticator&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">GitHubOAuthenticator</span><span class="o">.</span><span class="n">oauth_callback_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;OAUTH_CALLBACK_URL&#39;</span><span class="p">]</span>
+
+<span class="c1"># create system users that don&#39;t exist yet</span>
+<span class="n">c</span><span class="o">.</span><span class="n">LocalAuthenticator</span><span class="o">.</span><span class="n">create_system_users</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># specify users and admin</span>
+<span class="n">c</span><span class="o">.</span><span class="n">Authenticator</span><span class="o">.</span><span class="n">allowed_users</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rgbkrk&#39;</span><span class="p">,</span> <span class="s1">&#39;minrk&#39;</span><span class="p">,</span> <span class="s1">&#39;jhamrick&#39;</span><span class="p">}</span>
+<span class="n">c</span><span class="o">.</span><span class="n">Authenticator</span><span class="o">.</span><span class="n">admin_users</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;jhamrick&#39;</span><span class="p">,</span> <span class="s1">&#39;rgbkrk&#39;</span><span class="p">}</span>
+</code></pre></div>
+<h3 id="launch-jupyterhub">Launch JupyterHub</h3>
+<p>Let's launch JupyterHub with some environment variables. Use the GitHub client ID and secret of your GitHub App.</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/srv/jupyterhub
+chmod<span class="w"> </span>-R<span class="w"> </span>o+rx<span class="w"> </span>/home/ubuntu
+mkdir<span class="w"> </span>jupyterhub
+<span class="nb">cd</span><span class="w"> </span>jupyterhub
+sudo<span class="w"> </span>env<span class="w"> </span><span class="s2">&quot;PATH=</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="s2">&quot;OAUTH_CALLBACK_URL=https://my.jupyverse.com/hub/oauth_callback&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="s2">&quot;GITHUB_CLIENT_ID=github_id&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="s2">&quot;GITHUB_CLIENT_SECRET=github_secret&quot;</span><span class="w"> </span><span class="se">\</span>
+jupyterhub<span class="w"> </span>-f<span class="w"> </span>/etc/jupyterhub/jupyterhub_config.py
+</code></pre></div>
+<p>Now open a browser window at <a href="https://my.jupyverse.com">https://my.jupyverse.com</a>, and click "Sign in with GitHub". Enter your credentials and click "Sign in". If you have two-factor authentication enabled on your GitHub account, you may have to approve the request by entering a code e.g. in your mobile phone GitHub application.</p>
+<p>After a while, JupyterLab should start. You should see an icon for your user in the top-right corner, with your initials. Any other connected user should be visible in the "Collaboration" tab on the left, and if you work on the same notebook, you should see them collaborate live!</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.top", "navigation.sections", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.dd8806f2.min.js"></script>
+      
+    
+  </body>
+</html>
