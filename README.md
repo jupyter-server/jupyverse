@@ -8,7 +8,7 @@ Try it online:
 - JupyterLab frontend: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?urlpath=jupyverse-jupyterlab)
 - Jupyter Notebook frontend: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-server/jupyverse/HEAD?urlpath=jupyverse-notebook)
 
-Documentation is available [here](https://davidbrochart.github.io/jupyverse).
+Documentation is available [here](https://jupyter-server.github.io/jupyverse).
 
 ## Motivation
 
