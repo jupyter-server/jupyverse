@@ -70,7 +70,7 @@ class _TerminalServer(TerminalServer):
                     await websocket.send_json(["stdout", self.data_or_disconnect])
 
     def quit(self, websocket):
-        if websocket in self.weksockets:
+        if websocket in self.websockets:
             self.websockets.remove(websocket)
         if not self.websockets:
             os.close(self.fd)
