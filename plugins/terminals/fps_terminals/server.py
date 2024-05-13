@@ -40,6 +40,7 @@ class _TerminalServer(TerminalServer):
                 self.data_or_disconnect = self.p_out.read(65536).decode()
                 self.event.set()
             except Exception:
+                os.close(self.fd)
                 self.loop.remove_reader(self.p_out)
                 self.data_or_disconnect = None
                 self.event.set()
@@ -74,3 +75,4 @@ class _TerminalServer(TerminalServer):
             self.websockets.remove(websocket)
         if not self.websockets:
             os.close(self.fd)
+            self.loop.remove_reader(self.p_out)
