@@ -26,7 +26,12 @@ class _Terminals(Terminals):
         self,
         user: User,
     ):
-        name = str(len(TERMINALS) + 1)
+        name_int = 1
+        while True:
+            if str(name_int) not in TERMINALS:
+                break
+            name_int += 1
+        name = str(name_int)
         terminal = Terminal(
             name=name,
             last_activity=datetime.utcnow().isoformat() + "Z",
