@@ -191,11 +191,6 @@ class YRoom:
         self._task_group = None
 
     async def serve(self, websocket: Websocket):
-        """Serve a client.
-
-        Arguments:
-            websocket: The WebSocket through which to serve the client.
-        """
         async with create_task_group() as tg:
             self.clients.append(websocket)
             await sync(self.ydoc, websocket, self.log)

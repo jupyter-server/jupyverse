@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 from datetime import datetime
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import httpx
+from anyio import TASK_STATUS_IGNORED, Lock, create_task_group
+from anyio.abc import TaskStatus
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
+from httpx import AsyncClient
 from jupyterhub.services.auth import HubOAuth
 from jupyterhub.utils import isoformat
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,16 +28,15 @@ from .models import JupyterHubUser
 def auth_factory(
     app: App,
     db_session: AsyncSession,
-    http_client: httpx.AsyncClient,
 ):
     class AuthJupyterHub(Auth, Router):
         def __init__(self) -> None:
             super().__init__(app)
             self.hub_auth = HubOAuth()
-            self.db_lock = asyncio.Lock()
+            self.db_lock = Lock()
             self.activity_url = os.environ.get("JUPYTERHUB_ACTIVITY_URL")
             self.server_name = os.environ.get("JUPYTERHUB_SERVER_NAME")
-            self.background_tasks = set()
+            self.http_client = AsyncClient()
 
             router = APIRouter()
 
@@ -123,8 +124,9 @@ def auth_factory(
                             "Content-Type": "application/json",
                         }
                         last_activity = isoformat(datetime.utcnow())
-                        task = asyncio.create_task(
-                            http_client.post(
+                        self.task_group.start_soon(
+                            partial(
+                                self.http_client.post,
                                 self.activity_url,
                                 headers=headers,
                                 json={
@@ -132,8 +134,6 @@ def auth_factory(
                                 },
                             )
                         )
-                        self.background_tasks.add(task)
-                        task.add_done_callback(self.background_tasks.discard)
                     return user
 
                 if permissions:
@@ -192,5 +192,14 @@ def auth_factory(
                     return None
 
             return _
+
+        async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+            async with create_task_group() as tg:
+                self.task_group = tg
+                task_status.started()
+
+        async def stop(self) -> None:
+            await self.http_client.aclose()
+            self.task_group.cancel_scope().cancel()
 
     return AuthJupyterHub()

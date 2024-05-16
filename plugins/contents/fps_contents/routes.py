@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import base64
 import json
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
-from anyio import open_file
+from anyio import CancelScope, open_file
 from fastapi import HTTPException, Response
 from starlette.requests import Request
 
@@ -25,6 +27,8 @@ from .fileid import FileIdManager
 
 
 class _Contents(Contents):
+    _file_id_manager: FileIdManager | None = None
+
     async def create_checkpoint(
         self,
         path,
@@ -143,109 +147,115 @@ class _Contents(Contents):
     ) -> Content:
         if isinstance(path, str):
             path = Path(path)
-        content: Optional[Union[str, Dict, List[Dict]]] = None
-        if get_content:
+        async with self.file_lock(path):
+            content: Optional[Union[str, Dict, List[Dict]]] = None
+            if get_content:
+                if path.is_dir():
+                    content = [
+                        (await self.read_content(subpath, get_content=False)).model_dump()
+                        for subpath in path.iterdir()
+                        if not subpath.name.startswith(".")
+                    ]
+                elif path.is_file() or path.is_symlink():
+                    try:
+                        async with await open_file(path, mode="rb") as f:
+                            content_bytes = await f.read()
+                        if file_format == "base64":
+                            content = base64.b64encode(content_bytes).decode("ascii")
+                        elif file_format == "json":
+                            content = json.loads(content_bytes)
+                        else:
+                            content = content_bytes.decode()
+                    except Exception:
+                        raise HTTPException(status_code=404, detail="Item not found")
+            format: Optional[str] = None
             if path.is_dir():
-                content = [
-                    (await self.read_content(subpath, get_content=False)).model_dump()
-                    for subpath in path.iterdir()
-                    if not subpath.name.startswith(".")
-                ]
-            elif path.is_file() or path.is_symlink():
-                try:
-                    async with await open_file(path, mode="rb") as f:
-                        content_bytes = await f.read()
-                    if file_format == "base64":
-                        content = base64.b64encode(content_bytes).decode("ascii")
-                    elif file_format == "json":
-                        content = json.loads(content_bytes)
-                    else:
-                        content = content_bytes.decode()
-                except Exception:
-                    raise HTTPException(status_code=404, detail="Item not found")
-        format: Optional[str] = None
-        if path.is_dir():
-            size = None
-            type = "directory"
-            format = "json"
-            mimetype = None
-        elif path.is_file() or path.is_symlink():
-            size = get_file_size(path)
-            if path.suffix == ".ipynb":
-                type = "notebook"
-                format = None
+                size = None
+                type = "directory"
+                format = "json"
                 mimetype = None
-                if content is not None:
-                    nb: dict
-                    if file_format == "json":
-                        content = cast(Dict, content)
-                        nb = content
-                    else:
-                        content = cast(str, content)
-                        nb = json.loads(content)
-                    for cell in nb["cells"]:
-                        if "metadata" not in cell:
-                            cell["metadata"] = {}
-                        cell["metadata"].update({"trusted": False})
-                        if cell["cell_type"] == "code":
-                            cell_source = cell["source"]
-                            if not isinstance(cell_source, str):
-                                cell["source"] = "".join(cell_source)
-                    if file_format != "json":
-                        content = json.dumps(nb)
-            elif path.suffix == ".json":
-                type = "json"
-                format = "text"
-                mimetype = "application/json"
+            elif path.is_file() or path.is_symlink():
+                size = get_file_size(path)
+                if path.suffix == ".ipynb":
+                    type = "notebook"
+                    format = None
+                    mimetype = None
+                    if content is not None:
+                        nb: dict
+                        if file_format == "json":
+                            content = cast(Dict, content)
+                            nb = content
+                        else:
+                            content = cast(str, content)
+                            nb = json.loads(content)
+                        for cell in nb["cells"]:
+                            if "metadata" not in cell:
+                                cell["metadata"] = {}
+                            cell["metadata"].update({"trusted": False})
+                            if cell["cell_type"] == "code":
+                                cell_source = cell["source"]
+                                if not isinstance(cell_source, str):
+                                    cell["source"] = "".join(cell_source)
+                        if file_format != "json":
+                            content = json.dumps(nb)
+                elif path.suffix == ".json":
+                    type = "json"
+                    format = "text"
+                    mimetype = "application/json"
+                else:
+                    type = "file"
+                    format = None
+                    mimetype = "text/plain"
             else:
-                type = "file"
-                format = None
-                mimetype = "text/plain"
-        else:
-            raise HTTPException(status_code=404, detail="Item not found")
+                raise HTTPException(status_code=404, detail="Item not found")
 
-        return Content(
-            **{
-                "name": path.name,
-                "path": path.as_posix(),
-                "last_modified": get_file_modification_time(path),
-                "created": get_file_creation_time(path),
-                "content": content,
-                "format": format,
-                "mimetype": mimetype,
-                "size": size,
-                "writable": is_file_writable(path),
-                "type": type,
-            }
-        )
+            return Content(
+                **{
+                    "name": path.name,
+                    "path": path.as_posix(),
+                    "last_modified": get_file_modification_time(path),
+                    "created": get_file_creation_time(path),
+                    "content": content,
+                    "format": format,
+                    "mimetype": mimetype,
+                    "size": size,
+                    "writable": is_file_writable(path),
+                    "type": type,
+                }
+            )
 
     async def write_content(self, content: Union[SaveContent, Dict]) -> None:
-        if not isinstance(content, SaveContent):
-            content = SaveContent(**content)
-        if content.format == "base64":
-            async with await open_file(content.path, "wb") as f:
-                content.content = cast(str, content.content)
-                content_bytes = content.content.encode("ascii")
-                await f.write(content_bytes)
-        else:
-            async with await open_file(content.path, "wt") as f:
-                if content.format == "json":
-                    dict_content = cast(Dict, content.content)
-                    if content.type == "notebook":
-                        # see https://github.com/jupyterlab/jupyterlab/issues/11005
-                        if (
-                            "metadata" in dict_content
-                            and "orig_nbformat" in dict_content["metadata"]
-                        ):
-                            del dict_content["metadata"]["orig_nbformat"]
-                    await f.write(json.dumps(dict_content, indent=2))
+        # writing can never be cancelled, otherwise it would corrupt the file
+        with CancelScope(shield=True):
+            if not isinstance(content, SaveContent):
+                content = SaveContent(**content)
+            async with self.file_lock(Path(content.path)):
+                if content.format == "base64":
+                    async with await open_file(content.path, "wb") as f:
+                        content.content = cast(str, content.content)
+                        content_bytes = content.content.encode("ascii")
+                        await f.write(content_bytes)
                 else:
-                    content.content = cast(str, content.content)
-                    await f.write(content.content)
+                    async with await open_file(content.path, "wt") as f:
+                        if content.format == "json":
+                            dict_content = cast(Dict, content.content)
+                            if content.type == "notebook":
+                                # see https://github.com/jupyterlab/jupyterlab/issues/11005
+                                if (
+                                    "metadata" in dict_content
+                                    and "orig_nbformat" in dict_content["metadata"]
+                                ):
+                                    del dict_content["metadata"]["orig_nbformat"]
+                            await f.write(json.dumps(dict_content, indent=2))
+                        else:
+                            content.content = cast(str, content.content)
+                            await f.write(content.content)
 
     @property
     def file_id_manager(self):
-        return FileIdManager()
+        if self._file_id_manager is None:
+            self._file_id_manager = FileIdManager()
+        return self._file_id_manager
 
 
 def get_available_path(path: Path, sep: str = "") -> Path:
@@ -268,12 +278,16 @@ def get_available_path(path: Path, sep: str = "") -> Path:
 
 def get_file_modification_time(path: Path):
     if path.exists():
-        return datetime.utcfromtimestamp(path.stat().st_mtime).isoformat() + "Z"
+        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat().replace(
+            "+00:00", "Z"
+        )
 
 
 def get_file_creation_time(path: Path):
     if path.exists():
-        return datetime.utcfromtimestamp(path.stat().st_ctime).isoformat() + "Z"
+        return datetime.fromtimestamp(path.stat().st_ctime, tz=timezone.utc).isoformat().replace(
+            "+00:00", "Z"
+        )
 
 
 def get_file_size(path: Path) -> Optional[int]:

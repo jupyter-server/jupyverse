@@ -1,5 +1,6 @@
-from typing import Dict
+from typing import Any, Dict
 
+from anyio import Event
 from pydantic import BaseModel
 
 from .app import App
@@ -41,3 +42,37 @@ class Router:
 
     def add_middleware(self, middleware, *args, **kwargs) -> None:
         self._app.add_middleware(middleware, *args, **kwargs)
+
+
+class ResourceLock:
+    """ResourceLock ensures that accesses cannot be done concurrently on the same resource.
+    """
+    _locks: Dict[Any, Event]
+
+    def __init__(self):
+        self._locks = {}
+
+    def __call__(self, idx: Any):
+        return _ResourceLock(idx, self._locks)
+
+
+class _ResourceLock:
+    _idx: Any
+    _locks: Dict[Any, Event]
+    _lock: Event
+
+    def __init__(self, idx: Any, locks: Dict[Any, Event]):
+        self._idx = idx
+        self._locks = locks
+
+    async def __aenter__(self):
+        while True:
+            if self._idx in self._locks:
+                await self._locks[self._idx].wait()
+            else:
+                break
+        self._locks[self._idx] = self._lock = Event()
+
+    async def __aexit__(self, exc_type, exc_value, exc_tb):
+        self._lock.set()
+        del self._locks[self._idx]

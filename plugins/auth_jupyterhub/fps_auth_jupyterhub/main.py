@@ -1,5 +1,10 @@
-import httpx
-from asphalt.core import Component, ContainerComponent, Context, context_teardown
+from asphalt.core import (
+    Component,
+    ContainerComponent,
+    add_resource,
+    get_resource,
+    start_service_task,
+)
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from jupyverse_api.app import App
@@ -11,25 +16,17 @@ from .routes import auth_factory
 
 
 class _AuthJupyterHubComponent(Component):
-    @context_teardown
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(App)
-        db_session = await ctx.request_resource(AsyncSession)
-        db_engine = await ctx.request_resource(AsyncEngine)
+    async def start(self) -> None:
+        app = await get_resource(App, wait=True)
+        db_session = await get_resource(AsyncSession, wait=True)
+        db_engine = await get_resource(AsyncEngine, wait=True)
 
-        http_client = httpx.AsyncClient()
-        auth_jupyterhub = auth_factory(app, db_session, http_client)
-        ctx.add_resource(auth_jupyterhub, types=Auth)
+        auth_jupyterhub = auth_factory(app, db_session)
+        await start_service_task(auth_jupyterhub.start, "JupyterHub Auth", auth_jupyterhub.stop)
+        add_resource(auth_jupyterhub, types=Auth)
 
         async with db_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-
-        yield
-
-        await http_client.aclose()
 
 
 class AuthJupyterHubComponent(ContainerComponent):
@@ -37,14 +34,11 @@ class AuthJupyterHubComponent(ContainerComponent):
         self.auth_jupyterhub_config = AuthJupyterHubConfig(**kwargs)
         super().__init__()
 
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        ctx.add_resource(self.auth_jupyterhub_config, types=AuthConfig)
+    async def start(self) -> None:
+        add_resource(self.auth_jupyterhub_config, types=AuthConfig)
         self.add_component(
             "sqlalchemy",
             url=self.auth_jupyterhub_config.db_url,
         )
         self.add_component("auth_jupyterhub", type=_AuthJupyterHubComponent)
-        await super().start(ctx)
+        await super().start()

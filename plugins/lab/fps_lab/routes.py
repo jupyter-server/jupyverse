@@ -7,6 +7,11 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
+
 import json5  # type: ignore
 from babel import Locale
 from fastapi import Response, status

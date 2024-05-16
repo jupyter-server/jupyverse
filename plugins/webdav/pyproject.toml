@@ -30,7 +30,6 @@ Homepage = "https://jupyter.org"
 test = [
     "easywebdav",
     "pytest",
-    "pytest-asyncio",
 ]
 
 [tool.check-manifest]

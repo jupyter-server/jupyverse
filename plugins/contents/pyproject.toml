@@ -9,7 +9,7 @@ keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.8"
 dependencies = [
     "watchfiles >=0.18.1,<1",
-    "aiosqlite >=0.17.0,<1",
+    "sqlite-anyio >=0.2.0,<0.3.0",
     "anyio>=3.6.2,<5",
     "jupyverse-api >=0.1.2,<1",
 ]

@@ -1,96 +1,150 @@
-import asyncio
 import fcntl
 import os
 import pty
+import selectors
 import shlex
 import struct
 import termios
+from functools import partial
 
+from anyio import Lock, create_memory_object_stream, create_task_group, from_thread, to_thread
+from anyio.abc import ByteReceiveStream, ByteSendStream
 from fastapi import WebSocketDisconnect
 
 from jupyverse_api.terminals import TerminalServer
 
 
-def open_terminal(command="bash", columns=80, lines=24):
-    pid, fd = pty.fork()
-    if pid == 0:
-        argv = shlex.split(command)
-        env = os.environ.copy()
-        env.update(TERM="linux", COLUMNS=str(columns), LINES=str(lines))
-        os.execvpe(argv[0], argv, env)
-    return fd
-
-
 class _TerminalServer(TerminalServer):
     def __init__(self):
-        self.fd = open_terminal()
+        # FIXME: pass in config
+        command = "bash"
+        columns = 80
+        lines = 24
+
+        pid, fd = pty.fork()
+        if pid == 0:
+            argv = shlex.split(command)
+            env = os.environ.copy()
+            env.update(TERM="linux", COLUMNS=str(columns), LINES=str(lines))
+            os.execvpe(argv[0], argv, env)
+        self.fd = fd
         self.p_out = os.fdopen(self.fd, "w+b", 0)
         self.websockets = []
+        self.task_group = None
+        self.lock = Lock()
 
-    async def serve(self, websocket, permissions):
-        self.websocket = websocket
+    async def serve(self, websocket, permissions) -> None:
+        self.permissions = permissions
         self.websockets.append(websocket)
-        self.data_from_terminal = asyncio.Queue()
-        self.loop = asyncio.get_event_loop()
 
-        task = asyncio.create_task(self.send_data())  # noqa: F841
+        await self.lock.acquire()
+        if self.task_group is None:
+            async with create_task_group() as self.task_group:
+                self.lock.release()
+                self.recv_stream_from_backend = ReceiveStream(
+                    self.p_out, self.task_group, self.quit
+                )
+                async with create_task_group() as tg:
+                    self.send_stream_to_backend = SendStream(self.p_out)
+                    tg.start_soon(self.backend_to_frontend)
+                    tg.start_soon(partial(self.frontend_to_backend, websocket))
+        else:
+            self.lock.release()
+            async with create_task_group() as tg:
+                self.send_stream_to_backend = SendStream(self.p_out)
+                tg.start_soon(self.backend_to_frontend)
+                tg.start_soon(partial(self.frontend_to_backend, websocket))
 
-        def on_output():
-            try:
-                data = self.p_out.read(65536).decode()
-            except OSError:
-                try:
-                    self.loop.remove_reader(self.p_out)
-                except Exception:
-                    pass
-                try:
-                    os.close(self.fd)
-                except OSError:
-                    pass
-                self.data_from_terminal.put_nowait(None)
-                self.websockets.clear()
-                self.quit()
-            else:
-                self.data_from_terminal.put_nowait(data)
+    async def backend_to_frontend(self):
+        while True:
+            data = (await self.recv_stream_from_backend.receive(65536)).decode()
+            for websocket in self.websockets:
+                await websocket.send_json(["stdout", data])
 
-        self.loop.add_reader(self.p_out, on_output)
+    async def frontend_to_backend(self, websocket):
         await websocket.send_json(["setup", {}])
-        can_execute = permissions is None or "execute" in permissions.get("terminals", [])
+        can_execute = self.permissions is None or "execute" in self.permissions.get("terminals", [])
         try:
             while True:
                 msg = await websocket.receive_json()
                 if can_execute:
                     if msg[0] == "stdin":
-                        self.p_out.write(msg[1].encode())
+                        await self.send_stream_to_backend.send(msg[1].encode())
                     elif msg[0] == "set_size":
                         winsize = struct.pack("HH", msg[1], msg[2])
                         fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
         except WebSocketDisconnect:
             self.quit(websocket)
-
-    async def send_data(self):
-        while True:
-            data = await self.data_from_terminal.get()
-            if data is None:
-                try:
-                    await self.websocket.send_json(["disconnect", 1])
-                except Exception:
-                    pass
-                return
-
-            for websocket in self.websockets:
-                await websocket.send_json(["stdout", data])
+            self.task_group.cancel_scope.cancel()
 
     def quit(self, websocket=None):
-        if websocket in self.websockets:
+        try:
+            self.recv_stream_from_backend.sel.unregister(self.p_out)
+        except Exception:
+            pass
+        if websocket is None:
+            self.websockets.clear()
+        elif websocket in self.websockets:
             self.websockets.remove(websocket)
         if not self.websockets:
             try:
-                self.loop.remove_reader(self.p_out)
+                os.close(self.fd)
             except Exception:
                 pass
             try:
-                os.close(self.fd)
-            except OSError:
+                self.p_out.close()
+            except Exception:
                 pass
-        self.data_from_terminal.put_nowait(None)
+        self.task_group.cancel_scope.cancel()
+
+
+class ReceiveStream(ByteReceiveStream):
+    def __init__(self, p_out, task_group, quit):
+        self.p_out = p_out
+        self.task_group = task_group
+        self.quit = quit
+        self.sel = selectors.DefaultSelector()
+        self.sel.register(self.p_out, selectors.EVENT_READ, self._read)
+        self.send_stream, self.recv_stream = create_memory_object_stream[bytes](
+            max_buffer_size=65536
+        )
+
+        def reader():
+            # this runs in a thread
+            # the callback is self._read, which returns True when the terminal was exited
+            while True:
+                events = self.sel.select()
+                for key, mask in events:
+                    callback = key.data
+                    if callback():
+                        return
+
+        task_group.start_soon(partial(to_thread.run_sync, reader, abandon_on_cancel=True))
+
+    def _read(self) -> bool:
+        try:
+            data = self.p_out.read(65536)
+        except OSError:
+            from_thread.run_sync(self.quit)
+            return True
+        else:
+            from_thread.run_sync(self.send_stream.send_nowait, data)
+            return False
+
+    async def receive(self, max_bytes: int = 65536) -> bytes:
+        data = await self.recv_stream.receive()
+        return data
+
+    async def aclose(self) -> None:
+        pass
+
+
+class SendStream(ByteSendStream):
+    def __init__(self, p_out):
+        self.p_out = p_out
+
+    async def send(self, item: bytes) -> None:
+        self.p_out.write(item)
+
+    async def aclose(self) -> None:
+        pass

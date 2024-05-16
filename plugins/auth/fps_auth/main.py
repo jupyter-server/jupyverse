@@ -1,6 +1,6 @@
 import logging
 
-from asphalt.core import Component, Context
+from asphalt.core import Component, add_resource, get_resource
 from fastapi_users.exceptions import UserAlreadyExists
 
 from jupyverse_api.app import App
@@ -18,17 +18,14 @@ class AuthComponent(Component):
     def __init__(self, **kwargs):
         self.auth_config = _AuthConfig(**kwargs)
 
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        ctx.add_resource(self.auth_config, types=AuthConfig)
+    async def start(self) -> None:
+        add_resource(self.auth_config, types=AuthConfig)
 
-        app = await ctx.request_resource(App)
-        frontend_config = await ctx.request_resource(FrontendConfig)
+        app = await get_resource(App, wait=True)
+        frontend_config = await get_resource(FrontendConfig, wait=True)
 
         auth = auth_factory(app, self.auth_config, frontend_config)
-        ctx.add_resource(auth, types=Auth)
+        add_resource(auth, types=Auth)
 
         await auth.db.create_db_and_tables()
 
@@ -59,8 +56,8 @@ class AuthComponent(Component):
             )
 
         if self.auth_config.mode == "token":
-            query_params = await ctx.request_resource(QueryParams)
-            host = await ctx.request_resource(Host)
+            query_params = await get_resource(QueryParams, wait=True)
+            host = await get_resource(Host, wait=True)
             query_params.d["token"] = self.auth_config.token
 
             logger.info("")
