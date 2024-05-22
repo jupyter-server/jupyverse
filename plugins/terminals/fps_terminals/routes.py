@@ -45,9 +45,7 @@ class _Terminals(Terminals):
         name: str,
         user: User,
     ):
-        for websocket in TERMINALS[name]["server"].websockets:
-            TERMINALS[name]["server"].quit(websocket)
-        del TERMINALS[name]
+        await TERMINALS[name]["server"].exit(TERMINALS, name)
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     async def terminal_websocket(
@@ -59,8 +57,4 @@ class _Terminals(Terminals):
             return
         websocket, permissions = websocket_permissions
         await websocket.accept()
-        await TERMINALS[name]["server"].serve(websocket, permissions)
-        if name in TERMINALS:
-            TERMINALS[name]["server"].quit(websocket)
-            if not TERMINALS[name]["server"].websockets:
-                del TERMINALS[name]
+        await TERMINALS[name]["server"].serve(websocket, permissions, TERMINALS, name)

@@ -6,8 +6,6 @@ import shlex
 import struct
 import termios
 
-from fastapi import WebSocketDisconnect
-
 from jupyverse_api.terminals import TerminalServer
 
 
@@ -25,35 +23,26 @@ class _TerminalServer(TerminalServer):
     def __init__(self):
         self.fd = open_terminal()
         self.p_out = os.fdopen(self.fd, "w+b", 0)
-        self.websockets = []
-
-    async def serve(self, websocket, permissions):
-        self.websocket = websocket
-        self.websockets.append(websocket)
-        self.data_from_terminal = asyncio.Queue()
         self.loop = asyncio.get_event_loop()
-
-        task = asyncio.create_task(self.send_data())  # noqa: F841
+        self.data_from_terminal = asyncio.Queue()
+        self.websockets = []
 
         def on_output():
             try:
                 data = self.p_out.read(65536).decode()
-            except OSError:
-                try:
-                    self.loop.remove_reader(self.p_out)
-                except Exception:
-                    pass
-                try:
-                    os.close(self.fd)
-                except OSError:
-                    pass
+            except Exception:
                 self.data_from_terminal.put_nowait(None)
-                self.websockets.clear()
-                self.quit()
             else:
                 self.data_from_terminal.put_nowait(data)
 
         self.loop.add_reader(self.p_out, on_output)
+
+    async def serve(self, websocket, permissions, terminals, name):
+        self.websocket = websocket
+        self.websockets.append(websocket)
+
+        task = asyncio.create_task(self.send_data(terminals, name))  # noqa: F841
+
         await websocket.send_json(["setup", {}])
         can_execute = permissions is None or "execute" in permissions.get("terminals", [])
         try:
@@ -65,32 +54,29 @@ class _TerminalServer(TerminalServer):
                     elif msg[0] == "set_size":
                         winsize = struct.pack("HH", msg[1], msg[2])
                         fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
-        except WebSocketDisconnect:
-            self.quit(websocket)
+        except Exception:
+            if websocket in self.websockets:
+                self.websockets.remove(websocket)
 
-    async def send_data(self):
+    async def send_data(self, terminals, name):
         while True:
             data = await self.data_from_terminal.get()
             if data is None:
-                try:
-                    await self.websocket.send_json(["disconnect", 1])
-                except Exception:
-                    pass
+                await self.exit(terminals, name)
                 return
 
             for websocket in self.websockets:
                 await websocket.send_json(["stdout", data])
 
-    def quit(self, websocket=None):
-        if websocket in self.websockets:
-            self.websockets.remove(websocket)
-        if not self.websockets:
+    async def exit(self, terminals, name):
+        for websocket in self.websockets:
             try:
-                self.loop.remove_reader(self.p_out)
+                await websocket.send_json(["disconnect", 1])
             except Exception:
                 pass
-            try:
-                os.close(self.fd)
-            except OSError:
-                pass
-        self.data_from_terminal.put_nowait(None)
+        self.websockets.clear()
+        try:
+            self.loop.remove_reader(self.p_out)
+        except Exception:
+            pass
+        del terminals[name]
