@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import time
 import uuid
+from functools import partial
 from typing import Any, Dict, List, Optional, cast
 
-from pycrdt import Array, Map
+from pycrdt import Array, Doc, Map, MapEvent, Text
+from ypywidgets import Declare, Widget
 
 from jupyverse_api.yjs import Yjs
 
@@ -46,6 +50,7 @@ class KernelDriver:
         self.execute_requests: Dict[str, Dict[str, asyncio.Queue]] = {}
         self.comm_messages: asyncio.Queue = asyncio.Queue()
         self.tasks: List[asyncio.Task] = []
+        self._background_tasks: set[asyncio.Task] = set()
 
     async def restart(self, startup_timeout: float = float("inf")) -> None:
         for task in self.tasks:
@@ -80,13 +85,23 @@ class KernelDriver:
 
     def connect_channels(self, connection_cfg: Optional[cfg_t] = None):
         connection_cfg = connection_cfg or self.connection_cfg
-        self.shell_channel = connect_channel("shell", connection_cfg)
+        self.shell_channel = connect_channel(
+            "shell",
+            connection_cfg,
+            identity=self.session_id.encode(),
+        )
         self.control_channel = connect_channel("control", connection_cfg)
         self.iopub_channel = connect_channel("iopub", connection_cfg)
+        self.stdin_channel = connect_channel(
+            "stdin",
+            connection_cfg,
+            identity=self.session_id.encode(),
+        )
 
     def listen_channels(self):
         self.tasks.append(asyncio.create_task(self.listen_iopub()))
         self.tasks.append(asyncio.create_task(self.listen_shell()))
+        self.tasks.append(asyncio.create_task(self.listen_stdin()))
 
     async def stop(self) -> None:
         self.kernel_process.kill()
@@ -111,6 +126,13 @@ class KernelDriver:
             if msg_id in self.execute_requests.keys():
                 self.execute_requests[msg_id]["shell_msg"].put_nowait(msg)
 
+    async def listen_stdin(self):
+        while True:
+            msg = await receive_message(self.stdin_channel, change_str_to_date=True)
+            msg_id = msg["parent_header"].get("msg_id")
+            if msg_id in self.execute_requests.keys():
+               self.execute_requests[msg_id]["stdin_msg"].put_nowait(msg)
+
     async def execute(
         self,
         ycell: Map,
@@ -121,7 +143,7 @@ class KernelDriver:
         if ycell["cell_type"] != "code":
             return
         ycell["execution_state"] = "busy"
-        content = {"code": str(ycell["source"]), "silent": False}
+        content = {"code": str(ycell["source"]), "silent": False, "allow_stdin": True}
         msg = create_message(
             "execute_request", content, session_id=self.session_id, msg_id=str(self.msg_cnt)
         )
@@ -134,6 +156,7 @@ class KernelDriver:
         self.execute_requests[msg_id] = {
             "iopub_msg": asyncio.Queue(),
             "shell_msg": asyncio.Queue(),
+            "stdin_msg": asyncio.Queue(),
         }
         if wait_for_executed:
             deadline = time.time() + timeout
@@ -165,9 +188,11 @@ class KernelDriver:
                 ycell["execution_state"] = "idle"
             del self.execute_requests[msg_id]
         else:
-            self.tasks.append(asyncio.create_task(self._handle_iopub(msg_id, ycell)))
+            stdin_task = asyncio.create_task(self._handle_stdin(msg_id, ycell))
+            self.tasks.append(stdin_task)
+            self.tasks.append(asyncio.create_task(self._handle_iopub(msg_id, ycell, stdin_task)))
 
-    async def _handle_iopub(self, msg_id: str, ycell: Map) -> None:
+    async def _handle_iopub(self, msg_id: str, ycell: Map, stdin_task: asyncio.Task) -> None:
         while True:
             msg = await self.execute_requests[msg_id]["iopub_msg"].get()
             await self._handle_outputs(ycell["outputs"], msg)
@@ -175,10 +200,66 @@ class KernelDriver:
                 (msg["header"]["msg_type"] == "status"
                 and msg["content"]["execution_state"] == "idle")
             ):
+                stdin_task.cancel()
                 msg = await self.execute_requests[msg_id]["shell_msg"].get()
                 with ycell.doc.transaction():
                     ycell["execution_count"] = msg["content"]["execution_count"]
                     ycell["execution_state"] = "idle"
+
+    async def _handle_stdin(self, msg_id: str, ycell: Map) -> None:
+        while True:
+            msg = await self.execute_requests[msg_id]["stdin_msg"].get()
+            if msg["msg_type"] == "input_request":
+                content = msg["content"]
+                prompt = content["prompt"]
+                password = content["password"]
+                guid = uuid.uuid4().hex
+                path = f"ywidget:{guid}"
+                input_model = InputModel(prompt=prompt, password=password, value="")
+                await self.yjs.room_manager.websocket_server.get_room(path, ydoc=input_model.ydoc)
+                stdin_output = Map(
+                    {
+                     "output_type": "ywidget",
+                     "room_id": path,
+                     "model_name": "Input",
+                    }
+                )
+                outputs: Array = cast(Array, ycell.get("outputs"))
+                stdin_idx = len(outputs)
+                outputs.append(stdin_output)
+                input_model._attrs.observe_deep(
+                    partial(self._handle_stdin_submission, outputs, stdin_idx, password, prompt)
+                )
+
+    def _handle_stdin_submission(self, outputs, stdin_idx, password, prompt, events):
+        for event in events:
+            if isinstance(event, MapEvent):
+                if event.target["submitted"]:
+                    # send input reply to kernel
+                    value = str(event.target["value"])
+                    content = {"value": value}
+                    msg = create_message(
+                        "input_reply", content, session_id=self.session_id, msg_id=str(self.msg_cnt)
+                    )
+                    task0 = asyncio.create_task(
+                            send_message(msg, self.stdin_channel, self.key, change_date_to_str=True)
+                    )
+                    if password:
+                        value = "········"
+                    value = f"{prompt} {value}"
+                    task1 = asyncio.create_task(self._change_stdin_to_stream(outputs, stdin_idx, value))
+                    self._background_tasks.add(task0)
+                    self._background_tasks.add(task1)
+                    task0.add_done_callback(self._background_tasks.discard)
+                    task1.add_done_callback(self._background_tasks.discard)
+
+    async def _change_stdin_to_stream(self, outputs, stdin_idx, value):
+        # replace stdin output with stream output
+        outputs[stdin_idx] = {
+            "output_type": "stream",
+            "name": "stdin",
+            "text": value + '\n',
+        }
 
     async def _handle_comms(self) -> None:
         if self.yjs is None or self.yjs.widgets is None:  # type: ignore
@@ -296,3 +377,29 @@ class Comm:
         asyncio.create_task(
             send_message(msg, self.shell_channel, self.key, change_date_to_str=True)
         )
+
+
+class InputModel(Widget):
+    submitted = Declare[bool](False)
+    password = Declare[bool](False)
+    prompt = Declare[str]("")
+    value = Declare[Text](Text())
+
+    def __init__(
+        self,
+        submitted: bool | None = None,
+        password: bool | None = None,
+        prompt: str | None = None,
+        value: str | None = None,
+        ydoc: Doc | None = None,
+    ) -> None:
+        super().__init__(ydoc)
+        if submitted is not None:
+            self.submitted = submitted
+        if password is not None:
+            self.password = password
+        if prompt is not None:
+            self.prompt = prompt
+        self._attrs["value"] = _value = Text()
+        if value is not None:
+            _value += value
