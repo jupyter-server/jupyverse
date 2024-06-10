@@ -33,7 +33,6 @@ class AppComponent(Component):
 class JupyverseComponent(FastAPIComponent):
     def __init__(
         self,
-        components: dict[str, dict[str, Any] | None] | None = None,
         *,
         app: FastAPI | str | None = None,
         host: str = "127.0.0.1",
@@ -54,7 +53,6 @@ class JupyverseComponent(FastAPIComponent):
             }
             middlewares = list(middlewares) + [middleware]
         super().__init__(
-            components,  # type: ignore
             app=app,
             host=host,
             port=port,
@@ -67,7 +65,7 @@ class JupyverseComponent(FastAPIComponent):
         self.query_params = query_params
         self.lifespan = Lifespan()
 
-    async def start(self) -> None:
+    async def prepare(self) -> None:
         query_params = QueryParams(d={})
         host = self.host
         if not host.startswith("http"):
@@ -77,6 +75,9 @@ class JupyverseComponent(FastAPIComponent):
         add_resource(host_url)
         add_resource(self.lifespan)
 
+        await super().prepare()
+
+    async def start(self) -> None:
         await super().start()
 
         # at this point, the server has started
