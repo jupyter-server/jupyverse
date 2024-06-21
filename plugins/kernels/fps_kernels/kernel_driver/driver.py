@@ -207,6 +207,9 @@ class KernelDriver:
                     ycell["execution_state"] = "idle"
 
     async def _handle_stdin(self, msg_id: str, ycell: Map) -> None:
+        if self.yjs is None:
+            return
+
         while True:
             msg = await self.execute_requests[msg_id]["stdin_msg"].get()
             if msg["msg_type"] == "input_request":
@@ -303,30 +306,36 @@ class KernelDriver:
         content = msg["content"]
         if msg_type == "stream":
             with outputs.doc.transaction():
-                # TODO: uncomment when changes are made in jupyter-ydoc
                 text = content["text"]
                 if text.endswith((os.linesep, "\n")):
                     text = text[:-1]
-                if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
-                    outputs.append(
-                        #Map(
-                        #    {
-                        #        "name": content["name"],
-                        #        "output_type": msg_type,
-                        #        "text": Array([content["text"]]),
-                        #    }
-                        #)
+                stream_name = content["name"]
+                model_name = stream_name.capitalize() + "Output"
+                if (len(outputs) == 0) or (outputs[-1]["model_name"] != model_name):  # type: ignore
+                    guid = uuid.uuid4().hex
+                    path = f"ywidget:{guid}"
+                    output_model = OutputModel(text=text, stream_name=stream_name)
+                    _attrs = output_model.ydoc.get("_attrs", type=Map)
+                    _text = _attrs["text"]
+                    await self.yjs.room_manager.websocket_server.get_room(path, ydoc=output_model.ydoc)
+                    std_output = Map(
                         {
-                            "name": content["name"],
-                            "output_type": msg_type,
-                            "text": [text],
+                         "output_type": "ywidget",
+                         "room_id": path,
+                         "model_name": model_name,
                         }
                     )
+                    outputs.append(std_output)
                 else:
-                    #outputs[-1]["text"].append(content["text"])  # type: ignore
                     last_output = outputs[-1]
-                    last_output["text"].append(text)  # type: ignore
-                    outputs[-1] = last_output
+                    path = last_output["room_id"]
+                    model_name = last_output["model_name"]
+                    stream_name = model_name[:model_name.find("Output")]
+                    stream_name = stream_name[0].lower() + stream_name[1:]
+                    room = await self.yjs.room_manager.websocket_server.get_room(path)
+                    _attrs = room.ydoc.get("_attrs", type=Map)
+                    _text = _attrs["text"]
+                    _text += text
         elif msg_type in ("display_data", "execute_result"):
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
                 # this is a collaborative widget
@@ -403,3 +412,21 @@ class InputModel(Widget):
         self._attrs["value"] = _value = Text()
         if value is not None:
             _value += value
+
+
+class OutputModel(Widget):
+    text = Declare[Text](Text())
+    stream_name = Declare[str]("")
+
+    def __init__(
+        self,
+        text: str | None = None,
+        stream_name: str | None = None,
+        ydoc: Doc | None = None,
+    ) -> None:
+        super().__init__(ydoc)
+        if text is not None:
+            self._attrs["text"] = _text = Text()
+            _text += text
+        if stream_name is not None:
+            self.stream_name = stream_name
