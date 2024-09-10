@@ -228,24 +228,16 @@ class KernelDriver:
                     text = text[:-1]
                 if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
                     outputs.append(
-                        #Map(
-                        #    {
-                        #        "name": content["name"],
-                        #        "output_type": msg_type,
-                        #        "text": Array([content["text"]]),
-                        #    }
-                        #)
-                        {
-                            "name": content["name"],
-                            "output_type": msg_type,
-                            "text": [text],
-                        }
+                        Map(
+                            {
+                                "name": content["name"],
+                                "output_type": msg_type,
+                                "text": Array([content["text"]]),
+                            }
+                        )
                     )
                 else:
-                    #outputs[-1]["text"].append(content["text"])  # type: ignore
-                    last_output = outputs[-1]
-                    last_output["text"].append(text)  # type: ignore
-                    outputs[-1] = last_output
+                    outputs[-1]["text"].append(content["text"])  # type: ignore
         elif msg_type in ("display_data", "execute_result"):
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
                 # this is a collaborative widget
@@ -258,21 +250,25 @@ class KernelDriver:
                         outputs.append(doc)
             else:
                 outputs.append(
-                    {
-                        "data": {"text/plain": [content["data"].get("text/plain", "")]},
-                        "execution_count": content["execution_count"],
-                        "metadata": {},
-                        "output_type": msg_type,
-                    }
+                    Map(
+                        {
+                            "data": {"text/plain": [content["data"].get("text/plain", "")]},
+                            "execution_count": content["execution_count"],
+                            "metadata": {},
+                            "output_type": msg_type,
+                        }
+                    )
                 )
         elif msg_type == "error":
             outputs.append(
-                {
-                    "ename": content["ename"],
-                    "evalue": content["evalue"],
-                    "output_type": "error",
-                    "traceback": content["traceback"],
-                }
+                Map(
+                    {
+                        "ename": content["ename"],
+                        "evalue": content["evalue"],
+                        "output_type": "error",
+                        "traceback": content["traceback"],
+                    }
+                )
             )
 
 
