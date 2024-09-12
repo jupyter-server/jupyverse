@@ -1,15 +1,15 @@
 import sys
 from typing import Any
 
-from pycrdt import TransactionEvent
-
 try:
-    from ypywidgets.utils import (  # type: ignore
+    import ypywidgets  # noqa: F401
+    from pycrdt import (
+        TransactionEvent,
         YMessageType,
         YSyncMessageType,
+        create_sync_message,
         create_update_message,
-        process_sync_message,
-        sync,
+        handle_sync_message,
     )
     ypywidgets_installed = True
 except ImportError:
@@ -41,15 +41,15 @@ if ypywidgets_installed:
             self.comm = comm
             model = self.ydocs[f"{name}Model"]()
             self.widgets[comm_id] = {"model": model, "comm": comm}
-            msg = sync(model.ydoc)
-            comm.send(**msg)
+            msg = create_sync_message(model.ydoc)
+            comm.send(buffers=[msg])
 
         def comm_msg(self, msg) -> None:
             comm_id = msg["content"]["comm_id"]
             message = bytes(msg["buffers"][0])
             if message[0] == YMessageType.SYNC:
                 ydoc = self.widgets[comm_id]["model"].ydoc
-                reply = process_sync_message(
+                reply = handle_sync_message(
                     message[1:],
                     ydoc,
                 )

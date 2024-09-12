@@ -106,8 +106,8 @@ async def test_rest_api(start_jupyverse):
         cells = json.loads(str(ycells))
         assert cells[0]["outputs"] == [
             {
-                "data": {"text/plain": ["3"]},
-                "execution_count": 1.0,
+                "data": {"text/plain": "3"},
+                "execution_count": 1,
                 "metadata": {},
                 "output_type": "execute_result",
             }
@@ -117,8 +117,8 @@ async def test_rest_api(start_jupyverse):
         ]
         assert cells[2]["outputs"] == [
             {
-                "data": {"text/plain": ["7"]},
-                "execution_count": 3.0,
+                "data": {"text/plain": "7"},
+                "execution_count": 3,
                 "metadata": {},
                 "output_type": "execute_result",
             }
