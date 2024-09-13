@@ -257,14 +257,14 @@ class KernelDriver:
                         await self.yjs.room_manager.websocket_server.get_room(path, ydoc=doc)  # type: ignore
                         outputs.append(doc)
             else:
-                outputs.append(
-                    {
-                        "data": {"text/plain": [content["data"].get("text/plain", "")]},
-                        "execution_count": content["execution_count"],
-                        "metadata": {},
-                        "output_type": msg_type,
-                    }
-                )
+                output = {
+                    "data": content["data"],
+                    "metadata": {},
+                    "output_type": msg_type,
+                }
+                if msg_type == "execute_result":
+                    output["execution_count"] = content["execution_count"]
+                outputs.append(output)
         elif msg_type == "error":
             outputs.append(
                 {
