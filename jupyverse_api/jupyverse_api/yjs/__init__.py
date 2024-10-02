@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from jupyverse_api import Router
+from jupyverse_api import Config, Router
 
 from ..app import App
 from ..auth import Auth, User
@@ -61,3 +61,8 @@ class Yjs(Router, ABC):
         document_id: str,
     ):
         ...
+
+
+class YjsConfig(Config):
+    document_cleanup_delay: float = 60
+    document_save_delay: float = 1
