@@ -20,7 +20,7 @@ from websockets.exceptions import ConnectionClosedOK
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
-from jupyverse_api.yjs import Yjs
+from jupyverse_api.yjs import Yjs, YjsConfig
 from jupyverse_api.yjs.models import CreateDocumentSession
 
 from .ydocs import ydocs as YDOCS
@@ -44,12 +44,13 @@ class _Yjs(Yjs):
     def __init__(
         self,
         app: App,
+        yjs_config: YjsConfig,
         auth: Auth,
         contents: Contents,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.contents = contents
-        self.room_manager = RoomManager(contents)
+        self.room_manager = RoomManager(contents, yjs_config)
         if Widgets is None:
             self.widgets = None
         else:
@@ -148,8 +149,9 @@ class RoomManager:
     websocket_server: JupyterWebsocketServer
     lock: asyncio.Lock
 
-    def __init__(self, contents: Contents):
+    def __init__(self, contents: Contents, yjs_config: YjsConfig):
         self.contents = contents
+        self.yjs_config = yjs_config
         self.documents = {}  # a dictionary of room_name:document
         self.watchers = {}  # a dictionary of file_id:task
         self.savers = {}  # a dictionary of file_id:task
@@ -314,7 +316,7 @@ class RoomManager:
         self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
     ) -> None:
         # save after 1 second of inactivity to prevent too frequent saving
-        await asyncio.sleep(1)  # FIXME: pass in config
+        await asyncio.sleep(self.yjs_config.document_save_delay)
         # if the room cannot be found, don't save
         try:
             file_path = await self.get_file_path(file_id, document)
@@ -349,12 +351,12 @@ class RoomManager:
         del self.savers[file_id]
 
     async def maybe_clean_room(self, room, ws_path: str) -> None:
-        file_id = ws_path.split(":", 2)[2]
         # keep the document for a while in case someone reconnects
-        await asyncio.sleep(60)  # FIXME: pass in config
+        await asyncio.sleep(self.yjs_config.document_cleanup_delay)
         document = self.documents[ws_path]
         document.unobserve()
         del self.documents[ws_path]
+        file_id = ws_path.split(":", 2)[2]
         documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
         if not documents:
             self.watchers[file_id].cancel()
