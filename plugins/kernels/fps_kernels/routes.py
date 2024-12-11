@@ -182,13 +182,12 @@ class _Kernels(Kernels):
             kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
             await kernel_server.start()
         elif kernel_id is not None:
-            # external kernel
+            # already running kernel
             kernel_name = kernels[kernel_id]["name"]
             kernel_server = KernelServer(
                 connection_file=self.kernel_id_to_connection_file[kernel_id],
                 write_connection_file=False,
             )
-            kernels[kernel_id]["server"] = kernel_server
             await kernel_server.start(launch_kernel=False)
         else:
             return
