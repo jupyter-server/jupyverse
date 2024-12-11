@@ -178,6 +178,7 @@ class _Kernels(Kernels):
                 kernel_cwd=str(kernel_cwd),
             )
             kernel_id = str(uuid.uuid4())
+            self.kernel_id_to_connection_file[kernel_id] = kernel_server.connection_file_path
             kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
             await kernel_server.start()
         elif kernel_id is not None:
