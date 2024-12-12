@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime
 from functools import partial
 from typing import Dict
 from uuid import uuid4
 
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep
+from anyio.abc import TaskStatus
+from anyioutils import Task, create_task
 from fastapi import (
     HTTPException,
     Request,
@@ -14,20 +16,21 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from pycrdt import Doc
+from pycrdt import Doc, YMessageType, YSyncMessageType
 from websockets.exceptions import ConnectionClosedOK
 
+from jupyverse_api import ResourceLock
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
-from jupyverse_api.yjs import Yjs, YjsConfig
+from jupyverse_api.main import Lifespan
+from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
 
 from .ydocs import ydocs as YDOCS
 from .ydocs.ybasedoc import YBaseDoc
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
-from .ywebsocket.yutils import YMessageType, YSyncMessageType
 from .ywidgets import Widgets
 
 YFILE = YDOCS["file"]
@@ -44,17 +47,26 @@ class _Yjs(Yjs):
     def __init__(
         self,
         app: App,
-        yjs_config: YjsConfig,
         auth: Auth,
         contents: Contents,
+        lifespan: Lifespan,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.contents = contents
-        self.room_manager = RoomManager(contents, yjs_config)
+        self.lifespan = lifespan
         if Widgets is None:
             self.widgets = None
         else:
             self.widgets = Widgets()  # type: ignore
+
+    async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        async with create_task_group() as tg:
+            self.room_manager = RoomManager(self.contents, self.lifespan)
+            tg.start_soon(self.room_manager.start)
+            task_status.started()
+
+    async def stop(self) -> None:
+        await self.room_manager.stop()
 
     async def collaboration_room_websocket(
         self,
@@ -141,93 +153,110 @@ class YWebsocket:
 
 class RoomManager:
     contents: Contents
+    lifespan: Lifespan
     documents: Dict[str, YBaseDoc]
-    watchers: Dict[str, asyncio.Task]
-    savers: Dict[str, asyncio.Task]
-    cleaners: Dict[YRoom, asyncio.Task]
+    watchers: Dict[str, Task]
+    savers: Dict[str, Task]
+    cleaners: Dict[YRoom, Task]
     last_modified: Dict[str, datetime]
     websocket_server: JupyterWebsocketServer
-    lock: asyncio.Lock
+    room_lock: ResourceLock
 
-    def __init__(self, contents: Contents, yjs_config: YjsConfig):
+    def __init__(self, contents: Contents, lifespan: Lifespan):
         self.contents = contents
-        self.yjs_config = yjs_config
+        self.lifespan = lifespan
         self.documents = {}  # a dictionary of room_name:document
         self.watchers = {}  # a dictionary of file_id:task
         self.savers = {}  # a dictionary of file_id:task
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
-        self.websocket_server_task = asyncio.create_task(self.websocket_server.start())
-        self.lock = asyncio.Lock()
+        self.room_lock = ResourceLock()
 
-    def stop(self):
-        for watcher in self.watchers.values():
-            watcher.cancel()
-        for saver in self.savers.values():
-            saver.cancel()
-        for cleaner in self.cleaners.values():
-            cleaner.cancel()
-        self.websocket_server.stop()
+    async def start(self):
+        async with create_task_group() as self.task_group:
+            await self.task_group.start(self.websocket_server.start)
+            await self.lifespan.shutdown_request.wait()
+            await self.websocket_server.stop()
+
+    async def stop(self):
+        for task in (
+            list(self.watchers.values()) +
+            list(self.savers.values()) +
+            list(self.cleaners.values())
+        ):
+            task.cancel(raise_exception=False)
 
     async def serve(self, websocket: YWebsocket, permissions) -> None:
-        room = await self.websocket_server.get_room(websocket.path)
-        can_write = permissions is None or "write" in permissions.get("yjs", [])
-        room.on_message = partial(self.filter_message, can_write)
-        is_stored_document = websocket.path.count(":") >= 2
-        if is_stored_document:
-            assert room.ystore is not None
-            file_format, file_type, file_id = websocket.path.split(":", 2)
-            if room in self.cleaners:
-                # cleaning the room was scheduled because there was no client left
-                # cancel that since there is a new client
-                self.cleaners[room].cancel()
-            if not room.ready:
-                file_path = await self.contents.file_id_manager.get_path(file_id)
-                logger.info(f"Opening collaboration room: {websocket.path} ({file_path})")
-                document = YDOCS.get(file_type, YFILE)(room.ydoc)
-                document.file_id = file_id
-                self.documents[websocket.path] = document
-                async with self.lock:
-                    model = await self.contents.read_content(file_path, True, file_format)
-                assert model.last_modified is not None
-                self.last_modified[file_id] = to_datetime(model.last_modified)
+        async with self.room_lock(websocket.path):
+            room = await self.websocket_server.get_room(websocket.path)
+            can_write = permissions is None or "write" in permissions.get("yjs", [])
+            room.on_message = partial(self.filter_message, can_write)
+            is_stored_document = websocket.path.count(":") >= 2
+            if is_stored_document:
+                assert room.ystore is not None
+                file_format, file_type, file_id = websocket.path.split(":", 2)
+                if room in self.cleaners:
+                    # cleaning the room was scheduled because there was no client left
+                    # cancel that since there is a new client
+                    self.cleaners[room].cancel(raise_exception=False)
+                    await self.cleaners[room].wait()
+                    if room in self.cleaners:
+                        del self.cleaners[room]
                 if not room.ready:
-                    # try to apply Y updates from the YStore for this document
-                    try:
-                        await room.ystore.apply_updates(room.ydoc)
-                        read_from_source = False
-                    except YDocNotFound:
-                        # YDoc not found in the YStore, create the document from
-                        # the source file (no change history)
-                        read_from_source = True
-                    if not read_from_source:
-                        # if YStore updates and source file are out-of-sync, resync updates
-                        # with source
-                        if document.source != model.content:
+                    file_path = await self.contents.file_id_manager.get_path(file_id)
+                    logger.info(f"Opening collaboration room: {websocket.path} ({file_path})")
+                    document = YDOCS.get(file_type, YFILE)(room.ydoc)
+                    document.file_id = file_id
+                    self.documents[websocket.path] = document
+                    model = await self.contents.read_content(file_path, True, file_format)
+                    assert model.last_modified is not None
+                    self.last_modified[file_id] = to_datetime(model.last_modified)
+                    if not room.ready:
+                        # try to apply Y updates from the YStore for this document
+                        try:
+                            await room.ystore.apply_updates(room.ydoc)
+                            read_from_source = False
+                        except YDocNotFound:
+                            # YDoc not found in the YStore, create the document from
+                            # the source file (no change history)
                             read_from_source = True
-                    if read_from_source:
-                        document.source = model.content
-                        await room.ystore.encode_state_as_update(room.ydoc)
+                        if not read_from_source:
+                            # if YStore updates and source file are out-of-sync, resync updates
+                            # with source
+                            if document.source != model.content:
+                                read_from_source = True
+                        if read_from_source:
+                            document.source = model.content
+                            await room.ystore.encode_state_as_update(room.ydoc)
 
-                    document.dirty = False
-                    room.ready = True
-                    # save the document to file when changed
-                    document.observe(
-                        partial(self.on_document_change, file_id, file_type, file_format, document)
-                    )
-                    # update the document when file changes
-                    if file_id not in self.watchers:
-                        self.watchers[file_id] = asyncio.create_task(
-                            self.watch_file(file_format, file_id, document)
+                        document.dirty = False
+                        room.ready = True
+                        # save the document to file when changed
+                        document.observe(
+                            partial(
+                                self.on_document_change,
+                                file_id,
+                                file_type,
+                                file_format,
+                                document,
+                            )
                         )
+                        # update the document when file changes
+                        if file_id not in self.watchers:
+                            self.watchers[file_id] = create_task(
+                                self.watch_file(file_format, file_id, document),
+                                self.task_group,
+                            )
 
-        await self.websocket_server.started.wait()
-        await self.websocket_server.serve(websocket)
+        await self.websocket_server.serve(websocket, self.lifespan.shutdown_request)
 
-        if is_stored_document and not room.clients:
+        if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients:
             # no client in this room after we disconnect
-            self.cleaners[room] = asyncio.create_task(self.maybe_clean_room(room, websocket.path))
+            self.cleaners[room] = create_task(
+                self.maybe_clean_room(room, websocket.path),
+                self.task_group,
+            )
 
     async def filter_message(self, can_write: bool, message: bytes) -> bool:
         """
@@ -264,28 +293,28 @@ class RoomManager:
         file_path = await self.get_file_path(file_id, document)
         assert file_path is not None
         logger.debug(f"Watching file: {file_path}")
-        while True:
-            watcher = self.contents.file_id_manager.watch(file_path)
-            async for changes in watcher:
-                new_file_path = await self.get_file_path(file_id, document)
-                if new_file_path is None:
-                    continue
-                if new_file_path != file_path:
-                    # file was renamed
-                    self.contents.file_id_manager.unwatch(file_path, watcher)
-                    file_path = new_file_path
-                    # break
-                await self.maybe_load_file(file_format, file_path, file_id)
+        # FIXME: handle file rename/move?
+        watcher = self.contents.file_id_manager.watch(file_path)
+        async for changes in watcher:
+            new_file_path = await self.get_file_path(file_id, document)
+            if new_file_path is None:
+                continue
+            if new_file_path != file_path:
+                # file was renamed
+                self.contents.file_id_manager.unwatch(file_path, watcher)
+                file_path = new_file_path
+                # break
+            await self.maybe_load_file(file_format, file_path, file_id)
+        if file_id in self.watchers:
+            del self.watchers[file_id]
 
     async def maybe_load_file(self, file_format: str, file_path: str, file_id: str) -> None:
-        async with self.lock:
-            model = await self.contents.read_content(file_path, False)
+        model = await self.contents.read_content(file_path, False)
         # do nothing if the file was saved by us
         assert model.last_modified is not None
         if self.last_modified[file_id] < to_datetime(model.last_modified):
             # the file was not saved by us, update the shared document(s)
-            async with self.lock:
-                model = await self.contents.read_content(file_path, True, file_format)
+            model = await self.contents.read_content(file_path, True, file_format)
             assert model.last_modified is not None
             documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
             for document in documents:
@@ -307,24 +336,24 @@ class RoomManager:
             partial(self.on_document_change, file_id, file_type, file_format, document)
         )
         if file_id in self.savers:
-            self.savers[file_id].cancel()
-        self.savers[file_id] = asyncio.create_task(
-            self.maybe_save_document(file_id, file_type, file_format, document)
+            self.savers[file_id].cancel(raise_exception=False)
+        self.savers[file_id] = create_task(
+            self.maybe_save_document(file_id, file_type, file_format, document),
+            self.task_group,
         )
 
     async def maybe_save_document(
         self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
     ) -> None:
         # save after 1 second of inactivity to prevent too frequent saving
-        await asyncio.sleep(self.yjs_config.document_save_delay)
+        await sleep(1)  # FIXME: pass in config
         # if the room cannot be found, don't save
         try:
             file_path = await self.get_file_path(file_id, document)
         except Exception:
             return
         assert file_path is not None
-        async with self.lock:
-            model = await self.contents.read_content(file_path, True, file_format)
+        model = await self.contents.read_content(file_path, True, file_format)
         assert model.last_modified is not None
         if self.last_modified[file_id] < to_datetime(model.last_modified):
             # file changed on disk, let's revert
@@ -341,30 +370,34 @@ class RoomManager:
                 "path": file_path,
                 "type": file_type,
             }
-            async with self.lock:
-                await self.contents.write_content(content)
-                model = await self.contents.read_content(file_path, False)
+            await self.contents.write_content(content)
+            model = await self.contents.read_content(file_path, False)
             assert model.last_modified is not None
             self.last_modified[file_id] = to_datetime(model.last_modified)
         document.dirty = False
         # we're done saving, remove the saver
-        del self.savers[file_id]
+        if file_id in self.savers:
+            del self.savers[file_id]
 
     async def maybe_clean_room(self, room, ws_path: str) -> None:
+        file_id = ws_path.split(":", 2)[2]
         # keep the document for a while in case someone reconnects
-        await asyncio.sleep(self.yjs_config.document_cleanup_delay)
+        await sleep(60)  # FIXME: pass in config
         document = self.documents[ws_path]
         document.unobserve()
         del self.documents[ws_path]
-        file_id = ws_path.split(":", 2)[2]
         documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
         if not documents:
-            self.watchers[file_id].cancel()
-            del self.watchers[file_id]
+            self.watchers[file_id].cancel(raise_exception=False)
+            await self.watchers[file_id].wait()
+            if file_id in self.watchers:
+                del self.watchers[file_id]
         room_name = self.websocket_server.get_room_name(room)
         self.websocket_server.delete_room(room=room)
         file_path = await self.get_file_path(file_id, document)
         logger.info(f"Closing collaboration room: {room_name} ({file_path})")
+        if room in self.cleaners:
+            del self.cleaners[room]
 
 
 class JupyterWebsocketServer(WebsocketServer):

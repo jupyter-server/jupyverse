@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_resource_usage"
 description = "An FPS plugin for the resource usage API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "psutil >=5.9.4",
     "types-psutil",
@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
-"jupyverse.components" = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
+"fps.modules"       = {resource_usage = "fps_resource_usage.main:ResourceUsageModule"}
+"jupyverse.modules" = {resource_usage = "fps_resource_usage.main:ResourceUsageModule"}
 
 [tool.hatch.version]
 path = "fps_resource_usage/__init__.py"

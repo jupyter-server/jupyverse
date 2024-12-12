@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from jupyverse_api import Config
 
@@ -19,7 +19,7 @@ class Auth(ABC):
     def websocket_auth(
         self,
         permissions: Optional[Dict[str, List[str]]] = None,
-    ) -> Callable[[], Tuple[Any, Dict[str, List[str]]]]:
+    ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
         ...
 
 

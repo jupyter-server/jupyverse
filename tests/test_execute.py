@@ -1,30 +1,51 @@
-import asyncio
 import os
 from functools import partial
 from pathlib import Path
 
+import anyio
 import pytest
-from asphalt.core import Context
+from fps import get_root_module, merge_config
 from fps_yjs.ydocs import ydocs
 from fps_yjs.ywebsocket import WebsocketProvider
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 from pycrdt import Doc, Map, Text
-from utils import configure
-
-from jupyverse_api.main import JupyverseComponent
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
-COMPONENTS = {
-    "app": {"type": "app"},
-    "auth": {"type": "auth", "test": True},
-    "contents": {"type": "contents"},
-    "frontend": {"type": "frontend"},
-    "lab": {"type": "lab"},
-    "jupyterlab": {"type": "jupyterlab"},
-    "kernels": {"type": "kernels"},
-    "yjs": {"type": "yjs"},
+CONFIG = {
+    "jupyverse": {
+        "type": "jupyverse",
+        "modules": {
+            "app": {
+                "type": "app",
+            },
+            "auth": {
+                "type": "auth",
+                "config": {
+                    "test": True,
+                },
+            },
+            "contents": {
+                "type": "contents",
+            },
+            "frontend": {
+                "type": "frontend",
+            },
+            "lab": {
+                "type": "lab",
+            },
+            "jupyterlab": {
+                "type": "jupyterlab",
+            },
+            "kernels": {
+                "type": "kernels",
+            },
+            "yjs": {
+                "type": "yjs",
+            },
+        }
+    }
 }
 
 
@@ -55,20 +76,31 @@ class Websocket:
         return bytes(b)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_execute(auth_mode, unused_tcp_port):
     url = f"http://127.0.0.1:{unused_tcp_port}"
-    components = configure(COMPONENTS, {
-        "auth": {"mode": auth_mode},
-        "kernels": {"require_yjs": True},
-    })
-    async with Context() as ctx, AsyncClient() as http:
-        await JupyverseComponent(
-            components=components,
-            port=unused_tcp_port,
-        ).start(ctx)
-
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": unused_tcp_port},
+                "modules": {
+                    "auth": {
+                        "config": {
+                            "mode": auth_mode,
+                        }
+                    },
+                    "kernels": {
+                        "config": {
+                            "require_yjs": True,
+                        }
+                    },
+                }
+            }
+        }
+    )
+    async with get_root_module(config), AsyncClient() as http:
         ws_url = url.replace("http", "ws", 1)
         name = "notebook1.ipynb"
         path = (Path("tests") / "data" / name).as_posix()
@@ -98,7 +130,7 @@ async def test_execute(auth_mode, unused_tcp_port):
         def callback(aevent, events, event):
             events.append(event)
             aevent.set()
-        aevent = asyncio.Event()
+        aevent = anyio.Event()
         events = []
         ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
         async with aconnect_ws(
@@ -106,7 +138,7 @@ async def test_execute(auth_mode, unused_tcp_port):
         ) as websocket, WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)):
             # connect to the shared notebook document
             # wait for file to be loaded and Y model to be created in server and client
-            await asyncio.sleep(0.5)
+            await anyio.sleep(0.5)
             # execute notebook
             for cell_idx in range(2):
                 response = await http.post(
@@ -118,22 +150,22 @@ async def test_execute(auth_mode, unused_tcp_port):
                 )
             while True:
                 await aevent.wait()
-                aevent.clear()
+                aevent = anyio.Event()
                 guid = None
                 for event in events:
                     if event.added:
                         guid = event.added[0]
                 if guid is not None:
                     break
-            task = asyncio.create_task(connect_ywidget(ws_url, guid))
-            response = await http.post(
-                f"{url}/api/kernels/{kernel_id}/execute",
-                json={
-                    "document_id": document_id,
-                    "cell_id": ynb.ycells[2]["id"],
-                }
-            )
-            await task
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(connect_ywidget, ws_url, guid)
+                response = await http.post(
+                    f"{url}/api/kernels/{kernel_id}/execute",
+                    json={
+                        "document_id": document_id,
+                        "cell_id": ynb.ycells[2]["id"],
+                    }
+                )
 
 
 async def connect_ywidget(ws_url, guid):
@@ -141,7 +173,7 @@ async def connect_ywidget(ws_url, guid):
     async with aconnect_ws(
         f"{ws_url}/api/collaboration/room/ywidget:{guid}"
     ) as websocket, WebsocketProvider(ywidget_doc, Websocket(websocket, guid)):
-        await asyncio.sleep(0.5)
+        await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()
         ywidget_doc["_attrs"] = attrs

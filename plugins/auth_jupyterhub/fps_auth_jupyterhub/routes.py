@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from functools import partial
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 
-import httpx
+from anyio import TASK_STATUS_IGNORED, Lock, create_task_group
+from anyio.abc import TaskStatus
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
+from httpx import AsyncClient
 from jupyterhub.services.auth import HubOAuth
 from jupyterhub.utils import isoformat
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,16 +28,16 @@ from .models import JupyterHubUser
 def auth_factory(
     app: App,
     db_session: AsyncSession,
-    http_client: httpx.AsyncClient,
+    http_client: AsyncClient,
 ):
     class AuthJupyterHub(Auth, Router):
         def __init__(self) -> None:
             super().__init__(app)
             self.hub_auth = HubOAuth()
-            self.db_lock = asyncio.Lock()
+            self.db_lock = Lock()
             self.activity_url = os.environ.get("JUPYTERHUB_ACTIVITY_URL")
             self.server_name = os.environ.get("JUPYTERHUB_SERVER_NAME")
-            self.background_tasks = set()
+            self.http_client = AsyncClient()
 
             router = APIRouter()
 
@@ -123,8 +125,9 @@ def auth_factory(
                             "Content-Type": "application/json",
                         }
                         last_activity = isoformat(datetime.utcnow())
-                        task = asyncio.create_task(
-                            http_client.post(
+                        self.task_group.start_soon(
+                            partial(
+                                self.http_client.post,
                                 self.activity_url,
                                 headers=headers,
                                 json={
@@ -132,8 +135,6 @@ def auth_factory(
                                 },
                             )
                         )
-                        self.background_tasks.add(task)
-                        task.add_done_callback(self.background_tasks.discard)
                     return user
 
                 if permissions:
@@ -152,10 +153,19 @@ def auth_factory(
 
             return _
 
+        async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+            async with create_task_group() as tg:
+                self.task_group = tg
+                task_status.started()
+
+        async def stop(self) -> None:
+            await self.http_client.aclose()
+            self.task_group.cancel_scope.cancel()
+
         async def update_user(
             self, jupyverse_jupyterhub_token: Annotated[Union[str, None], Cookie()] = None
         ) -> Callable:
-            async def _(data: Dict[str, Any]) -> JupyterHubUser:
+            async def _(data: Dict[str, Any]) -> JupyterHubUser | None:
                 if jupyverse_jupyterhub_token is not None:
                     async with self.db_lock:
                         user_db = await db_session.scalar(
@@ -166,16 +176,17 @@ def auth_factory(
                         await db_session.commit()
                     user = JupyterHubUser.model_validate(user_db)
                     return user
+                return None
 
             return _
 
         def websocket_auth(
             self,
             permissions: Optional[Dict[str, List[str]]] = None,
-        ) -> Callable[[], Tuple[Any, Dict[str, List[str]]]]:
+        ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
             async def _(
                 websocket: WebSocket,
-            ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
+            ) -> Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]:
                 accept_websocket = False
                 if "jupyverse_jupyterhub_token" in websocket._cookies:
                     jupyverse_jupyterhub_token = websocket._cookies["jupyverse_jupyterhub_token"]

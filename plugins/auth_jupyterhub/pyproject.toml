@@ -7,12 +7,13 @@ name = "fps_auth_jupyterhub"
 description = "An FPS plugin for the authentication API, using JupyterHbu"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "asphalt-sqlalchemy >=5.0.1,<6",
     "httpx >=0.24.1,<1",
     "jupyterhub >=4.0.1,<5",
     "jupyverse-api >=0.1.2,<1",
+    "anyio",
 ]
 
 [[project.authors]]
@@ -36,8 +37,8 @@ ignore = [ ".*",]
 skip = [ "check-links" ]
 
 [project.entry-points]
-"asphalt.components"   = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubComponent"}
-"jupyverse.components" = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubComponent"}
+"fps.modules"       = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubModule"}
+"jupyverse.modules" = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubModule"}
 
 [tool.hatch.version]
 path = "fps_auth_jupyterhub/__init__.py"

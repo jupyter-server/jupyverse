@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_login"
 description = "An FPS plugin for the login API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
   "jupyverse-api >=0.1.2,<1",
 ]
@@ -32,8 +32,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {login = "fps_login.main:LoginComponent"}
-"jupyverse.components" = {login = "fps_login.main:LoginComponent"}
+"fps.modules"       = {login = "fps_login.main:LoginModule"}
+"jupyverse.modules" = {login = "fps_login.main:LoginModule"}
 
 [tool.hatch.version]
 path = "fps_login/__init__.py"

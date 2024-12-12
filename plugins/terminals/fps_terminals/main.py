@@ -1,7 +1,8 @@
-import os
+import sys
 from typing import Type
 
-from asphalt.core import Component, Context
+from anyio import create_task_group
+from fps import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -10,19 +11,22 @@ from jupyverse_api.terminals import Terminals, TerminalServer
 from .routes import _Terminals
 
 _TerminalServer: Type[TerminalServer]
-if os.name == "nt":
+if sys.platform == "win32":
     from .win_server import _TerminalServer
 else:
     from .server import _TerminalServer
 
 
-class TerminalsComponent(Component):
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)  # type: ignore
+class TerminalsModule(Module):
+    async def prepare(self) -> None:
+        app = await self.get(App)
+        auth = await self.get(Auth)  # type: ignore[type-abstract]
 
-        terminals = _Terminals(app, auth, _TerminalServer)
-        ctx.add_resource(terminals, types=Terminals)
+        self.terminals = _Terminals(app, auth, _TerminalServer)
+        self.put(self.terminals, types=Terminals)
+        async with create_task_group() as tg:
+            tg.start_soon(self.terminals.start)
+            self.done()
+
+    async def stop(self) -> None:
+        await self.terminals.stop()

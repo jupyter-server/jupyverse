@@ -2,7 +2,7 @@ import contextlib
 import json
 import logging
 import random
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select  # type: ignore
@@ -159,7 +159,7 @@ def auth_factory(
         def websocket_auth(
             self,
             permissions: Optional[Dict[str, List[str]]] = None,
-        ) -> Callable[[], Tuple[Any, Dict[str, List[str]]]]:
+        ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
             return backend.websocket_auth(permissions)
 
     return _Auth()

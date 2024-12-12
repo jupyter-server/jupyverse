@@ -1,8 +1,10 @@
+import json
 import sys
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import rich_click as click
-from asphalt.core.cli import run
+from fps import get_config, get_root_module, merge_config
+from fps import main as fps_main
 
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
@@ -11,6 +13,13 @@ else:
 
 
 @click.command()  # type: ignore
+@click.option(
+    "--debug",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Enable debug mode.",
+)
 @click.option(
     "--open-browser",
     is_flag=True,
@@ -29,6 +38,12 @@ else:
     type=int,
     default=8000,
     help="The host port.",
+)
+@click.option(
+    "--query-param",
+    multiple=True,
+    type=str,
+    help='The query parameter key and value, separated by "=".',
 )
 @click.option(
     "--allow-origin",
@@ -50,61 +65,53 @@ else:
     help="Disable plugin.",
 )
 def main(
+    debug: bool = False,
     open_browser: bool = False,
     host: str = "127.0.0.1",
     port: int = 8000,
     set_: Tuple[str, ...] = (),
     disable: Tuple[str, ...] = (),
     allow_origin: Tuple[str, ...] = (),
+    query_param: Tuple[str, ...] = (),
 ) -> None:
+    query_params_dict = {}
+    for qp in query_param:
+        key, _, value = qp.partition("=")
+        query_params_dict[key] = value
+    query_params_str = json.dumps(query_params_dict)
+    allow_origins_str = json.dumps(allow_origin)
     set_list: List[str] = list(set_)
-    for i, s in enumerate(set_list):
-        set_list[i] = f"component.components.{s}"
-    set_list.append(f"component.open_browser={open_browser}")
-    set_list.append(f"component.host={host}")
-    set_list.append(f"component.port={port}")
-    set_list.append(f"component.allow_origin={allow_origin}")
-    config = get_config(disable)
-    run.callback(
-        unsafe=False,
-        loop=None,
+    set_list.append(f"debug={debug}")
+    set_list.append(f"open_browser={open_browser}")
+    set_list.append(f"host={host}")
+    set_list.append(f"port={port}")
+    set_list.append(f"allow_origins={allow_origins_str}")
+    set_list.append(f"query_params={query_params_str}")
+    fps_main.callback(
+        "jupyverse_api.main:JupyverseModule",
         set_=set_list,
-        service=None,
-        configfile=[config],
     )  # type: ignore
+    cli_config = get_config()
+    pluggin_config = get_pluggin_config(disable)
+    config = merge_config(cli_config, pluggin_config)
+    root_module = get_root_module(config)
+    root_module.run()
 
 
-def get_config(disable: Tuple[str, ...]) -> str:
-    jupyverse_components = [
+def get_pluggin_config(disable: Tuple[str, ...]) -> dict[str, Any]:
+    jupyverse_modules = [
         ep.name
-        for ep in entry_points(group="jupyverse.components")
+        for ep in entry_points(group="jupyverse.modules")
         if ep.name not in disable
     ]
-
-    config = ["component:\n  type: jupyverse\n  components:\n"]
-    for component in jupyverse_components:
-        config.append(f"    {component}:\n      type: {component}\n")
-
-    config.append(
-        """
-logging:
-  version: 1
-  disable_existing_loggers: false
-  formatters:
-    default:
-      format: '[%(asctime)s %(levelname)s] %(message)s'
-  handlers:
-    console:
-      class: logging.StreamHandler
-      formatter: default
-  root:
-    handlers: [console]
-    level: INFO
-  loggers:
-    webnotifier:
-      level: DEBUG
-        """
-    )
-
-    config_str = "".join(config)
-    return config_str
+    config = {
+        "root_module": {
+            "modules": {
+                module: {
+                    "type": module
+                }
+                for module in jupyverse_modules
+            }
+        }
+    }
+    return config

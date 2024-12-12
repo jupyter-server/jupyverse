@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context
+from fps import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -9,15 +9,12 @@ from jupyverse_api.lab import Lab
 from .routes import _Lab
 
 
-class LabComponent(Component):
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)  # type: ignore
-        frontend_config = await ctx.request_resource(FrontendConfig)
-        jupyterlab_config = ctx.get_resource(JupyterLabConfig)
+class LabModule(Module):
+    async def prepare(self) -> None:
+        app = await self.get(App)
+        auth = await self.get(Auth)  # type: ignore[type-abstract]
+        frontend_config = await self.get(FrontendConfig)
+        jupyterlab_config = await self.get(JupyterLabConfig, timeout=0.1)
 
         lab = _Lab(app, auth, frontend_config, jupyterlab_config)
-        ctx.add_resource(lab, types=Lab)
+        self.put(lab, types=Lab)

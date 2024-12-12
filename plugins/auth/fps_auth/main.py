@@ -1,34 +1,31 @@
-import logging
-
-from asphalt.core import Component, Context
+import structlog
 from fastapi_users.exceptions import UserAlreadyExists
+from fps import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, AuthConfig
 from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.main import Host, QueryParams
+from jupyverse_api.main import QueryParams
 
 from .config import _AuthConfig
 from .routes import auth_factory
 
-logger = logging.getLogger("auth")
+log = structlog.get_logger()
 
 
-class AuthComponent(Component):
-    def __init__(self, **kwargs):
+class AuthModule(Module):
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name)
         self.auth_config = _AuthConfig(**kwargs)
 
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        ctx.add_resource(self.auth_config, types=AuthConfig)
+    async def prepare(self) -> None:
+        self.put(self.auth_config, types=AuthConfig)
 
-        app = await ctx.request_resource(App)
-        frontend_config = await ctx.request_resource(FrontendConfig)
+        app = await self.get(App)
+        frontend_config = await self.get(FrontendConfig)
 
         auth = auth_factory(app, self.auth_config, frontend_config)
-        ctx.add_resource(auth, types=Auth)
+        self.put(auth, types=Auth)
 
         await auth.db.create_db_and_tables()
 
@@ -59,11 +56,5 @@ class AuthComponent(Component):
             )
 
         if self.auth_config.mode == "token":
-            query_params = await ctx.request_resource(QueryParams)
-            host = await ctx.request_resource(Host)
+            query_params = await self.get(QueryParams)
             query_params.d["token"] = self.auth_config.token
-
-            logger.info("")
-            logger.info("To access the server, copy and paste this URL:")
-            logger.info(f"{host.url}?token={self.auth_config.token}")
-            logger.info("")

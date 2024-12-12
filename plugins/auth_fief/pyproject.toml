@@ -34,7 +34,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
+"fps.components"       = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
 "jupyverse.components" = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
 
 [tool.hatch.version]

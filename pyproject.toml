@@ -52,10 +52,10 @@ test = [
     "httpx",
     "httpx-ws >=0.4.1",
     "requests",
-    "websockets",
     "ipykernel",
     "ypywidgets >=0.9.3,<0.10.0",
     "ypywidgets-textual >=0.5.0,<0.6.0",
+    "trio",
 ]
 docs = [ "mkdocs", "mkdocs-material" ]
 
@@ -181,6 +181,3 @@ python_packages = [
 
 [tool.hatch.version]
 path = "jupyverse/__init__.py"
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"

@@ -1,56 +1,45 @@
 from __future__ import annotations
 
-import asyncio
-from collections.abc import AsyncGenerator
-from pathlib import Path
-from typing import Optional
-
-from asphalt.core import Component, Context, context_teardown
+import structlog
+from anyio import create_task_group
+from fps import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.kernels import Kernels, KernelsConfig
+from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 
-from .kernel_driver.paths import jupyter_runtime_dir
 from .routes import _Kernels
 
+log = structlog.get_logger()
 
-class KernelsComponent(Component):
-    def __init__(self, **kwargs):
+
+class KernelsModule(Module):
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name)
         self.kernels_config = KernelsConfig(**kwargs)
 
-    @context_teardown
-    async def start(
-        self,
-        ctx: Context,
-    ) -> AsyncGenerator[None, Optional[BaseException]]:
-        ctx.add_resource(self.kernels_config, types=KernelsConfig)
+    async def prepare(self) -> None:
+        self.put(self.kernels_config, types=KernelsConfig)
 
-        app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)  # type: ignore
-        frontend_config = await ctx.request_resource(FrontendConfig)
+        app = await self.get(App)
+        auth = await self.get(Auth)  # type: ignore[type-abstract]
+        frontend_config = await self.get(FrontendConfig)
+        lifespan = await self.get(Lifespan)
         yjs = (
-            await ctx.request_resource(Yjs)  # type: ignore
+            await self.get(Yjs)  # type: ignore[type-abstract]
             if self.kernels_config.require_yjs
             else None
         )
 
-        kernels = _Kernels(app, self.kernels_config, auth, frontend_config, yjs)
-        ctx.add_resource(kernels, types=Kernels)
+        self.kernels = _Kernels(app, self.kernels_config, auth, frontend_config, yjs, lifespan)
+        self.put(self.kernels, types=Kernels)
 
-        if self.kernels_config.allow_external_kernels:
-            external_connection_dir = self.kernels_config.external_connection_dir
-            if external_connection_dir is None:
-                path = Path(jupyter_runtime_dir()) / "external_kernels"
-            else:
-                path = Path(external_connection_dir)
-            task = asyncio.create_task(kernels.watch_connection_files(path))
+        async with create_task_group() as tg:
+            tg.start_soon(self.kernels.start)
+            self.done()
 
-        yield
-
-        if self.kernels_config.allow_external_kernels:
-            task.cancel()
-        for kernel in kernels.kernels.values():
-            await kernel["server"].stop()
+    async def stop(self) -> None:
+        await self.kernels.stop()

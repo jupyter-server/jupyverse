@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 import httpx
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -163,7 +163,7 @@ def auth_factory(
         def websocket_auth(
             self,
             permissions: Optional[Dict[str, List[str]]] = None,
-        ) -> Callable[[], Tuple[Any, Dict[str, List[str]]]]:
+        ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
             return backend.websocket_auth(permissions)
 
     return _AuthFief()

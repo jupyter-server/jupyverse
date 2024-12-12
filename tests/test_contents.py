@@ -2,17 +2,31 @@ import os
 from pathlib import Path
 
 import pytest
-from asphalt.core import Context
+from fps import get_root_module, merge_config
 from httpx import AsyncClient
-from utils import clear_content_values, configure, create_content, sort_content_by_name
+from utils import clear_content_values, create_content, sort_content_by_name
 
-from jupyverse_api.main import JupyverseComponent
-
-COMPONENTS = {
-    "app": {"type": "app"},
-    "auth": {"type": "auth", "test": True},
-    "contents": {"type": "contents"},
-    "frontend": {"type": "frontend"},
+CONFIG = {
+    "jupyverse": {
+        "type": "jupyverse",
+        "modules": {
+            "app": {
+                "type": "app",
+            },
+            "auth": {
+                "type": "auth",
+                "config": {
+                    "test": True,
+                },
+            },
+            "contents": {
+                "type": "contents",
+            },
+            "frontend": {
+                "type": "frontend",
+            },
+        }
+    }
 }
 
 
@@ -64,13 +78,22 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
         format="json",
     )
 
-    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
-        await JupyverseComponent(
-            components=components,
-            port=unused_tcp_port,
-        ).start(ctx)
-
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": unused_tcp_port},
+                "modules": {
+                    "auth": {
+                        "config": {
+                            "mode": auth_mode,
+                        }
+                    }
+                }
+            }
+        }
+    )
+    async with get_root_module(config), AsyncClient() as http:
         response = await http.get(
             f"http://127.0.0.1:{unused_tcp_port}/api/contents", params={"content": 1}
         )
