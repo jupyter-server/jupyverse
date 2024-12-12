@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context
+from fastaio import Component
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, AuthConfig
@@ -8,16 +8,13 @@ from .routes import auth_factory
 
 
 class AuthFiefComponent(Component):
-    def __init__(self, **kwargs):
+    def __init__(self, name: str, **kwargs):
         self.auth_fief_config = _AuthFiefConfig(**kwargs)
 
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        ctx.add_resource(self.auth_fief_config, types=AuthConfig)
+    async def start(self) -> None:
+        self.add_resource(self.auth_fief_config, types=AuthConfig)
 
-        app = await ctx.request_resource(App)
+        app = await self.request_resource(App)
 
         auth_fief = auth_factory(app, self.auth_fief_config)
-        ctx.add_resource(auth_fief, types=Auth)
+        self.add_resource(auth_fief, types=Auth)

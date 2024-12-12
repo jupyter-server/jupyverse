@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import logging
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List
 
+import structlog
 from fastapi import FastAPI, Request
 
 from ..exceptions import RedirectException, _redirect_exception_handler
 
-logger = logging.getLogger("app")
+logger = structlog.get_logger()
 
 
 class App:
@@ -57,7 +57,7 @@ class App:
                         f"{_type} adds a handler for a path that is already defined in "
                         f"{_router}: {path}"
                     )
-            logger.debug("%s added handler for path: %s", _type, path)
+            logger.debug("Handler added", type=_type, path=path)
             new_paths.append(path)
         self._router_paths[_type].extend(new_paths)
         self._app.include_router(router, **kwargs)
@@ -69,7 +69,7 @@ class App:
                     f"{_type } mounts a path that is already defined in {_router}: {path}"
                 )
         self._router_paths[_type].append(path)
-        logger.debug("%s mounted path: %s", _type, path)
+        logger.debug("Path mounted", type=_type, path=path)
         self._app.mount(path, *args, **kwargs)
 
     def add_middleware(self, middleware, *args, **kwargs) -> None:

@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context
+from fastaio import Component
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import AuthConfig
@@ -8,12 +8,11 @@ from .routes import _Login
 
 
 class LoginComponent(Component):
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(App)
-        auth_config = await ctx.request_resource(AuthConfig)
+    async def prepare(self) -> None:
+        app = await self.get_resource(App)
+        auth_config = await self.get_resource(AuthConfig)
 
         login = _Login(app, auth_config)
-        ctx.add_resource(login, types=Login)
+        self.add_resource(login, types=Login)
+
+        self.done()

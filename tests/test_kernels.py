@@ -4,29 +4,50 @@ from pathlib import Path
 from time import sleep
 
 import pytest
-from asphalt.core import Context
+from fastaio import get_root_component, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
-from utils import configure
-
-from jupyverse_api.main import JupyverseComponent
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
-COMPONENTS = {
-    "app": {"type": "app"},
-    "auth": {"type": "auth", "test": True},
-    "contents": {"type": "contents"},
-    "frontend": {"type": "frontend"},
-    "lab": {"type": "lab"},
-    "jupyterlab": {"type": "jupyterlab"},
-    "kernels": {"type": "kernels"},
-    "yjs": {"type": "yjs"},
+CONFIG = {
+    "jupyverse": {
+        "type": "jupyverse_api.main:JupyverseComponent",
+        "components": {
+            "app": {
+                "type": "jupyverse_api.main:AppComponent",
+            },
+            "auth": {
+                "type": "fps_auth.main:AuthComponent",
+                "config": {
+                    "test": True,
+                },
+            },
+            "contents": {
+                "type": "fps_contents.main:ContentsComponent",
+            },
+            "frontend": {
+                "type": "fps_frontend.main:FrontentComponent",
+            },
+            "lab": {
+                "type": "fps_lab.main:LabComponent",
+            },
+            "jupyterlab": {
+                "type": "fps_jupyterlab.main:JupyterlabComponent",
+            },
+            "kernels": {
+                "type": "fps_kernels.main:KernelsComponent",
+            },
+            "yjs": {
+                "type": "fps_yjs.main:YjsComponent",
+            },
+        }
+    }
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
     kernel_id = "kernel_id_0"
@@ -50,13 +71,22 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
         },
     }
 
-    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient():
-        await JupyverseComponent(
-            components=components,
-            port=unused_tcp_port,
-        ).start(ctx)
-
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": unused_tcp_port},
+                "components": {
+                    "auth": {
+                        "config": {
+                            "mode": auth_mode,
+                        }
+                    }
+                }
+            }
+        }
+    )
+    async with get_root_component(config), AsyncClient():
         # block msg_type_0
         msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
         kernel_server.block_messages("msg_type_0")

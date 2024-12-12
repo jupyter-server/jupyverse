@@ -11,6 +11,7 @@ try:
         create_update_message,
         handle_sync_message,
     )
+
     ypywidgets_installed = True
 except ImportError:
     ypywidgets_installed = False
@@ -24,11 +25,10 @@ else:
 Widgets: Any
 
 if ypywidgets_installed:
+
     class Widgets:  # type: ignore
         def __init__(self):
-            self.ydocs = {
-                ep.name: ep.load() for ep in entry_points(group="ypywidgets")
-            }
+            self.ydocs = {ep.name: ep.load() for ep in entry_points(group="ypywidgets")}
             self.widgets = {}
 
         def comm_open(self, msg, comm) -> None:

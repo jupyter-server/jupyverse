@@ -181,6 +181,3 @@ python_packages = [
 
 [tool.hatch.version]
 path = "jupyverse/__init__.py"
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"

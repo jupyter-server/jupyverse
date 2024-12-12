@@ -46,7 +46,7 @@ class WebDAV:
 
         for account in webdav_config.account_mapping:
             logger.info(f"WebDAV user {account.username} has password {account.password}")
-        webdav_conf = webdav_config.dict()
+        webdav_conf = webdav_config.model_dump()
         init_config_from_obj(webdav_conf)
         webdav_aep = AppEntryParameters()
         webdav_app = get_asgi_app(aep=webdav_aep, config_obj=webdav_conf)

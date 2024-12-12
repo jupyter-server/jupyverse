@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context
+from fastaio import Component
 
 from jupyverse_api.auth import Auth
 
@@ -6,9 +6,7 @@ from .backends import _NoAuth
 
 
 class NoAuthComponent(Component):
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
+    async def prepare(self) -> None:
         no_auth = _NoAuth()
-        ctx.add_resource(no_auth, types=Auth)
+        self.add_resource(no_auth, types=Auth)
+        self.done()

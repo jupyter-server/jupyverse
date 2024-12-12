@@ -33,7 +33,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"}
+"fastaio.components"   = {jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"}
 "jupyverse.components" = {jupyterlab = "fps_jupyterlab.main:JupyterLabComponent"}
 
 [tool.hatch.version]

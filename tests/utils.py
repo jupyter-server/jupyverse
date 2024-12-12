@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Dict, List, Optional
 from uuid import uuid4
 
@@ -57,15 +56,6 @@ async def authenticate_client(http, port, permissions={}):
     assert me["identity"]["username"] == username
     # check our permissions
     assert me["permissions"] == permissions
-
-
-def configure(components, config):
-    # TODO: generalize to arbitrary nested dictionaries, not just one level
-    _components = deepcopy(components)
-    for k1, v1 in config.items():
-        for k2, v2 in v1.items():
-            _components[k1][k2] = v2
-    return _components
 
 
 def create_content(

@@ -1,41 +1,38 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from typing import Optional
+from fastaio import Component
 
-from asphalt.core import Component, Context, context_teardown
-
+from anyio import create_task_group
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.contents import Contents
+from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs, YjsConfig
 
 from .routes import _Yjs
 
 
 class YjsComponent(Component):
-    def __init__(self, **kwargs):
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name)
         self.yjs_config = YjsConfig(**kwargs)
 
-    @context_teardown
-    async def start(
-        self,
-        ctx: Context,
-    ) -> AsyncGenerator[None, Optional[BaseException]]:
-        ctx.add_resource(self.yjs_config, types=YjsConfig)
+    async def prepare(self) -> None:
+        self.add_resource(self.yjs_config, types=YjsConfig)
 
-        app = await ctx.request_resource(App)
-        auth = await ctx.request_resource(Auth)  # type: ignore
-        contents = await ctx.request_resource(Contents)  # type: ignore
+        app = await self.get_resource(App)
+        auth = await self.get_resource(Auth)
+        self.contents = await self.get_resource(Contents)
+        lifespan = await self.get_resource(Lifespan)
 
-        yjs = _Yjs(app, self.yjs_config, auth, contents)
-        ctx.add_resource(yjs, types=Yjs)
+        self.yjs = _Yjs(app, auth, self.contents, lifespan)
+        self.add_resource(self.yjs, types=Yjs)
 
-        # start indexing in the background
-        contents.file_id_manager
+        async with create_task_group() as tg:
+            tg.start_soon(self.yjs.start)
+            tg.start_soon(self.contents.file_id_manager.start)
+            self.done()
 
-        yield
-
-        yjs.room_manager.stop()
-        contents.file_id_manager.stop_watching_files.set()
-        await contents.file_id_manager.stopped_watching_files.wait()
+    async def stop(self) -> None:
+        await self.yjs.stop()
+        await self.contents.file_id_manager.stop()

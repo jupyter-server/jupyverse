@@ -1,5 +1,6 @@
 import pytest
-from asphalt.core import Context
+
+from fastaio import get_root_component
 from fastapi import APIRouter
 from httpx import AsyncClient
 from utils import configure
@@ -9,7 +10,7 @@ from jupyverse_api.app import App
 from jupyverse_api.main import JupyverseComponent
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize(
     "mount_path",
     (
@@ -18,15 +19,22 @@ from jupyverse_api.main import JupyverseComponent
     ),
 )
 async def test_mount_path(mount_path, unused_tcp_port):
-    components = configure({"app": {"type": "app"}}, {"app": {"mount_path": mount_path}})
+    config = {
+        "jupyverse": {
+            "type": "jupyverse",
+            "components": {
+                "app": {
+                    "type": "app",
+                    "config": {
+                        "mout_path": mount_path
+                    }
+                },
+            }
+        }
+    }
 
-    async with Context() as ctx, AsyncClient() as http:
-        await JupyverseComponent(
-            components=components,
-            port=unused_tcp_port,
-        ).start(ctx)
-
-        app = await ctx.request_resource(App)
+    async with AsyncClient() as http, get_root_component(config) as jupyverse_component:
+        app = await jupyverse_component.get_resource(App)
         router = APIRouter()
 
         @router.get("/")
