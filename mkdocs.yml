@@ -35,7 +35,7 @@ nav:
   - usage/single_user.md
   - usage/multi_user.md
   - usage/microservices.md
-- Turorials:
+- Tutorials:
   - tutorials/standalone_jupyverse_deployment.md
   - tutorials/jupyterhub_jupyverse_deployment.md
 - Plugins:
