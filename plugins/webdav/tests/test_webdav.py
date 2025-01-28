@@ -1,13 +1,10 @@
 import sys
-from copy import deepcopy
 from pathlib import Path
 from uuid import uuid4
 
 import easywebdav  # type: ignore
 import pytest
 from anyio import to_thread
-
-from jupyverse_api.main import JupyverseComponent
 
 COMPONENTS = {
     "app": {"type": "app"},

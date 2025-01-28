@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from anyio import create_task_group
 from fastaio import Component
 
-from anyio import create_task_group
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.contents import Contents

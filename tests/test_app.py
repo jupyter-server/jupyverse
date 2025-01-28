@@ -1,13 +1,10 @@
 import pytest
-
 from fastaio import get_root_component
 from fastapi import APIRouter
 from httpx import AsyncClient
-from utils import configure
 
 from jupyverse_api import Router
 from jupyverse_api.app import App
-from jupyverse_api.main import JupyverseComponent
 
 
 @pytest.mark.anyio
