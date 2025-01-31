@@ -3,9 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import anyio
-from anyio import BrokenResourceError
 from anyio.streams.memory import MemoryObjectSendStream
-from pycrdt import Doc, TransactionEvent
+from pycrdt import TransactionEvent
 
 
 def put_updates(update_send_stream: MemoryObjectSendStream, event: TransactionEvent) -> None:

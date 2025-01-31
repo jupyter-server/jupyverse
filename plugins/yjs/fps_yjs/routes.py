@@ -6,8 +6,8 @@ from functools import partial
 from typing import Dict
 from uuid import uuid4
 
-from anyio import TASK_STATUS_IGNORED, Event, create_task_group, sleep
-from anyio.abc import TaskGroup, TaskStatus
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep
+from anyio.abc import TaskStatus
 from anyioutils import Task, create_task
 from fastapi import (
     HTTPException,
@@ -16,7 +16,7 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from pycrdt import Doc
+from pycrdt import Doc, YMessageType, YSyncMessageType
 from websockets.exceptions import ConnectionClosedOK
 
 from jupyverse_api import ResourceLock
@@ -31,7 +31,6 @@ from .ydocs import ydocs as YDOCS
 from .ydocs.ybasedoc import YBaseDoc
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
-from pycrdt import YMessageType, YSyncMessageType
 from .ywidgets import Widgets
 
 YFILE = YDOCS["file"]

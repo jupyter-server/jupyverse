@@ -2,10 +2,10 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
-from fastaio import get_root_component, merge_config
 import easywebdav  # type: ignore
 import pytest
 from anyio import to_thread
+from fastaio import get_root_component, merge_config
 
 CONFIG = {
     "jupyverse": {

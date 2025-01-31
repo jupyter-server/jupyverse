@@ -4,10 +4,9 @@ from logging import getLogger
 from typing import TypedDict
 
 from channels.generic.websocket import AsyncWebsocketConsumer  # type: ignore
-from pycrdt import Doc
+from pycrdt import Doc, YMessageType, YSyncMessageType, process_sync_message
 
 from .websocket import Websocket
-from pycrdt import YMessageType, YSyncMessageType, process_sync_message, create_sync_message
 
 logger = getLogger(__name__)
 

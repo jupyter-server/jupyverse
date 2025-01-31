@@ -14,7 +14,14 @@ from anyio import (
 )
 from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
-from pycrdt import YMessageType, YSyncMessageType, Doc, create_update_message, create_sync_message, handle_sync_message
+from pycrdt import (
+    Doc,
+    YMessageType,
+    YSyncMessageType,
+    create_sync_message,
+    create_update_message,
+    handle_sync_message,
+)
 
 from .awareness import Awareness
 from .websocket import Websocket
