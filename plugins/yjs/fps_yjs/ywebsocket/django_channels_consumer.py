@@ -7,7 +7,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer  # type: ignore
 from pycrdt import Doc
 
 from .websocket import Websocket
-from .yutils import YMessageType, process_sync_message, sync
+from pycrdt import YMessageType, YSyncMessageType, process_sync_message, create_sync_message
 
 logger = getLogger(__name__)
 
@@ -159,7 +159,13 @@ class YjsConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.accept()
 
-        await sync(self.ydoc, self._websocket_shim, logger)
+        sync_message = create_sync_messafe(self.ydoc)
+        logger.debug(
+            "Sending %s message to endpoint: %s",
+            YSyncMessageType.SYNC_STEP1.name,
+            self._websocket_shim.path,
+        )
+        await self._websocket_shim.send(sync_message)
 
     async def disconnect(self, code) -> None:
         await self.channel_layer.group_discard(self.room_name, self.channel_name)

@@ -19,11 +19,14 @@ async def test_mount_path(mount_path, unused_tcp_port):
     config = {
         "jupyverse": {
             "type": "jupyverse",
+            "config": {
+                "port": unused_tcp_port,
+            },
             "components": {
                 "app": {
                     "type": "app",
                     "config": {
-                        "mout_path": mount_path
+                        "mount_path": mount_path
                     }
                 },
             }

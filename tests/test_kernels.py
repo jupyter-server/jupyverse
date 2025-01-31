@@ -4,6 +4,7 @@ from pathlib import Path
 from time import sleep
 
 import pytest
+from anyio import create_task_group
 from fastaio import get_root_component, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
 from httpx import AsyncClient
@@ -13,34 +14,34 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 CONFIG = {
     "jupyverse": {
-        "type": "jupyverse_api.main:JupyverseComponent",
+        "type": "jupyverse",
         "components": {
             "app": {
-                "type": "jupyverse_api.main:AppComponent",
+                "type": "app",
             },
             "auth": {
-                "type": "fps_auth.main:AuthComponent",
+                "type": "auth",
                 "config": {
                     "test": True,
                 },
             },
             "contents": {
-                "type": "fps_contents.main:ContentsComponent",
+                "type": "contents",
             },
             "frontend": {
-                "type": "fps_frontend.main:FrontentComponent",
+                "type": "frontend",
             },
             "lab": {
-                "type": "fps_lab.main:LabComponent",
+                "type": "lab",
             },
             "jupyterlab": {
-                "type": "fps_jupyterlab.main:JupyterlabComponent",
+                "type": "jupyterlab",
             },
             "kernels": {
-                "type": "fps_kernels.main:KernelsComponent",
+                "type": "kernels",
             },
             "yjs": {
-                "type": "fps_yjs.main:YjsComponent",
+                "type": "yjs",
             },
         }
     }
@@ -57,76 +58,79 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
     )
     assert kernelspec_path.exists()
     kernel_server = KernelServer(kernelspec_path=kernelspec_path, capture_kernel_output=False)
-    await kernel_server.start()
-    kernels[kernel_id] = {"server": kernel_server}
-    msg_id = "0"
-    msg = {
-        "channel": "shell",
-        "parent_header": None,
-        "content": None,
-        "metadata": None,
-        "header": {
-            "msg_type": "msg_type_0",
-            "msg_id": msg_id,
-        },
-    }
+    async with create_task_group() as tg:
+        await tg.start(kernel_server.start)
+        kernels[kernel_id] = {"server": kernel_server}
+        msg_id = "0"
+        msg = {
+            "channel": "shell",
+            "parent_header": None,
+            "content": None,
+            "metadata": None,
+            "header": {
+                "msg_type": "msg_type_0",
+                "msg_id": msg_id,
+            },
+        }
 
-    config = merge_config(
-        CONFIG,
-        {
-            "jupyverse": {
-                "config": {"port": unused_tcp_port},
-                "components": {
-                    "auth": {
-                        "config": {
-                            "mode": auth_mode,
+        config = merge_config(
+            CONFIG,
+            {
+                "jupyverse": {
+                    "config": {"port": unused_tcp_port},
+                    "components": {
+                        "auth": {
+                            "config": {
+                                "mode": auth_mode,
+                            }
                         }
                     }
                 }
             }
-        }
-    )
-    async with get_root_component(config), AsyncClient():
-        # block msg_type_0
-        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-        kernel_server.block_messages("msg_type_0")
-        async with aconnect_ws(
-            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-        ) as websocket:
-            await websocket.send_json(msg)
-        sleep(0.5)
-        out, err = capfd.readouterr()
-        assert not err
+        )
+        async with get_root_component(config), AsyncClient():
+            # block msg_type_0
+            msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+            kernel_server.block_messages("msg_type_0")
+            async with aconnect_ws(
+                f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+            ) as websocket:
+                await websocket.send_json(msg)
+            sleep(0.5)
+            out, err = capfd.readouterr()
+            assert not err
 
-        # allow only msg_type_0
-        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-        kernel_server.allow_messages("msg_type_0")
-        async with aconnect_ws(
-            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-        ) as websocket:
-            await websocket.send_json(msg)
-        sleep(0.5)
-        out, err = capfd.readouterr()
-        assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
+            # allow only msg_type_0
+            msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+            kernel_server.allow_messages("msg_type_0")
+            async with aconnect_ws(
+                f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+            ) as websocket:
+                await websocket.send_json(msg)
+            sleep(0.5)
+            out, err = capfd.readouterr()
+            assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") == 1
 
-        # block all messages
-        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-        kernel_server.allow_messages([])
-        async with aconnect_ws(
-            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-        ) as websocket:
-            await websocket.send_json(msg)
-        sleep(0.5)
-        out, err = capfd.readouterr()
-        assert not err
+            # block all messages
+            msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+            kernel_server.allow_messages([])
+            async with aconnect_ws(
+                f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+            ) as websocket:
+                await websocket.send_json(msg)
+            sleep(0.5)
+            out, err = capfd.readouterr()
+            assert not err
 
-        # allow all messages
-        msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
-        kernel_server.allow_messages()
-        async with aconnect_ws(
-            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-        ) as websocket:
-            await websocket.send_json(msg)
-        sleep(0.5)
-        out, err = capfd.readouterr()
-        assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") >= 1
+            # allow all messages
+            msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
+            kernel_server.allow_messages()
+            async with aconnect_ws(
+                f"http://127.0.0.1:{unused_tcp_port}/api/kernels/{kernel_id}/channels?session_id=session_id_0",
+            ) as websocket:
+                await websocket.send_json(msg)
+            sleep(0.5)
+            out, err = capfd.readouterr()
+            assert err.count("[IPKernelApp] WARNING | Unknown message type: 'msg_type_0'") >= 1
+
+            tg.start_soon(kernel_server.stop)

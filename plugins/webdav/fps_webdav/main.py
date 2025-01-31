@@ -8,10 +8,11 @@ from .routes import WebDAV
 
 class WebDAVComponent(Component):
     def __init__(self, name: str, **kwargs):
+        super().__init__(name)
         self.webdav_config = WebDAVConfig(**kwargs)
 
-    async def start(self) -> None:
-        app = await self.request_resource(App)
+    async def prepare(self) -> None:
+        app = await self.get_resource(App)
 
         webdav = WebDAV(app, self.webdav_config)
         self.add_resource(webdav)

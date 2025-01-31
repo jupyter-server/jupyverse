@@ -2,14 +2,11 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
+from fastaio import get_root_component, merge_config
 import easywebdav  # type: ignore
 import pytest
 from anyio import to_thread
 
-COMPONENTS = {
-    "app": {"type": "app"},
-    "webdav": {"type": "webdav"},
-}
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse_api.main:JupyverseComponent",
@@ -26,12 +23,16 @@ CONFIG = {
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python >=3.10")
 async def test_webdav(unused_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
+                "config": {
+                    "port": unused_tcp_port,
+                },
                 "components": {
                     "webdav": {
                         "config": {

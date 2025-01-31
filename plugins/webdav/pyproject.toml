@@ -39,6 +39,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
+"fastaio.components"   = {webdav = "fps_webdav.main:WebDAVComponent"}
 "jupyverse.components" = {webdav = "fps_webdav.main:WebDAVComponent"}
 
 [tool.hatch.version]

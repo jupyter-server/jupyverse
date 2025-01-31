@@ -8,7 +8,9 @@ import requests
 from fps_yjs.ydocs import ydocs
 from fps_yjs.ywebsocket import WebsocketProvider
 from pycrdt import Array, Doc, Map, Text
-from websockets import connect
+from httpx_ws import aconnect_ws
+
+from utils import Websocket
 
 prev_theme = {}
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
@@ -52,7 +54,6 @@ def test_settings_persistence_get(start_jupyverse):
 @pytest.mark.parametrize("clear_users", (False,))
 async def test_rest_api(start_jupyverse):
     url = start_jupyverse
-    ws_url = url.replace("http", "ws", 1)
     name = "notebook0.ipynb"
     path = (Path("tests") / "data" / name).as_posix()
     # create a session to launch a kernel
@@ -82,9 +83,9 @@ async def test_rest_api(start_jupyverse):
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
     ydoc = Doc()
-    async with connect(
-        f"{ws_url}/api/collaboration/room/{document_id}"
-    ) as websocket, WebsocketProvider(ydoc, websocket):
+    async with aconnect_ws(
+        f"{url}/api/collaboration/room/{document_id}"
+    ) as websocket, WebsocketProvider(ydoc, Websocket(websocket, document_id)):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
         await anyio.sleep(0.5)
@@ -113,7 +114,7 @@ async def test_rest_api(start_jupyverse):
             }
         ]
         assert cells[1]["outputs"] == [
-            {"name": "stdout", "output_type": "stream", "text": ["Hello World!"]}
+            {"name": "stdout", "output_type": "stream", "text": ["Hello World!\n"]}
         ]
         assert cells[2]["outputs"] == [
             {
@@ -130,7 +131,6 @@ async def test_rest_api(start_jupyverse):
 @pytest.mark.parametrize("clear_users", (False,))
 async def test_ywidgets(start_jupyverse):
     url = start_jupyverse
-    ws_url = url.replace("http", "ws", 1)
     name = "notebook1.ipynb"
     path = (Path("tests") / "data" / name).as_posix()
     # create a session to launch a kernel
@@ -167,9 +167,9 @@ async def test_ywidgets(start_jupyverse):
     aevent = anyio.Event()
     events = []
     ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-    async with connect(
-        f"{ws_url}/api/collaboration/room/{document_id}"
-    ) as websocket, WebsocketProvider(ynb.ydoc, websocket):
+    async with aconnect_ws(
+        f"{url}/api/collaboration/room/{document_id}"
+    ) as websocket, WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
         await anyio.sleep(0.5)
@@ -194,7 +194,7 @@ async def test_ywidgets(start_jupyverse):
             if guid is not None:
                 break
         async with anyio.create_task_group() as tg:
-            tg.start_soon(connect_ywidget, ws_url, guid)
+            tg.start_soon(connect_ywidget, url, guid)
             response = requests.post(
                 f"{url}/api/kernels/{kernel_id}/execute",
                 data=json.dumps(
@@ -206,11 +206,11 @@ async def test_ywidgets(start_jupyverse):
             )
 
 
-async def connect_ywidget(ws_url, guid):
+async def connect_ywidget(url, guid):
     ywidget_doc = Doc()
-    async with connect(
-        f"{ws_url}/api/collaboration/room/ywidget:{guid}"
-    ) as websocket, WebsocketProvider(ywidget_doc, websocket):
+    async with aconnect_ws(
+        f"{url}/api/collaboration/room/ywidget:{guid}"
+    ) as websocket, WebsocketProvider(ywidget_doc, Websocket(websocket, guid)):
         await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()

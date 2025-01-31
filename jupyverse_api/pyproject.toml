@@ -44,6 +44,7 @@ jupyverse = "jupyverse_api.cli:main"
 
 [project.entry-points."fastaio.components"]
 app = "jupyverse_api.main:AppComponent"
+jupyverse = "jupyverse_api.main:JupyverseComponent"
 
 [project.entry-points."jupyverse.components"]
 app = "jupyverse_api.main:AppComponent"

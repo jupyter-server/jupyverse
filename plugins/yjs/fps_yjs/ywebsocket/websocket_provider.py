@@ -12,16 +12,17 @@ from anyio import (
 )
 from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
-from pycrdt import Doc
+from pycrdt import (
+    Doc,
+    YMessageType,
+    YSyncMessageType,
+    create_sync_message,
+    create_update_message,
+    handle_sync_message,
+)
 
 from .websocket import Websocket
-from .yutils import (
-    YMessageType,
-    create_update_message,
-    process_sync_message,
-    put_updates,
-    sync,
-)
+from .yutils import put_updates
 
 
 class WebsocketProvider:
@@ -72,11 +73,29 @@ class WebsocketProvider:
         return await self._exit_stack.__aexit__(exc_type, exc_value, exc_tb)
 
     async def _run(self):
-        await sync(self._ydoc, self._websocket, self.log)
+        sync_message = create_sync_message(self._ydoc)
+        self.log.debug(
+            "Sending %s message to endpoint: %s",
+            YSyncMessageType.SYNC_STEP1.name,
+            self._websocket.path,
+        )
+        await self._websocket.send(sync_message)
         self._task_group.start_soon(self._send)
         async for message in self._websocket:
             if message[0] == YMessageType.SYNC:
-                await process_sync_message(message[1:], self._ydoc, self._websocket, self.log)
+                self.log.debug(
+                    "Received %s message from endpoint: %s",
+                    YSyncMessageType(message[1]).name,
+                    self._websocket.path,
+                )
+                reply = handle_sync_message(message[1:], self._ydoc)
+                if reply is not None:
+                    self.log.debug(
+                        "Sending %s message to endpoint: %s",
+                        YSyncMessageType.SYNC_STEP2.name,
+                        self._websocket.path,
+                    )
+                    await self._websocket.send(reply)
 
     async def _send(self):
         async with self._update_receive_stream:

@@ -15,34 +15,34 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 CONFIG = {
     "jupyverse": {
-        "type": "jupyverse_api.main:JupyverseComponent",
+        "type": "jupyverse",
         "components": {
             "app": {
-                "type": "jupyverse_api.main:AppComponent",
+                "type": "app",
             },
             "auth": {
-                "type": "fps_auth.main:AuthComponent",
+                "type": "auth",
                 "config": {
                     "test": True,
                 },
             },
             "contents": {
-                "type": "fps_contents.main:ContentsComponent",
+                "type": "contents",
             },
             "frontend": {
-                "type": "fps_frontend.main:FrontentComponent",
+                "type": "frontend",
             },
             "lab": {
-                "type": "fps_lab.main:LabComponent",
+                "type": "lab",
             },
             "jupyterlab": {
-                "type": "fps_jupyterlab.main:JupyterlabComponent",
+                "type": "jupyterlab",
             },
             "kernels": {
-                "type": "fps_kernels.main:KernelsComponent",
+                "type": "kernels",
             },
             "yjs": {
-                "type": "fps_yjs.main:YjsComponent",
+                "type": "yjs",
             },
         }
     }

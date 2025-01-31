@@ -107,5 +107,5 @@ class JupyverseConfig(Config):
     port: int = 8000
     allow_origins: Json[List[str]] = []
     open_browser: bool = False
-    query_params: Json[Dict[str, str]]
+    query_params: Json[Dict[str, str]] = {}
     debug: bool | None = None

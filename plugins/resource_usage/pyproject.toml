@@ -35,7 +35,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
+"fastaio.components"   = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
 "jupyverse.components" = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
 
 [tool.hatch.version]

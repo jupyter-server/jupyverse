@@ -8,22 +8,22 @@ from utils import clear_content_values, create_content, sort_content_by_name
 
 CONFIG = {
     "jupyverse": {
-        "type": "jupyverse_api.main:JupyverseComponent",
+        "type": "jupyverse",
         "components": {
             "app": {
-                "type": "jupyverse_api.main:AppComponent",
+                "type": "app",
             },
             "auth": {
-                "type": "fps_auth.main:AuthComponent",
+                "type": "auth",
                 "config": {
                     "test": True,
                 },
             },
             "contents": {
-                "type": "fps_contents.main:ContentsComponent",
+                "type": "contents",
             },
             "frontend": {
-                "type": "fps_frontend.main:FrontentComponent",
+                "type": "frontend",
             },
         }
     }

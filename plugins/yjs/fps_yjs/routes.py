@@ -6,9 +6,9 @@ from functools import partial
 from typing import Dict
 from uuid import uuid4
 
-from anyio import TASK_STATUS_IGNORED, sleep
-from anyio.abc import TaskStatus
-from asphalt.core import TaskFactory, TaskHandle
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group, sleep
+from anyio.abc import TaskGroup, TaskStatus
+from anyioutils import Task, create_task
 from fastapi import (
     HTTPException,
     Request,
@@ -31,7 +31,7 @@ from .ydocs import ydocs as YDOCS
 from .ydocs.ybasedoc import YBaseDoc
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
-from .ywebsocket.yutils import YMessageType, YSyncMessageType
+from pycrdt import YMessageType, YSyncMessageType
 from .ywidgets import Widgets
 
 YFILE = YDOCS["file"]
@@ -51,33 +51,23 @@ class _Yjs(Yjs):
         auth: Auth,
         contents: Contents,
         lifespan: Lifespan,
-        task_factory: TaskFactory,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.contents = contents
         self.lifespan = lifespan
-        self.task_factory = task_factory
         if Widgets is None:
             self.widgets = None
         else:
             self.widgets = Widgets()  # type: ignore
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
-        self.room_manager = RoomManager(self.contents, self.lifespan, self.task_factory)
-        await self.task_factory.start_task(
-            self.room_manager.websocket_server.start,
-            "WebSocket server",
-        )
-        self.task_factory.start_task_soon(self.room_manager.on_shutdown)
-        task_status.started()
+        async with create_task_group() as tg:
+            self.room_manager = RoomManager(self.contents, self.lifespan)
+            tg.start_soon(self.room_manager.start)
+            task_status.started()
 
     async def stop(self) -> None:
-        for task in (
-            list(self.room_manager.watchers.values()) +
-            list(self.room_manager.savers.values()) +
-            list(self.room_manager.cleaners.values())
-        ):
-            task.cancel()
+        await self.room_manager.stop()
 
     async def collaboration_room_websocket(
         self,
@@ -166,18 +156,16 @@ class RoomManager:
     contents: Contents
     lifespan: Lifespan
     documents: Dict[str, YBaseDoc]
-    watchers: Dict[str, TaskHandle]
-    savers: Dict[str, TaskHandle]
-    cleaners: Dict[YRoom, TaskHandle]
+    watchers: Dict[str, Task]
+    savers: Dict[str, Task]
+    cleaners: Dict[YRoom, Task]
     last_modified: Dict[str, datetime]
     websocket_server: JupyterWebsocketServer
     room_lock: ResourceLock
-    task_factory: TaskFactory
 
-    def __init__(self, contents: Contents, lifespan: Lifespan, task_factory: TaskFactory):
+    def __init__(self, contents: Contents, lifespan: Lifespan):
         self.contents = contents
         self.lifespan = lifespan
-        self.task_factory = task_factory
         self.documents = {}  # a dictionary of room_name:document
         self.watchers = {}  # a dictionary of file_id:task
         self.savers = {}  # a dictionary of file_id:task
@@ -186,9 +174,19 @@ class RoomManager:
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
         self.room_lock = ResourceLock()
 
-    async def on_shutdown(self):
-        await self.lifespan.shutdown_request.wait()
-        await self.websocket_server.stop()
+    async def start(self):
+        async with create_task_group() as self.task_group:
+            await self.task_group.start(self.websocket_server.start)
+            await self.lifespan.shutdown_request.wait()
+            await self.websocket_server.stop()
+
+    async def stop(self):
+        for task in (
+            list(self.watchers.values()) +
+            list(self.savers.values()) +
+            list(self.cleaners.values())
+        ):
+            task.cancel(raise_exception=False)
 
     async def serve(self, websocket: YWebsocket, permissions) -> None:
         async with self.room_lock(websocket.path):
@@ -202,7 +200,7 @@ class RoomManager:
                 if room in self.cleaners:
                     # cleaning the room was scheduled because there was no client left
                     # cancel that since there is a new client
-                    self.cleaners[room].cancel()
+                    self.cleaners[room].cancel(raise_exception=False)
                     await self.cleaners[room].wait_finished()
                     if room in self.cleaners:
                         del self.cleaners[room]
@@ -247,18 +245,18 @@ class RoomManager:
                         )
                         # update the document when file changes
                         if file_id not in self.watchers:
-                            self.watchers[file_id] = self.task_factory.start_task_soon(
-                                lambda: self.watch_file(file_format, file_id, document),
-                                f"Watch file {file_id}"
+                            self.watchers[file_id] = create_task(
+                                self.watch_file(file_format, file_id, document),
+                                self.task_group,
                             )
 
         await self.websocket_server.serve(websocket, self.lifespan.shutdown_request)
 
-        if is_stored_document and not room.clients:
+        if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients:
             # no client in this room after we disconnect
-            self.cleaners[room] = self.task_factory.start_task_soon(
-                lambda: self.maybe_clean_room(room, websocket.path),
-                f"Clean room {websocket.path}"
+            self.cleaners[room] = create_task(
+                self.maybe_clean_room(room, websocket.path),
+                self.task_group,
             )
 
     async def filter_message(self, can_write: bool, message: bytes) -> bool:
@@ -339,10 +337,10 @@ class RoomManager:
             partial(self.on_document_change, file_id, file_type, file_format, document)
         )
         if file_id in self.savers:
-            self.savers[file_id].cancel()
-        self.savers[file_id] = self.task_factory.start_task_soon(
-            lambda: self.maybe_save_document(file_id, file_type, file_format, document),
-            f"Save file {file_id}"
+            self.savers[file_id].cancel(raise_exception=False)
+        self.savers[file_id] = create_task(
+            self.maybe_save_document(file_id, file_type, file_format, document),
+            self.task_group,
         )
 
     async def maybe_save_document(
@@ -391,7 +389,7 @@ class RoomManager:
         del self.documents[ws_path]
         documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
         if not documents:
-            self.watchers[file_id].cancel()
+            self.watchers[file_id].cancel(raise_exception=False)
             await self.watchers[file_id].wait_finished()
             if file_id in self.watchers:
                 del self.watchers[file_id]
