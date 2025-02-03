@@ -1,6 +1,7 @@
-from copy import deepcopy
 from typing import Dict, List, Optional
 from uuid import uuid4
+
+from anyio import Lock
 
 
 async def authenticate_client(http, port, permissions={}):
@@ -59,15 +60,6 @@ async def authenticate_client(http, port, permissions={}):
     assert me["permissions"] == permissions
 
 
-def configure(components, config):
-    # TODO: generalize to arbitrary nested dictionaries, not just one level
-    _components = deepcopy(components)
-    for k1, v1 in config.items():
-        for k2, v2 in v1.items():
-            _components[k1][k2] = v2
-    return _components
-
-
 def create_content(
     content: Optional[List],
     type: str,
@@ -118,3 +110,32 @@ def sort_content_by_name(content: Dict):
             for c in content[k]:
                 sort_content_by_name(c)
     return content
+
+
+class Websocket:
+    def __init__(self, websocket, path: str):
+        self._websocket = websocket
+        self._path = path
+        self._send_lock = Lock()
+
+    @property
+    def path(self) -> str:
+        return self._path
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self) -> bytes:
+        try:
+            message = await self.recv()
+        except Exception:
+            raise StopAsyncIteration()
+        return message
+
+    async def send(self, message: bytes):
+        async with self._send_lock:
+            await self._websocket.send_bytes(message)
+
+    async def recv(self) -> bytes:
+        b = await self._websocket.receive_bytes()
+        return bytes(b)

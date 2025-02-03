@@ -4,7 +4,7 @@ import json
 import time
 from typing import Any
 
-from .yutils import Decoder, read_message
+from pycrdt import Decoder, read_message
 
 
 class Awareness:

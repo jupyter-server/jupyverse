@@ -14,18 +14,19 @@ from anyio import (
 )
 from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
-from pycrdt import Doc
+from pycrdt import (
+    Doc,
+    YMessageType,
+    YSyncMessageType,
+    create_sync_message,
+    create_update_message,
+    handle_sync_message,
+)
 
 from .awareness import Awareness
 from .websocket import Websocket
 from .ystore import BaseYStore
-from .yutils import (
-    YMessageType,
-    create_update_message,
-    process_sync_message,
-    put_updates,
-    sync,
-)
+from .yutils import put_updates
 
 
 class YRoom:
@@ -191,14 +192,15 @@ class YRoom:
         self._task_group = None
 
     async def serve(self, websocket: Websocket):
-        """Serve a client.
-
-        Arguments:
-            websocket: The WebSocket through which to serve the client.
-        """
         async with create_task_group() as tg:
             self.clients.append(websocket)
-            await sync(self.ydoc, websocket, self.log)
+            sync_message = create_sync_message(self.ydoc)
+            self.log.debug(
+                "Sending %s message to endpoint: %s",
+                YSyncMessageType.SYNC_STEP1.name,
+                websocket.path,
+            )
+            await websocket.send(sync_message)
             try:
                 async for message in websocket:
                     # filter messages (e.g. awareness)
@@ -213,9 +215,14 @@ class YRoom:
                         # update our internal state in the background
                         # changes to the internal state are then forwarded to all clients
                         # and stored in the YStore (if any)
-                        tg.start_soon(
-                            process_sync_message, message[1:], self.ydoc, websocket, self.log
-                        )
+                        reply = handle_sync_message(message[1:], self.ydoc)
+                        if reply is not None:
+                            self.log.debug(
+                                "Sending %s message to endpoint: %s",
+                                YSyncMessageType.SYNC_STEP2.name,
+                                websocket.path,
+                            )
+                            tg.start_soon(websocket.send, reply)
                     elif message_type == YMessageType.AWARENESS:
                         # forward awareness messages from this client to all clients,
                         # including itself, because it's used to keep the connection alive

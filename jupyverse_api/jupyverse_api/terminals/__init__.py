@@ -83,5 +83,5 @@ class TerminalServer(ABC):
         ...
 
     @abstractmethod
-    async def exit(self):
+    def quit(self, websocket):
         ...
