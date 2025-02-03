@@ -1,4 +1,4 @@
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 
@@ -6,13 +6,13 @@ from .config import WebDAVConfig
 from .routes import WebDAV
 
 
-class WebDAVComponent(Component):
+class WebDAVModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
         self.webdav_config = WebDAVConfig(**kwargs)
 
     async def prepare(self) -> None:
-        app = await self.get_resource(App)
+        app = await self.get(App)
 
         webdav = WebDAV(app, self.webdav_config)
-        self.add_resource(webdav)
+        self.put(webdav)

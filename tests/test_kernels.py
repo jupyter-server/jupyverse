@@ -5,7 +5,7 @@ from time import sleep
 
 import pytest
 from anyio import create_task_group
-from fastaio import get_root_component, merge_config
+from fastaio import get_root_module, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
@@ -15,7 +15,7 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse",
-        "components": {
+        "modules": {
             "app": {
                 "type": "app",
             },
@@ -78,7 +78,7 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
             {
                 "jupyverse": {
                     "config": {"port": unused_tcp_port},
-                    "components": {
+                    "modules": {
                         "auth": {
                             "config": {
                                 "mode": auth_mode,
@@ -88,7 +88,7 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
                 }
             }
         )
-        async with get_root_component(config), AsyncClient():
+        async with get_root_module(config), AsyncClient():
             # block msg_type_0
             msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
             kernel_server.block_messages("msg_type_0")

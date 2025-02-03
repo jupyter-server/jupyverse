@@ -37,7 +37,7 @@ ignore = [ ".*",]
 skip = [ "check-links" ]
 
 [project.entry-points]
-"jupyverse.components" = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubComponent"}
+"jupyverse.modules" = {auth_jupyterhub = "fps_auth_jupyterhub.main:AuthJupyterHubModule"}
 
 [tool.hatch.version]
 path = "fps_auth_jupyterhub/__init__.py"

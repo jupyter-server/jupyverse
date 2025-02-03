@@ -3,7 +3,7 @@ import sys
 from typing import Any, List, Tuple
 
 import rich_click as click
-from fastaio import get_config, get_root_component, merge_config
+from fastaio import get_config, get_root_module, merge_config
 from fastaio import main as fastaio_main
 
 if sys.version_info < (3, 10):
@@ -88,29 +88,29 @@ def main(
     set_list.append(f"allow_origins={allow_origins_str}")
     set_list.append(f"query_params={query_params_str}")
     fastaio_main.callback(
-        "jupyverse_api.main:JupyverseComponent",
+        "jupyverse_api.main:JupyverseModule",
         set_=set_list,
     )  # type: ignore
     cli_config = get_config()
     pluggin_config = get_pluggin_config(disable)
     config = merge_config(cli_config, pluggin_config)
-    root_component = get_root_component(config)
-    root_component.run()
+    root_module = get_root_module(config)
+    root_module.run()
 
 
 def get_pluggin_config(disable: Tuple[str, ...]) -> dict[str, Any]:
-    jupyverse_components = [
+    jupyverse_modules = [
         ep.name
-        for ep in entry_points(group="jupyverse.components")
+        for ep in entry_points(group="jupyverse.modules")
         if ep.name not in disable
     ]
     config = {
-        "root_component": {
-            "components": {
-                component: {
-                    "type": component
+        "root_module": {
+            "modules": {
+                module: {
+                    "type": module
                 }
-                for component in jupyverse_components
+                for module in jupyverse_modules
             }
         }
     }

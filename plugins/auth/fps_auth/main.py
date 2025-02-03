@@ -1,5 +1,5 @@
 import structlog
-from fastaio import Component
+from fastaio import Module
 from fastapi_users.exceptions import UserAlreadyExists
 
 from jupyverse_api.app import App
@@ -13,19 +13,19 @@ from .routes import auth_factory
 log = structlog.get_logger()
 
 
-class AuthComponent(Component):
+class AuthModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
         self.auth_config = _AuthConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.add_resource(self.auth_config, types=AuthConfig)
+        self.put(self.auth_config, types=AuthConfig)
 
-        app = await self.get_resource(App)
-        frontend_config = await self.get_resource(FrontendConfig)
+        app = await self.get(App)
+        frontend_config = await self.get(FrontendConfig)
 
         auth = auth_factory(app, self.auth_config, frontend_config)
-        self.add_resource(auth, types=Auth)
+        self.put(auth, types=Auth)
 
         await auth.db.create_db_and_tables()
 
@@ -56,5 +56,5 @@ class AuthComponent(Component):
             )
 
         if self.auth_config.mode == "token":
-            query_params = await self.get_resource(QueryParams)
+            query_params = await self.get(QueryParams)
             query_params.d["token"] = self.auth_config.token

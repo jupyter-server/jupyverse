@@ -5,14 +5,14 @@ from uuid import uuid4
 import easywebdav  # type: ignore
 import pytest
 from anyio import to_thread
-from fastaio import get_root_component, merge_config
+from fastaio import get_root_module, merge_config
 
 CONFIG = {
     "jupyverse": {
-        "type": "jupyverse_api.main:JupyverseComponent",
-        "components": {
+        "type": "jupyverse_api.main:JupyverseModule",
+        "modules": {
             "app": {
-                "type": "jupyverse_api.main:AppComponent",
+                "type": "jupyverse_api.main:AppModule",
             },
             "webdav": {
                 "type": "webdav",
@@ -33,7 +33,7 @@ async def test_webdav(unused_tcp_port):
                 "config": {
                     "port": unused_tcp_port,
                 },
-                "components": {
+                "modules": {
                     "webdav": {
                         "config": {
                             "account_mapping": [{"username": "foo", "password": "bar"}],
@@ -43,7 +43,7 @@ async def test_webdav(unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config):
+    async with get_root_module(config):
         webdav = easywebdav.connect(
             "127.0.0.1", port=unused_tcp_port, path="webdav", username="foo", password="bar"
         )

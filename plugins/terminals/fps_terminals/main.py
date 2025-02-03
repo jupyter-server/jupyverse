@@ -2,7 +2,7 @@ import sys
 from typing import Type
 
 from anyio import create_task_group
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -17,13 +17,13 @@ else:
     from .server import _TerminalServer
 
 
-class TerminalsComponent(Component):
+class TerminalsModule(Module):
     async def prepare(self) -> None:
-        app = await self.get_resource(App)
-        auth = await self.get_resource(Auth)
+        app = await self.get(App)
+        auth = await self.get(Auth)
 
         self.terminals = _Terminals(app, auth, _TerminalServer)
-        self.add_resource(self.terminals, types=Terminals)
+        self.put(self.terminals, types=Terminals)
         async with create_task_group() as tg:
             tg.start_soon(self.terminals.start)
             self.done()

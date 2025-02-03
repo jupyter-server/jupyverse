@@ -1,5 +1,5 @@
 import structlog
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -12,14 +12,12 @@ from .routes import _Notebook
 logger = structlog.get_logger()
 
 
-class NotebookComponent(Component):
+class NotebookModule(Module):
     async def prepare(self) -> None:
-        app = await self.get_resource(App)
-        auth = await self.get_resource(Auth)
-        frontend_config = await self.get_resource(FrontendConfig)
-        lab = await self.get_resource(Lab)
+        app = await self.get(App)
+        auth = await self.get(Auth)
+        frontend_config = await self.get(FrontendConfig)
+        lab = await self.get(Lab)
 
         notebook = _Notebook(app, auth, frontend_config, lab)
-        self.add_resource(notebook, types=Notebook)
-
-        self.done()
+        self.put(notebook, types=Notebook)

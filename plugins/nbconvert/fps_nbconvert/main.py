@@ -1,4 +1,4 @@
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -7,10 +7,9 @@ from jupyverse_api.nbconvert import Nbconvert
 from .routes import _Nbconvert
 
 
-class NbconvertComponent(Component):
+class NbconvertModule(Module):
     async def prepare(self) -> None:
-        app = await self.get_resource(App)
-        auth = await self.get_resource(Auth)
+        app = await self.get(App)
+        auth = await self.get(Auth)
         nbconvert = _Nbconvert(app, auth)
-        self.add_resource(nbconvert, types=Nbconvert)
-        self.done()
+        self.put(nbconvert, types=Nbconvert)

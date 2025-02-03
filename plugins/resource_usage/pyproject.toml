@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"fastaio.components"   = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
-"jupyverse.components" = {resource_usage = "fps_resource_usage.main:ResourceUsageComponent"}
+"fastaio.modules"   = {resource_usage = "fps_resource_usage.main:ResourceUsageModule"}
+"jupyverse.modules" = {resource_usage = "fps_resource_usage.main:ResourceUsageModule"}
 
 [tool.hatch.version]
 path = "fps_resource_usage/__init__.py"

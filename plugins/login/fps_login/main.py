@@ -1,4 +1,4 @@
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import AuthConfig
@@ -7,12 +7,10 @@ from jupyverse_api.login import Login
 from .routes import _Login
 
 
-class LoginComponent(Component):
+class LoginModule(Module):
     async def prepare(self) -> None:
-        app = await self.get_resource(App)
-        auth_config = await self.get_resource(AuthConfig)
+        app = await self.get(App)
+        auth_config = await self.get(AuthConfig)
 
         login = _Login(app, auth_config)
-        self.add_resource(login, types=Login)
-
-        self.done()
+        self.put(login, types=Login)

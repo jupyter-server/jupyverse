@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"fastaio.components"   = {lab = "fps_lab.main:LabComponent"}
-"jupyverse.components" = {lab = "fps_lab.main:LabComponent"}
+"fastaio.modules"   = {lab = "fps_lab.main:LabModule"}
+"jupyverse.modules" = {lab = "fps_lab.main:LabModule"}
 
 [tool.hatch.version]
 path = "fps_lab/__init__.py"

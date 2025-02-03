@@ -1,4 +1,4 @@
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -9,20 +9,18 @@ from jupyverse_api.lab import Lab
 from .routes import _JupyterLab
 
 
-class JupyterLabComponent(Component):
+class JupyterLabModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
         self.jupyterlab_config = JupyterLabConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.add_resource(self.jupyterlab_config, types=JupyterLabConfig)
+        self.put(self.jupyterlab_config, types=JupyterLabConfig)
 
-        app = await self.get_resource(App)
-        auth = await self.get_resource(Auth)
-        frontend_config = await self.get_resource(FrontendConfig)
-        lab = await self.get_resource(Lab)
+        app = await self.get(App)
+        auth = await self.get(Auth)
+        frontend_config = await self.get(FrontendConfig)
+        lab = await self.get(Lab)
 
         jupyterlab = _JupyterLab(app, self.jupyterlab_config, auth, frontend_config, lab)
-        self.add_resource(jupyterlab, types=JupyterLab)
-
-        self.done()
+        self.put(jupyterlab, types=JupyterLab)

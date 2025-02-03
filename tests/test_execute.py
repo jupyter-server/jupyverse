@@ -4,7 +4,7 @@ from pathlib import Path
 
 import anyio
 import pytest
-from fastaio import get_root_component, merge_config
+from fastaio import get_root_module, merge_config
 from fps_yjs.ydocs import ydocs
 from fps_yjs.ywebsocket import WebsocketProvider
 from httpx import AsyncClient
@@ -16,7 +16,7 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse",
-        "components": {
+        "modules": {
             "app": {
                 "type": "app",
             },
@@ -85,7 +85,7 @@ async def test_execute(auth_mode, unused_tcp_port):
         {
             "jupyverse": {
                 "config": {"port": unused_tcp_port},
-                "components": {
+                "modules": {
                     "auth": {
                         "config": {
                             "mode": auth_mode,
@@ -100,7 +100,7 @@ async def test_execute(auth_mode, unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config), AsyncClient() as http:
+    async with get_root_module(config), AsyncClient() as http:
         ws_url = url.replace("http", "ws", 1)
         name = "notebook1.ipynb"
         path = (Path("tests") / "data" / name).as_posix()

@@ -6,8 +6,8 @@ from typing import Dict, List
 
 import structlog
 from anyio import Event, create_task_group
-from fastaio import Component
-from fastaio.web.fastapi import FastAPIComponent
+from fastaio import Module
+from fastaio.web.fastapi import FastAPIModule
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Json
@@ -19,7 +19,7 @@ from ..app import App
 logger = structlog.get_logger()
 
 
-class AppComponent(Component):
+class AppModule(Module):
     def __init__(
         self,
         name: str,
@@ -30,13 +30,12 @@ class AppComponent(Component):
         self.mount_path = mount_path
 
     async def prepare(self) -> None:
-        app = await self.get_resource(FastAPI)
+        app = await self.get(FastAPI)
         _app = App(app, mount_path=self.mount_path)
-        self.add_resource(_app)
-        self.done()
+        self.put(_app)
 
 
-class JupyverseComponent(FastAPIComponent):
+class JupyverseModule(FastAPIModule):
     def __init__(self, name: str, **kwargs) -> None:
         self.jupyverse_config = JupyverseConfig(**kwargs)
         if self.jupyverse_config.debug:
@@ -51,7 +50,7 @@ class JupyverseComponent(FastAPIComponent):
 
     async def prepare(self) -> None:
         await super().prepare()
-        app = await self.get_resource(App)
+        app = await self.get(App)
         if self.jupyverse_config.allow_origins:
             app.add_middleware(
                 CORSMiddleware,
@@ -66,9 +65,9 @@ class JupyverseComponent(FastAPIComponent):
             self._host = f"http://{self._host}"
         self._port = self.jupyverse_config.port
         host_url = Host(url=f"{self._host}:{self._port}/")
-        self.add_resource(self._query_params)
-        self.add_resource(host_url)
-        self.add_resource(self.lifespan)
+        self.put(self._query_params)
+        self.put(host_url)
+        self.put(self.lifespan)
 
     async def start(self) -> None:
         async with create_task_group() as tg:

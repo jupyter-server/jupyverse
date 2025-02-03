@@ -33,8 +33,8 @@ ignore = [".*"]
 skip = ["check-links"]
 
 [project.entry-points]
-"fastaio.components"   = {frontend = "fps_frontend.main:FrontendComponent"}
-"jupyverse.components" = {frontend = "fps_frontend.main:FrontendComponent"}
+"fastaio.modules"   = {frontend = "fps_frontend.main:FrontendModule"}
+"jupyverse.modules" = {frontend = "fps_frontend.main:FrontendModule"}
 
 [tool.hatch.version]
 path = "fps_frontend/__init__.py"

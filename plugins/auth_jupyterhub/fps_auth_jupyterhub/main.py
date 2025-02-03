@@ -1,4 +1,4 @@
-from fastaio import Component
+from fastaio import Module
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from jupyverse_api.app import App
@@ -9,19 +9,19 @@ from .db import Base
 from .routes import auth_factory
 
 
-class AuthJupyterHubComponent(Component):
+class AuthJupyterHubModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
         self.auth_jupyterhub_config = AuthJupyterHubConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.add_resource(self.auth_jupyterhub_config, types=AuthConfig)
-        app = await self.get_resource(App)
+        self.put(self.auth_jupyterhub_config, types=AuthConfig)
+        app = await self.get(App)
         self.db_engine = create_async_engine(self.auth_jupyterhub_config.db_url)
         self.db_session = AsyncSession(self.db_engine)
 
         auth_jupyterhub = auth_factory(app, self.db_session)
-        self.add_resource(auth_jupyterhub, types=Auth)
+        self.put(auth_jupyterhub, types=Auth)
 
         async with self.db_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

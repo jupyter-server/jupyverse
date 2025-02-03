@@ -33,7 +33,7 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"jupyverse.components" = {notebook = "fps_notebook.main:NotebookComponent"}
+"jupyverse.modules" = {notebook = "fps_notebook.main:NotebookModule"}
 
 [tool.hatch.version]
 path = "fps_notebook/__init__.py"

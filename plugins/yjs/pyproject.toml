@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"fastaio.components"   = {yjs = "fps_yjs.main:YjsComponent"}
-"jupyverse.components" = {yjs = "fps_yjs.main:YjsComponent"}
+"fastaio.modules"   = {yjs = "fps_yjs.main:YjsModule"}
+"jupyverse.modules" = {yjs = "fps_yjs.main:YjsModule"}
 
 [project.entry-points.jupyverse_ydoc]
 blob = "fps_yjs.ydocs.yblob:YBlob"

@@ -1,5 +1,5 @@
 import pytest
-from fastaio import get_root_component
+from fastaio import get_root_module
 from fastapi import APIRouter
 from httpx import AsyncClient
 
@@ -22,7 +22,7 @@ async def test_mount_path(mount_path, unused_tcp_port):
             "config": {
                 "port": unused_tcp_port,
             },
-            "components": {
+            "modules": {
                 "app": {
                     "type": "app",
                     "config": {
@@ -33,8 +33,8 @@ async def test_mount_path(mount_path, unused_tcp_port):
         }
     }
 
-    async with AsyncClient() as http, get_root_component(config) as jupyverse_component:
-        app = await jupyverse_component.get_resource(App)
+    async with AsyncClient() as http, get_root_module(config) as jupyverse_module:
+        app = await jupyverse_module.get(App)
         router = APIRouter()
 
         @router.get("/")

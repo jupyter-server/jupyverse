@@ -27,8 +27,8 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fastaio.components"   = {auth = "fps_noauth.main:NoAuthComponent"}
-"jupyverse.components" = {auth = "fps_noauth.main:NoAuthComponent"}
+"fastaio.modules"   = {auth = "fps_noauth.main:NoAuthModule"}
+"jupyverse.modules" = {auth = "fps_noauth.main:NoAuthModule"}
 
 [tool.check-manifest]
 ignore = [ ".*",]

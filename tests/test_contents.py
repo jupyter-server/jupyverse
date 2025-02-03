@@ -2,14 +2,14 @@ import os
 from pathlib import Path
 
 import pytest
-from fastaio import get_root_component, merge_config
+from fastaio import get_root_module, merge_config
 from httpx import AsyncClient
 from utils import clear_content_values, create_content, sort_content_by_name
 
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse",
-        "components": {
+        "modules": {
             "app": {
                 "type": "app",
             },
@@ -83,7 +83,7 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
         {
             "jupyverse": {
                 "config": {"port": unused_tcp_port},
-                "components": {
+                "modules": {
                     "auth": {
                         "config": {
                             "mode": auth_mode,
@@ -93,7 +93,7 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config), AsyncClient() as http:
+    async with get_root_module(config), AsyncClient() as http:
         response = await http.get(
             f"http://127.0.0.1:{unused_tcp_port}/api/contents", params={"content": 1}
         )

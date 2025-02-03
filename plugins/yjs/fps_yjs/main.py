@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from anyio import create_task_group
-from fastaio import Component
+from fastaio import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -12,21 +12,21 @@ from jupyverse_api.yjs import Yjs, YjsConfig
 from .routes import _Yjs
 
 
-class YjsComponent(Component):
+class YjsModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
         self.yjs_config = YjsConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.add_resource(self.yjs_config, types=YjsConfig)
+        self.put(self.yjs_config, types=YjsConfig)
 
-        app = await self.get_resource(App)
-        auth = await self.get_resource(Auth)
-        self.contents = await self.get_resource(Contents)
-        lifespan = await self.get_resource(Lifespan)
+        app = await self.get(App)
+        auth = await self.get(Auth)
+        self.contents = await self.get(Contents)
+        lifespan = await self.get(Lifespan)
 
         self.yjs = _Yjs(app, auth, self.contents, lifespan)
-        self.add_resource(self.yjs, types=Yjs)
+        self.put(self.yjs, types=Yjs)
 
         async with create_task_group() as tg:
             tg.start_soon(self.yjs.start)

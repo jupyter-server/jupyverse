@@ -1,5 +1,5 @@
 import pytest
-from fastaio import get_root_component, merge_config
+from fastaio import get_root_module, merge_config
 from httpx import AsyncClient
 from httpx_ws import WebSocketUpgradeError, aconnect_ws
 from utils import authenticate_client
@@ -9,7 +9,7 @@ from jupyverse_api.auth import AuthConfig
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse",
-        "components": {
+        "modules": {
             "app": {
                 "type": "app",
             },
@@ -45,7 +45,7 @@ CONFIG = {
 @pytest.mark.anyio
 async def test_kernel_channels_unauthenticated(unused_tcp_port):
     config = merge_config(CONFIG, {"jupyverse": {"config": {"port": unused_tcp_port}}})
-    async with get_root_component(config):
+    async with get_root_module(config):
         with pytest.raises(WebSocketUpgradeError):
             async with aconnect_ws(
                 f"http://127.0.0.1:{unused_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
@@ -56,7 +56,7 @@ async def test_kernel_channels_unauthenticated(unused_tcp_port):
 @pytest.mark.anyio
 async def test_kernel_channels_authenticated(unused_tcp_port):
     config = merge_config(CONFIG, {"jupyverse": {"config": {"port": unused_tcp_port}}})
-    async with get_root_component(config), AsyncClient() as http:
+    async with get_root_module(config), AsyncClient() as http:
         await authenticate_client(http, unused_tcp_port)
         async with aconnect_ws(
             f"http://127.0.0.1:{unused_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
@@ -73,7 +73,7 @@ async def test_root_auth(auth_mode, unused_tcp_port):
         {
             "jupyverse": {
                 "config": {"port": unused_tcp_port},
-                "components": {
+                "modules": {
                     "auth": {
                         "config": {
                             "mode": auth_mode,
@@ -83,7 +83,7 @@ async def test_root_auth(auth_mode, unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config), AsyncClient() as http:
+    async with get_root_module(config), AsyncClient() as http:
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
         if auth_mode == "noauth":
             expected = 302
@@ -102,7 +102,7 @@ async def test_no_auth(auth_mode, unused_tcp_port):
         {
             "jupyverse": {
                 "config": {"port": unused_tcp_port},
-                "components": {
+                "modules": {
                     "auth": {
                         "config": {
                             "mode": auth_mode,
@@ -112,7 +112,7 @@ async def test_no_auth(auth_mode, unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config), AsyncClient() as http:
+    async with get_root_module(config), AsyncClient() as http:
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/lab")
         assert response.status_code == 200
 
@@ -125,7 +125,7 @@ async def test_token_auth(auth_mode, unused_tcp_port):
         {
             "jupyverse": {
                 "config": {"port": unused_tcp_port},
-                "components": {
+                "modules": {
                     "auth": {
                         "config": {
                             "mode": auth_mode,
@@ -135,8 +135,8 @@ async def test_token_auth(auth_mode, unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config) as jupyverse, AsyncClient() as http:
-        auth_config = await jupyverse.get_resource(AuthConfig)
+    async with get_root_module(config) as jupyverse, AsyncClient() as http:
+        auth_config = await jupyverse.get(AuthConfig)
 
         # no token provided, should not work
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
@@ -161,7 +161,7 @@ async def test_permissions(auth_mode, permissions, unused_tcp_port):
         {
             "jupyverse": {
                 "config": {"port": unused_tcp_port},
-                "components": {
+                "modules": {
                     "auth": {
                         "config": {
                             "mode": auth_mode,
@@ -171,7 +171,7 @@ async def test_permissions(auth_mode, permissions, unused_tcp_port):
             }
         }
     )
-    async with get_root_component(config), AsyncClient() as http:
+    async with get_root_module(config), AsyncClient() as http:
         await authenticate_client(http, unused_tcp_port, permissions=permissions)
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/auth/user/me")
         if "admin" in permissions.keys():

@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"fastaio.components"   = {auth = "fps_auth.main:AuthComponent"}
-"jupyverse.components" = {auth = "fps_auth.main:AuthComponent"}
+"fastaio.modules"   = {auth = "fps_auth.main:AuthModule"}
+"jupyverse.modules" = {auth = "fps_auth.main:AuthModule"}
 
 [tool.hatch.version]
 path = "fps_auth/__init__.py"

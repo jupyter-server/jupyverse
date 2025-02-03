@@ -33,8 +33,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"fastaio.components"   = {nbconvert = "fps_nbconvert.main:NbconvertComponent"}
-"jupyverse.components" = {nbconvert = "fps_nbconvert.main:NbconvertComponent"}
+"fastaio.modules"   = {nbconvert = "fps_nbconvert.main:NbconvertModule"}
+"jupyverse.modules" = {nbconvert = "fps_nbconvert.main:NbconvertModule"}
 
 [tool.hatch.version]
 path = "fps_nbconvert/__init__.py"
