@@ -16,7 +16,7 @@ class _Notebook(Notebook):
         super().__init__(app, auth, lab)
         self.frontend_config = frontend_config
         self.lab = lab
-        self.lab.redirect_after_root = "tree"
+        lab.redirect_after_root = "tree"
 
         extensions_dir = lab.prefix_dir / "share" / "jupyter" / "labextensions"
         self.federated_extensions, self.disabled_extensions = lab.get_federated_extensions(
@@ -111,31 +111,32 @@ class _Notebook(Notebook):
 
 
 INDEX_HTML = """\
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Notebook - DOC_NAME</title>
-  <link rel="icon" type="image/x-icon" href="/static/favicons/favicon-notebook.ico"
-    class="favicon">
-</head>
-<body>
-  <script id="jupyter-config-data" type="application/json">
-    PAGE_CONFIG
-  </script>
-  <script src="BASE_URLstatic/notebook/bundle.js" main="index"></script>
-  <script type="text/javascript">
-    /* Remove token from URL. */
-    (function () {
-      var parsedUrl = new URL(window.location.href);
-      if (parsedUrl.searchParams.get('token')) {
-        parsedUrl.searchParams.delete('token');
-        window.history.replaceState({ }, '', parsedUrl.href);
-      }
-    })();
-  </script>
-</body>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <title>Home</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico" class="favicon"/>
+        <link rel="stylesheet" href="/custom/custom.css"/>
+        <script defer="defer" src="/static/notebook/main.MAIN_ID.js?v=MAIN_ID"></script>
+    </head>
+    <body class="jp-ThemedContainer">
+        <script id="jupyter-config-data" type="application/json">
+            PAGE_CONFIG
+        </script>
+        <script>
+            /* Remove token from URL. */
+            (function() {
+                var parsedUrl = new URL(window.location.href);
+                if (parsedUrl.searchParams.get('token')) {
+                    parsedUrl.searchParams.delete('token');
+                    window.history.replaceState({}, '', parsedUrl.href);
+                }
+            }
+            )();
+        </script>
+    </body>
 </html>
 """
 
@@ -150,6 +151,9 @@ def get_index(
     collaborative,
     base_url="/",
 ):
+    for path in (notebook_dir / "static").glob("main.*.js"):
+        main_id = path.name.split(".")[1]
+        break
     page_config = {
         "appName": "Notebook",
         "appNamespace": "notebook",
@@ -195,6 +199,7 @@ def get_index(
     }
     index = (
         INDEX_HTML.replace("PAGE_CONFIG", json.dumps(page_config))
+        .replace("MAIN_ID", main_id)
         .replace("DOC_NAME", doc_name)
         .replace("BASE_URL", base_url)
     )

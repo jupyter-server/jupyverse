@@ -14,7 +14,11 @@ class LabModule(Module):
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
         frontend_config = await self.get(FrontendConfig)
-        jupyterlab_config = await self.get(JupyterLabConfig, timeout=0.1)
+        # FIXME: find a better way than getting JupyterLabConfig with a timeout
+        try:
+            jupyterlab_config = await self.get(JupyterLabConfig, timeout=0.1)
+        except TimeoutError:
+            jupyterlab_config = None
 
         lab = _Lab(app, auth, frontend_config, jupyterlab_config)
         self.put(lab, types=Lab)
