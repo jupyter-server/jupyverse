@@ -1,9 +1,9 @@
+import io
 import json
 import sys
 from typing import Any, List, Tuple
 
 import rich_click as click
-from fps import get_config, get_root_module, merge_config
 from fps import main as fps_main
 
 if sys.version_info < (3, 10):
@@ -87,15 +87,12 @@ def main(
     set_list.append(f"port={port}")
     set_list.append(f"allow_origins={allow_origins_str}")
     set_list.append(f"query_params={query_params_str}")
+    pluggin_config = io.StringIO(json.dumps(get_pluggin_config(disable)))
     fps_main.callback(
-        "jupyverse_api.main:JupyverseModule",
+        "",
         set_=set_list,
+        config=pluggin_config,
     )  # type: ignore
-    cli_config = get_config()
-    pluggin_config = get_pluggin_config(disable)
-    config = merge_config(cli_config, pluggin_config)
-    root_module = get_root_module(config)
-    root_module.run()
 
 
 def get_pluggin_config(disable: Tuple[str, ...]) -> dict[str, Any]:
@@ -105,7 +102,8 @@ def get_pluggin_config(disable: Tuple[str, ...]) -> dict[str, Any]:
         if ep.name not in disable
     ]
     config = {
-        "root_module": {
+        "jupyverse": {
+            "type":"jupyverse_api.main:JupyverseModule",
             "modules": {
                 module: {
                     "type": module
