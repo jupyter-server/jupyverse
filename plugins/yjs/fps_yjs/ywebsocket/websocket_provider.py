@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from contextlib import AsyncExitStack
 from functools import partial
-from logging import Logger, getLogger
 
 from anyio import (
     TASK_STATUS_IGNORED,
@@ -20,6 +19,7 @@ from pycrdt import (
     create_update_message,
     handle_sync_message,
 )
+from structlog import BoundLogger, get_logger
 
 from .websocket import Websocket
 from .yutils import put_updates
@@ -33,10 +33,10 @@ class WebsocketProvider:
     _starting: bool
     _task_group: TaskGroup | None
 
-    def __init__(self, ydoc: Doc, websocket: Websocket, log: Logger | None = None) -> None:
+    def __init__(self, ydoc: Doc, websocket: Websocket, log: BoundLogger | None = None) -> None:
         self._ydoc = ydoc
         self._websocket = websocket
-        self.log = log or getLogger(__name__)
+        self.log = log or get_logger()
         self._update_send_stream, self._update_receive_stream = create_memory_object_stream(
             max_buffer_size=65536
         )
@@ -84,16 +84,16 @@ class WebsocketProvider:
         async for message in self._websocket:
             if message[0] == YMessageType.SYNC:
                 self.log.debug(
-                    "Received %s message from endpoint: %s",
-                    YSyncMessageType(message[1]).name,
-                    self._websocket.path,
+                    "Received message",
+                    name=YSyncMessageType(message[1]).name,
+                    endpoint=self._websocket.path,
                 )
                 reply = handle_sync_message(message[1:], self._ydoc)
                 if reply is not None:
                     self.log.debug(
-                        "Sending %s message to endpoint: %s",
-                        YSyncMessageType.SYNC_STEP2.name,
-                        self._websocket.path,
+                        "Sending message",
+                        name=YSyncMessageType.SYNC_STEP2.name,
+                        endpoint=self._websocket.path,
                     )
                     await self._websocket.send(reply)
 

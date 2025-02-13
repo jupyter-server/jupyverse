@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import logging
 import sqlite3
 from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
+import structlog
 from anyio import Event, Lock, Path
 from sqlite_anyio import connect
 from watchfiles import Change, awatch
 
-contents_logger = logging.getLogger("contents")
-watchfiles_logger = logging.getLogger("watchfiles")
-watchfiles_logger.setLevel(logging.WARNING)
+logger = structlog.get_logger()
 
 
 class Watcher:
@@ -121,15 +119,15 @@ class FileIdManager():
                     changed_path_str = str(changed_path)
 
                     if change == Change.deleted:
-                        contents_logger.debug("File %s was deleted", changed_path_str)
+                        logger.debug("File was deleted", path=changed_path_str)
                         await cursor.execute(
                             "SELECT COUNT(*) FROM fileids WHERE path = ?", (changed_path_str,)
                         )
                         if not (await cursor.fetchone())[0]:
                             # path is not indexed, ignore
-                            contents_logger.debug(
-                                "File %s is not indexed, ignoring",
-                                changed_path_str,
+                            logger.debug(
+                                "File is not indexed, ignoring",
+                                path=changed_path_str,
                             )
                             continue
                         # path is indexed
@@ -137,12 +135,12 @@ class FileIdManager():
                             self._db, changed_path_str, deleted_paths, added_paths, False
                         )
                     elif change == Change.added:
-                        contents_logger.debug("File %s was added", changed_path_str)
+                        logger.debug("File was added", path=changed_path_str)
                         await maybe_rename(
                             self._db, changed_path_str, added_paths, deleted_paths, True
                         )
                     elif change == Change.modified:
-                        contents_logger.debug("File %s was modified", changed_path_str)
+                        logger.debug("File was modified", path=changed_path_str)
                         if changed_path_str == self.db_path:
                             continue
                         await cursor.execute(
@@ -150,9 +148,9 @@ class FileIdManager():
                         )
                         if not (await cursor.fetchone())[0]:
                             # path is not indexed, ignore
-                            contents_logger.debug(
-                                "File %s is not indexed, ignoring",
-                                changed_path_str,
+                            logger.debug(
+                                "File is not indexed, ignoring",
+                                path=changed_path_str,
                             )
                             continue
                         mtime = (await changed_path.stat()).st_mtime
@@ -162,7 +160,7 @@ class FileIdManager():
                         )
 
                 for path in deleted_paths - added_paths:
-                    contents_logger.debug("Unindexing file %s ", path)
+                    logger.debug("Unindexing file", path=path)
                     await cursor.execute("DELETE FROM fileids WHERE path = ?", (path,))
                 await self._db.commit()
 
@@ -215,7 +213,7 @@ async def maybe_rename(
             path1, path2 = changed_path, other_path
             if is_added_path:
                 path1, path2 = path2, path1
-            contents_logger.debug("File %s was renamed to %s", path1, path2)
+            logger.debug("File was renamed", from_path=path1, to_path=path2)
             cursor = await db.cursor()
             await cursor.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
             other_paths.remove(other_path)

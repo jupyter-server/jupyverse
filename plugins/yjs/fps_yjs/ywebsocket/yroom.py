@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import AsyncExitStack
 from functools import partial
 from inspect import isawaitable
-from logging import Logger, getLogger
 from typing import Awaitable, Callable
 
 from anyio import (
@@ -22,6 +21,7 @@ from pycrdt import (
     create_update_message,
     handle_sync_message,
 )
+from structlog import BoundLogger, get_logger
 
 from .awareness import Awareness
 from .websocket import Websocket
@@ -46,7 +46,7 @@ class YRoom:
         ydoc: Doc | None = None,
         ready: bool = True,
         ystore: BaseYStore | None = None,
-        log: Logger | None = None,
+        log: BoundLogger | None = None,
     ):
         """Initialize the object.
 
@@ -76,7 +76,7 @@ class YRoom:
         self._ready = False
         self.ready = ready
         self.ystore = ystore
-        self.log = log or getLogger(__name__)
+        self.log = log or get_logger()
         self.clients = []
         self._on_message = None
         self._started = None
@@ -135,7 +135,10 @@ class YRoom:
                 # broadcast internal ydoc's update to all clients, that includes changes from the
                 # clients and changes from the backend (out-of-band changes)
                 for client in self.clients:
-                    self.log.debug("Sending Y update to client with endpoint: %s", client.path)
+                    self.log.debug(
+                        "Sending Y update to client",
+                        endpoint=client.path,
+                    )
                     message = create_update_message(update)
                     self._task_group.start_soon(client.send, message)
                 if self.ystore:
@@ -196,9 +199,9 @@ class YRoom:
             self.clients.append(websocket)
             sync_message = create_sync_message(self.ydoc)
             self.log.debug(
-                "Sending %s message to endpoint: %s",
-                YSyncMessageType.SYNC_STEP1.name,
-                websocket.path,
+                "Sending message",
+                name=YSyncMessageType.SYNC_STEP1.name,
+                endpoint=websocket.path,
             )
             await websocket.send(sync_message)
             try:
@@ -218,29 +221,32 @@ class YRoom:
                         reply = handle_sync_message(message[1:], self.ydoc)
                         if reply is not None:
                             self.log.debug(
-                                "Sending %s message to endpoint: %s",
-                                YSyncMessageType.SYNC_STEP2.name,
-                                websocket.path,
+                                "Sending message",
+                                name=YSyncMessageType.SYNC_STEP2.name,
+                                endpoint=websocket.path,
                             )
                             tg.start_soon(websocket.send, reply)
                     elif message_type == YMessageType.AWARENESS:
                         # forward awareness messages from this client to all clients,
                         # including itself, because it's used to keep the connection alive
                         self.log.debug(
-                            "Received %s message from endpoint: %s",
-                            YMessageType.AWARENESS.name,
-                            websocket.path,
+                            "Received message",
+                            name=YMessageType.AWARENESS.name,
+                            endpoint=websocket.path,
                         )
                         for client in self.clients:
                             self.log.debug(
-                                "Sending Y awareness from client with endpoint "
-                                "%s to client with endpoint: %s",
-                                websocket.path,
-                                client.path,
+                                "Sending Y awareness",
+                                from_endpoint=websocket.path,
+                                to_endpoint=client.path,
                             )
                             tg.start_soon(client.send, message)
             except Exception as e:
-                self.log.debug("Error serving endpoint: %s", websocket.path, exc_info=e)
+                self.log.debug(
+                    "Error serving",
+                    endpoint=websocket.path,
+                    exc_info=e,
+                )
 
             # remove this client
             self.clients = [c for c in self.clients if c != websocket]

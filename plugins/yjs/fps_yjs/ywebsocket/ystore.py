@@ -6,7 +6,6 @@ import time
 from abc import ABC, abstractmethod
 from contextlib import AsyncExitStack
 from inspect import isawaitable
-from logging import Logger, getLogger
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, Callable, cast
 
@@ -15,6 +14,7 @@ from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group
 from anyio.abc import TaskGroup, TaskStatus
 from pycrdt import Decoder, Doc, write_var_uint
 from sqlite_anyio import connect
+from structlog import BoundLogger, get_logger
 
 from .yutils import get_new_path
 
@@ -133,7 +133,7 @@ class FileYStore(BaseYStore):
         self,
         path: str,
         metadata_callback: Callable[[], Awaitable[bytes] | bytes] | None = None,
-        log: Logger | None = None,
+        log: BoundLogger | None = None,
     ) -> None:
         """Initialize the object.
 
@@ -144,7 +144,7 @@ class FileYStore(BaseYStore):
         """
         self.path = path
         self.metadata_callback = metadata_callback
-        self.log = log or getLogger(__name__)
+        self.log = log or get_logger()
         self.lock = Lock()
 
     async def check_version(self) -> int:
@@ -172,7 +172,11 @@ class FileYStore(BaseYStore):
                     move_file = True
             if move_file:
                 new_path = await get_new_path(self.path)
-                self.log.warning(f"YStore version mismatch, moving {self.path} to {new_path}")
+                self.log.warning(
+                    "YStore version mismatch, moving file",
+                    from_path=self.path,
+                    to_path=new_path,
+                )
                 await anyio.Path(self.path).rename(new_path)
         if version_mismatch:
             async with await anyio.open_file(self.path, "wb") as f:
@@ -246,7 +250,7 @@ class TempFileYStore(FileYStore):
         self,
         path: str,
         metadata_callback: Callable[[], Awaitable[bytes] | bytes] | None = None,
-        log: Logger | None = None,
+        log: BoundLogger | None = None,
     ):
         """Initialize the object.
 
@@ -299,7 +303,7 @@ class SQLiteYStore(BaseYStore):
         self,
         path: str,
         metadata_callback: Callable[[], Awaitable[bytes] | bytes] | None = None,
-        log: Logger | None = None,
+        log: BoundLogger | None = None,
     ) -> None:
         """Initialize the object.
 
@@ -310,7 +314,7 @@ class SQLiteYStore(BaseYStore):
         """
         self.path = path
         self.metadata_callback = metadata_callback
-        self.log = log or getLogger(__name__)
+        self.log = log or get_logger()
         self.lock = Lock()
         self.db_initialized = Event()
 
@@ -352,7 +356,11 @@ class SQLiteYStore(BaseYStore):
                     create_db = True
         if move_db:
             new_path = await get_new_path(self.db_path)
-            self.log.warning(f"YStore version mismatch, moving {self.db_path} to {new_path}")
+            self.log.warning(
+                "YStore version mismatch, moving database",
+                from_path=self.db_path,
+                to_path=new_path,
+            )
             await anyio.Path(self.db_path).rename(new_path)
         if create_db:
             async with self.lock:

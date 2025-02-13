@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from logging import Logger, getLogger
-
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskGroup, TaskStatus
 from pycrdt import Doc
+from structlog import BoundLogger, get_logger
 
 from .websocket import Websocket
 from .yroom import YRoom
@@ -16,11 +15,14 @@ class WebsocketServer:
     _task_group: TaskGroup
 
     def __init__(
-        self, rooms_ready: bool = True, auto_clean_rooms: bool = True, log: Logger | None = None
+        self,
+        rooms_ready: bool = True,
+        auto_clean_rooms: bool = True,
+        log: BoundLogger | None = None,
     ) -> None:
         self.rooms_ready = rooms_ready
         self.auto_clean_rooms = auto_clean_rooms
-        self.log = log or getLogger(__name__)
+        self.log = log or get_logger()
         self.rooms = {}
 
     async def get_room(self, name: str, ydoc: Doc | None = None) -> YRoom:

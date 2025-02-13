@@ -1,6 +1,5 @@
 import contextlib
 import json
-import logging
 import random
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
@@ -16,8 +15,6 @@ from .backends import get_backend
 from .config import _AuthConfig
 from .db import get_db
 from .models import UserCreate, UserRead, UserUpdate
-
-logger = logging.getLogger("auth")
 
 
 def auth_factory(
