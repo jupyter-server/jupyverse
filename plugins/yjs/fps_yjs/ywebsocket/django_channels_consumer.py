@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from logging import getLogger
 from typing import TypedDict
 
 from channels.generic.websocket import AsyncWebsocketConsumer  # type: ignore
 from pycrdt import Doc, YMessageType, YSyncMessageType, create_sync_message, handle_sync_message
+from structlog import get_logger
 
 from .websocket import Websocket
 
-logger = getLogger(__name__)
+logger = get_logger()
 
 
 class _WebsocketShim(Websocket):
@@ -160,9 +160,9 @@ class YjsConsumer(AsyncWebsocketConsumer):
 
         sync_message = create_sync_message(self.ydoc)
         logger.debug(
-            "Sending %s message to endpoint: %s",
-            YSyncMessageType.SYNC_STEP1.name,
-            self._websocket_shim.path,
+            "Sending message",
+            name=YSyncMessageType.SYNC_STEP1.name,
+            endpoint=self._websocket_shim.path,
         )
         await self._websocket_shim.send(sync_message)
 
@@ -178,9 +178,9 @@ class YjsConsumer(AsyncWebsocketConsumer):
         reply = handle_sync_message(bytes_data[1:], self.ydoc)
         if reply is not None:
             logger.debug(
-                "Sending %s message to endpoint: %s",
-                YSyncMessageType.SYNC_STEP2.name,
-                self._websocket_shim.path,
+                "Sending message",
+                name=YSyncMessageType.SYNC_STEP2.name,
+                endpoint=self._websocket_shim.path,
             )
             await self._websocket_shim.send(reply)
 

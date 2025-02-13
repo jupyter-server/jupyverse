@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from functools import partial
 from typing import Dict
 from uuid import uuid4
 
+import structlog
 from anyio import TASK_STATUS_IGNORED, create_task_group, sleep
 from anyio.abc import TaskStatus
 from anyioutils import Task, create_task
@@ -36,7 +36,7 @@ from .ywidgets import Widgets
 YFILE = YDOCS["file"]
 AWARENESS = 1
 SERVER_SESSION = uuid4().hex
-logger = logging.getLogger("yjs")
+logger = structlog.get_logger()
 
 
 class JupyterSQLiteYStore(SQLiteYStore):
@@ -205,7 +205,11 @@ class RoomManager:
                         del self.cleaners[room]
                 if not room.ready:
                     file_path = await self.contents.file_id_manager.get_path(file_id)
-                    logger.info(f"Opening collaboration room: {websocket.path} ({file_path})")
+                    logger.info(
+                        "Opening collaboration room",
+                        room_id=websocket.path,
+                        file_path=file_path,
+                    )
                     document = YDOCS.get(file_type, YFILE)(room.ydoc)
                     document.file_id = file_id
                     self.documents[websocket.path] = document
@@ -292,7 +296,7 @@ class RoomManager:
     async def watch_file(self, file_format: str, file_id: str, document: YBaseDoc) -> None:
         file_path = await self.get_file_path(file_id, document)
         assert file_path is not None
-        logger.debug(f"Watching file: {file_path}")
+        logger.info("Watching file", path=file_path)
         # FIXME: handle file rename/move?
         watcher = self.contents.file_id_manager.watch(file_path)
         async for changes in watcher:
@@ -395,7 +399,7 @@ class RoomManager:
         room_name = self.websocket_server.get_room_name(room)
         self.websocket_server.delete_room(room=room)
         file_path = await self.get_file_path(file_id, document)
-        logger.info(f"Closing collaboration room: {room_name} ({file_path})")
+        logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
         if room in self.cleaners:
             del self.cleaners[room]
 

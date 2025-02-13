@@ -94,7 +94,7 @@ async def test_root_auth(auth_mode, unused_tcp_port):
         assert response.headers["content-type"] == "application/json"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_no_auth(auth_mode, unused_tcp_port):
     config = merge_config(

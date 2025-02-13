@@ -107,7 +107,7 @@ class _JupyterLab(JupyterLab):
         )
 
     def get_index(self, workspace, collaborative, server_side_execution, dev_mode, base_url="/"):
-        for path in (self.static_lab_dir).glob("main.*.js"):
+        for path in self.static_lab_dir.glob("main.*.js"):
             main_id = path.name.split(".")[1]
             break
         vendor_id = None

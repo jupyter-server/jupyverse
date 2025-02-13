@@ -23,7 +23,6 @@ CONFIG = {
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python >=3.10")
 async def test_webdav(unused_tcp_port):
     config = merge_config(

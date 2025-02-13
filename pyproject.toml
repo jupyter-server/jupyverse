@@ -45,7 +45,6 @@ test = [
     "mypy",
     "types-setuptools",
     "pytest",
-    "pytest-asyncio",
     "pytest-rerunfailures",
     "pytest-timeout",
     "pytest-env",
