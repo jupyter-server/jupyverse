@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.0
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.6.4...6fe98eab9ef0cef9d77a49bed92829ae3fb3538c))
+
+### Merged PRs
+
+- Switch to FPS [#453](https://github.com/jupyter-server/jupyverse/pull/453) ([@davidbrochart](https://github.com/davidbrochart))
+- Fixing typo in the documentation [#452](https://github.com/jupyter-server/jupyverse/pull/452) ([@ThePavolC](https://github.com/ThePavolC))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2024-10-15&to=2025-02-14&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2024-10-15..2025-02-14&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2024-10-15..2025-02-14&type=Issues) | [@ThePavolC](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3AThePavolC+updated%3A2024-10-15..2025-02-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.6.4
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.6.3...69394c087d0645c784ff14e3cb71557c7a0d5cfa))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2024-10-02&to=2024-10-15&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2024-10-02..2024-10-15&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2024-10-02..2024-10-15&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.6.3
 
