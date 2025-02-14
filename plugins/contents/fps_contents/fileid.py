@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sqlite3
 from typing import Dict, List, Optional, Set
 from uuid import uuid4
@@ -10,6 +11,8 @@ from sqlite_anyio import connect
 from watchfiles import Change, awatch
 
 logger = structlog.get_logger()
+watchfiles_logger = logging.getLogger("watchfiles")
+watchfiles_logger.setLevel(logging.WARNING)
 
 
 class Watcher:
