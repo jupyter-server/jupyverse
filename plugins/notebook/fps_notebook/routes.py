@@ -119,7 +119,7 @@ INDEX_HTML = """\
         <title>Home</title>
         <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico" class="favicon"/>
         <link rel="stylesheet" href="/custom/custom.css"/>
-        <script defer="defer" src="/static/notebook/main.MAIN_ID.js?v=MAIN_ID"></script>
+        <script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"></script>
     </head>
     <body class="jp-ThemedContainer">
         <script id="jupyter-config-data" type="application/json">
@@ -151,6 +151,7 @@ def get_index(
     collaborative,
     base_url="/",
 ):
+    full_static_url = f"{base_url}static/notebook"
     for path in (notebook_dir / "static").glob("main.*.js"):
         main_id = path.name.split(".")[1]
         break
@@ -202,5 +203,6 @@ def get_index(
         .replace("MAIN_ID", main_id)
         .replace("DOC_NAME", doc_name)
         .replace("BASE_URL", base_url)
+        .replace("FULL_STATIC_URL", full_static_url)
     )
     return index
