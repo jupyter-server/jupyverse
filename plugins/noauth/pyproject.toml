@@ -7,7 +7,7 @@ name = "fps_noauth"
 description = "An FPS plugin for an unprotected API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "jupyverse-api >=0.1.2,<1",
 ]
@@ -27,8 +27,8 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"asphalt.components"   = {auth = "fps_noauth.main:NoAuthComponent"}
-"jupyverse.components" = {auth = "fps_noauth.main:NoAuthComponent"}
+"fps.modules"       = {auth = "fps_noauth.main:NoAuthModule"}
+"jupyverse.modules" = {auth = "fps_noauth.main:NoAuthModule"}
 
 [tool.check-manifest]
 ignore = [ ".*",]

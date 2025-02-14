@@ -5,6 +5,9 @@ from pycrdt import Doc, Map, Subscription
 
 
 class YBaseDoc(ABC):
+    _ydoc: Doc
+    _ystate: Map
+
     def __init__(self, ydoc: Optional[Doc] = None):
         if ydoc is None:
             self._ydoc = Doc()

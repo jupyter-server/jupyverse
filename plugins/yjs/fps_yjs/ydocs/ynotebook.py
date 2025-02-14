@@ -16,6 +16,9 @@ NBFORMAT_MINOR_VERSION = 5
 
 
 class YNotebook(YBaseDoc):
+    _ycells: Array
+    _ymeta: Map
+
     def __init__(self, ydoc: Optional[Doc] = None):
         super().__init__(ydoc)
         self._ymeta = Map()

@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any, Dict, Type
 
+import structlog
+from anyio import Event, create_task_group
 from fastapi import Response
 
 from jupyverse_api.app import App
@@ -10,11 +12,23 @@ from jupyverse_api.terminals import Terminal, Terminals, TerminalServer
 
 TERMINALS: Dict[str, Dict[str, Any]] = {}
 
+log = structlog.get_logger()
+
 
 class _Terminals(Terminals):
     def __init__(self, app: App, auth: Auth, _TerminalServer: Type[TerminalServer]) -> None:
         super().__init__(app=app, auth=auth)
         self.TerminalServer = _TerminalServer
+        self.stop_event = Event()
+
+    async def start(self):
+        await self.stop_event.wait()
+
+    async def stop(self):
+        async with create_task_group() as tg:
+            for terminal in TERMINALS.values():
+                tg.start_soon(terminal["server"].stop)
+        self.stop_event.set()
 
     async def get_terminals(
         self,
@@ -32,12 +46,14 @@ class _Terminals(Terminals):
                 break
             name_int += 1
         name = str(name_int)
+        log.info("Creating terminal", name=name)
         terminal = Terminal(
             name=name,
-            last_activity=datetime.utcnow().isoformat() + "Z",
+            last_activity=datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
         )
         server = self.TerminalServer()
         TERMINALS[name] = {"info": terminal, "server": server}
+        log.info("Terminal created", name=name)
         return terminal
 
     async def delete_terminal(
@@ -45,7 +61,11 @@ class _Terminals(Terminals):
         name: str,
         user: User,
     ):
-        await TERMINALS[name]["server"].exit(TERMINALS, name)
+        log.info("Deleting terminal", name=name)
+        if name in TERMINALS:
+            for websocket in TERMINALS[name]["server"].websockets:
+                TERMINALS[name]["server"].quit(websocket)
+            del TERMINALS[name]
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     async def terminal_websocket(
@@ -57,4 +77,12 @@ class _Terminals(Terminals):
             return
         websocket, permissions = websocket_permissions
         await websocket.accept()
-        await TERMINALS[name]["server"].serve(websocket, permissions, TERMINALS, name)
+        if name not in TERMINALS:
+            return
+
+        await TERMINALS[name]["server"].serve(websocket, permissions)
+        if name in TERMINALS:
+            TERMINALS[name]["server"].quit(websocket)
+            if not TERMINALS[name]["server"].websockets:
+                del TERMINALS[name]
+        log.info("Terminal exited", name=name)

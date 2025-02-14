@@ -6,14 +6,16 @@ build-backend = "hatchling.build"
 name = "fps_kernels"
 description = "An FPS plugin for the kernels API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "pyzmq",
     "websockets",
     "python-dateutil",
     "types-python-dateutil",
-    "watchfiles >=0.16.1,<1",
+    "watchfiles >=1.0.4,<2",
     "jupyverse-api >=0.1.2,<1",
+    "pycrdt >=0.10.3,<0.13.0",
+    "anyio",
 ]
 dynamic = [ "version",]
 [[project.authors]]
@@ -37,8 +39,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {kernels = "fps_kernels.main:KernelsComponent"}
-"jupyverse.components" = {kernels = "fps_kernels.main:KernelsComponent"}
+"fps.modules"       = {kernels = "fps_kernels.main:KernelsModule"}
+"jupyverse.modules" = {kernels = "fps_kernels.main:KernelsModule"}
 
 [tool.hatch.version]
 path = "fps_kernels/__init__.py"

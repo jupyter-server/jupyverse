@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import logging
 from functools import partial
 from pathlib import Path
 
+import structlog
 from asgi_middleware_static_file import ASGIMiddlewareStaticFile  # type: ignore
 from asgi_webdav import __name__ as app_name  # type: ignore
 from asgi_webdav import __version__  # type: ignore
@@ -25,7 +25,7 @@ from jupyverse_api.app import App
 
 from .config import WebDAVConfig
 
-logger = logging.getLogger("webdav")
+logger = structlog.get_logger()
 
 
 class WebDAVApp:
@@ -45,8 +45,12 @@ class WebDAV:
             return
 
         for account in webdav_config.account_mapping:
-            logger.info(f"WebDAV user {account.username} has password {account.password}")
-        webdav_conf = webdav_config.dict()
+            logger.info(
+                "WebDAV user",
+                username=account.username,
+                password=account.password,
+            )
+        webdav_conf = webdav_config.model_dump()
         init_config_from_obj(webdav_conf)
         webdav_aep = AppEntryParameters()
         webdav_app = get_asgi_app(aep=webdav_aep, config_obj=webdav_conf)
@@ -102,7 +106,7 @@ def get_asgi_app(aep: AppEntryParameters, config_obj: dict | None = None):
             )
             app = SentryAsgiMiddleware(app)
 
-        except ImportError as e:
-            logger.warning(e)
+        except ImportError as exception:
+            logger.warning("Exception", exc_info=exception)
 
     return app

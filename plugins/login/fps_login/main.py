@@ -1,4 +1,4 @@
-from asphalt.core import Component, Context
+from fps import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import AuthConfig
@@ -7,13 +7,10 @@ from jupyverse_api.login import Login
 from .routes import _Login
 
 
-class LoginComponent(Component):
-    async def start(
-        self,
-        ctx: Context,
-    ) -> None:
-        app = await ctx.request_resource(App)
-        auth_config = await ctx.request_resource(AuthConfig)
+class LoginModule(Module):
+    async def prepare(self) -> None:
+        app = await self.get(App)
+        auth_config = await self.get(AuthConfig)
 
         login = _Login(app, auth_config)
-        ctx.add_resource(login, types=Login)
+        self.put(login, Login)

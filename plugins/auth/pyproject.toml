@@ -7,7 +7,7 @@ name = "fps_auth"
 description = "An FPS plugin for the authentication API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "aiosqlite",
     "fastapi-users[sqlalchemy,oauth] >=13.0.0,<14.0.0",
@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {auth = "fps_auth.main:AuthComponent"}
-"jupyverse.components" = {auth = "fps_auth.main:AuthComponent"}
+"fps.modules"       = {auth = "fps_auth.main:AuthModule"}
+"jupyverse.modules" = {auth = "fps_auth.main:AuthModule"}
 
 [tool.hatch.version]
 path = "fps_auth/__init__.py"

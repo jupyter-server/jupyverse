@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import sys
 from glob import glob
@@ -23,8 +22,6 @@ if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
 else:
     from importlib.metadata import entry_points
-
-logger = logging.getLogger("lab")
 
 
 class _Lab(Lab):

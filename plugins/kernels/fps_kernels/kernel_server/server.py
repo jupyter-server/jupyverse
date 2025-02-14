@@ -1,11 +1,12 @@
-import asyncio
 import json
-import os
 import signal
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Iterable, List, Optional, cast
 
+import anyio
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group
+from anyio.abc import TaskGroup, TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
@@ -62,7 +63,6 @@ class KernelServer:
         self.connection_cfg = connection_cfg
         self.connection_file = connection_file
         self.write_connection_file = write_connection_file
-        self.channel_tasks: List[asyncio.Task] = []
         self.sessions: Dict[str, AcceptedWebSocket] = {}
         # blocked messages and allowed messages are mutually exclusive
         self.blocked_messages: List[str] = []
@@ -104,77 +104,88 @@ class KernelServer:
     def connections(self) -> int:
         return len(self.sessions)
 
-    async def start(self, launch_kernel: bool = True) -> None:
-        self.last_activity = {
-            "date": datetime.utcnow().isoformat() + "Z",
-            "execution_state": "starting",
-        }
-        if launch_kernel:
-            if not self.kernelspec_path:
-                raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
-            self.kernel_process = await _launch_kernel(
-                self.kernelspec_path,
-                self.connection_file_path,
-                self.kernel_cwd,
-                self.capture_kernel_output,
+    async def start(
+        self, launch_kernel: bool = True, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED
+    ) -> None:
+        async with create_task_group() as tg:
+            self.task_group = tg
+            self.last_activity = {
+                "date": datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+                "execution_state": "starting",
+            }
+            if launch_kernel:
+                if not self.kernelspec_path:
+                    raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
+                self.kernel_process = await _launch_kernel(
+                    self.kernelspec_path,
+                    self.connection_file_path,
+                    self.kernel_cwd,
+                    self.capture_kernel_output,
+                )
+            assert self.connection_cfg is not None
+            identity = uuid.uuid4().hex.encode("ascii")
+            self.shell_channel = connect_channel("shell", self.connection_cfg, identity=identity)
+            self.stdin_channel = connect_channel("stdin", self.connection_cfg, identity=identity)
+            self.control_channel = connect_channel(
+                "control", self.connection_cfg, identity=identity
             )
-        assert self.connection_cfg is not None
-        identity = uuid.uuid4().hex.encode("ascii")
-        self.shell_channel = connect_channel("shell", self.connection_cfg, identity=identity)
-        self.stdin_channel = connect_channel("stdin", self.connection_cfg, identity=identity)
-        self.control_channel = connect_channel("control", self.connection_cfg, identity=identity)
-        self.iopub_channel = connect_channel("iopub", self.connection_cfg)
-        await self._wait_for_ready()
-        self.channel_tasks += [
-            asyncio.create_task(self.listen("shell")),
-            asyncio.create_task(self.listen("stdin")),
-            asyncio.create_task(self.listen("control")),
-            asyncio.create_task(self.listen("iopub")),
-        ]
+            self.iopub_channel = connect_channel("iopub", self.connection_cfg)
+            await self._wait_for_ready()
+            tg.start_soon(lambda: self.listen("shell"))
+            tg.start_soon(lambda: self.listen("stdin"))
+            tg.start_soon(lambda: self.listen("control"))
+            tg.start_soon(lambda: self.listen("iopub"))
+            task_status.started()
 
     async def stop(self) -> None:
+        try:
+            self.kernel_process.terminate()
+        except ProcessLookupError:
+            pass
+        await self.kernel_process.wait()
+        self.task_group.cancel_scope.cancel()
         if self.write_connection_file:
-            # FIXME: stop kernel in a better way
+            path = anyio.Path(self.connection_file_path)
             try:
-                self.kernel_process.send_signal(signal.SIGINT)
-                self.kernel_process.kill()
-                await self.kernel_process.wait()
-            except BaseException:
+                await path.unlink()
+            except Exception:
                 pass
-            try:
-                os.remove(self.connection_file_path)
-            except BaseException:
-                pass
-        for task in self.channel_tasks:
-            task.cancel()
-        self.channel_tasks = []
 
     def interrupt(self) -> None:
         self.kernel_process.send_signal(signal.SIGINT)
 
-    async def restart(self) -> None:
+    async def restart(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         await self.stop()
         self.setup_connection_file()
-        await self.start()
+        await self.start(task_status=task_status)
 
     async def serve(
         self,
         websocket: AcceptedWebSocket,
         session_id: str,
         permissions: Optional[Dict[str, List[str]]],
+        stop_event: Event,
     ):
         self.sessions[session_id] = websocket
         self.can_execute = permissions is None or "execute" in permissions.get("kernels", [])
-        await self.listen_web(websocket)
+        async with create_task_group() as tg:
+            tg.start_soon(self.listen_web, websocket, tg)
+            tg.start_soon(self._watch_stop, tg, stop_event)
+
         # the session could have been removed through the REST API, so check if it still exists
         if session_id in self.sessions:
             del self.sessions[session_id]
 
-    async def listen_web(self, websocket: AcceptedWebSocket):
+    async def _watch_stop(self, tg: TaskGroup, stop_event: Event):
+        await stop_event.wait()
+        tg.cancel_scope.cancel()
+
+    async def listen_web(self, websocket: AcceptedWebSocket, tg: TaskGroup):
         try:
             await self.send_to_zmq(websocket)
         except WebSocketDisconnect:
             pass
+        tg.cancel_scope.cancel()
 
     async def listen(self, channel_name: str):
         if channel_name == "shell":
@@ -264,7 +275,7 @@ class KernelServer:
                         "execution_state": msg["content"]["execution_state"],
                     }
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
-            bin_msg = serialize_msg_to_ws_v1(parts, channel_name)
+            bin_msg = b"".join(serialize_msg_to_ws_v1(parts, channel_name))
             try:
                 await websocket.websocket.send_bytes(bin_msg)
             except BaseException:

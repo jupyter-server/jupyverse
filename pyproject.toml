@@ -7,7 +7,7 @@ name = "jupyverse"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "fps-contents >=0.1.2,<1",
     "fps-kernels >=0.1.2,<1",
@@ -45,17 +45,16 @@ test = [
     "mypy",
     "types-setuptools",
     "pytest",
-    "pytest-asyncio",
     "pytest-rerunfailures",
     "pytest-timeout",
     "pytest-env",
     "httpx",
     "httpx-ws >=0.4.1",
     "requests",
-    "websockets",
     "ipykernel",
     "ypywidgets >=0.9.3,<0.10.0",
     "ypywidgets-textual >=0.5.0,<0.6.0",
+    "trio",
 ]
 docs = [ "mkdocs", "mkdocs-material" ]
 
@@ -181,6 +180,3 @@ python_packages = [
 
 [tool.hatch.version]
 path = "jupyverse/__init__.py"
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"

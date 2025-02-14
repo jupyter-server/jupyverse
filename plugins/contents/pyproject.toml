@@ -6,10 +6,10 @@ build-backend = "hatchling.build"
 name = "fps_contents"
 description = "An FPS plugin for the contents API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    "watchfiles >=0.18.1,<1",
-    "aiosqlite >=0.17.0,<1",
+    "watchfiles >=1.0.4,<2",
+    "sqlite-anyio >=0.2.0,<0.3.0",
     "anyio>=3.6.2,<5",
     "jupyverse-api >=0.1.2,<1",
 ]
@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {contents = "fps_contents.main:ContentsComponent"}
-"jupyverse.components" = {contents = "fps_contents.main:ContentsComponent"}
+"fps.modules"       = {contents = "fps_contents.main:ContentsModule"}
+"jupyverse.modules" = {contents = "fps_contents.main:ContentsModule"}
 
 [tool.hatch.version]
 path = "fps_contents/__init__.py"

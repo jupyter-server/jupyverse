@@ -1,10 +1,19 @@
 import os
+import signal
 import subprocess
 import time
 from pathlib import Path
+from socket import socket
 
 import pytest
 import requests
+
+
+@pytest.fixture
+def anyio_backend():
+    # at least, SQLAlchemy and pyzmq don't support anything else than asyncio
+    # TODO: switch to zmq-anyio
+    return "asyncio"
 
 
 @pytest.fixture()
@@ -13,20 +22,25 @@ def cwd():
 
 
 @pytest.fixture()
+def unused_tcp_port() -> int:
+    with socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+@pytest.fixture()
 def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
     os.chdir(cwd)
     command_list = [
-        "asphalt",
-        "run",
-        "config.yaml",
+        "jupyverse",
         "--set",
-        f"component.components.auth.mode={auth_mode}",
+        f"auth.mode={auth_mode}",
         "--set",
-        f"component.components.auth.clear_users={str(clear_users).lower()}",
+        f"auth.clear_users={str(clear_users).lower()}",
         "--set",
-        "component.components.kernels.require_yjs=true",
-        "--set",
-        f"component.port={unused_tcp_port}",
+        "kernels.require_yjs=true",
+        "--port",
+        str(unused_tcp_port),
     ]
     p = subprocess.Popen(command_list)
     url = f"http://127.0.0.1:{unused_tcp_port}"
@@ -38,5 +52,5 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
         else:
             break
     yield url
-    p.kill()
+    os.kill(p.pid, signal.SIGINT)
     p.wait()

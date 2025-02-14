@@ -1,4 +1,3 @@
-import logging
 import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, List, Optional, Tuple, cast
@@ -28,8 +27,6 @@ from jupyverse_api.frontend import FrontendConfig
 from .config import _AuthConfig
 from .db import User
 from .models import UserCreate, UserRead
-
-logger = logging.getLogger("auth")
 
 
 @dataclass

@@ -1,4 +1,3 @@
-import logging
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,8 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker,
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
 
 from .config import _AuthConfig
-
-logger = logging.getLogger("auth")
 
 
 class Base(AsyncAttrs, DeclarativeBase):

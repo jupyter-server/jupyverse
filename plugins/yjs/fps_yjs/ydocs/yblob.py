@@ -16,6 +16,8 @@ class YBlob(YBaseDoc):
     base64.
     """
 
+    _ysource: Map
+
     def __init__(self, ydoc: Optional[Doc] = None):
         super().__init__(ydoc)
         self._ysource = Map()

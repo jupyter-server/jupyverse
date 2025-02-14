@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_terminals"
 description = "An FPS plugin for the terminals API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "websockets",
     "pywinpty;platform_system=='Windows'",
@@ -35,8 +35,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"asphalt.components"   = {terminals = "fps_terminals.main:TerminalsComponent"}
-"jupyverse.components" = {terminals = "fps_terminals.main:TerminalsComponent"}
+"fps.modules"       = {terminals = "fps_terminals.main:TerminalsModule"}
+"jupyverse.modules" = {terminals = "fps_terminals.main:TerminalsModule"}
 
 [tool.hatch.version]
 path = "fps_terminals/__init__.py"

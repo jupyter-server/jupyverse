@@ -7,7 +7,6 @@
 ./plugins/nbconvert
 ./plugins/terminals
 ./plugins/yjs
-fps[unicorn] >=0.0.10
+fps >=0.1.1
 mypy
 pytest
-pytest-asyncio

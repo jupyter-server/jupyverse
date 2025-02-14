@@ -1,36 +1,66 @@
 import json
 
 import pytest
-from asphalt.core import Context
+from fps import get_root_module, merge_config
 from httpx import AsyncClient
-from utils import configure
-
-from jupyverse_api.main import JupyverseComponent
 
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 
-COMPONENTS = {
-    "app": {"type": "app"},
-    "auth": {"type": "auth", "test": True},
-    "contents": {"type": "contents"},
-    "frontend": {"type": "frontend"},
-    "lab": {"type": "lab"},
-    "jupyterlab": {"type": "jupyterlab"},
-    "kernels": {"type": "kernels"},
-    "yjs": {"type": "yjs"},
+CONFIG = {
+    "jupyverse": {
+        "type": "jupyverse",
+        "modules": {
+            "app": {
+                "type": "app",
+            },
+            "auth": {
+                "type": "auth",
+                "config": {
+                    "test": True,
+                },
+            },
+            "contents": {
+                "type": "contents",
+            },
+            "frontend": {
+                "type": "frontend",
+            },
+            "lab": {
+                "type": "lab",
+            },
+            "jupyterlab": {
+                "type": "jupyterlab",
+            },
+            "kernels": {
+                "type": "kernels",
+            },
+            "yjs": {
+                "type": "yjs",
+            },
+        }
+    }
 }
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_settings(auth_mode, unused_tcp_port):
-    components = configure(COMPONENTS, {"auth": {"mode": auth_mode}})
-    async with Context() as ctx, AsyncClient() as http:
-        await JupyverseComponent(
-            components=components,
-            port=unused_tcp_port,
-        ).start(ctx)
-
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": unused_tcp_port},
+                "modules": {
+                    "auth": {
+                        "config": {
+                            "mode": auth_mode,
+                        }
+                    }
+                }
+            }
+        }
+    )
+    async with get_root_module(config), AsyncClient() as http:
         # get previous theme
         response = await http.get(
             f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
