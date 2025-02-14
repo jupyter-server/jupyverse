@@ -4,6 +4,7 @@ from fps import Module
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
+from jupyverse_api.jupyterlab import JupyterLabConfig
 from jupyverse_api.lab import Lab
 from jupyverse_api.notebook import Notebook
 
@@ -14,6 +15,7 @@ logger = structlog.get_logger()
 
 class NotebookModule(Module):
     async def prepare(self) -> None:
+        self.put(JupyterLabConfig(), JupyterLabConfig)
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
         frontend_config = await self.get(FrontendConfig)
