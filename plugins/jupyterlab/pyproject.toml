@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fps_jupyterlab"
 description = "An FPS plugin for the JupyterLab API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
   "jupyterlab >=4.0.0,<5",
   "jupyverse-api >=0.1.2,<1",

@@ -7,7 +7,7 @@ name = "jupyverse"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "fps-contents >=0.1.2,<1",
     "fps-kernels >=0.1.2,<1",
