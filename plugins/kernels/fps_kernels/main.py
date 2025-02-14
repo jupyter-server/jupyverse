@@ -22,7 +22,7 @@ class KernelsModule(Module):
         self.kernels_config = KernelsConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.kernels_config, types=KernelsConfig)
+        self.put(self.kernels_config, KernelsConfig)
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
@@ -35,7 +35,7 @@ class KernelsModule(Module):
         )
 
         self.kernels = _Kernels(app, self.kernels_config, auth, frontend_config, yjs, lifespan)
-        self.put(self.kernels, types=Kernels)
+        self.put(self.kernels, Kernels)
 
         async with create_task_group() as tg:
             tg.start_soon(self.kernels.start)

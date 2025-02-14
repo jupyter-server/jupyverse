@@ -9,4 +9,4 @@ class FrontendModule(Module):
         self.frontend_config = FrontendConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.frontend_config, types=FrontendConfig)
+        self.put(self.frontend_config, FrontendConfig)

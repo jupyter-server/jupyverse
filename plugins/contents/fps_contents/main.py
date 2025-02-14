@@ -13,4 +13,4 @@ class ContentsModule(Module):
         auth = await self.get(Auth)  # type: ignore
 
         contents = _Contents(app, auth)
-        self.put(contents, types=Contents)
+        self.put(contents, Contents)

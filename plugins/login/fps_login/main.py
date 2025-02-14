@@ -13,4 +13,4 @@ class LoginModule(Module):
         auth_config = await self.get(AuthConfig)
 
         login = _Login(app, auth_config)
-        self.put(login, types=Login)
+        self.put(login, Login)

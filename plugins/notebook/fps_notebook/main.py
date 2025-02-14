@@ -15,11 +15,11 @@ logger = structlog.get_logger()
 
 class NotebookModule(Module):
     async def prepare(self) -> None:
-        self.put(JupyterLabConfig(), JupyterLabConfig)
+        self.put(None, JupyterLabConfig)
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
         frontend_config = await self.get(FrontendConfig)
         lab = await self.get(Lab)  # type: ignore[type-abstract]
 
         notebook = _Notebook(app, auth, frontend_config, lab)
-        self.put(notebook, types=Notebook)
+        self.put(notebook, Notebook)

@@ -17,4 +17,4 @@ class ResourceUsageModule(Module):
         auth = await self.get(Auth)  # type: ignore[type-abstract]
 
         resource_usage = _ResourceUsage(app, auth, self.resource_usage_config)
-        self.put(resource_usage, types=ResourceUsage)
+        self.put(resource_usage, ResourceUsage)

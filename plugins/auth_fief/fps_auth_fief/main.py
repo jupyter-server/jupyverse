@@ -12,9 +12,9 @@ class AuthFiefModule(Module):
         self.auth_fief_config = _AuthFiefConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.auth_fief_config, types=AuthConfig)
+        self.put(self.auth_fief_config, AuthConfig)
 
         app = await self.get(App)
 
         auth_fief = auth_factory(app, self.auth_fief_config)
-        self.put(auth_fief, types=Auth)
+        self.put(auth_fief, Auth)

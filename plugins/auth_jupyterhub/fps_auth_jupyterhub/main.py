@@ -16,14 +16,14 @@ class AuthJupyterHubModule(Module):
         self.auth_jupyterhub_config = AuthJupyterHubConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.auth_jupyterhub_config, types=AuthConfig)
+        self.put(self.auth_jupyterhub_config, AuthConfig)
         app = await self.get(App)
         self.db_engine = create_async_engine(self.auth_jupyterhub_config.db_url)
         self.db_session = AsyncSession(self.db_engine)
 
         self.http_client = httpx.AsyncClient()
         auth_jupyterhub = auth_factory(app, self.db_session, self.http_client)
-        self.put(auth_jupyterhub, types=Auth)
+        self.put(auth_jupyterhub, Auth)
 
         async with self.db_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

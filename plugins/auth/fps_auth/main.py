@@ -19,13 +19,13 @@ class AuthModule(Module):
         self.auth_config = _AuthConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.auth_config, types=AuthConfig)
+        self.put(self.auth_config, AuthConfig)
 
         app = await self.get(App)
         frontend_config = await self.get(FrontendConfig)
 
         auth = auth_factory(app, self.auth_config, frontend_config)
-        self.put(auth, types=Auth)
+        self.put(auth, Auth)
 
         await auth.db.create_db_and_tables()
 

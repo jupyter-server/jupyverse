@@ -18,7 +18,7 @@ class YjsModule(Module):
         self.yjs_config = YjsConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.yjs_config, types=YjsConfig)
+        self.put(self.yjs_config, YjsConfig)
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
@@ -26,7 +26,7 @@ class YjsModule(Module):
         lifespan = await self.get(Lifespan)
 
         self.yjs = _Yjs(app, auth, self.contents, lifespan)
-        self.put(self.yjs, types=Yjs)
+        self.put(self.yjs, Yjs)
 
         async with create_task_group() as tg:
             tg.start_soon(self.yjs.start)

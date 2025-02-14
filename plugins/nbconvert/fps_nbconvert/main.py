@@ -12,4 +12,4 @@ class NbconvertModule(Module):
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
         nbconvert = _Nbconvert(app, auth)
-        self.put(nbconvert, types=Nbconvert)
+        self.put(nbconvert, Nbconvert)

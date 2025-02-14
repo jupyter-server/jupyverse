@@ -15,7 +15,7 @@ class JupyterLabModule(Module):
         self.jupyterlab_config = JupyterLabConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.jupyterlab_config, types=JupyterLabConfig)
+        self.put(self.jupyterlab_config, JupyterLabConfig)
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
@@ -23,4 +23,4 @@ class JupyterLabModule(Module):
         lab = await self.get(Lab)  # type: ignore[type-abstract]
 
         jupyterlab = _JupyterLab(app, self.jupyterlab_config, auth, frontend_config, lab)
-        self.put(jupyterlab, types=JupyterLab)
+        self.put(jupyterlab, JupyterLab)

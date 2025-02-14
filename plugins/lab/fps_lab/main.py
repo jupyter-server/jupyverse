@@ -17,4 +17,4 @@ class LabModule(Module):
         jupyterlab_config = await self.get(JupyterLabConfig)
 
         lab = _Lab(app, auth, frontend_config, jupyterlab_config)
-        self.put(lab, types=Lab)
+        self.put(lab, Lab)
