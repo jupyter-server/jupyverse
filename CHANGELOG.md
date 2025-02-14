@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.1
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.0...96cb8831e330527089ebbf41d649cbe9c8b32053))
+
+### Merged PRs
+
+- Require versions >=0.7.0 [#457](https://github.com/jupyter-server/jupyverse/pull/457) ([@davidbrochart](https://github.com/davidbrochart))
+- Unpin Python version in Binder [#456](https://github.com/jupyter-server/jupyverse/pull/456) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix fps-notebook base URL [#455](https://github.com/jupyter-server/jupyverse/pull/455) ([@davidbrochart](https://github.com/davidbrochart))
+- Update README [#454](https://github.com/jupyter-server/jupyverse/pull/454) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-02-14&to=2025-02-14&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-02-14..2025-02-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.7.0
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.6.4...6fe98eab9ef0cef9d77a49bed92829ae3fb3538c))
@@ -16,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2024-10-15&to=2025-02-14&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2024-10-15..2025-02-14&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2024-10-15..2025-02-14&type=Issues) | [@ThePavolC](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3AThePavolC+updated%3A2024-10-15..2025-02-14&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.6.4
 
