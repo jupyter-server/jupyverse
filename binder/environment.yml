@@ -2,7 +2,7 @@ name: jupyverse
 channels:
   - conda-forge
 dependencies:
-  - python =3.13
+  - python
   - jupyter-server-proxy
   - jupyterlab-language-pack-fr-FR
   - pip
