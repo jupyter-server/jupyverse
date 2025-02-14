@@ -11,7 +11,7 @@ dependencies = [
   "importlib_metadata >=3.6; python_version<'3.10'",
   "babel",
   "json5",
-  "jupyverse-api >=0.1.2,<1",
+  "jupyverse-api >=0.7.0,<1",
 ]
 dynamic = [ "version",]
 [[project.authors]]

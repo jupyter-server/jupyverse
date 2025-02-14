@@ -9,14 +9,14 @@ keywords = ["jupyter", "server", "fastapi", "plugins"]
 dynamic = ["version"]
 requires-python = ">=3.9"
 dependencies = [
-    "fps-contents >=0.1.2,<1",
-    "fps-kernels >=0.1.2,<1",
-    "fps-terminals >=0.1.2,<1",
-    "fps-nbconvert >=0.1.2,<1",
-    "fps-yjs >=0.1.2,<1",
-    "fps-lab >=0.1.2,<1",
-    "fps-frontend >=0.1.2,<1",
-    "jupyverse_api >=0.1.2,<1",
+    "fps-contents >=0.7.0,<1",
+    "fps-kernels >=0.7.0,<1",
+    "fps-terminals >=0.7.0,<1",
+    "fps-nbconvert >=0.7.0,<1",
+    "fps-yjs >=0.7.0,<1",
+    "fps-lab >=0.7.0,<1",
+    "fps-frontend >=0.7.0,<1",
+    "jupyverse_api >=0.7.0,<1",
 ]
 
 [[project.authors]]
@@ -34,12 +34,12 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = ["fps-jupyterlab >=0.1.2,<1"]
-notebook = ["fps-notebook>=0.1.2,<1"]
-auth = ["fps-auth >=0.1.2,<1", "fps-login >=0.1.2,<1"]
-auth-fief = ["fps-auth-fief >=0.1.2,<1"]
-auth-jupyterhub = ["fps-auth-jupyterhub >=0.1.2,<1"]
-noauth = ["fps-noauth >=0.1.2,<1"]
+jupyterlab = ["fps-jupyterlab >=0.7.0,<1"]
+notebook = ["fps-notebook>=0.7.0,<1"]
+auth = ["fps-auth >=0.7.0,<1", "fps-login >=0.7.0,<1"]
+auth-fief = ["fps-auth-fief >=0.7.0,<1"]
+auth-jupyterhub = ["fps-auth-jupyterhub >=0.7.0,<1"]
+noauth = ["fps-noauth >=0.7.0,<1"]
 test = [
     "ruff >=0.1.2",
     "mypy",
