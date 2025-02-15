@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 import structlog
-from anyio import TASK_STATUS_IGNORED, Event, create_task_group
+from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group
 from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
@@ -55,6 +55,7 @@ class _Kernels(Kernels):
         self.kernels = kernels
         self._app = app
         self.stop_event = Event()
+        self._stop_lock = Lock()
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with create_task_group() as tg:
@@ -71,16 +72,18 @@ class _Kernels(Kernels):
             await self.stop_event.wait()
 
     async def stop(self) -> None:
-        if self.stop_event.is_set():
-            return
+        async with self._stop_lock:
+            if self.stop_event.is_set():
+                return
 
-        async with create_task_group() as tg:
-            for kernel in self.kernels.values():
-                tg.start_soon(kernel["server"].stop)
-                if kernel["driver"] is not None:
-                    tg.start_soon(kernel["driver"].stop)
-        self.stop_event.set()
-        self.task_group.cancel_scope.cancel()
+            async with create_task_group() as tg:
+                for kernel_id, kernel in self.kernels.items():
+                    logger.info("Stopping kernel", kernel_id=kernel_id)
+                    tg.start_soon(kernel["server"].stop)
+                    if kernel["driver"] is not None:
+                        tg.start_soon(kernel["driver"].stop)
+            self.stop_event.set()
+            self.task_group.cancel_scope.cancel()
 
     async def on_shutdown(self):
         await self.lifespan.shutdown_request.wait()
