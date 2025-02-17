@@ -6,14 +6,14 @@ from datetime import datetime
 from functools import partial
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 
-from anyio import TASK_STATUS_IGNORED, Lock, create_task_group
+from anyio import TASK_STATUS_IGNORED, Lock, create_task_group, sleep
 from anyio.abc import TaskStatus
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
 from httpx import AsyncClient
 from jupyterhub.services.auth import HubOAuth
 from jupyterhub.utils import isoformat
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from typing_extensions import Annotated
 
@@ -21,18 +21,22 @@ from jupyverse_api import Router
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 
-from .db import UserDB
+from .config import AuthJupyterHubConfig
+from .db import Base, UserDB
 from .models import JupyterHubUser
 
 
 def auth_factory(
     app: App,
-    db_session: AsyncSession,
-    http_client: AsyncClient,
+    auth_jupyterhub_config: AuthJupyterHubConfig,
 ):
     class AuthJupyterHub(Auth, Router):
         def __init__(self) -> None:
             super().__init__(app)
+            self.db_engine = create_async_engine(auth_jupyterhub_config.db_url)
+            self.db_session = AsyncSession(self.db_engine)
+
+            self.http_client = AsyncClient()
             self.hub_auth = HubOAuth()
             self.db_lock = Lock()
             self.activity_url = os.environ.get("JUPYTERHUB_ACTIVITY_URL")
@@ -57,14 +61,14 @@ def auth_factory(
                 token = self.hub_auth.token_for_code(code)
                 hub_user = await self.hub_auth.user_for_token(token, use_cache=False, sync=False)
                 async with self.db_lock:
-                    db_session.add(
+                    self.db_session.add(
                         UserDB(
                             token=token,
                             name=hub_user["name"],
                             username=hub_user["name"],
                         ),
                     )
-                    await db_session.commit()
+                    await self.db_session.commit()
 
                 next_url = self.hub_auth.get_next_url(cookie_state)
                 response = RedirectResponse(next_url)
@@ -115,7 +119,7 @@ def auth_factory(
                         )
 
                     async with self.db_lock:
-                        user_db = await db_session.scalar(
+                        user_db = await self.db_session.scalar(
                             select(UserDB).filter_by(token=jupyverse_jupyterhub_token)
                         )
                     user = JupyterHubUser.model_validate(user_db)
@@ -154,13 +158,18 @@ def auth_factory(
             return _
 
         async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+            async with self.db_engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+
             async with create_task_group() as tg:
                 self.task_group = tg
                 task_status.started()
+                await sleep(float("inf"))
 
         async def stop(self) -> None:
             await self.http_client.aclose()
-            self.task_group.cancel_scope.cancel()
+            await self.db_session.close()
+            await self.db_engine.dispose()
 
         async def update_user(
             self, jupyverse_jupyterhub_token: Annotated[Union[str, None], Cookie()] = None
@@ -168,12 +177,12 @@ def auth_factory(
             async def _(data: Dict[str, Any]) -> JupyterHubUser | None:
                 if jupyverse_jupyterhub_token is not None:
                     async with self.db_lock:
-                        user_db = await db_session.scalar(
+                        user_db = await self.db_session.scalar(
                             select(UserDB).filter_by(token=jupyverse_jupyterhub_token)
                         )
                         for k, v in data.items():
                             setattr(user_db, k, v)
-                        await db_session.commit()
+                        await self.db_session.commit()
                     user = JupyterHubUser.model_validate(user_db)
                     return user
                 return None
@@ -191,7 +200,7 @@ def auth_factory(
                 if "jupyverse_jupyterhub_token" in websocket._cookies:
                     jupyverse_jupyterhub_token = websocket._cookies["jupyverse_jupyterhub_token"]
                     async with self.db_lock:
-                        user_db = await db_session.scalar(
+                        user_db = await self.db_session.scalar(
                             select(UserDB).filter_by(token=jupyverse_jupyterhub_token)
                         )
                     if user_db:
