@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.4
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.3...3dee770cdcb8ae2529874a0a73592d2744eed63e))
+
+### Merged PRs
+
+- Fix fps-auth-jupyterhub [#460](https://github.com/jupyter-server/jupyverse/pull/460) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-02-17&to=2025-02-17&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-02-17..2025-02-17&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.7.3
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.2...2c046e8db0203c7d90476bf11ab11b89c0b0af51))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-02-15&to=2025-02-17&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-02-15..2025-02-17&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.7.2
 
