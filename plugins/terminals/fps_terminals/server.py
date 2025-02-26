@@ -1,13 +1,17 @@
 import fcntl
 import os
 import pty
-import selectors
 import shlex
 import struct
 import termios
 from functools import partial
 
-from anyio import Lock, create_memory_object_stream, create_task_group, from_thread, to_thread
+from anyio import (
+    Lock,
+    create_memory_object_stream,
+    create_task_group,
+    wait_readable,
+)
 from anyio.abc import ByteReceiveStream, ByteSendStream
 from fastapi import WebSocketDisconnect
 
@@ -78,10 +82,6 @@ class _TerminalServer(TerminalServer):
             self.task_group.cancel_scope.cancel()
 
     def quit(self, websocket=None):
-        try:
-            self.recv_stream_from_backend.sel.unregister(self.p_out)
-        except Exception:
-            pass
         if websocket is None:
             self.websockets.clear()
         elif websocket in self.websockets:
@@ -103,33 +103,20 @@ class ReceiveStream(ByteReceiveStream):
         self.p_out = p_out
         self.task_group = task_group
         self.quit = quit
-        self.sel = selectors.DefaultSelector()
-        self.sel.register(self.p_out, selectors.EVENT_READ, self._read)
         self.send_stream, self.recv_stream = create_memory_object_stream[bytes](
             max_buffer_size=65536
         )
+        task_group.start_soon(self.read)
 
-        def reader():
-            # this runs in a thread
-            # the callback is self._read, which returns True when the terminal was exited
-            while True:
-                events = self.sel.select()
-                for key, mask in events:
-                    callback = key.data
-                    if callback():
-                        return
-
-        task_group.start_soon(partial(to_thread.run_sync, reader, abandon_on_cancel=True))
-
-    def _read(self) -> bool:
-        try:
-            data = self.p_out.read(65536)
-        except OSError:
-            from_thread.run_sync(self.quit)
-            return True
-        else:
-            from_thread.run_sync(self.send_stream.send_nowait, data)
-            return False
+    async def read(self):
+        while True:
+            await wait_readable(self.p_out)
+            try:
+                data = self.p_out.read(65536)
+            except OSError:
+                self.quit()
+                return
+            await self.send_stream.send(data)
 
     async def receive(self, max_bytes: int = 65536) -> bytes:
         data = await self.recv_stream.receive()
