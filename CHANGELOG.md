@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.5
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.4...3c652e450d8ce5e46d7ea1bb00c402d611c4f54f))
+
+### Merged PRs
+
+- Use AnyIO's wait_readable for terminals [#461](https://github.com/jupyter-server/jupyverse/pull/461) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-02-17&to=2025-02-26&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-02-17..2025-02-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2025-02-17..2025-02-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.7.4
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.3...3dee770cdcb8ae2529874a0a73592d2744eed63e))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-02-17&to=2025-02-17&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-02-17..2025-02-17&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.7.3
 
