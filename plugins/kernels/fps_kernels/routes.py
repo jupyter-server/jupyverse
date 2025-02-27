@@ -223,14 +223,21 @@ class _Kernels(Kernels):
             logger.info("Starting kernel", kernel_id=kernel_id, kernel_name=kernel_name)
             await self.task_group.start(kernel_server.start)
         elif kernel_id is not None:
-            # external kernel
+            # external or already running kernel
+            if kernel_id not in kernels:
+                raise HTTPException(
+                        status_code=404, detail=f"Kernel ID not found: {kernel_id}"
+                )
             kernel_name = kernels[kernel_id]["name"]
-            kernel_server = KernelServer(
-                connection_file=self.kernel_id_to_connection_file[kernel_id],
-                write_connection_file=False,
-            )
-            kernels[kernel_id]["server"] = kernel_server
-            await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
+            if kernels[kernel_id]["server"] is None:
+                kernel_server = KernelServer(
+                    connection_file=self.kernel_id_to_connection_file[kernel_id],
+                    write_connection_file=False,
+                )
+                kernels[kernel_id]["server"] = kernel_server
+                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
+            else:
+                kernel_server = kernels[kernel_id]["server"]
         else:
             return
         session_id = str(uuid.uuid4())
