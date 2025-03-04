@@ -60,7 +60,7 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
     kernel_server = KernelServer(kernelspec_path=kernelspec_path, capture_kernel_output=False)
     async with create_task_group() as tg:
         await tg.start(kernel_server.start)
-        kernels[kernel_id] = {"server": kernel_server}
+        kernels[kernel_id] = {"server": kernel_server, "driver": None}
         msg_id = "0"
         msg = {
             "channel": "shell",
