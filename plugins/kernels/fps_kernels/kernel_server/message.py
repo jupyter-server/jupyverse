@@ -1,8 +1,8 @@
 import json
 import struct
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
-from zmq.asyncio import Socket
+from zmq_anyio import Socket
 
 from ..kernel_driver.message import DELIM, deserialize, feed_identities, sign, unpack
 
@@ -38,7 +38,7 @@ async def send_raw_message(parts: List[bytes], sock: Socket, key: str) -> None:
     msg = parts[:4]
     buffers = parts[4:]
     to_send = [DELIM, sign(msg, key)] + msg + buffers
-    await sock.send_multipart(to_send)
+    await sock.asend_multipart(to_send).wait()
 
 
 def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
@@ -53,8 +53,8 @@ def deserialize_msg_from_ws_v1(ws_msg: bytes) -> Tuple[str, List[bytes]]:
 
 
 async def get_zmq_parts(socket: Socket) -> List[bytes]:
-    parts = await socket.recv_multipart()
-    idents, parts = feed_identities(parts)
+    parts = await socket.arecv_multipart().wait()
+    idents, parts = feed_identities(cast(list[bytes], parts))
     return parts
 
 

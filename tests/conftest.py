@@ -12,7 +12,6 @@ import requests
 @pytest.fixture
 def anyio_backend():
     # at least, SQLAlchemy and pyzmq don't support anything else than asyncio
-    # TODO: switch to zmq-anyio
     return "asyncio"
 
 
