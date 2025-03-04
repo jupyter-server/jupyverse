@@ -12,7 +12,7 @@ from typing import Dict, Optional, Tuple, Union
 import zmq
 from anyio import open_process
 from anyio.abc import Process
-from zmq.asyncio import Socket
+from zmq_anyio import Socket
 
 channel_socket_types = {
     "hb": zmq.REQ,
@@ -22,7 +22,7 @@ channel_socket_types = {
     "control": zmq.DEALER,
 }
 
-context = zmq.asyncio.Context()
+context = zmq.Context()
 
 cfg_t = Dict[str, Union[str, int]]
 
@@ -102,7 +102,7 @@ def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) ->
     port = cfg[f"{channel}_port"]
     url = f"tcp://{ip}:{port}"
     socket_type = channel_socket_types[channel]
-    sock = context.socket(socket_type)
+    sock = Socket(context.socket(socket_type))
     sock.linger = 1000  # set linger to 1s to prevent hangs at exit
     if identity:
         sock.identity = identity

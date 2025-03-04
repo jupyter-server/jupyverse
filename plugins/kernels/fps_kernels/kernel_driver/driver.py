@@ -102,6 +102,9 @@ class KernelDriver:
 
     async def connect(self, startup_timeout: float = float("inf")) -> None:
         self.connect_channels()
+        await self.task_group.start(self.iopub_channel.start)
+        await self.task_group.start(self.shell_channel.start)
+        await self.task_group.start(self.control_channel.start)
         await self._wait_for_ready(startup_timeout)
         self.listen_channels()
         self.task_group.start_soon(self._handle_comms)
@@ -117,6 +120,14 @@ class KernelDriver:
         self.task_group.start_soon(self.listen_shell)
 
     async def stop(self) -> None:
+        try:
+            async with create_task_group() as tg:
+                tg.start_soon(self.iopub_channel.stop)
+                tg.start_soon(self.shell_channel.stop)
+                tg.start_soon(self.control_channel.stop)
+        except Exception:
+            pass
+
         try:
             self.kernel_process.terminate()
         except ProcessLookupError:

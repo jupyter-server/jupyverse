@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 from uuid import uuid4
 
 from dateutil.parser import parse as dateutil_parse
-from zmq.asyncio import Socket
 from zmq.utils import jsonapi
+from zmq_anyio import Socket
 
 protocol_version_info = (5, 3)
 protocol_version = "%i.%i" % protocol_version_info
@@ -123,16 +123,19 @@ def deserialize(
 async def send_message(
     msg: Dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False
 ) -> None:
-    await sock.send_multipart(serialize(msg, key, change_date_to_str=change_date_to_str), copy=True)
+    await sock.asend_multipart(
+        serialize(msg, key, change_date_to_str=change_date_to_str),
+        copy=True,
+    ).wait()
 
 
 async def receive_message(
     sock: Socket, timeout: float = float("inf"), change_str_to_date: bool = False
 ) -> Optional[Dict[str, Any]]:
     timeout *= 1000  # in ms
-    ready = await sock.poll(timeout)
+    ready = await sock.apoll(timeout).wait()
     if ready:
-        msg_list = await sock.recv_multipart()
-        idents, msg_list = feed_identities(msg_list)
+        msg_list = await sock.arecv_multipart().wait()
+        idents, msg_list = feed_identities(cast(list[bytes], msg_list))
         return deserialize(msg_list, change_str_to_date=change_str_to_date)
     return None

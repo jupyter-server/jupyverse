@@ -130,6 +130,10 @@ class KernelServer:
                 "control", self.connection_cfg, identity=identity
             )
             self.iopub_channel = connect_channel("iopub", self.connection_cfg)
+            await tg.start(self.shell_channel.start)
+            await tg.start(self.stdin_channel.start)
+            await tg.start(self.control_channel.start)
+            await tg.start(self.iopub_channel.start)
             await self._wait_for_ready()
             tg.start_soon(lambda: self.listen("shell"))
             tg.start_soon(lambda: self.listen("stdin"))
@@ -138,6 +142,15 @@ class KernelServer:
             task_status.started()
 
     async def stop(self) -> None:
+        try:
+            async with create_task_group() as tg:
+                tg.start_soon(self.shell_channel.stop)
+                tg.start_soon(self.stdin_channel.stop)
+                tg.start_soon(self.control_channel.stop)
+                tg.start_soon(self.iopub_channel.stop)
+        except Exception:
+            pass
+
         try:
             self.kernel_process.terminate()
         except ProcessLookupError:
@@ -202,7 +215,8 @@ class KernelServer:
             parent_header = get_parent_header(parts)
             if channel == self.iopub_channel:
                 # broadcast to all web clients
-                for websocket in self.sessions.values():
+                websockets = list(self.sessions.values())
+                for websocket in websockets:
                     await self.send_to_ws(websocket, parts, parent_header, channel_name)
             else:
                 session = parent_header["session"]
