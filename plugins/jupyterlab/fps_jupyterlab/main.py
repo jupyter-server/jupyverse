@@ -12,15 +12,15 @@ from .routes import _JupyterLab
 class JupyterLabModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
-        self.jupyterlab_config = JupyterLabConfig(**kwargs)
+        self.config = JupyterLabConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.jupyterlab_config, JupyterLabConfig)
+        self.put(self.config, JupyterLabConfig)
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
         frontend_config = await self.get(FrontendConfig)
         lab = await self.get(Lab)  # type: ignore[type-abstract]
 
-        jupyterlab = _JupyterLab(app, self.jupyterlab_config, auth, frontend_config, lab)
+        jupyterlab = _JupyterLab(app, self.config, auth, frontend_config, lab)
         self.put(jupyterlab, JupyterLab)
