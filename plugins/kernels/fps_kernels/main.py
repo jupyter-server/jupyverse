@@ -19,10 +19,10 @@ log = structlog.get_logger()
 class KernelsModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
-        self.kernels_config = KernelsConfig(**kwargs)
+        self.config = KernelsConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.kernels_config, KernelsConfig)
+        self.put(self.config, KernelsConfig)
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
@@ -30,11 +30,11 @@ class KernelsModule(Module):
         lifespan = await self.get(Lifespan)
         yjs = (
             await self.get(Yjs)  # type: ignore[type-abstract]
-            if self.kernels_config.require_yjs
+            if self.config.require_yjs
             else None
         )
 
-        self.kernels = _Kernels(app, self.kernels_config, auth, frontend_config, yjs, lifespan)
+        self.kernels = _Kernels(app, self.config, auth, frontend_config, yjs, lifespan)
         self.put(self.kernels, Kernels)
 
         async with create_task_group() as tg:

@@ -9,10 +9,10 @@ from .routes import WebDAV
 class WebDAVModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
-        self.webdav_config = WebDAVConfig(**kwargs)
+        self.config = WebDAVConfig(**kwargs)
 
     async def prepare(self) -> None:
         app = await self.get(App)
 
-        webdav = WebDAV(app, self.webdav_config)
+        webdav = WebDAV(app, self.config)
         self.put(webdav)

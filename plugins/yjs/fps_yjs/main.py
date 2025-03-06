@@ -15,10 +15,10 @@ from .routes import _Yjs
 class YjsModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
-        self.yjs_config = YjsConfig(**kwargs)
+        self.config = YjsConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.yjs_config, YjsConfig)
+        self.put(self.config, YjsConfig)
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]

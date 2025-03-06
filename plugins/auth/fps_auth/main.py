@@ -16,20 +16,20 @@ log = structlog.get_logger()
 class AuthModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
-        self.auth_config = _AuthConfig(**kwargs)
+        self.config = _AuthConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.auth_config, AuthConfig)
+        self.put(self.config, AuthConfig)
 
         app = await self.get(App)
         frontend_config = await self.get(FrontendConfig)
 
-        auth = auth_factory(app, self.auth_config, frontend_config)
+        auth = auth_factory(app, self.config, frontend_config)
         self.put(auth, Auth)
 
         await auth.db.create_db_and_tables()
 
-        if self.auth_config.test:
+        if self.config.test:
             try:
                 await auth.create_user(
                     username="admin@jupyter.com",
@@ -42,19 +42,19 @@ class AuthModule(Module):
 
         try:
             await auth.create_user(
-                username=self.auth_config.token,
-                email=self.auth_config.global_email,
+                username=self.config.token,
+                email=self.config.global_email,
                 password="",
                 permissions={},
             )
         except UserAlreadyExists:
-            global_user = await auth.get_user_by_email(self.auth_config.global_email)
+            global_user = await auth.get_user_by_email(self.config.global_email)
             await auth._update_user(
                 global_user,
-                username=self.auth_config.token,
+                username=self.config.token,
                 permissions={},
             )
 
-        if self.auth_config.mode == "token":
+        if self.config.mode == "token":
             query_params = await self.get(QueryParams)
-            query_params.d["token"] = self.auth_config.token
+            query_params.d["token"] = self.config.token

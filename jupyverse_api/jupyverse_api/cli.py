@@ -21,6 +21,26 @@ else:
     help="Enable debug mode.",
 )
 @click.option(
+    "--show-config",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Show the actual configuration.",
+)
+@click.option(
+    "--help-all",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Show the configuration description.",
+)
+@click.option(
+    "--backend",
+    show_default=True,
+    default="asyncio",
+    help="The name of the event loop to use (asyncio or trio).",
+)
+@click.option(
     "--open-browser",
     is_flag=True,
     show_default=True,
@@ -66,6 +86,9 @@ else:
 )
 def main(
     debug: bool = False,
+    show_config: bool = False,
+    help_all: bool = False,
+    backend: str = "asyncio",
     open_browser: bool = False,
     host: str = "127.0.0.1",
     port: int = 8000,
@@ -92,6 +115,9 @@ def main(
         "",
         set_=set_list,
         config=pluggin_config,
+        show_config=show_config,
+        help_all=help_all,
+        backend=backend,
     )  # type: ignore
 
 

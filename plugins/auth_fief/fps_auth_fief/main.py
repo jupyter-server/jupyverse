@@ -9,12 +9,12 @@ from .routes import auth_factory
 
 class AuthFiefModule(Module):
     def __init__(self, name: str, **kwargs):
-        self.auth_fief_config = _AuthFiefConfig(**kwargs)
+        self.config = _AuthFiefConfig(**kwargs)
 
     async def prepare(self) -> None:
-        self.put(self.auth_fief_config, AuthConfig)
+        self.put(self.config, AuthConfig)
 
         app = await self.get(App)
 
-        auth_fief = auth_factory(app, self.auth_fief_config)
+        auth_fief = auth_factory(app, self.config)
         self.put(auth_fief, Auth)

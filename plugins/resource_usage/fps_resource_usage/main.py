@@ -10,11 +10,11 @@ from .routes import _ResourceUsage
 class ResourceUsageModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
-        self.resource_usage_config = ResourceUsageConfig(**kwargs)
+        self.config = ResourceUsageConfig(**kwargs)
 
     async def prepare(self) -> None:
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
 
-        resource_usage = _ResourceUsage(app, auth, self.resource_usage_config)
+        resource_usage = _ResourceUsage(app, auth, self.config)
         self.put(resource_usage, ResourceUsage)
