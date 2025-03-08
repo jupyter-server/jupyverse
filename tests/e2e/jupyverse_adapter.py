@@ -1,7 +1,6 @@
 import json
 import urllib
 import uuid
-from typing import TypeAlias
 
 import requests
 import structlog
@@ -9,15 +8,12 @@ from websocket import create_connection
 
 logger = structlog.get_logger()
 
-KernelId: TypeAlias = str
-SessionId: TypeAlias = str
-
 
 class JupyverseAdapter:
     def __init__(self, base_url):
         self.__netloc = urllib.parse.urlparse(base_url).netloc
 
-    def new_session(self) -> KernelId:
+    def new_session(self) -> str:
         kernel_name = str(uuid.uuid4())
         response = requests.post(
             f"http://{self.__netloc}/api/sessions",
@@ -35,7 +31,7 @@ class JupyverseAdapter:
         logger.info("Created kernel %s with new session %s.", kernel_id, session_id)
         return kernel_id, session_id
 
-    def kernel_info_request(self, kernel_id: KernelId, session_id: SessionId) -> str:
+    def kernel_info_request(self, kernel_id: str, session_id: str):
         session_id = str(uuid.uuid4())
         ws = create_connection(
             f"ws://{self.__netloc}/api/kernels/{kernel_id}/channels?session_id={session_id}"
@@ -64,7 +60,7 @@ class JupyverseAdapter:
                 break
         ws.close()
 
-    def stop_kernel(self, kernel_id: KernelId):
+    def stop_kernel(self, kernel_id: str) -> None:
         response = requests.delete(f"http://{self.__netloc}/api/kernels/{kernel_id}")
         response.raise_for_status()
         logger.info("Stopped kernel %s.", kernel_id)
