@@ -1,5 +1,5 @@
 import pytest
-from .jupyverse_adapter.jupyverse_adapter import JupyverseAdapter
+from .jupyverse_adapter import JupyverseAdapter
 
 
 @pytest.mark.parametrize("auth_mode", ("noauth",))
