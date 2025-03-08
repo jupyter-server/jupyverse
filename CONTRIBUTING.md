@@ -26,3 +26,9 @@ hatch run dev.jupyterlab-auth:test
 ```shell
 hatch run dev.jupyterlab-auth:lint
 ```
+
+## Type Checking
+
+```shell
+hatch run dev.jupyterlab-auth:typecheck0
+```
