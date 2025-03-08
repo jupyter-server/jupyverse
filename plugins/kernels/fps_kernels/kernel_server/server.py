@@ -144,10 +144,10 @@ class KernelServer:
     async def stop(self) -> None:
         try:
             async with create_task_group() as tg:
-                tg.start_soon(self.shell_channel.stop)
-                tg.start_soon(self.stdin_channel.stop)
-                tg.start_soon(self.control_channel.stop)
-                tg.start_soon(self.iopub_channel.stop)
+                await tg.start(self.shell_channel.stop)
+                await tg.start(self.stdin_channel.stop)
+                await tg.start(self.control_channel.stop)
+                await tg.start(self.iopub_channel.stop)
         except Exception:
             pass
 
