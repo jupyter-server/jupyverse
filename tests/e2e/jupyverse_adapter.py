@@ -1,10 +1,11 @@
 import json
 import urllib
-from websocket import create_connection
 import uuid
+from typing import TypeAlias
+
 import requests
 import structlog
-from typing import TypeAlias
+from websocket import create_connection
 
 logger = structlog.get_logger()
 
