@@ -344,6 +344,7 @@ $RECYCLE.BIN/
 .jupyter_ystore.db
 .jupyter_ystore.db-journal
 fps_cli_args.toml
+.fileid.db
 
 # pixi environments
 .pixi
