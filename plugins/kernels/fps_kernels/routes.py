@@ -385,7 +385,7 @@ class _Kernels(Kernels):
                 await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
                 kernels[kernel_id]["server"] = kernel_server
             await kernel_server.serve(
-                accepted_websocket, session_id, permissions, self.lifespan.shutdown_request
+                accepted_websocket, session_id, permissions
             )
 
     async def watch_connection_files(self, path: Path) -> None:
