@@ -22,6 +22,29 @@ channel_socket_types = {
     "control": zmq.DEALER,
 }
 
+class HbSocket(Socket):
+    pass
+
+class ShellSocket(Socket):
+    pass
+
+class StdinSocket(Socket):
+    pass
+
+class IOPubSocket(Socket):
+    pass
+
+class ControlSocket(Socket):
+    pass
+
+channel_socket_wrapper_types = {
+    "hb": HbSocket,
+    "shell": ShellSocket,
+    "iopub": IOPubSocket,
+    "stdin": StdinSocket,
+    "control": ControlSocket,
+}
+
 context = zmq.Context()
 
 cfg_t = Dict[str, Union[str, int]]
@@ -102,7 +125,8 @@ def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) ->
     port = cfg[f"{channel}_port"]
     url = f"tcp://{ip}:{port}"
     socket_type = channel_socket_types[channel]
-    sock = Socket(context.socket(socket_type))
+    socket_wrapper_type = channel_socket_wrapper_types[channel]
+    sock = socket_wrapper_type(context.socket(socket_type))
     sock.linger = 1000  # set linger to 1s to prevent hangs at exit
     if identity:
         sock.identity = identity
