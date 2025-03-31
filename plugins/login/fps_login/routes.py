@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,7 +12,7 @@ from jupyverse_api.login import Login
 
 
 class _AuthConfig(AuthConfig):
-    login_url: Optional[str]
+    login_url: str | None
 
 
 class _Login(Login):

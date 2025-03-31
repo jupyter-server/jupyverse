@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import json
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
+from collections.abc import Awaitable
+from typing import Any, Callable
 
 import httpx
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -127,12 +130,12 @@ def auth_factory(
                 user: User = Depends(self.current_user()),
                 access_token_info: FiefAccessTokenInfo = Depends(backend.auth.authenticated()),
             ):
-                checked_permissions: Dict[str, List[str]] = {}
+                checked_permissions: dict[str, list[str]] = {}
                 permissions = json.loads(
                     dict(request.query_params).get("permissions", "{}").replace("'", '"')
                 )
                 if permissions:
-                    user_permissions: Dict[str, List[str]] = {}
+                    user_permissions: dict[str, list[str]] = {}
                     for permission in access_token_info["permissions"]:
                         resource, action = permission.split(":")
                         if resource not in user_permissions:
@@ -154,7 +157,7 @@ def auth_factory(
 
             self.include_router(router)
 
-        def current_user(self, permissions: Optional[Dict[str, List[str]]] = None) -> Callable:
+        def current_user(self, permissions: dict[str, list[str]] | None = None) -> Callable:
             return backend.current_user(permissions)
 
         async def update_user(self, update_user=Depends(backend.update_user)) -> Callable:
@@ -162,8 +165,8 @@ def auth_factory(
 
         def websocket_auth(
             self,
-            permissions: Optional[Dict[str, List[str]]] = None,
-        ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
+            permissions: dict[str, list[str]] | None = None,
+        ) -> Callable[[Any], Awaitable[tuple[Any, dict[str, list[str]] | None] | None]]:
             return backend.websocket_auth(permissions)
 
     return _AuthFief()

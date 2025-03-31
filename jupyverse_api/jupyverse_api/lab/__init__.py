@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +21,7 @@ class Lab(Router, ABC):
     extensions_dir: Path
     redirect_after_root: str
 
-    def __init__(self, app: App, auth: Auth, jupyterlab_config: Optional[JupyterLabConfig]):
+    def __init__(self, app: App, auth: Auth, jupyterlab_config: JupyterLabConfig | None):
         super().__init__(app)
 
         self.prefix_dir = Path(sys.prefix)
@@ -124,51 +125,42 @@ class Lab(Router, ABC):
         self.include_router(router)
 
     @abstractmethod
-    def get_federated_extensions(self, extensions_dir: Path) -> Tuple[List, List]:
-        ...
+    def get_federated_extensions(self, extensions_dir: Path) -> tuple[list, list]: ...
 
     @abstractmethod
     async def get_root(
         self,
         response: Response,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
-    async def get_favicon(self):
-        ...
+    async def get_favicon(self): ...
 
     @abstractmethod
-    async def get_mathjax(self, rest_of_path):
-        ...
+    async def get_mathjax(self, rest_of_path): ...
 
     @abstractmethod
-    async def get_listings(self, user: User):
-        ...
+    async def get_listings(self, user: User): ...
 
     @abstractmethod
-    async def get_extensions(self, user: User):
-        ...
+    async def get_extensions(self, user: User): ...
 
     @abstractmethod
     async def get_translations_(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
-    async def get_translations(self, user: User):
-        ...
+    async def get_translations(self, user: User): ...
 
     @abstractmethod
     async def get_translation(
         self,
         language,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_setting(
@@ -177,8 +169,7 @@ class Lab(Router, ABC):
         name1,
         name2,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def change_setting(
@@ -188,9 +179,7 @@ class Lab(Router, ABC):
         name1,
         user: User,
         user_update,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
-    async def get_settings(self, user: User):
-        ...
+    async def get_settings(self, user: User): ...

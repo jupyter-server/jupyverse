@@ -20,5 +20,4 @@ class Login(Router, ABC):
         self.include_router(router)
 
     @abstractmethod
-    async def get_login(self):
-        ...
+    async def get_login(self): ...

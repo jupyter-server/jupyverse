@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import Any, Dict, Type
+from typing import Any
 
 import structlog
 from anyio import Event
@@ -10,13 +10,13 @@ from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.terminals import Terminal, Terminals, TerminalServer
 
-TERMINALS: Dict[str, Dict[str, Any]] = {}
+TERMINALS: dict[str, dict[str, Any]] = {}
 
 log = structlog.get_logger()
 
 
 class _Terminals(Terminals):
-    def __init__(self, app: App, auth: Auth, _TerminalServer: Type[TerminalServer]) -> None:
+    def __init__(self, app: App, auth: Auth, _TerminalServer: type[TerminalServer]) -> None:
         super().__init__(app=app, auth=auth)
         self.TerminalServer = _TerminalServer
         self.stop_event = Event()

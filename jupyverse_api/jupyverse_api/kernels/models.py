@@ -1,11 +1,11 @@
-from typing import Optional
+from __future__ import annotations
 
 from pydantic import BaseModel
 
 
 class KernelInfo(BaseModel):
-    name: Optional[str] = None
-    id: Optional[str] = None
+    name: str | None = None
+    id: str | None = None
 
 
 class CreateSession(BaseModel):

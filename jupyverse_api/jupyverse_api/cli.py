@@ -1,7 +1,7 @@
 import io
 import json
 import sys
-from typing import Any, List, Tuple
+from typing import Any
 
 import rich_click as click
 from fps import main as fps_main
@@ -92,10 +92,10 @@ def main(
     open_browser: bool = False,
     host: str = "127.0.0.1",
     port: int = 8000,
-    set_: Tuple[str, ...] = (),
-    disable: Tuple[str, ...] = (),
-    allow_origin: Tuple[str, ...] = (),
-    query_param: Tuple[str, ...] = (),
+    set_: tuple[str, ...] = (),
+    disable: tuple[str, ...] = (),
+    allow_origin: tuple[str, ...] = (),
+    query_param: tuple[str, ...] = (),
 ) -> None:
     query_params_dict = {}
     for qp in query_param:
@@ -103,7 +103,7 @@ def main(
         query_params_dict[key] = value
     query_params_str = json.dumps(query_params_dict)
     allow_origins_str = json.dumps(allow_origin)
-    set_list: List[str] = list(set_)
+    set_list: list[str] = list(set_)
     set_list.append(f"debug={debug}")
     set_list.append(f"open_browser={open_browser}")
     set_list.append(f"host={host}")
@@ -121,21 +121,14 @@ def main(
     )  # type: ignore
 
 
-def get_pluggin_config(disable: Tuple[str, ...]) -> dict[str, Any]:
+def get_pluggin_config(disable: tuple[str, ...]) -> dict[str, Any]:
     jupyverse_modules = [
-        ep.name
-        for ep in entry_points(group="jupyverse.modules")
-        if ep.name not in disable
+        ep.name for ep in entry_points(group="jupyverse.modules") if ep.name not in disable
     ]
     config = {
         "jupyverse": {
-            "type":"jupyverse_api.main:JupyverseModule",
-            "modules": {
-                module: {
-                    "type": module
-                }
-                for module in jupyverse_modules
-            }
+            "type": "jupyverse_api.main:JupyverseModule",
+            "modules": {module: {"type": module} for module in jupyverse_modules},
         }
     }
     return config

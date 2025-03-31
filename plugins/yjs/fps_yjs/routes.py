@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from functools import partial
-from typing import Dict
 from uuid import uuid4
 
 import structlog
@@ -154,11 +153,11 @@ class YWebsocket:
 class RoomManager:
     contents: Contents
     lifespan: Lifespan
-    documents: Dict[str, YBaseDoc]
-    watchers: Dict[str, Task]
-    savers: Dict[str, Task]
-    cleaners: Dict[YRoom, Task]
-    last_modified: Dict[str, datetime]
+    documents: dict[str, YBaseDoc]
+    watchers: dict[str, Task]
+    savers: dict[str, Task]
+    cleaners: dict[YRoom, Task]
+    last_modified: dict[str, datetime]
     websocket_server: JupyterWebsocketServer
     room_lock: ResourceLock
 

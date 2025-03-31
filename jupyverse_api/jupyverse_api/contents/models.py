@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from __future__ import annotations
 
 from pydantic import BaseModel
 
@@ -11,24 +11,24 @@ class Checkpoint(BaseModel):
 class Content(BaseModel):
     name: str
     path: str
-    last_modified: Optional[str] = None
-    created: Optional[str] = None
-    content: Optional[Union[List[Dict], str, Dict]] = None
-    format: Optional[str] = None
-    mimetype: Optional[str] = None
-    size: Optional[int] = None
+    last_modified: str | None = None
+    created: str | None = None
+    content: list[dict] | str | dict | None = None
+    format: str | None = None
+    mimetype: str | None = None
+    size: int | None = None
     writable: bool
     type: str
 
 
 class CreateContent(BaseModel):
-    ext: Optional[str] = None
+    ext: str | None = None
     path: str
     type: str
 
 
 class SaveContent(BaseModel):
-    content: Optional[Union[str, Dict]] = None
+    content: str | dict | None = None
     format: str
     path: str
     type: str

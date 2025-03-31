@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import json
 import uuid
 from functools import partial
 from http import HTTPStatus
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
 
 import structlog
 from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group
@@ -40,7 +41,7 @@ class _Kernels(Kernels):
         kernels_config: KernelsConfig,
         auth: Auth,
         frontend_config: FrontendConfig,
-        yjs: Optional[Yjs],
+        yjs: Yjs | None,
         lifespan: Lifespan,
     ) -> None:
         super().__init__(app=app, auth=auth)
@@ -50,8 +51,8 @@ class _Kernels(Kernels):
         self.lifespan = lifespan
 
         self.kernelspecs: dict = {}
-        self.kernel_id_to_connection_file: Dict[str, str] = {}
-        self.sessions: Dict[str, Session] = {}
+        self.kernel_id_to_connection_file: dict[str, str] = {}
+        self.sessions: dict[str, Session] = {}
         self.kernels = kernels
         self._app = app
         self.stop_event = Event()
@@ -396,15 +397,15 @@ class _Kernels(Kernels):
         async for changes in awatch(path, stop_event=self.stop_event):
             await self.process_connection_files(changes)
 
-    async def process_connection_files(self, changes: Set[Tuple[Change, str]]):
+    async def process_connection_files(self, changes: set[tuple[Change, str]]):
         # get rid of "simultaneously" added/deleted files
-        file_changes: Dict[str, List[Change]] = {}
+        file_changes: dict[str, list[Change]] = {}
         for c in changes:
             change, path = c
             if path not in file_changes:
                 file_changes[path] = []
             file_changes[path].append(change)
-        to_delete: List[str] = []
+        to_delete: list[str] = []
         for p, cs in file_changes.items():
             if Change.added in cs and Change.deleted in cs:
                 cs.remove(Change.added)

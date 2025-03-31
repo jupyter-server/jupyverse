@@ -1,4 +1,3 @@
-from typing import Dict, List
 
 from pydantic import ConfigDict
 
@@ -10,4 +9,4 @@ class JupyterHubUser(User):
 
     token: str
     anonymous: bool = True
-    permissions: Dict[str, List[str]]
+    permissions: dict[str, list[str]]

@@ -1,7 +1,8 @@
 import secrets
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, AsyncGenerator, List
+from typing import Any
 
 from fastapi import Depends
 from fastapi_users.db import (
@@ -35,7 +36,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     workspace = Column(Text(), default="{}", nullable=False)
     settings = Column(Text(), default="{}", nullable=False)
     permissions = Column(JSON, default={}, nullable=False)
-    oauth_accounts: Mapped[List[OAuthAccount]] = relationship("OAuthAccount", lazy="joined")
+    oauth_accounts: Mapped[list[OAuthAccount]] = relationship("OAuthAccount", lazy="joined")
 
 
 @dataclass

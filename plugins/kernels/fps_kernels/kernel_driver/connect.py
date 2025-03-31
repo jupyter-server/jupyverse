@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
-from typing import Dict, Optional, Tuple, Union
+from typing import Union
 
 import zmq
 from anyio import open_process
@@ -47,7 +47,7 @@ channel_socket_wrapper_types = {
 
 context = zmq.Context()
 
-cfg_t = Dict[str, Union[str, int]]
+cfg_t = dict[str, Union[str, int]]
 
 
 def get_port(ip: str) -> int:
@@ -65,13 +65,13 @@ def write_connection_file(
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
-) -> Tuple[str, cfg_t]:
+) -> tuple[str, cfg_t]:
     ip = ip or "127.0.0.1"
 
     if not fname:
         fd, fname = tempfile.mkstemp(suffix=".json")
         os.close(fd)
-    f = open(fname, "wt")
+    f = open(fname, "w")
 
     channels = ["shell", "iopub", "stdin", "control", "hb"]
 
@@ -90,7 +90,7 @@ def write_connection_file(
 
 
 def read_connection_file(fname: str) -> cfg_t:
-    with open(fname, "rt") as f:
+    with open(fname) as f:
         cfg: cfg_t = json.load(f)
 
     return cfg
@@ -104,8 +104,8 @@ async def launch_kernel(
     cmd = [s.format(connection_file=connection_file_path) for s in kernelspec["argv"]]
     if cmd and cmd[0] in {
         "python",
-        "python%i" % sys.version_info[0],
-        "python%i.%i" % sys.version_info[:2],
+        f"python{sys.version_info[0]}",
+        "python" + ".".join(map(str, sys.version_info[:2])),
     }:
         cmd[0] = sys.executable
     if capture_output:
@@ -120,7 +120,7 @@ async def launch_kernel(
     return process
 
 
-def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
+def create_socket(channel: str, cfg: cfg_t, identity: bytes | None = None) -> Socket:
     ip = cfg["ip"]
     port = cfg[f"{channel}_port"]
     url = f"tcp://{ip}:{port}"
@@ -134,7 +134,7 @@ def create_socket(channel: str, cfg: cfg_t, identity: Optional[bytes] = None) ->
     return sock
 
 
-def connect_channel(channel_name: str, cfg: cfg_t, identity: Optional[bytes] = None) -> Socket:
+def connect_channel(channel_name: str, cfg: cfg_t, identity: bytes | None = None) -> Socket:
     sock = create_socket(channel_name, cfg, identity)
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")

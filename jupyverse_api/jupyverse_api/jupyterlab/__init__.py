@@ -55,19 +55,16 @@ class JupyterLab(Router, ABC):
     async def get_lab(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def load_workspace(
         self,
         path,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
-    async def get_workspace_data(self, user: User):
-        ...
+    async def get_workspace_data(self, user: User): ...
 
     @abstractmethod
     async def set_workspace(
@@ -75,16 +72,14 @@ class JupyterLab(Router, ABC):
         request: Request,
         user: User,
         user_update,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_workspace(
         self,
         name,
         user: User,
-    ):
-        ...
+    ): ...
 
 
 class JupyterLabConfig(Config):

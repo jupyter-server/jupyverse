@@ -7,7 +7,7 @@ import shutil
 from datetime import datetime, timezone
 from http import HTTPStatus
 from pathlib import Path
-from typing import Dict, List, Optional, Union, cast
+from typing import cast
 
 from anyio import CancelScope, open_file
 from fastapi import HTTPException, Response
@@ -47,7 +47,7 @@ class _Contents(Contents):
 
     async def create_content(
         self,
-        path: Optional[str],
+        path: str | None,
         request: Request,
         user: User,
     ):
@@ -143,12 +143,12 @@ class _Contents(Contents):
         return await self.read_content(rename_content.path, False)
 
     async def read_content(
-        self, path: Union[str, Path], get_content: bool, file_format: Optional[str] = None
+        self, path: str | Path, get_content: bool, file_format: str | None = None
     ) -> Content:
         if isinstance(path, str):
             path = Path(path)
         async with self.file_lock(path):
-            content: Optional[Union[str, Dict, List[Dict]]] = None
+            content: str | dict | list[dict] | None = None
             if get_content:
                 if path.is_dir():
                     content = [
@@ -168,7 +168,7 @@ class _Contents(Contents):
                             content = content_bytes.decode()
                     except Exception:
                         raise HTTPException(status_code=404, detail="Item not found")
-            format: Optional[str] = None
+            format: str | None = None
             if path.is_dir():
                 size = None
                 type = "directory"
@@ -183,7 +183,7 @@ class _Contents(Contents):
                     if content is not None:
                         nb: dict
                         if file_format == "json":
-                            content = cast(Dict, content)
+                            content = cast(dict, content)
                             nb = content
                         else:
                             content = cast(str, content)
@@ -224,7 +224,7 @@ class _Contents(Contents):
                 }
             )
 
-    async def write_content(self, content: Union[SaveContent, Dict]) -> None:
+    async def write_content(self, content: SaveContent | dict) -> None:
         # writing can never be cancelled, otherwise it would corrupt the file
         with CancelScope(shield=True):
             if not isinstance(content, SaveContent):
@@ -238,7 +238,7 @@ class _Contents(Contents):
                 else:
                     async with await open_file(content.path, "wt") as f:
                         if content.format == "json":
-                            dict_content = cast(Dict, content.content)
+                            dict_content = cast(dict, content.content)
                             if content.type == "notebook":
                                 # see https://github.com/jupyterlab/jupyterlab/issues/11005
                                 if (
@@ -290,7 +290,7 @@ def get_file_creation_time(path: Path):
         )
 
 
-def get_file_size(path: Path) -> Optional[int]:
+def get_file_size(path: Path) -> int | None:
     if path.exists():
         return path.stat().st_size
     raise HTTPException(status_code=404, detail="Item not found")

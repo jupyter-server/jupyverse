@@ -42,8 +42,7 @@ class Yjs(Router, ABC):
         self,
         path,
         websocket_permissions,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def create_roomid(
@@ -52,15 +51,13 @@ class Yjs(Router, ABC):
         request: Request,
         response: Response,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def get_document(
         self,
         document_id: str,
-    ):
-        ...
+    ): ...
 
 
 class YjsConfig(Config):
