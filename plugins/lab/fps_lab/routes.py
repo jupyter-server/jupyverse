@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import json
 import os
 import sys
 from glob import glob
 from http import HTTPStatus
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import json5  # type: ignore
 from babel import Locale
@@ -30,7 +31,7 @@ class _Lab(Lab):
         app: App,
         auth: Auth,
         frontend_config: FrontendConfig,
-        jupyterlab_config: Optional[JupyterLabConfig] = None,
+        jupyterlab_config: JupyterLabConfig | None = None,
     ) -> None:
         super().__init__(app, auth, jupyterlab_config)
 
@@ -194,7 +195,7 @@ class _Lab(Lab):
                         settings.append(setting)
         return {"settings": settings}
 
-    def get_federated_extensions(self, extensions_dir: Path) -> Tuple[List, List]:
+    def get_federated_extensions(self, extensions_dir: Path) -> tuple[list, list]:
         federated_extensions = []
         disabled_extensions = []
 

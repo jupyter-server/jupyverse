@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import Field
@@ -61,7 +62,7 @@ class Kernels(Router, ABC):
         @router.get("/api/sessions")
         async def get_sessions(
             user: User = Depends(auth.current_user(permissions={"sessions": ["read"]})),
-        ) -> List[Session]:
+        ) -> list[Session]:
             return await self.get_sessions(user)
 
         @router.post(
@@ -124,22 +125,19 @@ class Kernels(Router, ABC):
         self.include_router(router)
 
     @abstractmethod
-    async def watch_connection_files(self, path: Path) -> None:
-        ...
+    async def watch_connection_files(self, path: Path) -> None: ...
 
     @abstractmethod
     async def get_status(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_kernelspecs(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_kernelspec(
@@ -147,62 +145,54 @@ class Kernels(Router, ABC):
         kernel_name,
         file_name,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_kernels(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def delete_session(
         self,
         session_id: str,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def rename_session(
         self,
         request: Request,
         user: User,
-    ) -> Session:
-        ...
+    ) -> Session: ...
 
     @abstractmethod
     async def get_sessions(
         self,
         user: User,
-    ) -> List[Session]:
-        ...
+    ) -> list[Session]: ...
 
     @abstractmethod
     async def create_session(
         self,
         request: Request,
         user: User,
-    ) -> Session:
-        ...
+    ) -> Session: ...
 
     @abstractmethod
     async def interrupt_kernel(
         self,
         kernel_id,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def restart_kernel(
         self,
         kernel_id,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def execute_cell(
@@ -210,24 +200,21 @@ class Kernels(Router, ABC):
         request: Request,
         kernel_id,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_kernel(
         self,
         kernel_id,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def shutdown_kernel(
         self,
         kernel_id,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def kernel_channels(
@@ -235,8 +222,7 @@ class Kernels(Router, ABC):
         kernel_id,
         session_id,
         websocket_permissions,
-    ):
-        ...
+    ): ...
 
 
 class KernelsConfig(Config):
@@ -248,7 +234,7 @@ class KernelsConfig(Config):
         ),
         default=False,
     )
-    external_connection_dir: Optional[str] = Field(
+    external_connection_dir: str | None = Field(
         description=(
             "The directory to look at for external kernel connection files, if "
             "allow_external_kernels is True. Defaults to Jupyter runtime_dir/external_kernels. "

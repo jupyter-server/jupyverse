@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from inspect import isawaitable
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable
 
 from .websocket_server import WebsocketServer
 

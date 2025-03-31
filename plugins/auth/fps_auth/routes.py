@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import contextlib
 import json
 import random
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
+from collections.abc import Awaitable
+from typing import Any, Callable
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select  # type: ignore
@@ -67,11 +70,11 @@ def auth_factory(
 
             @router.get("/api/me")
             async def get_api_me(
-                permissions: Optional[str] = None,
+                permissions: str | None = None,
                 user: UserRead = Depends(backend.current_user()),
-                update_user = Depends(backend.update_user),
+                update_user=Depends(backend.update_user),
             ):
-                checked_permissions: Dict[str, List[str]] = {}
+                checked_permissions: dict[str, list[str]] = {}
                 if permissions is None:
                     permissions = "{}"
                 else:
@@ -147,7 +150,7 @@ def auth_factory(
         async def _update_user(self, user, **kwargs):
             return await self.__update_user(user, **kwargs)
 
-        def current_user(self, permissions: Optional[Dict[str, List[str]]] = None) -> Callable:
+        def current_user(self, permissions: dict[str, list[str]] | None = None) -> Callable:
             return backend.current_user(permissions)
 
         async def update_user(self, update_user=Depends(backend.update_user)) -> Callable:
@@ -155,8 +158,8 @@ def auth_factory(
 
         def websocket_auth(
             self,
-            permissions: Optional[Dict[str, List[str]]] = None,
-        ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
+            permissions: dict[str, list[str]] | None = None,
+        ) -> Callable[[Any], Awaitable[tuple[Any, dict[str, list[str]] | None] | None]]:
             return backend.websocket_auth(permissions)
 
     return _Auth()

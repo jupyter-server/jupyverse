@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import sqlite3
-from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
 import structlog
@@ -33,10 +32,10 @@ class Watcher:
         self._event.set()
 
 
-class FileIdManager():
+class FileIdManager:
     db_path: str
     initialized: Event
-    watchers: Dict[str, List[Watcher]]
+    watchers: dict[str, list[Watcher]]
     lock: Lock
 
     def __init__(self, db_path: str = ".fileid.db"):
@@ -57,7 +56,7 @@ class FileIdManager():
         await self._db.close()
         self.stop_event.set()
 
-    async def get_id(self, path: str) -> Optional[str]:
+    async def get_id(self, path: str) -> str | None:
         await self.initialized.wait()
         async with self.lock:
             cursor = await self._db.cursor()
@@ -66,7 +65,7 @@ class FileIdManager():
                 return idx
             return None
 
-    async def get_path(self, idx: str) -> Optional[str]:
+    async def get_path(self, idx: str) -> str | None:
         await self.initialized.wait()
         async with self.lock:
             cursor = await self._db.cursor()
@@ -75,7 +74,7 @@ class FileIdManager():
                 return path
             return None
 
-    async def index(self, path: str) -> Optional[str]:
+    async def index(self, path: str) -> str | None:
         await self.initialized.wait()
         async with self.lock:
             apath = Path(path)
@@ -184,7 +183,7 @@ class FileIdManager():
         self.watchers[path].remove(watcher)
 
 
-async def get_mtime(path, db) -> Optional[float]:
+async def get_mtime(path, db) -> float | None:
     if db:
         cursor = await db.cursor()
         await cursor.execute("SELECT mtime FROM fileids WHERE path = ?", (path,))
@@ -200,7 +199,7 @@ async def get_mtime(path, db) -> Optional[float]:
 
 
 async def maybe_rename(
-    db, changed_path: str, changed_paths: Set[str], other_paths: Set[str], is_added_path: bool
+    db, changed_path: str, changed_paths: set[str], other_paths: set[str], is_added_path: bool
 ) -> None:
     # check if the same file was added/deleted, this would be a rename
     db_or_fs1, db_or_fs2 = db, None

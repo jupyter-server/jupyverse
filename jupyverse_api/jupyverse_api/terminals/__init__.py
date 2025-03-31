@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 
 from fastapi import APIRouter, Depends
 
@@ -19,7 +18,7 @@ class Terminals(Router, ABC):
         @router.get("/api/terminals")
         async def get_terminals(
             user: User = Depends(auth.current_user({"terminals": ["read"]})),
-        ) -> List[Terminal]:
+        ) -> list[Terminal]:
             return await self.get_terminals(user)
 
         @router.post("/api/terminals")
@@ -50,38 +49,32 @@ class Terminals(Router, ABC):
     async def get_terminals(
         self,
         user: User,
-    ) -> List[Terminal]:
-        ...
+    ) -> list[Terminal]: ...
 
     @abstractmethod
     async def create_terminal(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def delete_terminal(
         self,
         name: str,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def terminal_websocket(
         self,
         name,
         websocket_permissions,
-    ):
-        ...
+    ): ...
 
 
 class TerminalServer(ABC):
     @abstractmethod
-    async def serve(self, websocket, permissions):
-        ...
+    async def serve(self, websocket, permissions): ...
 
     @abstractmethod
-    def quit(self, websocket):
-        ...
+    def quit(self, websocket): ...

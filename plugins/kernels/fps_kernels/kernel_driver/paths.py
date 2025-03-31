@@ -3,7 +3,6 @@ import os
 import sys
 import tempfile
 import uuid
-from typing import Dict, List
 
 
 def _expand_path(s):
@@ -30,7 +29,7 @@ def _filefind(filename, path_dirs=()):
         if os.path.isfile(testname):
             return os.path.abspath(testname)
 
-    raise IOError(f"File {filename} does not exist in any of the search paths: {path_dirs}")
+    raise OSError(f"File {filename} does not exist in any of the search paths: {path_dirs}")
 
 
 def get_home_dir():
@@ -39,7 +38,7 @@ def get_home_dir():
     return home
 
 
-_dtemps: Dict = {}
+_dtemps: dict = {}
 
 
 def _mkdtemp_once(name):
@@ -87,7 +86,7 @@ def jupyter_runtime_dir():
 
 def find_connection_file(
     filename: str = "kernel-*.json",
-    paths: List[str] = [],
+    paths: list[str] = [],
 ) -> str:
     if not paths:
         paths = [".", jupyter_runtime_dir()]
@@ -107,7 +106,7 @@ def find_connection_file(
 
     matches = [os.path.abspath(m) for m in matches]
     if not matches:
-        raise IOError(f"Could not find {filename} in {paths}")
+        raise OSError(f"Could not find {filename} in {paths}")
     elif len(matches) == 1:
         return matches[0]
     else:

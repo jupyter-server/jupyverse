@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import partial
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from pycrdt import Doc, Text
 
@@ -7,7 +9,7 @@ from .ybasedoc import YBaseDoc
 
 
 class YUnicode(YBaseDoc):
-    def __init__(self, ydoc: Optional[Doc] = None):
+    def __init__(self, ydoc: Doc | None = None):
         super().__init__(ydoc)
         self._ysource = Text()
         self._ydoc["source"] = self._ysource

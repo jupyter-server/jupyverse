@@ -56,37 +56,32 @@ class Notebook(Router, ABC):
     async def get_tree(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_notebook(
         self,
         path,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def edit_file(
         self,
         path,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_console(
         self,
         path,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def get_terminal(
         self,
         name: str,
         user: User,
-    ):
-        ...
+    ): ...

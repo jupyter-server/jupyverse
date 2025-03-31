@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from anyio import Event
 from pydantic import BaseModel
@@ -9,11 +9,11 @@ __version__ = "0.7.6"
 
 
 class Singleton(type):
-    _instances: Dict = {}
+    _instances: dict = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -45,9 +45,9 @@ class Router:
 
 
 class ResourceLock:
-    """ResourceLock ensures that accesses cannot be done concurrently on the same resource.
-    """
-    _locks: Dict[Any, Event]
+    """ResourceLock ensures that accesses cannot be done concurrently on the same resource."""
+
+    _locks: dict[Any, Event]
 
     def __init__(self):
         self._locks = {}
@@ -58,10 +58,10 @@ class ResourceLock:
 
 class _ResourceLock:
     _idx: Any
-    _locks: Dict[Any, Event]
+    _locks: dict[Any, Event]
     _lock: Event
 
-    def __init__(self, idx: Any, locks: Dict[Any, Event]):
+    def __init__(self, idx: Any, locks: dict[Any, Event]):
         self._idx = idx
         self._locks = locks
 

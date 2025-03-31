@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, Depends, Request, Response
 
@@ -15,26 +14,20 @@ from .models import Checkpoint, Content, SaveContent
 
 class FileIdManager(ABC):
     @abstractmethod
-    async def start(self) -> None:
-        ...
+    async def start(self) -> None: ...
 
     @abstractmethod
-    async def stop(self) -> None:
-        ...
+    async def stop(self) -> None: ...
 
     @abstractmethod
-    async def get_path(self, file_id: str) -> str:
-        ...
+    async def get_path(self, file_id: str) -> str: ...
 
     @abstractmethod
-    async def get_id(self, file_path: str) -> str:
-        ...
+    async def get_id(self, file_path: str) -> str: ...
 
-    def watch(self, path: str):
-        ...
+    def watch(self, path: str): ...
 
-    def unwatch(self, path: str, watcher):
-        ...
+    def unwatch(self, path: str, watcher): ...
 
 
 class Contents(Router, ABC):
@@ -59,7 +52,7 @@ class Contents(Router, ABC):
             status_code=201,
         )
         async def create_content(
-            path: Optional[str],
+            path: str | None,
             request: Request,
             user: User = Depends(auth.current_user(permissions={"contents": ["write"]})),
         ) -> Content:
@@ -75,7 +68,7 @@ class Contents(Router, ABC):
         @router.get("/api/contents/{path:path}/checkpoints")
         async def get_checkpoint(
             path, user: User = Depends(auth.current_user(permissions={"contents": ["read"]}))
-        ) -> List[Checkpoint]:
+        ) -> list[Checkpoint]:
             return await self.get_checkpoint(path, user)
 
         @router.get("/api/contents/{path:path}")
@@ -117,35 +110,30 @@ class Contents(Router, ABC):
 
     @property
     @abstractmethod
-    def file_id_manager(self) -> FileIdManager:
-        ...
+    def file_id_manager(self) -> FileIdManager: ...
 
     @abstractmethod
     async def read_content(
-        self, path: Union[str, Path], get_content: bool, file_format: Optional[str] = None
-    ) -> Content:
-        ...
+        self, path: str | Path, get_content: bool, file_format: str | None = None
+    ) -> Content: ...
 
     @abstractmethod
-    async def write_content(self, content: Union[SaveContent, Dict]) -> None:
-        ...
+    async def write_content(self, content: SaveContent | dict) -> None: ...
 
     @abstractmethod
     async def create_checkpoint(
         self,
         path,
         user: User,
-    ) -> Checkpoint:
-        ...
+    ) -> Checkpoint: ...
 
     @abstractmethod
     async def create_content(
         self,
-        path: Optional[str],
+        path: str | None,
         request: Request,
         user: User,
-    ) -> Content:
-        ...
+    ) -> Content: ...
 
     @abstractmethod
     async def get_root_content(
@@ -160,8 +148,7 @@ class Contents(Router, ABC):
         self,
         path,
         user: User,
-    ) -> List[Checkpoint]:
-        ...
+    ) -> list[Checkpoint]: ...
 
     @abstractmethod
     async def get_content(
@@ -169,8 +156,7 @@ class Contents(Router, ABC):
         path: str,
         content: int,
         user: User,
-    ) -> Content:
-        ...
+    ) -> Content: ...
 
     @abstractmethod
     async def save_content(
@@ -179,16 +165,14 @@ class Contents(Router, ABC):
         request: Request,
         response: Response,
         user: User,
-    ) -> Content:
-        ...
+    ) -> Content: ...
 
     @abstractmethod
     async def delete_content(
         self,
         path,
         user: User,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     async def rename_content(
@@ -196,5 +180,4 @@ class Contents(Router, ABC):
         path,
         request: Request,
         user: User,
-    ) -> Content:
-        ...
+    ) -> Content: ...

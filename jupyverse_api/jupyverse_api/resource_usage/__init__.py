@@ -26,8 +26,7 @@ class ResourceUsage(Router, ABC):
     async def get_metrics(
         self,
         user: User,
-    ):
-        ...
+    ): ...
 
 
 class ResourceUsageConfig(Config):

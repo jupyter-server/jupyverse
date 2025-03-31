@@ -1,4 +1,5 @@
-from typing import Optional
+from __future__ import annotations
+
 from uuid import uuid4
 
 from jupyverse_api.auth import AuthConfig
@@ -15,5 +16,5 @@ class _AuthConfig(AuthConfig):
     cookie_secure: bool = False  # FIXME: should default to True, and set to False for tests
     clear_users: bool = False
     test: bool = False
-    login_url: Optional[str] = None
-    directory: Optional[str] = None
+    login_url: str | None = None
+    directory: str | None = None

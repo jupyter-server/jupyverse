@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import base64
 from functools import partial
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 
 from pycrdt import Doc, Map
 
@@ -18,7 +20,7 @@ class YBlob(YBaseDoc):
 
     _ysource: Map
 
-    def __init__(self, ydoc: Optional[Doc] = None):
+    def __init__(self, ydoc: Doc | None = None):
         super().__init__(ydoc)
         self._ysource = Map()
         self._ydoc["source"] = self._ysource
@@ -30,7 +32,7 @@ class YBlob(YBaseDoc):
     def get(self) -> bytes:
         return base64.b64decode(self._ysource["base64"].encode())
 
-    def set(self, value: Union[bytes, str]) -> None:
+    def set(self, value: bytes | str) -> None:
         if isinstance(value, bytes):
             value = base64.b64encode(value).decode()
         self._ysource["base64"] = value

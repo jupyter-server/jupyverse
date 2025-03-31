@@ -1,5 +1,4 @@
 import sys
-from typing import Type
 
 from anyio import create_task_group
 from fps import Module
@@ -10,7 +9,7 @@ from jupyverse_api.terminals import Terminals, TerminalServer
 
 from .routes import _Terminals
 
-_TerminalServer: Type[TerminalServer]
+_TerminalServer: type[TerminalServer]
 if sys.platform == "win32":
     from .win_server import _TerminalServer
 else:

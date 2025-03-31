@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import copy
 import json
 from functools import partial
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 from uuid import uuid4
 
 from pycrdt import Array, Doc, Map, Text
@@ -19,7 +21,7 @@ class YNotebook(YBaseDoc):
     _ycells: Array
     _ymeta: Map
 
-    def __init__(self, ydoc: Optional[Doc] = None):
+    def __init__(self, ydoc: Doc | None = None):
         super().__init__(ydoc)
         self._ymeta = Map()
         self._ycells = Array()
@@ -38,7 +40,7 @@ class YNotebook(YBaseDoc):
     def cell_number(self) -> int:
         return len(self._ycells)
 
-    def get_cell(self, index: int) -> Dict[str, Any]:
+    def get_cell(self, index: int) -> dict[str, Any]:
         meta = json.loads(str(self._ymeta))
         cell = json.loads(str(self._ycells[index]))
         cell.pop("execution_status", None)
@@ -54,15 +56,15 @@ class YNotebook(YBaseDoc):
             del cell["attachments"]
         return cell
 
-    def append_cell(self, value: Dict[str, Any]) -> None:
+    def append_cell(self, value: dict[str, Any]) -> None:
         ycell = self.create_ycell(value)
         self._ycells.append(ycell)
 
-    def set_cell(self, index: int, value: Dict[str, Any]) -> None:
+    def set_cell(self, index: int, value: dict[str, Any]) -> None:
         ycell = self.create_ycell(value)
         self.set_ycell(index, ycell)
 
-    def create_ycell(self, value: Dict[str, Any]) -> Map:
+    def create_ycell(self, value: dict[str, Any]) -> Map:
         cell = copy.deepcopy(value)
         if "id" not in cell:
             cell["id"] = str(uuid4())
@@ -84,7 +86,7 @@ class YNotebook(YBaseDoc):
     def set_ycell(self, index: int, ycell: Map) -> None:
         self._ycells[index] = ycell
 
-    def get(self) -> Dict:
+    def get(self) -> dict:
         meta = json.loads(str(self._ymeta))
         cast_all(meta, float, int)  # notebook coming from Yjs has e.g. nbformat as float
         cells = []
@@ -108,7 +110,7 @@ class YNotebook(YBaseDoc):
             nbformat_minor=int(meta.get("nbformat_minor", 0)),
         )
 
-    def set(self, value: Dict) -> None:
+    def set(self, value: dict) -> None:
         nb_without_cells = {key: value[key] for key in value.keys() if key != "cells"}
         nb = copy.deepcopy(nb_without_cells)
         cast_all(nb, int, float)  # Yjs expects numbers to be floating numbers

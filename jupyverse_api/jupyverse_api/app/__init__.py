@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import Dict, List
 
 import structlog
 from fastapi import FastAPI, Request
@@ -16,7 +15,7 @@ class App:
     """A wrapper around FastAPI that checks for endpoint path conflicts."""
 
     _app: FastAPI
-    _router_paths: Dict[str, List[str]]
+    _router_paths: dict[str, list[str]]
 
     def __init__(self, app: FastAPI, mount_path: str | None = None):
         if mount_path is None:
@@ -66,7 +65,7 @@ class App:
         for _router, _paths in self._router_paths.items():
             if path in _paths:
                 raise RuntimeError(
-                    f"{_type } mounts a path that is already defined in {_router}: {path}"
+                    f"{_type} mounts a path that is already defined in {_router}: {path}"
                 )
         self._router_paths[_type].append(path)
         logger.debug("Path mounted", type=_type, path=path)

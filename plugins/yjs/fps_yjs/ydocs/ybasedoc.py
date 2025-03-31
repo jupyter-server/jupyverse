@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from pycrdt import Doc, Map, Subscription
 
@@ -8,14 +10,14 @@ class YBaseDoc(ABC):
     _ydoc: Doc
     _ystate: Map
 
-    def __init__(self, ydoc: Optional[Doc] = None):
+    def __init__(self, ydoc: Doc | None = None):
         if ydoc is None:
             self._ydoc = Doc()
         else:
             self._ydoc = ydoc
         self._ystate = Map()
         self._ydoc["state"] = self._ystate
-        self._subscriptions: Dict[Any, Subscription] = {}
+        self._subscriptions: dict[Any, Subscription] = {}
 
     @property
     @abstractmethod
@@ -39,7 +41,7 @@ class YBaseDoc(ABC):
         return self.set(value)
 
     @property
-    def dirty(self) -> Optional[bool]:
+    def dirty(self) -> bool | None:
         return self._ystate.get("dirty")
 
     @dirty.setter
@@ -47,7 +49,7 @@ class YBaseDoc(ABC):
         self._ystate["dirty"] = value
 
     @property
-    def path(self) -> Optional[str]:
+    def path(self) -> str | None:
         return self._ystate.get("path")
 
     @path.setter
@@ -55,7 +57,7 @@ class YBaseDoc(ABC):
         self._ystate["path"] = value
 
     @property
-    def file_id(self) -> Optional[str]:
+    def file_id(self) -> str | None:
         return self._ystate.get("file_id")
 
     @file_id.setter

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import uuid4
 
 from anyio import Lock
@@ -61,14 +61,14 @@ async def authenticate_client(http, port, permissions={}):
 
 
 def create_content(
-    content: Optional[List],
+    content: Optional[list],
     type: str,
     size: Optional[int],
     mimetype: Optional[str],
     name: str,
     path: str,
     format: Optional[str],
-) -> Dict:
+) -> dict:
     return {
         "content": content,
         "created": None,
@@ -83,7 +83,7 @@ def create_content(
     }
 
 
-def clear_content_values(content: Dict, keys: List[str] = []):
+def clear_content_values(content: dict, keys: list[str] = []):
     for k in content:
         if k in keys:
             content[k] = None
@@ -93,7 +93,7 @@ def clear_content_values(content: Dict, keys: List[str] = []):
     return content
 
 
-def sort_content_by_name(content: Dict):
+def sort_content_by_name(content: dict):
     for k in content:
         if k == "content" and isinstance(content[k], list):
             # FIXME: this sorting algorithm is terrible!

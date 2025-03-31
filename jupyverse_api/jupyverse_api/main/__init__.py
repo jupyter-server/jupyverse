@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import webbrowser
-from typing import Dict, List
 
 import structlog
 from anyio import Event, create_task_group
@@ -89,7 +88,7 @@ class JupyverseModule(FastAPIModule):
 
 
 class QueryParams(BaseModel):
-    d: Dict[str, str]
+    d: dict[str, str]
 
 
 class Host(BaseModel):
@@ -104,7 +103,7 @@ class Lifespan:
 class JupyverseConfig(Config):
     host: str = "127.0.0.1"
     port: int = 8000
-    allow_origins: Json[List[str]] = []
+    allow_origins: Json[list[str]] = []
     open_browser: bool = False
-    query_params: Json[Dict[str, str]] = {}
+    query_params: Json[dict[str, str]] = {}
     debug: bool = False

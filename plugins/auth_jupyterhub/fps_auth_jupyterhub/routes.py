@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Awaitable
 from datetime import datetime
 from functools import partial
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import Annotated, Any, Callable
 
 from anyio import TASK_STATUS_IGNORED, Lock, create_task_group, sleep
 from anyio.abc import TaskStatus
@@ -15,7 +16,6 @@ from jupyterhub.services.auth import HubOAuth
 from jupyterhub.utils import isoformat
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
-from typing_extensions import Annotated
 
 from jupyverse_api import Router
 from jupyverse_api.app import App
@@ -80,12 +80,12 @@ def auth_factory(
                 request: Request,
                 user: User = Depends(self.current_user()),
             ):
-                checked_permissions: Dict[str, List[str]] = {}
+                checked_permissions: dict[str, list[str]] = {}
                 permissions = json.loads(
                     dict(request.query_params).get("permissions", "{}").replace("'", '"')
                 )
                 if permissions:
-                    user_permissions: Dict[str, List[str]] = {}
+                    user_permissions: dict[str, list[str]] = {}
                     for resource, actions in permissions.items():
                         user_resource_permissions = user_permissions.get(resource, [])
                         allowed = checked_permissions[resource] = []
@@ -102,10 +102,10 @@ def auth_factory(
 
             self.include_router(router)
 
-        def current_user(self, permissions: Optional[Dict[str, List[str]]] = None) -> Callable:
+        def current_user(self, permissions: dict[str, list[str]] | None = None) -> Callable:
             async def _(
                 request: Request,
-                jupyverse_jupyterhub_token: Annotated[Union[str, None], Cookie()] = None,
+                jupyverse_jupyterhub_token: Annotated[str | None, Cookie()] = None,
             ):
                 if jupyverse_jupyterhub_token is not None:
                     hub_user = await self.hub_auth.user_for_token(
@@ -172,9 +172,9 @@ def auth_factory(
             await self.db_engine.dispose()
 
         async def update_user(
-            self, jupyverse_jupyterhub_token: Annotated[Union[str, None], Cookie()] = None
+            self, jupyverse_jupyterhub_token: Annotated[str | None, Cookie()] = None
         ) -> Callable:
-            async def _(data: Dict[str, Any]) -> JupyterHubUser | None:
+            async def _(data: dict[str, Any]) -> JupyterHubUser | None:
                 if jupyverse_jupyterhub_token is not None:
                     async with self.db_lock:
                         user_db = await self.db_session.scalar(
@@ -191,11 +191,11 @@ def auth_factory(
 
         def websocket_auth(
             self,
-            permissions: Optional[Dict[str, List[str]]] = None,
-        ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
+            permissions: dict[str, list[str]] | None = None,
+        ) -> Callable[[Any], Awaitable[tuple[Any, dict[str, list[str]] | None] | None]]:
             async def _(
                 websocket: WebSocket,
-            ) -> Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]:
+            ) -> tuple[Any, dict[str, list[str]] | None] | None:
                 accept_websocket = False
                 if "jupyverse_jupyterhub_token" in websocket._cookies:
                     jupyverse_jupyterhub_token = websocket._cookies["jupyverse_jupyterhub_token"]

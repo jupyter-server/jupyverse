@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Optional, Tuple
+from __future__ import annotations
+
+from typing import Any
 
 from fastapi import WebSocket
 
@@ -14,16 +16,16 @@ class _NoAuth(Auth):
 
         return _
 
-    def websocket_auth(self, permissions: Optional[Dict[str, List[str]]] = None):
+    def websocket_auth(self, permissions: dict[str, list[str]] | None = None):
         async def _(
             websocket: WebSocket,
-        ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
+        ) -> tuple[WebSocket, dict[str, list[str]] | None] | None:
             return websocket, permissions
 
         return _
 
     async def update_user(self):
-        async def _(data: Dict[str, Any]) -> User:
+        async def _(data: dict[str, Any]) -> User:
             global USER
             user = dict(USER)
             user.update(data)

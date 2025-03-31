@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import os
 import time
 import uuid
-from typing import Any, Dict, Optional, cast
+from typing import Any, cast
 
 import anyio
 from anyio import (
@@ -38,7 +40,7 @@ class KernelDriver:
         connection_file: str = "",
         write_connection_file: bool = True,
         capture_kernel_output: bool = True,
-        yjs: Optional[Yjs] = None,
+        yjs: Yjs | None = None,
     ) -> None:
         self.write_connection_file = write_connection_file
         self.capture_kernel_output = capture_kernel_output
@@ -55,7 +57,7 @@ class KernelDriver:
         self.key = cast(str, self.connection_cfg["key"])
         self.session_id = uuid.uuid4().hex
         self.msg_cnt = 0
-        self.execute_requests: Dict[str, Dict[str, StapledObjectStream]] = {}
+        self.execute_requests: dict[str, dict[str, StapledObjectStream]] = {}
         self.comm_messages: StapledObjectStream = StapledObjectStream(
             *create_memory_object_stream[dict](max_buffer_size=1024)
         )
@@ -71,7 +73,7 @@ class KernelDriver:
             await send_message(msg, self.control_channel, self.key, change_date_to_str=True)
             while True:
                 msg = cast(
-                    Dict[str, Any],
+                    dict[str, Any],
                     await receive_message(self.control_channel, change_str_to_date=True),
                 )
                 if msg["msg_type"] == "shutdown_reply" and msg["content"]["restart"]:
@@ -109,7 +111,7 @@ class KernelDriver:
         self.listen_channels()
         self.task_group.start_soon(self._handle_comms)
 
-    def connect_channels(self, connection_cfg: Optional[cfg_t] = None):
+    def connect_channels(self, connection_cfg: cfg_t | None = None):
         connection_cfg = connection_cfg or self.connection_cfg
         self.shell_channel = connect_channel("shell", connection_cfg)
         self.control_channel = connect_channel("control", connection_cfg)
@@ -264,7 +266,7 @@ class KernelDriver:
                     break
             new_timeout = deadline_to_timeout(deadline)
 
-    async def _handle_outputs(self, outputs: Array, msg: Dict[str, Any]):
+    async def _handle_outputs(self, outputs: Array, msg: dict[str, Any]):
         msg_type = msg["header"]["msg_type"]
         content = msg["content"]
         if msg_type == "stream":

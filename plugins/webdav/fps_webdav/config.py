@@ -1,4 +1,3 @@
-from typing import List
 from uuid import uuid4
 
 from pydantic import BaseModel
@@ -7,7 +6,7 @@ from pydantic import BaseModel
 class Account(BaseModel):
     username: str = uuid4().hex
     password: str = uuid4().hex
-    permissions: List[str] = ["+"]
+    permissions: list[str] = ["+"]
 
 
 class Provider(BaseModel):
@@ -16,5 +15,5 @@ class Provider(BaseModel):
 
 
 class WebDAVConfig(BaseModel):
-    account_mapping: List[Account] = [Account()]
-    provider_mapping: List[Provider] = [Provider()]
+    account_mapping: list[Account] = [Account()]
+    provider_mapping: list[Provider] = [Provider()]

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import json
 import signal
 import uuid
+from collections.abc import Iterable
 from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Optional, cast
+from typing import cast
 
 import anyio
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
@@ -43,7 +46,7 @@ kernels: dict = {}
 
 class AcceptedWebSocket:
     _websocket: WebSocket
-    _accepted_subprotocol: Optional[str]
+    _accepted_subprotocol: str | None
 
     def __init__(self, websocket, accepted_subprotocol):
         self._websocket = websocket
@@ -63,7 +66,7 @@ class KernelServer:
         self,
         kernelspec_path: str = "",
         kernel_cwd: str = "",
-        connection_cfg: Optional[cfg_t] = None,
+        connection_cfg: cfg_t | None = None,
         connection_file: str = "",
         write_connection_file: bool = True,
         capture_kernel_output: bool = True,
@@ -74,10 +77,10 @@ class KernelServer:
         self.connection_cfg = connection_cfg
         self.connection_file = connection_file
         self.write_connection_file = write_connection_file
-        self.sessions: Dict[str, AcceptedWebSocket] = {}
+        self.sessions: dict[str, AcceptedWebSocket] = {}
         # blocked messages and allowed messages are mutually exclusive
-        self.blocked_messages: List[str] = []
-        self.allowed_messages: Optional[List[str]] = None  # when None, all messages are allowed
+        self.blocked_messages: list[str] = []
+        self.allowed_messages: list[str] | None = None  # when None, all messages are allowed
         # when [], no message is allowed
         self.setup_connection_file()
         self.context = Context()
@@ -102,7 +105,7 @@ class KernelServer:
             message_types = [message_types]
         self.blocked_messages = list(message_types)
 
-    def allow_messages(self, message_types: Optional[Iterable[str]] = None):
+    def allow_messages(self, message_types: Iterable[str] | None = None):
         # if using allowed messages, discard blocked messages
         self.blocked_messages = []
         if message_types is None:
@@ -185,7 +188,7 @@ class KernelServer:
         self,
         websocket: AcceptedWebSocket,
         session_id: str,
-        permissions: Optional[Dict[str, List[str]]],
+        permissions: dict[str, list[str]] | None,
     ):
         self.sessions[session_id] = websocket
         self.can_execute = permissions is None or "execute" in permissions.get("kernels", [])

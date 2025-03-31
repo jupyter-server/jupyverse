@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Optional, Tuple, cast
+from typing import Any, Generic, cast
 
 import httpx
 from fastapi import Depends, HTTPException, Response, WebSocket, status
@@ -65,8 +67,8 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
 
     class NoAuthStrategy(Strategy, Generic[models.UP, models.ID]):
         async def read_token(
-            self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
-        ) -> Optional[models.UP]:
+            self, token: str | None, user_manager: BaseUserManager[models.UP, models.ID]
+        ) -> models.UP | None:
             active_user = await user_manager.user_db.get_by_email(auth_config.global_email)
             return active_user
 
@@ -110,7 +112,7 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
     github_authentication = GitHubOAuth2(auth_config.client_id, auth_config.client_secret)
 
     class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
-        async def on_after_register(self, user: User, request: Optional[Request] = None):
+        async def on_after_register(self, user: User, request: Request | None = None):
             for oauth_account in await user.awaitable_attrs.oauth_accounts:
                 if oauth_account.oauth_name == "github":
                     async with httpx.AsyncClient() as client:
@@ -166,11 +168,11 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
         )
         return await user_manager.create(UserCreate(**guest))
 
-    def current_user(permissions: Optional[Dict[str, List[str]]] = None):
+    def current_user(permissions: dict[str, list[str]] | None = None):
         async def _(
             response: Response,
-            token: Optional[str] = None,
-            user: Optional[User] = Depends(
+            token: str | None = None,
+            user: User | None = Depends(
                 fapi_users.current_user(optional=True, get_enabled_backends=get_enabled_backends)
             ),
             user_manager: BaseUserManager[User, models.ID] = Depends(get_user_manager),
@@ -223,7 +225,7 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
 
         return _
 
-    def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
+    def websocket_auth(permissions: dict[str, list[str]] | None = None):
         """
         A function returning a dependency for the WebSocket connection.
 
@@ -237,9 +239,9 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
         async def _(
             websocket: WebSocket,
             user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
+        ) -> tuple[WebSocket, dict[str, list[str]] | None] | None:
             accept_websocket = False
-            checked_permissions: Optional[Dict[str, List[str]]] = None
+            checked_permissions: dict[str, list[str]] | None = None
             if auth_config.mode == "noauth":
                 accept_websocket = True
             elif "fastapiusersauth" in websocket._cookies:
@@ -275,7 +277,7 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
         user: UserRead = Depends(current_user()),
         user_db: SQLAlchemyUserDatabase = Depends(db.get_user_db),
     ):
-        async def _(data: Dict[str, Any]) -> UserRead:
+        async def _(data: dict[str, Any]) -> UserRead:
             await user_db.update(user, data)
             return user
 

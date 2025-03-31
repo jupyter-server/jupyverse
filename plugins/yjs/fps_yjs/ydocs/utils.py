@@ -1,12 +1,12 @@
-from typing import Dict, List, Type, Union
+from typing import Union
 
-INT = Type[int]
-FLOAT = Type[float]
+INT = type[int]
+FLOAT = type[float]
 
 
 def cast_all(
-    o: Union[List, Dict], from_type: Union[INT, FLOAT], to_type: Union[FLOAT, INT]
-) -> Union[List, Dict]:
+    o: Union[list, dict], from_type: Union[INT, FLOAT], to_type: Union[FLOAT, INT]
+) -> Union[list, dict]:
     if isinstance(o, list):
         for i, v in enumerate(o):
             if type(v) is from_type:

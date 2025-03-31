@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from fastapi import Depends, HTTPException, Request, Response, WebSocket, status
 from fastapi.security import APIKeyCookie
@@ -50,18 +52,18 @@ def get_backend(auth_fief_config: _AuthFiefConfig) -> Res:
         user: FiefUserInfo = Depends(auth.current_user()),
         access_token_info: FiefAccessTokenInfo = Depends(auth.authenticated()),
     ):
-        async def _(data: Dict[str, Any]) -> FiefUserInfo:
+        async def _(data: dict[str, Any]) -> FiefUserInfo:
             user = await fief.update_profile(access_token_info["access_token"], {"fields": data})
             return user
 
         return _
 
-    def websocket_auth(permissions: Optional[Dict[str, List[str]]] = None):
+    def websocket_auth(permissions: dict[str, list[str]] | None = None):
         async def _(
             websocket: WebSocket,
-        ) -> Optional[Tuple[WebSocket, Optional[Dict[str, List[str]]]]]:
+        ) -> tuple[WebSocket, dict[str, list[str]] | None] | None:
             accept_websocket = False
-            checked_permissions: Optional[Dict[str, List[str]]] = None
+            checked_permissions: dict[str, list[str]] | None = None
             if session_cookie_name in websocket._cookies:
                 access_token = websocket._cookies[session_cookie_name]
                 if permissions is None:

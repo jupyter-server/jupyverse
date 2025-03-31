@@ -30,8 +30,7 @@ class Nbconvert(Router, ABC):
         self.include_router(router)
 
     @abstractmethod
-    async def get_nbconvert_formats(self):
-        ...
+    async def get_nbconvert_formats(self): ...
 
     @abstractmethod
     async def get_nbconvert_document(
@@ -40,5 +39,4 @@ class Nbconvert(Router, ABC):
         path: str,
         download: bool,
         user: User,
-    ):
-        ...
+    ): ...

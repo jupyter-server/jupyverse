@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import hashlib
 import hmac
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, cast
 from uuid import uuid4
 
 from dateutil.parser import parse as dateutil_parse
@@ -9,23 +11,23 @@ from zmq.utils import jsonapi
 from zmq_anyio import Socket
 
 protocol_version_info = (5, 3)
-protocol_version = "%i.%i" % protocol_version_info
+protocol_version = ".".join(map(str, protocol_version_info))
 
 DELIM = b"<IDS|MSG>"
 
 
-def feed_identities(msg_list: List[bytes]) -> Tuple[List[bytes], List[bytes]]:
+def feed_identities(msg_list: list[bytes]) -> tuple[list[bytes], list[bytes]]:
     idx = msg_list.index(DELIM)
     return msg_list[:idx], msg_list[idx + 1 :]  # noqa
 
 
-def str_to_date(obj: Dict[str, Any]) -> Dict[str, Any]:
+def str_to_date(obj: dict[str, Any]) -> dict[str, Any]:
     if "date" in obj:
         obj["date"] = dateutil_parse(obj["date"])
     return obj
 
 
-def date_to_str(obj: Dict[str, Any]):
+def date_to_str(obj: dict[str, Any]):
     if "date" in obj and not isinstance(obj["date"], str):
         obj["date"] = obj["date"].isoformat().replace("+00:00", "Z")
     return obj
@@ -35,7 +37,7 @@ def utcnow() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
-def create_message_header(msg_type: str, session_id: str, msg_id: str) -> Dict[str, Any]:
+def create_message_header(msg_type: str, session_id: str, msg_id: str) -> dict[str, Any]:
     if not session_id:
         session_id = msg_id = uuid4().hex
     else:
@@ -53,11 +55,11 @@ def create_message_header(msg_type: str, session_id: str, msg_id: str) -> Dict[s
 
 def create_message(
     msg_type: str,
-    content: Dict = {},
+    content: dict = {},
     session_id: str = "",
     msg_id: str = "",
-    buffers: List = [],
-) -> Dict[str, Any]:
+    buffers: list = [],
+) -> dict[str, Any]:
     header = create_message_header(msg_type, session_id, msg_id)
     msg = {
         "header": header,
@@ -71,15 +73,15 @@ def create_message(
     return msg
 
 
-def pack(obj: Dict[str, Any]) -> bytes:
+def pack(obj: dict[str, Any]) -> bytes:
     return jsonapi.dumps(obj)
 
 
-def unpack(s: bytes) -> Dict[str, Any]:
-    return cast(Dict[str, Any], jsonapi.loads(s))
+def unpack(s: bytes) -> dict[str, Any]:
+    return cast(dict[str, Any], jsonapi.loads(s))
 
 
-def sign(msg_list: List[bytes], key: str) -> bytes:
+def sign(msg_list: list[bytes], key: str) -> bytes:
     auth = hmac.new(key.encode("ascii"), digestmod=hashlib.sha256)
     h = auth.copy()
     for m in msg_list:
@@ -87,7 +89,7 @@ def sign(msg_list: List[bytes], key: str) -> bytes:
     return h.hexdigest().encode()
 
 
-def serialize(msg: Dict[str, Any], key: str, change_date_to_str: bool = False) -> List[bytes]:
+def serialize(msg: dict[str, Any], key: str, change_date_to_str: bool = False) -> list[bytes]:
     _date_to_str = date_to_str if change_date_to_str else lambda x: x
     message = [
         pack(_date_to_str(msg["header"])),
@@ -100,12 +102,12 @@ def serialize(msg: Dict[str, Any], key: str, change_date_to_str: bool = False) -
 
 
 def deserialize(
-    msg_list: List[bytes],
-    parent_header: Optional[Dict[str, Any]] = None,
+    msg_list: list[bytes],
+    parent_header: dict[str, Any] | None = None,
     change_str_to_date: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     _str_to_date = str_to_date if change_str_to_date else lambda x: x
-    message: Dict[str, Any] = {}
+    message: dict[str, Any] = {}
     header = unpack(msg_list[1])
     message["header"] = _str_to_date(header)
     message["msg_id"] = header["msg_id"]
@@ -121,7 +123,7 @@ def deserialize(
 
 
 async def send_message(
-    msg: Dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False
+    msg: dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False
 ) -> None:
     await sock.asend_multipart(
         serialize(msg, key, change_date_to_str=change_date_to_str),
@@ -131,7 +133,7 @@ async def send_message(
 
 async def receive_message(
     sock: Socket, timeout: float = float("inf"), change_str_to_date: bool = False
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     timeout *= 1000  # in ms
     ready = await sock.apoll(timeout).wait()
     if ready:

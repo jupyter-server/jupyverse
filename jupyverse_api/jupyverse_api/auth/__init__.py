@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
+from collections.abc import Awaitable
+from typing import Any, Callable
 
 from jupyverse_api import Config
 
@@ -8,19 +11,16 @@ from .models import User  # noqa
 
 class Auth(ABC):
     @abstractmethod
-    def current_user(self, permissions: Optional[Dict[str, List[str]]] = None) -> Callable:
-        ...
+    def current_user(self, permissions: dict[str, list[str]] | None = None) -> Callable: ...
 
     @abstractmethod
-    async def update_user(self) -> Callable:
-        ...
+    async def update_user(self) -> Callable: ...
 
     @abstractmethod
     def websocket_auth(
         self,
-        permissions: Optional[Dict[str, List[str]]] = None,
-    ) -> Callable[[Any], Awaitable[Optional[Tuple[Any, Optional[Dict[str, List[str]]]]]]]:
-        ...
+        permissions: dict[str, list[str]] | None = None,
+    ) -> Callable[[Any], Awaitable[tuple[Any, dict[str, list[str]] | None] | None]]: ...
 
 
 class AuthConfig(Config):
