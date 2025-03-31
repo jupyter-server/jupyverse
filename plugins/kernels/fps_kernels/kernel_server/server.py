@@ -11,8 +11,7 @@ import anyio
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
-from fps import Context
-from fps._context import Value
+from fps import Context, Value
 from starlette.websockets import WebSocketState
 from zmq_anyio import Socket
 
