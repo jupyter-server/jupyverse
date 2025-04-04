@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.7
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.6...69a1ecaa8f61a83c441d1c8e69a02835085fceb6))
+
+### Merged PRs
+
+- Check if file exists before inserting it in fileids [#478](https://github.com/jupyter-server/jupyverse/pull/478) ([@davidbrochart](https://github.com/davidbrochart))
+- Bump fps >=0.2.1 [#476](https://github.com/jupyter-server/jupyverse/pull/476) ([@davidbrochart](https://github.com/davidbrochart))
+- Update types [#475](https://github.com/jupyter-server/jupyverse/pull/475) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-03-28&to=2025-04-04&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-03-28..2025-04-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.7.6
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.5...510ab6902fb8701df90fb542511b7daa2f7a9537))
@@ -20,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-02-26&to=2025-03-28&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-02-26..2025-03-28&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2025-02-26..2025-03-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.7.5
 
