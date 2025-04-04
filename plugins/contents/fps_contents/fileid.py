@@ -103,10 +103,14 @@ class FileIdManager:
             cursor = await self._db.cursor()
             async for path in Path().rglob("*"):
                 idx = uuid4().hex
-                mtime = (await path.stat()).st_mtime
-                await cursor.execute(
-                    "INSERT INTO fileids VALUES (?, ?, ?)", (idx, str(path), mtime)
-                )
+                try:
+                    mtime = (await path.stat()).st_mtime
+                except FileNotFoundError:
+                    pass
+                else:
+                    await cursor.execute(
+                        "INSERT INTO fileids VALUES (?, ?, ?)", (idx, str(path), mtime)
+                    )
             await self._db.commit()
             self.initialized.set()
 
