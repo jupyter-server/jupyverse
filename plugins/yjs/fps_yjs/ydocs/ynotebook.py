@@ -78,8 +78,18 @@ class YNotebook(YBaseDoc):
             if "attachments" in cell and not cell["attachments"]:
                 del cell["attachments"]
         elif cell_type == "code":
-            cell["outputs"] = Array(cell.get("outputs", []))
-            cell["execution_status"] = "idle"
+            outputs = cell.get("outputs", [])
+            for idx, output in enumerate(outputs):
+                if output.get("output_type") == "stream":
+                    text = output.get("text", "")
+                    if isinstance(text, str):
+                        ytext = Text(text)
+                    else:
+                        ytext = Text("".join(text))
+                    output["text"] = ytext
+                outputs[idx] = Map(output)
+            cell["outputs"] = Array(outputs)
+            cell["execution_state"] = "idle"
 
         return Map(cell)
 
