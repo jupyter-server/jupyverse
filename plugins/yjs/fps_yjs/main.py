@@ -26,13 +26,8 @@ class YjsModule(Module):
         lifespan = await self.get(Lifespan)
 
         self.yjs = _Yjs(app, auth, self.contents, lifespan)
-        self.put(self.yjs, Yjs)
 
         async with create_task_group() as tg:
-            tg.start_soon(self.yjs.start)
-            tg.start_soon(self.contents.file_id_manager.start)
+            await tg.start(self.yjs.start)
+            self.put(self.yjs, Yjs, teardown_callback=self.yjs.stop)
             self.done()
-
-    async def stop(self) -> None:
-        await self.yjs.stop()
-        await self.contents.file_id_manager.stop()
