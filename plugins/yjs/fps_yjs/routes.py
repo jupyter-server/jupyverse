@@ -62,10 +62,12 @@ class _Yjs(Yjs):
         async with create_task_group() as tg:
             self.room_manager = RoomManager(self.contents, self.lifespan)
             tg.start_soon(self.room_manager.start)
+            tg.start_soon(self.contents.file_id_manager.start)
             task_status.started()
 
     async def stop(self) -> None:
         await self.room_manager.stop()
+        await self.contents.file_id_manager.stop()
 
     async def collaboration_room_websocket(
         self,

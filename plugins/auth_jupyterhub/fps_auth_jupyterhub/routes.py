@@ -170,6 +170,7 @@ def auth_factory(
             await self.http_client.aclose()
             await self.db_session.close()
             await self.db_engine.dispose()
+            self.task_group.cancel_scope.cancel()
 
         async def update_user(
             self, jupyverse_jupyterhub_token: Annotated[str | None, Cookie()] = None
