@@ -5,10 +5,10 @@ from pathlib import Path
 import anyio
 import pytest
 from fps import get_root_module, merge_config
-from fps_yjs.ydocs import ydocs
 from fps_yjs.ywebsocket import WebsocketProvider
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
+from jupyter_ydoc import ydocs
 from pycrdt import Doc, Map, Text
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
