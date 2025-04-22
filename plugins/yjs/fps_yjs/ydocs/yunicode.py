@@ -1,18 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
-from pycrdt import Doc, Text
+from pycrdt import Awareness, Doc, Text
 
 from .ybasedoc import YBaseDoc
 
 
 class YUnicode(YBaseDoc):
-    def __init__(self, ydoc: Doc | None = None):
-        super().__init__(ydoc)
-        self._ysource = Text()
-        self._ydoc["source"] = self._ysource
+    def __init__(self, ydoc: Doc | None = None, awareness: Awareness | None = None):
+        super().__init__(ydoc,awareness)
+        self._ysource = self._ydoc.get("source", type=Text)
+        self.undo_manager.expand_scope(self._ysource)
 
     @property
     def version(self) -> str:
@@ -24,7 +25,7 @@ class YUnicode(YBaseDoc):
     def set(self, value: str) -> None:
         with self._ydoc.transaction():
             # clear document
-            del self._ysource[:]
+            self._ysource.clear()
             # initialize document
             if value:
                 self._ysource += value

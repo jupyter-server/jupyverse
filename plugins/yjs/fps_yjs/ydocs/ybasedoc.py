@@ -1,28 +1,37 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from pycrdt import Doc, Map, Subscription
+from pycrdt import Awareness, Doc, Map, Subscription, UndoManager
 
 
 class YBaseDoc(ABC):
     _ydoc: Doc
     _ystate: Map
+    _subscriptions: dict[Any, Subscription]
+    _undo_manager: UndoManager
 
-    def __init__(self, ydoc: Doc | None = None):
+    def __init__(self, ydoc: Doc | None = None, awareness: Awareness | None = None):
         if ydoc is None:
             self._ydoc = Doc()
         else:
             self._ydoc = ydoc
-        self._ystate = Map()
-        self._ydoc["state"] = self._ystate
-        self._subscriptions: dict[Any, Subscription] = {}
+        self.awareness = awareness
+
+        self._ystate = self._ydoc.get("state", type=Map)
+        self._subscriptions = {}
+        self._undo_manager = UndoManager(doc=self._ydoc, capture_timeout_millis=0)
 
     @property
     @abstractmethod
     def version(self) -> str:
         ...
+
+    @property
+    def undo_manager(self) -> UndoManager:
+        return self._undo_manager
 
     @property
     def ystate(self) -> Map:
@@ -49,20 +58,20 @@ class YBaseDoc(ABC):
         self._ystate["dirty"] = value
 
     @property
+    def hash(self) -> str | None:
+        return self._ystate.get("hash")
+
+    @hash.setter
+    def hash(self, value: str) -> None:
+        self._ystate["hash"] = value
+
+    @property
     def path(self) -> str | None:
         return self._ystate.get("path")
 
     @path.setter
     def path(self, value: str) -> None:
         self._ystate["path"] = value
-
-    @property
-    def file_id(self) -> str | None:
-        return self._ystate.get("file_id")
-
-    @file_id.setter
-    def file_id(self, value: str) -> None:
-        self._ystate["file_id"] = value
 
     @abstractmethod
     def get(self) -> Any:

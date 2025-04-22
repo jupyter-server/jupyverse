@@ -1,41 +1,31 @@
 from __future__ import annotations
 
-import base64
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
-from pycrdt import Doc, Map
+from pycrdt import Awareness, Doc, Map
 
 from .ybasedoc import YBaseDoc
 
 
 class YBlob(YBaseDoc):
-    """
-    Extends :class:`YBaseDoc`, and represents a blob document.
-    It is currently encoded as base64 because of:
-    https://github.com/y-crdt/ypy/issues/108#issuecomment-1377055465
-    The Y document can be set from bytes or from str, in which case it is assumed to be encoded as
-    base64.
-    """
-
     _ysource: Map
 
-    def __init__(self, ydoc: Doc | None = None):
-        super().__init__(ydoc)
-        self._ysource = Map()
-        self._ydoc["source"] = self._ysource
+    def __init__(self, ydoc: Doc | None = None, awareness: Awareness | None = None):
+        super().__init__(ydoc,awareness)
+        self._ysource = self._ydoc.get("source", type=Map)
+        self.undo_manager.expand_scope(self._ysource)
 
     @property
     def version(self) -> str:
-        return "1.0.0"
+        return "2.0.0"
 
     def get(self) -> bytes:
-        return base64.b64decode(self._ysource["base64"].encode())
+        return self._ysource.get("bytes", b"")
 
     def set(self, value: bytes | str) -> None:
-        if isinstance(value, bytes):
-            value = base64.b64encode(value).decode()
-        self._ysource["base64"] = value
+        self._ysource["bytes"] = value
 
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()

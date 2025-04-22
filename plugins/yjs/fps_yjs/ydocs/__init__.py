@@ -5,4 +5,4 @@ if sys.version_info < (3, 10):
 else:
     from importlib.metadata import entry_points
 
-ydocs = {ep.name: ep.load() for ep in entry_points(group="jupyverse_ydoc")}
+ydocs = {ep.name: ep.load() for ep in entry_points(group="jupyter_ydoc")}

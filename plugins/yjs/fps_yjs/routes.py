@@ -15,6 +15,8 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+from jupyter_ydoc import ydocs as YDOCS
+from jupyter_ydoc.ybasedoc import YBaseDoc
 from pycrdt import Doc, YMessageType, YSyncMessageType
 from websockets.exceptions import ConnectionClosedOK
 
@@ -26,8 +28,6 @@ from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
 
-from .ydocs import ydocs as YDOCS
-from .ydocs.ybasedoc import YBaseDoc
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywidgets import Widgets

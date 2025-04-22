@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import copy
 import json
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 from uuid import uuid4
 
-from pycrdt import Array, Doc, Map, Text
+from pycrdt import Array, Awareness, Doc, Map, Text
 
 from .utils import cast_all
 from .ybasedoc import YBaseDoc
@@ -21,16 +22,15 @@ class YNotebook(YBaseDoc):
     _ycells: Array
     _ymeta: Map
 
-    def __init__(self, ydoc: Doc | None = None):
-        super().__init__(ydoc)
-        self._ymeta = Map()
-        self._ycells = Array()
-        self._ydoc["meta"] = self._ymeta
-        self._ydoc["cells"] = self._ycells
+    def __init__(self, ydoc: Doc | None = None, awareness: Awareness | None = None):
+        super().__init__(ydoc,awareness)
+        self._ymeta = self._ydoc.get("meta", type=Map)
+        self._ycells = self._ydoc.get("cells", type=Array)
+        self.undo_manager.expand_scope(self._ycells)
 
     @property
     def version(self) -> str:
-        return "1.0.0"
+        return "2.0.0"
 
     @property
     def ycells(self):
@@ -41,9 +41,9 @@ class YNotebook(YBaseDoc):
         return len(self._ycells)
 
     def get_cell(self, index: int) -> dict[str, Any]:
-        meta = json.loads(str(self._ymeta))
-        cell = json.loads(str(self._ycells[index]))
-        cell.pop("execution_status", None)
+        meta = self._ymeta.to_py()
+        cell = self._ycells[index].to_py()
+        cell.pop("execution_state", None)
         cast_all(cell, float, int)  # cells coming from Yjs have e.g. execution_count as float
         if "id" in cell and meta["nbformat"] == 4 and meta["nbformat_minor"] <= 4:
             # strip cell IDs if we have notebook format 4.0-4.4
@@ -78,8 +78,18 @@ class YNotebook(YBaseDoc):
             if "attachments" in cell and not cell["attachments"]:
                 del cell["attachments"]
         elif cell_type == "code":
-            cell["outputs"] = Array(cell.get("outputs", []))
-            cell["execution_status"] = "idle"
+            outputs = cell.get("outputs", [])
+            for idx, output in enumerate(outputs):
+                if output.get("output_type") == "stream":
+                    text = output.get("text", "")
+                    if isinstance(text, str):
+                        ytext = Text(text)
+                    else:
+                        ytext = Text("".join(text))
+                    output["text"] = ytext
+                outputs[idx] = Map(output)
+            cell["outputs"] = Array(outputs)
+            cell["execution_state"] = "idle"
 
         return Map(cell)
 
@@ -87,7 +97,7 @@ class YNotebook(YBaseDoc):
         self._ycells[index] = ycell
 
     def get(self) -> dict:
-        meta = json.loads(str(self._ymeta))
+        meta = self._ymeta.to_py()
         cast_all(meta, float, int)  # notebook coming from Yjs has e.g. nbformat as float
         cells = []
         for i in range(len(self._ycells)):
@@ -130,7 +140,7 @@ class YNotebook(YBaseDoc):
             # clear document
             self._ymeta.clear()
             self._ycells.clear()
-            for key in [k for k in self._ystate.keys() if k not in ("dirty", "path", "file_id")]:
+            for key in [k for k in self._ystate.keys() if k not in ("dirty", "path")]:
                 del self._ystate[key]
 
             # initialize document
