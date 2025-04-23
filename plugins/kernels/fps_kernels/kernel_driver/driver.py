@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import time
 import uuid
 from typing import Any, cast
@@ -15,7 +14,7 @@ from anyio import (
 )
 from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.stapled import StapledObjectStream
-from pycrdt import Array, Map
+from pycrdt import Array, Map, Text
 
 from jupyverse_api.yjs import Yjs
 
@@ -271,22 +270,19 @@ class KernelDriver:
         content = msg["content"]
         if msg_type == "stream":
             with outputs.doc.transaction():
-                # TODO: uncomment when changes are made in jupyter-ydoc
-                text = content["text"]
-                if text.endswith((os.linesep, "\n")):
-                    text = text[:-1]
                 if (not outputs) or (outputs[-1]["name"] != content["name"]):  # type: ignore
                     outputs.append(
                         Map(
                             {
                                 "name": content["name"],
                                 "output_type": msg_type,
-                                "text": Array([content["text"]]),
+                                "text": Text(content["text"]),
                             }
                         )
                     )
                 else:
-                    outputs[-1]["text"].append(content["text"])  # type: ignore
+                    text = outputs[-1]["text"]
+                    text += content["text"]  # type: ignore
         elif msg_type in ("display_data", "execute_result"):
             if "application/vnd.jupyter.ywidget-view+json" in content["data"]:
                 # this is a collaborative widget

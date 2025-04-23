@@ -113,7 +113,7 @@ async def test_rest_api(start_jupyverse):
             }
         ]
         assert cells[1]["outputs"] == [
-            {"name": "stdout", "output_type": "stream", "text": ["Hello World!\n"]}
+            {"name": "stdout", "output_type": "stream", "text": "Hello World!\n"}
         ]
         assert cells[2]["outputs"] == [
             {
