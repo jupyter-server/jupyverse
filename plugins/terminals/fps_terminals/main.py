@@ -22,10 +22,7 @@ class TerminalsModule(Module):
         auth = await self.get(Auth)  # type: ignore[type-abstract]
 
         self.terminals = _Terminals(app, auth, _TerminalServer)
-        self.put(self.terminals, Terminals)
         async with create_task_group() as tg:
             tg.start_soon(self.terminals.start)
+            self.put(self.terminals, Terminals, teardown_callback=self.terminals.stop)
             self.done()
-
-    async def stop(self) -> None:
-        await self.terminals.stop()

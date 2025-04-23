@@ -15,6 +15,8 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+from jupyter_ydoc import ydocs as YDOCS
+from jupyter_ydoc.ybasedoc import YBaseDoc
 from pycrdt import Doc, YMessageType, YSyncMessageType
 from websockets.exceptions import ConnectionClosedOK
 
@@ -26,8 +28,6 @@ from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
 
-from .ydocs import ydocs as YDOCS
-from .ydocs.ybasedoc import YBaseDoc
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywidgets import Widgets
@@ -62,10 +62,12 @@ class _Yjs(Yjs):
         async with create_task_group() as tg:
             self.room_manager = RoomManager(self.contents, self.lifespan)
             tg.start_soon(self.room_manager.start)
+            tg.start_soon(self.contents.file_id_manager.start)
             task_status.started()
 
     async def stop(self) -> None:
         await self.room_manager.stop()
+        await self.contents.file_id_manager.stop()
 
     async def collaboration_room_websocket(
         self,

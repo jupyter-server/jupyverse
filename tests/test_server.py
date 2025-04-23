@@ -5,9 +5,9 @@ from pathlib import Path
 import anyio
 import pytest
 import requests
-from fps_yjs.ydocs import ydocs
 from fps_yjs.ywebsocket import WebsocketProvider
 from httpx_ws import aconnect_ws
+from jupyter_ydoc import ydocs
 from pycrdt import Array, Doc, Map, Text
 from utils import Websocket
 

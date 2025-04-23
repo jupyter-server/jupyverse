@@ -21,9 +21,5 @@ class AuthJupyterHubModule(Module):
 
         async with create_task_group() as self.tg:
             await self.tg.start(self.auth_jupyterhub.start)
-            self.put(self.auth_jupyterhub, Auth)
+            self.put(self.auth_jupyterhub, Auth, teardown_callback=self.auth_jupyterhub.stop)
             self.done()
-
-    async def stop(self) -> None:
-        await self.auth_jupyterhub.stop()
-        self.tg.cancel_scope.cancel()

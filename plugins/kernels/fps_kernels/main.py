@@ -35,11 +35,8 @@ class KernelsModule(Module):
         )
 
         self.kernels = _Kernels(app, self.config, auth, frontend_config, yjs, lifespan)
-        self.put(self.kernels, Kernels)
+        self.put(self.kernels, Kernels, teardown_callback=self.kernels.stop)
 
         async with create_task_group() as tg:
             tg.start_soon(self.kernels.start)
             self.done()
-
-    async def stop(self) -> None:
-        await self.kernels.stop()
