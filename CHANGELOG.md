@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.8
+
+([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.7...aef97417f06bbb76e9a6b060b5f662dd555caaae))
+
+### Merged PRs
+
+- Use jupyter-ydoc instead of vendored version [#484](https://github.com/jupyter-server/jupyverse/pull/484) ([@davidbrochart](https://github.com/davidbrochart))
+- Upgrade FPS to v0.3.0 [#482](https://github.com/jupyter-server/jupyverse/pull/482) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix stream outputs [#480](https://github.com/jupyter-server/jupyverse/pull/480) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-04-04&to=2025-04-23&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-04-04..2025-04-23&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2025-04-04..2025-04-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.7.7
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.6...69a1ecaa8f61a83c441d1c8e69a02835085fceb6))
@@ -17,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-03-28&to=2025-04-04&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-03-28..2025-04-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.7.6
 
