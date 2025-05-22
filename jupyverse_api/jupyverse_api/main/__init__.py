@@ -41,11 +41,16 @@ class JupyverseModule(FastAPIModule):
             structlog.stdlib.recreate_defaults(log_level=logging.DEBUG)
         super().__init__(
             name,
-            host=self.jupyverse_config.host,
-            port=self.jupyverse_config.port,
             debug=self.jupyverse_config.debug,
         )
         self.lifespan = Lifespan()
+        if self.jupyverse_config.start_server:
+            self.add_module(
+                "fps.web.server:ServerModule",
+                "server",
+                host=self.jupyverse_config.host,
+                port=self.jupyverse_config.port,
+            )
 
     async def prepare(self) -> None:
         await super().prepare()
@@ -71,7 +76,7 @@ class JupyverseModule(FastAPIModule):
     async def start(self) -> None:
         async with create_task_group() as tg:
             tg.start_soon(super().start)
-            await self.started.wait()
+            await self.modules["server"].started.wait()
 
             # at this point, the server has started
             qp = self._query_params.d
@@ -101,6 +106,7 @@ class Lifespan:
 
 
 class JupyverseConfig(Config):
+    start_server: bool = True
     host: str = "127.0.0.1"
     port: int = 8000
     allow_origins: Json[list[str]] = []
