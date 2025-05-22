@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-import notebook  # type: ignore
+import notebook_frontend
 from fastapi.staticfiles import StaticFiles
 
 from jupyverse_api.app import App
@@ -22,7 +22,7 @@ class _Notebook(Notebook):
         self.federated_extensions, self.disabled_extensions = lab.get_federated_extensions(
             extensions_dir
         )
-        self.notebook_dir = Path(notebook.__file__).parent
+        self.notebook_dir = Path(notebook_frontend.__file__).parent
 
         self.mount(
             "/static/notebook",
@@ -160,7 +160,7 @@ def get_index(
         "appNamespace": "notebook",
         "appSettingsDir": (lab.prefix_dir / "share" / "jupyter" / "lab" / "settings").as_posix(),
         "appUrl": "/lab",
-        "appVersion": notebook.__version__,
+        "appVersion": notebook_frontend.__version__,
         "baseUrl": base_url,
         "cacheFiles": True,
         "collaborative": collaborative,
