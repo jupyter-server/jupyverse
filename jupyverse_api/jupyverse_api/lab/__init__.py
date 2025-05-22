@@ -29,13 +29,11 @@ class Lab(Router, ABC):
         self.federated_extensions, disabled_extensions = self.get_federated_extensions(
             self.extensions_dir
         )
-        if jupyterlab_config is not None:
+
+        jlab_dev_mode = False if jupyterlab_config is None else jupyterlab_config.dev_mode
+        if jlab_dev_mode:
             import jupyterlab as jupyterlab_module  # type: ignore
 
-            jlab_dev_mode = jupyterlab_config.dev_mode
-        else:
-            jlab_dev_mode = False
-        if jlab_dev_mode:
             self.jlab_dir = Path(jupyterlab_module.__file__).parents[1] / "dev_mode"
         else:
             self.jlab_dir = self.prefix_dir / "share" / "jupyter" / "lab"
