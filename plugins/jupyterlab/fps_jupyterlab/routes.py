@@ -2,7 +2,7 @@ import json
 from http import HTTPStatus
 from pathlib import Path
 
-import jupyterlab as jupyterlab_module  # type: ignore
+import jupyterlab_js
 from fastapi import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,9 +37,10 @@ class _JupyterLab(JupyterLab):
         self.federated_extensions, self.disabled_extensions = lab.get_federated_extensions(
             extensions_dir
         )
-        jupyterlab_dir = Path(jupyterlab_module.__file__).parents[1]
-
         if jupyterlab_config.dev_mode:
+            import jupyterlab as jupyterlab_module  # type: ignore
+
+            jupyterlab_dir = Path(jupyterlab_module.__file__).parents[1]
             self.static_lab_dir = jupyterlab_dir / "dev_mode" / "static"
         else:
             self.static_lab_dir = lab.prefix_dir / "share" / "jupyter" / "lab" / "static"
@@ -120,7 +121,7 @@ class _JupyterLab(JupyterLab):
             "appName": "JupyterLab",
             "appNamespace": "lab",
             "appUrl": "/lab",
-            "appVersion": jupyterlab_module.__version__,
+            "appVersion": jupyterlab_js.__version__,
             "baseUrl": base_url,
             "cacheFiles": False,
             "collaborative": collaborative,
