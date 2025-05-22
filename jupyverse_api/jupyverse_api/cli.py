@@ -4,7 +4,7 @@ import sys
 from typing import Any
 
 import rich_click as click
-from fps import main as fps_main
+from fps.cli._cli import main as fps_main
 
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
