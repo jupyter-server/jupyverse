@@ -1,5 +1,12 @@
 # Version history
 
+## 0.8.0
+
+- Use `uv` for building and publishing.
+- Update `fps` to v0.4.0.
+- Depend on package `notebook-frontend` instead of `notebook`.
+- Depend on package `jupyterlab-js` instead of `jupyterlab`.
+
 ## 0.7.8
 
 ([Full Changelog](https://github.com/jupyter-server/jupyverse/compare/v0.7.7...aef97417f06bbb76e9a6b060b5f662dd555caaae))
