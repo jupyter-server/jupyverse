@@ -1,3 +1,4 @@
+import importlib.metadata
 from typing import Any
 
 from anyio import Event
@@ -5,7 +6,10 @@ from pydantic import BaseModel
 
 from .app import App
 
-__version__ = "0.7.8"
+try:
+    __version__ = importlib.metadata.version("jupyverse_api")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "unknown"
 
 
 class Singleton(type):

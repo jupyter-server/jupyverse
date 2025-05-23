@@ -31,7 +31,7 @@ dependencies = [
   "rich-click >=1.6.1,<2",
   "fps >=0.4.0,<0.5.0",
 ]
-dynamic = ["version"]
+version = "0.8.0"
 
 [project.license]
 text = "BSD 3-Clause License"

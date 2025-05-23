@@ -6,18 +6,18 @@ build-backend = "hatchling.build"
 name = "jupyverse"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-dynamic = ["version"]
+version = "0.8.0"
 requires-python = ">=3.9"
 dependencies = [
     "fps[click,fastapi,anycorn] >=0.4.0,<0.5.0",
-    "fps-contents >=0.7.0,<1",
-    "fps-kernels >=0.7.0,<1",
-    "fps-terminals >=0.7.0,<1",
-    "fps-nbconvert >=0.7.0,<1",
-    "fps-yjs >=0.7.0,<1",
-    "fps-lab >=0.7.0,<1",
-    "fps-frontend >=0.7.0,<1",
-    "jupyverse_api >=0.7.0,<1",
+    "fps-contents >=0.8.0,<0.9.0",
+    "fps-kernels >=0.8.0,<0.9.0",
+    "fps-terminals >=0.8.0,<0.9.0",
+    "fps-nbconvert >=0.8.0,<0.9.0",
+    "fps-yjs >=0.8.0,<0.9.0",
+    "fps-lab >=0.8.0,<0.9.0",
+    "fps-frontend >=0.8.0,<0.9.0",
+    "jupyverse-api >=0.8.0,<0.9.0",
     "eval-type-backport; python_version<'3.10'",
 ]
 
@@ -36,12 +36,12 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = ["fps-jupyterlab >=0.7.0,<1"]
-notebook = ["fps-notebook>=0.7.0,<1"]
-auth = ["fps-auth >=0.7.0,<1", "fps-login >=0.7.0,<1"]
-auth-fief = ["fps-auth-fief >=0.7.0,<1"]
-auth-jupyterhub = ["fps-auth-jupyterhub >=0.7.0,<1"]
-noauth = ["fps-noauth >=0.7.0,<1"]
+jupyterlab = ["fps-jupyterlab >=0.8.0,<0.9.0"]
+notebook = ["fps-notebook>=0.8.0,<0.9.0"]
+auth = ["fps-auth >=0.8.0,<0.9.0", "fps-login >=0.8.0,<0.9.0"]
+auth-fief = ["fps-auth-fief >=0.8.0,<0.9.0"]
+auth-jupyterhub = ["fps-auth-jupyterhub >=0.8.0,<0.9.0"]
+noauth = ["fps-noauth >=0.8.0,<0.9.0"]
 test = [
     "ruff >=0.1.2",
     "mypy",
@@ -155,30 +155,27 @@ select = [
 line-length = 100
 exclude = ["binder"]
 
-[tool.jupyter-releaser]
-skip = [ "check-links", "check-manifest",]
-
-[tool.jupyter-releaser.options]
-python_packages = [
-    "jupyverse_api:jupyverse_api",
-    "plugins/noauth:fps-noauth",
-    "plugins/auth:fps-auth",
-    "plugins/auth_fief:fps-auth-fief",
-    "plugins/auth_jupyterhub:fps-auth-jupyterhub",
-    "plugins/contents:fps-contents",
-    "plugins/frontend:fps-frontend",
-    "plugins/jupyterlab:fps-jupyterlab",
-    "plugins/kernels:fps-kernels",
-    "plugins/lab:fps-lab",
-    "plugins/nbconvert:fps-nbconvert",
-    "plugins/notebook:fps-notebook",
-    "plugins/terminals:fps-terminals",
-    "plugins/yjs:fps-yjs",
-    "plugins/resource_usage:fps-resource-usage",
-    "plugins/login:fps-login",
-    "plugins/webdav:fps-webdav",
-    ".:jupyverse:jupyverse_api,fps-noauth,fps-auth,fps-auth-fief,fps-auth-jupyterhub,fps-contents,fps-jupyterlab,fps-kernels,fps-lab,fps-frontend,fps-nbconvert,fps-notebook,fps-terminals,fps-yjs,fps-resource-usage,fps-webdav"
-]
-
 [tool.hatch.version]
 path = "jupyverse/__init__.py"
+
+[tool.uv.workspace]
+members = ["plugins/*", "jupyverse_api"]
+
+[tool.uv.sources]
+jupyverse-api = { workspace = true }
+fps-auth = { workspace = true }
+fps-auth-fief = { workspace = true }
+fps-auth-jupyterhub = { workspace = true }
+fps-contents = { workspace = true }
+fps-frontend = { workspace = true }
+fps-jupyterlab = { workspace = true }
+fps-kernels = { workspace = true }
+fps-lab = { workspace = true }
+fps-login = { workspace = true }
+fps-nbconvert = { workspace = true }
+fps-noauth = { workspace = true }
+fps-notebook = { workspace = true }
+fps-resource-usage = { workspace = true }
+fps-terminals = { workspace = true }
+fps-webdav = { workspace = true }
+fps-yjs = { workspace = true }
