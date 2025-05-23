@@ -11,9 +11,9 @@ dependencies = [
     "psutil >=5.9.4",
     "types-psutil",
     "anyio >=3.6.2,<5",
-    "jupyverse-api >=0.7.0,<1",
+    "jupyverse-api >=0.8.0,<0.9.0",
 ]
-dynamic = [ "version",]
+version = "0.8.0"
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"

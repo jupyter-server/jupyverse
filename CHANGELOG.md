@@ -1,6 +1,4 @@
-# Changes in Jupyverse {#changelog}
-
-<!-- <START NEW CHANGELOG ENTRY> -->
+# Version history
 
 ## 0.7.8
 
@@ -17,8 +15,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter-server/jupyverse/graphs/contributors?from=2025-04-04&to=2025-04-23&type=c))
 
 [@davidbrochart](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Adavidbrochart+updated%3A2025-04-04..2025-04-23&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter-server%2Fjupyverse+involves%3Apre-commit-ci+updated%3A2025-04-04..2025-04-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.7.7
 
