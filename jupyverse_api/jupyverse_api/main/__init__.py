@@ -76,7 +76,8 @@ class JupyverseModule(FastAPIModule):
     async def start(self) -> None:
         async with create_task_group() as tg:
             tg.start_soon(super().start)
-            await self.modules["server"].started.wait()
+            if self.jupyverse_config.start_server:
+                await self.modules["server"].started.wait()
 
             # at this point, the server has started
             qp = self._query_params.d
