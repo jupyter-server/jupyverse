@@ -1,5 +1,9 @@
 # Version history
 
+## 0.8.1
+
+- `jupyverse-api`: Don't wait for server to start if no server.
+
 ## 0.8.0
 
 - Use `uv` for building and publishing.
