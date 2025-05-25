@@ -2,6 +2,10 @@
 
 ## 0.8.1
 
+- Move `rich-click` dependency from `jupyverse-api` to `jupyverse`.
+
+## 0.8.1
+
 - `jupyverse-api`: Don't wait for server to start if no server.
 
 ## 0.8.0
