@@ -1,6 +1,6 @@
 # Version history
 
-## 0.8.1
+## 0.8.2
 
 - Move `rich-click` dependency from `jupyverse-api` to `jupyverse`.
 
