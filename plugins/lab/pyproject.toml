@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_lab"
+version = "0.8.1"
 description = "An FPS plugin for the JupyterLab/Notebook API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"
@@ -13,7 +14,6 @@ dependencies = [
   "json5",
   "jupyverse-api >=0.8.0,<0.9.0",
 ]
-version = "0.8.0"
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"

@@ -1,5 +1,9 @@
 # Version history
 
+## 0.8.4
+
+- Check if `labextensions` directory exists.
+
 ## 0.8.3
 
 - Pin `jupyverse-api` >=0.8.2.
