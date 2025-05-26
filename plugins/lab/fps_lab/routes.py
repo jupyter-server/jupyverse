@@ -166,12 +166,13 @@ class _Lab(Lab):
             user_settings = {}
         settings = []
         schemas = [self.jlab_dir / "schemas"]
-        for d1 in self.labextensions_dir.iterdir():
-            if (d1 / "schemas").exists():
-                schemas.append(d1 / "schemas")
-            for d2 in d1.iterdir():
-                if (d2 / "schemas").exists():
-                    schemas.append(d2 / "schemas")
+        if self.labextensions_dir.is_dir():
+            for d1 in self.labextensions_dir.iterdir():
+                if (d1 / "schemas").exists():
+                    schemas.append(d1 / "schemas")
+                for d2 in d1.iterdir():
+                    if (d2 / "schemas").exists():
+                        schemas.append(d2 / "schemas")
         for s in schemas:
             for d1 in s.iterdir():
                 for d2 in d1.iterdir():
