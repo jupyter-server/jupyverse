@@ -17,7 +17,7 @@ dependencies = [
     "fps-yjs >=0.8.0,<0.9.0",
     "fps-lab >=0.8.0,<0.9.0",
     "fps-frontend >=0.8.0,<0.9.0",
-    "jupyverse-api >=0.8.1,<0.9.0",
+    "jupyverse-api >=0.8.2,<0.9.0",
     "rich-click >=1.6.1,<2",
     "eval-type-backport; python_version<'3.10'",
 ]
