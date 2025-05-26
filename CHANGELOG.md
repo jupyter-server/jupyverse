@@ -1,5 +1,9 @@
 # Version history
 
+## 0.8.3
+
+- Pin `jupyverse-api` >=0.8.2.
+
 ## 0.8.2
 
 - Move `rich-click` dependency from `jupyverse-api` to `jupyverse`.
