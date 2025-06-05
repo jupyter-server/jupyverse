@@ -29,6 +29,9 @@ CONFIG = {
             "contents": {
                 "type": "contents",
             },
+            "file_id": {
+                "type": "file_id",
+            },
             "frontend": {
                 "type": "frontend",
             },
