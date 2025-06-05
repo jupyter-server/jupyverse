@@ -24,6 +24,7 @@ from jupyverse_api import ResourceLock
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
+from jupyverse_api.file_id import FileId
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
@@ -48,10 +49,12 @@ class _Yjs(Yjs):
         app: App,
         auth: Auth,
         contents: Contents,
+        file_id: FileId,
         lifespan: Lifespan,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.contents = contents
+        self.file_id = file_id
         self.lifespan = lifespan
         if Widgets is None:
             self.widgets = None
@@ -60,14 +63,12 @@ class _Yjs(Yjs):
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with create_task_group() as tg:
-            self.room_manager = RoomManager(self.contents, self.lifespan)
+            self.room_manager = RoomManager(self.contents, self.file_id, self.lifespan)
             tg.start_soon(self.room_manager.start)
-            tg.start_soon(self.contents.file_id_manager.start)
             task_status.started()
 
     async def stop(self) -> None:
         await self.room_manager.stop()
-        await self.contents.file_id_manager.stop()
 
     async def collaboration_room_websocket(
         self,
@@ -91,7 +92,7 @@ class _Yjs(Yjs):
         # we need to process the request manually
         # see https://github.com/tiangolo/fastapi/issues/3373#issuecomment-1306003451
         create_document_session = CreateDocumentSession(**(await request.json()))
-        idx = await self.contents.file_id_manager.get_id(path)
+        idx = await self.file_id.get_id(path)
         res = {
             "format": create_document_session.format,
             "type": create_document_session.type,
@@ -101,7 +102,7 @@ class _Yjs(Yjs):
             res["fileId"] = idx
             return res
 
-        idx = await self.contents.file_id_manager.index(path)
+        idx = await self.file_id.index(path)
         if idx is None:
             raise HTTPException(status_code=404, detail=f"File {path} does not exist")
 
@@ -154,6 +155,7 @@ class YWebsocket:
 
 class RoomManager:
     contents: Contents
+    file_id: FileId
     lifespan: Lifespan
     documents: dict[str, YBaseDoc]
     watchers: dict[str, Task]
@@ -163,8 +165,9 @@ class RoomManager:
     websocket_server: JupyterWebsocketServer
     room_lock: ResourceLock
 
-    def __init__(self, contents: Contents, lifespan: Lifespan):
+    def __init__(self, contents: Contents, file_id: FileId, lifespan: Lifespan):
         self.contents = contents
+        self.file_id = file_id
         self.lifespan = lifespan
         self.documents = {}  # a dictionary of room_name:document
         self.watchers = {}  # a dictionary of file_id:task
@@ -205,7 +208,7 @@ class RoomManager:
                     if room in self.cleaners:
                         del self.cleaners[room]
                 if not room.ready:
-                    file_path = await self.contents.file_id_manager.get_path(file_id)
+                    file_path = await self.file_id.get_path(file_id)
                     logger.info(
                         "Opening collaboration room",
                         room_id=websocket.path,
@@ -287,7 +290,7 @@ class RoomManager:
         return skip
 
     async def get_file_path(self, file_id: str, document) -> str | None:
-        file_path = await self.contents.file_id_manager.get_path(file_id)
+        file_path = await self.file_id.get_path(file_id)
         if file_path is None:
             return
         if file_path != document.path:
@@ -299,14 +302,14 @@ class RoomManager:
         assert file_path is not None
         logger.info("Watching file", path=file_path)
         # FIXME: handle file rename/move?
-        watcher = self.contents.file_id_manager.watch(file_path)
+        watcher = self.file_id.watch(file_path)
         async for changes in watcher:
             new_file_path = await self.get_file_path(file_id, document)
             if new_file_path is None:
                 continue
             if new_file_path != file_path:
                 # file was renamed
-                self.contents.file_id_manager.unwatch(file_path, watcher)
+                self.file_id.unwatch(file_path, watcher)
                 file_path = new_file_path
                 # break
             await self.maybe_load_file(file_format, file_path, file_id)

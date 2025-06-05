@@ -3,12 +3,13 @@ requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
-name = "fps_contents"
-description = "An FPS plugin for the contents API"
+name = "fps_file_id"
+description = "An FPS plugin for the file ID API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"
 dependencies = [
     "watchfiles >=1.0.4,<2",
+    "sqlite-anyio >=0.2.0,<0.3.0",
     "anyio>=3.6.2,<5",
     "jupyverse-api >=0.8.0,<0.9.0",
 ]
@@ -27,15 +28,6 @@ text = "BSD 3-Clause License"
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[tool.check-manifest]
-ignore = [ ".*",]
-
-[tool.jupyter-releaser]
-skip = [ "check-links",]
-
 [project.entry-points]
-"fps.modules"       = {contents = "fps_contents.main:ContentsModule"}
-"jupyverse.modules" = {contents = "fps_contents.main:ContentsModule"}
-
-[tool.hatch.version]
-path = "fps_contents/__init__.py"
+"fps.modules"       = {file_id = "fps_file_id.main:FileIdModule"}
+"jupyverse.modules" = {file_id = "fps_file_id.main:FileIdModule"}
