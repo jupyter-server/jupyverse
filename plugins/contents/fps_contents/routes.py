@@ -23,12 +23,8 @@ from jupyverse_api.contents.models import (
     SaveContent,
 )
 
-from .fileid import FileIdManager
-
 
 class _Contents(Contents):
-    _file_id_manager: FileIdManager | None = None
-
     async def create_checkpoint(
         self,
         path,
@@ -250,12 +246,6 @@ class _Contents(Contents):
                         else:
                             content.content = cast(str, content.content)
                             await f.write(content.content)
-
-    @property
-    def file_id_manager(self):
-        if self._file_id_manager is None:
-            self._file_id_manager = FileIdManager()
-        return self._file_id_manager
 
 
 def get_available_path(path: Path, sep: str = "") -> Path:

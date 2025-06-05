@@ -9,6 +9,8 @@ from anyio import Event, Lock, Path
 from sqlite_anyio import connect
 from watchfiles import Change, awatch
 
+from jupyverse_api.file_id import FileId
+
 logger = structlog.get_logger()
 watchfiles_logger = logging.getLogger("watchfiles")
 watchfiles_logger.setLevel(logging.WARNING)
@@ -32,7 +34,7 @@ class Watcher:
         self._event.set()
 
 
-class FileIdManager:
+class _FileId(FileId):
     db_path: str
     initialized: Event
     watchers: dict[str, list[Watcher]]

@@ -11,6 +11,7 @@ requires-python = ">=3.9"
 dependencies = [
     "fps[click,fastapi,anycorn] >=0.4.0,<0.5.0",
     "fps-contents >=0.8.0,<0.9.0",
+    "fps-file_id >=0.8.0,<0.9.0",
     "fps-kernels >=0.8.0,<0.9.0",
     "fps-terminals >=0.8.0,<0.9.0",
     "fps-nbconvert >=0.8.0,<0.9.0",
@@ -68,6 +69,7 @@ docs = [ "mkdocs", "mkdocs-material" ]
 pre-install-commands = [
   "pip install -e ./jupyverse_api",
   "pip install -e ./plugins/contents",
+  "pip install -e ./plugins/file_id",
   "pip install -e ./plugins/frontend",
   "pip install -e ./plugins/kernels",
   "pip install -e ./plugins/lab",
@@ -116,6 +118,7 @@ lint = [
 typecheck0 = """mypy --no-incremental \
 ./jupyverse_api \
 ./plugins/contents \
+./plugins/file_id \
 ./plugins/frontend \
 ./plugins/kernels \
 ./plugins/lab \
@@ -168,6 +171,7 @@ fps-auth = { workspace = true }
 fps-auth-fief = { workspace = true }
 fps-auth-jupyterhub = { workspace = true }
 fps-contents = { workspace = true }
+fps-file_id = { workspace = true }
 fps-frontend = { workspace = true }
 fps-jupyterlab = { workspace = true }
 fps-kernels = { workspace = true }

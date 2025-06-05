@@ -12,24 +12,6 @@ from ..auth import Auth, User
 from .models import Checkpoint, Content, SaveContent
 
 
-class FileIdManager(ABC):
-    @abstractmethod
-    async def start(self) -> None: ...
-
-    @abstractmethod
-    async def stop(self) -> None: ...
-
-    @abstractmethod
-    async def get_path(self, file_id: str) -> str: ...
-
-    @abstractmethod
-    async def get_id(self, file_path: str) -> str: ...
-
-    def watch(self, path: str): ...
-
-    def unwatch(self, path: str, watcher): ...
-
-
 class Contents(Router, ABC):
     file_lock: ResourceLock
 
@@ -107,10 +89,6 @@ class Contents(Router, ABC):
             return await self.rename_content(path, request, user)
 
         self.include_router(router)
-
-    @property
-    @abstractmethod
-    def file_id_manager(self) -> FileIdManager: ...
 
     @abstractmethod
     async def read_content(

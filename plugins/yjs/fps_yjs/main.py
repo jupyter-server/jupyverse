@@ -6,6 +6,7 @@ from fps import Module
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.contents import Contents
+from jupyverse_api.file_id import FileId
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs, YjsConfig
 
@@ -22,10 +23,11 @@ class YjsModule(Module):
 
         app = await self.get(App)
         auth = await self.get(Auth)  # type: ignore[type-abstract]
-        self.contents = await self.get(Contents)  # type: ignore[type-abstract]
+        contents = await self.get(Contents)  # type: ignore[type-abstract]
+        file_id = await self.get(FileId)  # type: ignore[type-abstract]
         lifespan = await self.get(Lifespan)
 
-        self.yjs = _Yjs(app, auth, self.contents, lifespan)
+        self.yjs = _Yjs(app, auth, contents, file_id, lifespan)
 
         async with create_task_group() as tg:
             await tg.start(self.yjs.start)
