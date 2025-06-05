@@ -209,6 +209,7 @@ class RoomManager:
                         del self.cleaners[room]
                 if not room.ready:
                     file_path = await self.file_id.get_path(file_id)
+                    assert file_path is not None
                     logger.info(
                         "Opening collaboration room",
                         room_id=websocket.path,
@@ -292,7 +293,7 @@ class RoomManager:
     async def get_file_path(self, file_id: str, document) -> str | None:
         file_path = await self.file_id.get_path(file_id)
         if file_path is None:
-            return
+            return None
         if file_path != document.path:
             document.path = file_path
         return file_path
