@@ -1,5 +1,9 @@
 # Version history
 
+## 0.9.0
+
+- Extract out file ID from contents to its own plugin.
+
 ## 0.8.4
 
 - Check if `labextensions` directory exists.
