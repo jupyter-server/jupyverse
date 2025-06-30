@@ -1,4 +1,3 @@
-
 from pydantic import ConfigDict
 
 from jupyverse_api.auth import User

@@ -25,7 +25,7 @@ CONFIG = {
             "frontend": {
                 "type": "frontend",
             },
-        }
+        },
     }
 }
 
@@ -89,9 +89,9 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
                             "mode": auth_mode,
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config), AsyncClient() as http:
         response = await http.get(

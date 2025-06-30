@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 from datetime import datetime, timezone
 from typing import Any, cast
 from uuid import uuid4
 
 from dateutil.parser import parse as dateutil_parse
-from zmq.utils import jsonapi
-from zmq_anyio import Socket
 
 protocol_version_info = (5, 3)
 protocol_version = ".".join(map(str, protocol_version_info))
@@ -73,12 +72,30 @@ def create_message(
     return msg
 
 
+def dumps(o: Any, **kwargs) -> bytes:
+    """Serialize object to JSON bytes (utf-8).
+
+    Keyword arguments are passed along to :py:func:`json.dumps`.
+    """
+    return json.dumps(o, **kwargs).encode("utf8")
+
+
+def loads(s: bytes | str, **kwargs) -> dict | list | str | int | float:
+    """Load object from JSON bytes (utf-8).
+
+    Keyword arguments are passed along to :py:func:`json.loads`.
+    """
+    if isinstance(s, bytes):
+        s = s.decode("utf8")
+    return json.loads(s, **kwargs)
+
+
 def pack(obj: dict[str, Any]) -> bytes:
-    return jsonapi.dumps(obj)
+    return dumps(obj)
 
 
 def unpack(s: bytes) -> dict[str, Any]:
-    return cast(dict[str, Any], jsonapi.loads(s))
+    return cast(dict[str, Any], loads(s))
 
 
 def sign(msg_list: list[bytes], key: str) -> bytes:
@@ -89,7 +106,9 @@ def sign(msg_list: list[bytes], key: str) -> bytes:
     return h.hexdigest().encode()
 
 
-def serialize(msg: dict[str, Any], key: str, change_date_to_str: bool = False) -> list[bytes]:
+def serialize_message(
+    msg: dict[str, Any], key: str, change_date_to_str: bool = False
+) -> list[bytes]:
     _date_to_str = date_to_str if change_date_to_str else lambda x: x
     message = [
         pack(_date_to_str(msg["header"])),
@@ -101,7 +120,7 @@ def serialize(msg: dict[str, Any], key: str, change_date_to_str: bool = False) -
     return to_send
 
 
-def deserialize(
+def deserialize_message(
     msg_list: list[bytes],
     parent_header: dict[str, Any] | None = None,
     change_str_to_date: bool = False,
@@ -120,24 +139,3 @@ def deserialize(
     message["content"] = unpack(msg_list[4])
     message["buffers"] = [memoryview(b) for b in msg_list[5:]]
     return message
-
-
-async def send_message(
-    msg: dict[str, Any], sock: Socket, key: str, change_date_to_str: bool = False
-) -> None:
-    await sock.asend_multipart(
-        serialize(msg, key, change_date_to_str=change_date_to_str),
-        copy=True,
-    ).wait()
-
-
-async def receive_message(
-    sock: Socket, timeout: float = float("inf"), change_str_to_date: bool = False
-) -> dict[str, Any] | None:
-    timeout *= 1000  # in ms
-    ready = await sock.apoll(timeout).wait()
-    if ready:
-        msg_list = await sock.arecv_multipart().wait()
-        idents, msg_list = feed_identities(cast(list[bytes], msg_list))
-        return deserialize(msg_list, change_str_to_date=change_str_to_date)
-    return None

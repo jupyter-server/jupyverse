@@ -343,8 +343,7 @@ class SQLiteYStore(BaseYStore):
             async with self.lock:
                 cursor = await self._db.cursor()
                 await cursor.execute(
-                    "SELECT count(name) FROM sqlite_master "
-                    "WHERE type='table' and name='yupdates'"
+                    "SELECT count(name) FROM sqlite_master WHERE type='table' and name='yupdates'"
                 )
                 table_exists = (await cursor.fetchone())[0]
                 if table_exists:

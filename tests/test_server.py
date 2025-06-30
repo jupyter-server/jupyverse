@@ -82,9 +82,10 @@ async def test_rest_api(start_jupyverse):
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
     ydoc = Doc()
-    async with aconnect_ws(
-        f"{url}/api/collaboration/room/{document_id}"
-    ) as websocket, WebsocketProvider(ydoc, Websocket(websocket, document_id)):
+    async with (
+        aconnect_ws(f"{url}/api/collaboration/room/{document_id}") as websocket,
+        WebsocketProvider(ydoc, Websocket(websocket, document_id)),
+    ):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
         await anyio.sleep(0.5)
@@ -138,7 +139,7 @@ async def test_ywidgets(start_jupyverse):
         data=json.dumps(
             {
                 "kernel": {"name": "python3"},
-                #"kernel": {"name": "akernel"},
+                # "kernel": {"name": "akernel"},
                 "name": name,
                 "path": path,
                 "type": "notebook",
@@ -160,15 +161,18 @@ async def test_ywidgets(start_jupyverse):
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
     ynb = ydocs["notebook"]()
+
     def callback(aevent, events, event):
         events.append(event)
         aevent.set()
+
     aevent = anyio.Event()
     events = []
     ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-    async with aconnect_ws(
-        f"{url}/api/collaboration/room/{document_id}"
-    ) as websocket, WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)):
+    async with (
+        aconnect_ws(f"{url}/api/collaboration/room/{document_id}") as websocket,
+        WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)),
+    ):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
         await anyio.sleep(0.5)
@@ -207,9 +211,10 @@ async def test_ywidgets(start_jupyverse):
 
 async def connect_ywidget(url, guid):
     ywidget_doc = Doc()
-    async with aconnect_ws(
-        f"{url}/api/collaboration/room/ywidget:{guid}"
-    ) as websocket, WebsocketProvider(ywidget_doc, Websocket(websocket, guid)):
+    async with (
+        aconnect_ws(f"{url}/api/collaboration/room/ywidget:{guid}") as websocket,
+        WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
+    ):
         await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()

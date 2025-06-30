@@ -268,15 +268,19 @@ def get_available_path(path: Path, sep: str = "") -> Path:
 
 def get_file_modification_time(path: Path):
     if path.exists():
-        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat().replace(
-            "+00:00", "Z"
+        return (
+            datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z")
         )
 
 
 def get_file_creation_time(path: Path):
     if path.exists():
-        return datetime.fromtimestamp(path.stat().st_ctime, tz=timezone.utc).isoformat().replace(
-            "+00:00", "Z"
+        return (
+            datetime.fromtimestamp(path.stat().st_ctime, tz=timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z")
         )
 
 

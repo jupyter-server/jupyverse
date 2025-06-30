@@ -185,9 +185,7 @@ class RoomManager:
 
     async def stop(self):
         for task in (
-            list(self.watchers.values()) +
-            list(self.savers.values()) +
-            list(self.cleaners.values())
+            list(self.watchers.values()) + list(self.savers.values()) + list(self.cleaners.values())
         ):
             task.cancel(raise_exception=False)
 

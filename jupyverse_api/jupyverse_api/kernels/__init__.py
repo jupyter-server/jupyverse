@@ -10,6 +10,7 @@ from jupyverse_api import Config, Router
 
 from ..app import App
 from ..auth import Auth, User
+from ..kernel import KernelFactory
 from .models import Session
 
 
@@ -223,6 +224,13 @@ class Kernels(Router, ABC):
         session_id,
         websocket_permissions,
     ): ...
+
+    def register_kernel_factory(
+        self,
+        kernel_name: str,
+        kernel_factory: KernelFactory,
+    ) -> None:
+        pass
 
 
 class KernelsConfig(Config):
