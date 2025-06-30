@@ -4,7 +4,6 @@ import time
 import uuid
 from typing import Any, cast
 
-import anyio
 from anyio import (
     TASK_STATUS_IGNORED,
     Event,
@@ -16,9 +15,10 @@ from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.stapled import StapledObjectStream
 from pycrdt import Array, Map, Text
 
+from jupyverse_api.kernel import KernelSubprocessFactory
 from jupyverse_api.yjs import Yjs
 
-from .connect import cfg_t, connect_channel, launch_kernel, read_connection_file
+from .connect import cfg_t, connect_channel, read_connection_file
 from .connect import write_connection_file as _write_connection_file
 from .kernelspec import find_kernelspec
 from .message import create_message, receive_message, send_message
@@ -33,6 +33,7 @@ class KernelDriver:
 
     def __init__(
         self,
+        kernel_subprocess_factory: KernelSubprocessFactory,
         kernel_name: str = "",
         kernelspec_path: str = "",
         kernel_cwd: str = "",
@@ -41,6 +42,7 @@ class KernelDriver:
         capture_kernel_output: bool = True,
         yjs: Yjs | None = None,
     ) -> None:
+        self.kernel_subprocess_factory = kernel_subprocess_factory
         self.write_connection_file = write_connection_file
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path or find_kernelspec(kernel_name)
@@ -90,12 +92,14 @@ class KernelDriver:
     ) -> None:
         async with create_task_group() as tg:
             self.task_group = tg
-            self.kernel_process = await launch_kernel(
+            self.kernel = self.kernel_subprocess_factory(
+                self.write_connection_file,
                 self.kernelspec_path,
                 self.connection_file_path,
                 self.kernel_cwd,
                 self.capture_kernel_output,
             )
+            await self.kernel.start()
             if connect:
                 await self.connect()
             task_status.started()
@@ -129,18 +133,8 @@ class KernelDriver:
         except Exception:
             pass
 
-        try:
-            self.kernel_process.terminate()
-        except ProcessLookupError:
-            pass
-        await self.kernel_process.wait()
+        await self.kernel.stop()
         self.task_group.cancel_scope.cancel()
-        if self.write_connection_file:
-            path = anyio.Path(self.connection_file_path)
-            try:
-                await path.unlink()
-            except Exception:
-                pass
 
     async def listen_iopub(self):
         while True:
