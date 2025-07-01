@@ -7,9 +7,10 @@ import pytest
 from anyio import create_task_group
 from fps import get_root_module, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
-from jupyverse_api.kernel import KernelSubprocessFactory
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
+
+from jupyverse_api.kernel import KernelSubprocessFactory
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
