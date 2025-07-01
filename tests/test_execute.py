@@ -41,6 +41,9 @@ CONFIG = {
             "jupyterlab": {
                 "type": "jupyterlab",
             },
+            "kernel_subprocess": {
+                "type": "kernel_subprocess",
+            },
             "kernels": {
                 "type": "kernels",
             },
