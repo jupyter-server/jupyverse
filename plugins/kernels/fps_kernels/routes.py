@@ -17,6 +17,7 @@ from watchfiles import Change, awatch
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
+from jupyverse_api.kernel import KernelFactory, KernelSubprocessFactory
 from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.kernels.models import CreateSession, Execution, Kernel, Notebook, Session
 from jupyverse_api.main import Lifespan
@@ -43,12 +44,14 @@ class _Kernels(Kernels):
         frontend_config: FrontendConfig,
         yjs: Yjs | None,
         lifespan: Lifespan,
+        kernel_subprocess_factory: KernelSubprocessFactory,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.kernels_config = kernels_config
         self.frontend_config = frontend_config
         self.yjs = yjs
         self.lifespan = lifespan
+        self.kernel_subprocess_factory = kernel_subprocess_factory
 
         self.kernelspecs: dict = {}
         self.kernel_id_to_connection_file: dict[str, str] = {}
@@ -57,6 +60,7 @@ class _Kernels(Kernels):
         self._app = app
         self.stop_event = Event()
         self._stop_lock = Lock()
+        self.kernel_factories: dict[str, KernelFactory] = {}
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with create_task_group() as tg:
@@ -218,11 +222,13 @@ class _Kernels(Kernels):
             kernel_server = KernelServer(
                 kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
                 kernel_cwd=str(kernel_cwd),
+                kernel_subprocess_factory=self.kernel_subprocess_factory,
             )
             kernel_id = str(uuid.uuid4())
             kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
             logger.info("Starting kernel", kernel_id=kernel_id, kernel_name=kernel_name)
-            await self.task_group.start(kernel_server.start)
+            kernel_factory = self.kernel_factories.get(kernel_name)
+            await self.task_group.start(partial(kernel_server.start, kernel_factory=kernel_factory))
         elif kernel_id is not None:
             # external or already running kernel
             if kernel_id not in kernels:
@@ -234,6 +240,7 @@ class _Kernels(Kernels):
                 kernel_server = KernelServer(
                     connection_file=self.kernel_id_to_connection_file[kernel_id],
                     write_connection_file=False,
+                    kernel_subprocess_factory=self.kernel_subprocess_factory,
                 )
                 kernels[kernel_id]["server"] = kernel_server
                 await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
@@ -269,7 +276,7 @@ class _Kernels(Kernels):
     ):
         if kernel_id in kernels:
             kernel = kernels[kernel_id]
-            kernel["server"].interrupt()
+            await kernel["server"].interrupt()
             result = {
                 "id": kernel_id,
                 "name": kernel["name"],
@@ -319,6 +326,7 @@ class _Kernels(Kernels):
             kernel = kernels[kernel_id]
             if not kernel["driver"]:
                 kernel["driver"] = driver = KernelDriver(
+                    kernel_subprocess_factory=self.kernel_subprocess_factory,
                     kernelspec_path=Path(find_kernelspec(kernel["name"])).as_posix(),
                     write_connection_file=False,
                     connection_file=kernel["server"].connection_file_path,
@@ -439,3 +447,10 @@ class _Kernels(Kernels):
                         "server": None,
                         "driver": None,
                     }
+
+    def register_kernel_factory(
+        self,
+        kernel_name: str,
+        kernel_factory: KernelFactory,
+    ) -> None:
+        self.kernel_factories[kernel_name] = kernel_factory

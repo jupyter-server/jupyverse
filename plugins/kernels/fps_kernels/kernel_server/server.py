@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import signal
 import uuid
 from collections.abc import Iterable
 from datetime import datetime, timezone
@@ -15,6 +14,8 @@ from fps import Context, Value
 from starlette.websockets import WebSocketState
 from zmq_anyio import Socket
 
+from jupyverse_api.kernel import KernelFactory, KernelSubprocessFactory
+
 from ..kernel_driver.connect import (
     ControlSocket,
     IOPubSocket,
@@ -24,7 +25,6 @@ from ..kernel_driver.connect import (
     connect_channel,
     read_connection_file,
 )
-from ..kernel_driver.connect import launch_kernel as _launch_kernel
 from ..kernel_driver.connect import (
     write_connection_file as _write_connection_file,
 )
@@ -63,6 +63,7 @@ class AcceptedWebSocket:
 class KernelServer:
     def __init__(
         self,
+        kernel_subprocess_factory: KernelSubprocessFactory,
         kernelspec_path: str = "",
         kernel_cwd: str = "",
         connection_cfg: cfg_t | None = None,
@@ -70,6 +71,7 @@ class KernelServer:
         write_connection_file: bool = True,
         capture_kernel_output: bool = True,
     ) -> None:
+        self.kernel_subprocess_factory = kernel_subprocess_factory
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
         self.kernel_cwd = kernel_cwd
@@ -119,7 +121,11 @@ class KernelServer:
         return len(self.sessions)
 
     async def start(
-        self, launch_kernel: bool = True, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED
+        self,
+        launch_kernel: bool = True,
+        kernel_factory: KernelFactory | None = None,
+        *,
+        task_status: TaskStatus[None] = TASK_STATUS_IGNORED,
     ) -> None:
         async with create_task_group() as self.task_group:
             self.last_activity = {
@@ -129,12 +135,22 @@ class KernelServer:
             if launch_kernel:
                 if not self.kernelspec_path:
                     raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
-                self.kernel_process = await _launch_kernel(
-                    self.kernelspec_path,
-                    self.connection_file_path,
-                    self.kernel_cwd,
-                    self.capture_kernel_output,
-                )
+                if kernel_factory is None:
+                    self.kernel = self.kernel_subprocess_factory(
+                        write_connection_file=self.write_connection_file,
+                        kernelspec_path=self.kernelspec_path,
+                        connection_file_path=self.connection_file_path,
+                        kernel_cwd=self.kernel_cwd,
+                        capture_output=self.capture_kernel_output,
+                    )
+                else:
+                    self.kernel = kernel_factory(
+                        kernelspec_path=self.kernelspec_path,
+                        connection_file_path=self.connection_file_path,
+                        kernel_cwd=self.kernel_cwd,
+                        capture_output=self.capture_kernel_output,
+                    )
+                await self.kernel.start()
             assert self.connection_cfg is not None
             identity = uuid.uuid4().hex.encode("ascii")
             self.shell_channel = connect_channel("shell", self.connection_cfg, identity=identity)
@@ -163,11 +179,7 @@ class KernelServer:
         self.task_group.cancel_scope.cancel()
         await self.context.aclose()
 
-        try:
-            self.kernel_process.terminate()
-        except ProcessLookupError:
-            pass
-        await self.kernel_process.wait()
+        await self.kernel.stop()
         if self.write_connection_file:
             path = anyio.Path(self.connection_file_path)
             try:
@@ -175,8 +187,8 @@ class KernelServer:
             except Exception:
                 pass
 
-    def interrupt(self) -> None:
-        self.kernel_process.send_signal(signal.SIGINT)
+    async def interrupt(self) -> None:
+        await self.kernel.interrupt()
 
     async def restart(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         await self.stop()

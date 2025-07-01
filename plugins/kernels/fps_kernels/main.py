@@ -7,6 +7,7 @@ from fps import Module
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
+from jupyverse_api.kernel import KernelSubprocessFactory
 from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
@@ -33,8 +34,17 @@ class KernelsModule(Module):
             if self.config.require_yjs
             else None
         )
+        kernel_subprocess_factory = await self.get(KernelSubprocessFactory)
 
-        self.kernels = _Kernels(app, self.config, auth, frontend_config, yjs, lifespan)
+        self.kernels = _Kernels(
+            app,
+            self.config,
+            auth,
+            frontend_config,
+            yjs,
+            lifespan,
+            kernel_subprocess_factory,
+        )
         self.put(self.kernels, Kernels, teardown_callback=self.kernels.stop)
 
         async with create_task_group() as tg:

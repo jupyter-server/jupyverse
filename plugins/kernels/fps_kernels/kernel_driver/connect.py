@@ -3,15 +3,11 @@ from __future__ import annotations
 import json
 import os
 import socket
-import subprocess
-import sys
 import tempfile
 import uuid
 from typing import Union
 
 import zmq
-from anyio import open_process
-from anyio.abc import Process
 from zmq_anyio import Socket
 
 channel_socket_types = {
@@ -94,30 +90,6 @@ def read_connection_file(fname: str) -> cfg_t:
         cfg: cfg_t = json.load(f)
 
     return cfg
-
-
-async def launch_kernel(
-    kernelspec_path: str, connection_file_path: str, kernel_cwd: str | None, capture_output: bool
-) -> Process:
-    with open(kernelspec_path) as f:
-        kernelspec = json.load(f)
-    cmd = [s.format(connection_file=connection_file_path) for s in kernelspec["argv"]]
-    if cmd and cmd[0] in {
-        "python",
-        f"python{sys.version_info[0]}",
-        "python" + ".".join(map(str, sys.version_info[:2])),
-    }:
-        cmd[0] = sys.executable
-    if capture_output:
-        stdout = subprocess.DEVNULL
-        stderr = subprocess.STDOUT
-    else:
-        stdout = None
-        stderr = None
-    if not kernel_cwd:
-        kernel_cwd = None
-    process = await open_process(cmd, stdout=stdout, stderr=stderr, cwd=kernel_cwd)
-    return process
 
 
 def create_socket(channel: str, cfg: cfg_t, identity: bytes | None = None) -> Socket:
