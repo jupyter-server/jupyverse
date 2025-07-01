@@ -7,6 +7,7 @@ import pytest
 from anyio import create_task_group
 from fps import get_root_module, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
+from jupyverse_api.kernel import KernelSubprocessFactory
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 
@@ -63,10 +64,7 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
         Path(sys.prefix) / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
     )
     assert kernelspec_path.exists()
-    kernel_server = KernelServer(kernelspec_path=kernelspec_path, capture_kernel_output=False)
     async with create_task_group() as tg:
-        await tg.start(kernel_server.start)
-        kernels[kernel_id] = {"server": kernel_server, "driver": None}
         msg_id = "0"
         msg = {
             "channel": "shell",
@@ -94,7 +92,15 @@ async def test_kernel_messages(auth_mode, capfd, unused_tcp_port):
                 }
             }
         )
-        async with get_root_module(config), AsyncClient():
+        async with get_root_module(config) as jupyverse_module, AsyncClient():
+            kernel_subprocess_factory = await jupyverse_module.get(KernelSubprocessFactory)
+            kernel_server = KernelServer(
+                kernelspec_path=kernelspec_path,
+                capture_kernel_output=False,
+                kernel_subprocess_factory=kernel_subprocess_factory,
+            )
+            await tg.start(kernel_server.start)
+            kernels[kernel_id] = {"server": kernel_server, "driver": None}
             # block msg_type_0
             msg["header"]["msg_id"] = str(int(msg["header"]["msg_id"]) + 1)
             kernel_server.block_messages("msg_type_0")
