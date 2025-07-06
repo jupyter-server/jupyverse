@@ -197,9 +197,9 @@ class RoomManager:
         async with self.room_lock(websocket.path):
             room = await self.websocket_server.get_room(websocket.path)
             can_write = permissions is None or "write" in permissions.get("yjs", [])
+            if websocket.path not in self.room_write_permissions:
+                self.room_write_permissions[websocket.path] = set()
             if can_write:
-                if websocket.path not in self.room_write_permissions:
-                    self.room_write_permissions[websocket.path] = set()
                 self.room_write_permissions[websocket.path].add(websocket)
             room.on_message = self.filter_message
             is_stored_document = websocket.path.count(":") >= 2
@@ -284,16 +284,19 @@ class RoomManager:
         skip = False
         byte = message[0]
         msg = message[1:]
+        can_write = websocket in self.room_write_permissions.get(websocket.path, set())
         if byte == AWARENESS:
             # changes = self.room.awareness.get_changes(msg)
             # # filter out message depending on changes
             # skip = True
             pass
         elif byte == YMessageType.SYNC:
-            if websocket not in self.room_write_permissions[websocket.path] and msg[0] == YSyncMessageType.SYNC_UPDATE:
+            if not can_write and msg[0] == YSyncMessageType.SYNC_UPDATE:
                 skip = True
         else:
             skip = True
+
+        print(skip)
         return skip
 
     async def get_file_path(self, file_id: str, document) -> str | None:
