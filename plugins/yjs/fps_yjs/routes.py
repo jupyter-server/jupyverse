@@ -29,8 +29,8 @@ from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
 
-from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.websocket import Websocket
+from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywidgets import Widgets
 
