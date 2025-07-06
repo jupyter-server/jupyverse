@@ -296,7 +296,6 @@ class RoomManager:
         else:
             skip = True
 
-        print(skip)
         return skip
 
     async def get_file_path(self, file_id: str, document) -> str | None:
