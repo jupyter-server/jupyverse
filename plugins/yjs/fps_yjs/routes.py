@@ -201,6 +201,9 @@ class RoomManager:
                 self.room_write_permissions[websocket.path] = set()
             if can_write:
                 self.room_write_permissions[websocket.path].add(websocket)
+            else:
+                self.room_write_permissions[websocket.path].discard(websocket)
+            
             room.on_message = self.filter_message
             is_stored_document = websocket.path.count(":") >= 2
             if is_stored_document:
@@ -411,6 +414,10 @@ class RoomManager:
                 del self.watchers[file_id]
         room_name = self.websocket_server.get_room_name(room)
         self.websocket_server.delete_room(room=room)
+
+        if ws_path in self.room_write_permissions:
+            del self.room_write_permissions[ws_path]
+            
         file_path = await self.get_file_path(file_id, document)
         logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
         if room in self.cleaners:
