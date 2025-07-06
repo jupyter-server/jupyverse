@@ -34,7 +34,7 @@ class YRoom:
     clients: list
     ydoc: Doc
     ystore: BaseYStore | None
-    _on_message: Callable[[bytes], Awaitable[bool] | bool] | None
+    _on_message: Callable[[bytes, Websocket], Awaitable[bool] | bool] | None
     _update_send_stream: MemoryObjectSendStream
     _update_receive_stream: MemoryObjectReceiveStream
     _ready: bool
@@ -109,7 +109,7 @@ class YRoom:
             self.ydoc.observe(partial(put_updates, self._update_send_stream))
 
     @property
-    def on_message(self) -> Callable[[bytes], Awaitable[bool] | bool] | None:
+    def on_message(self) -> Callable[[bytes, Websocket], Awaitable[bool] | bool] | None:
         """
         Returns:
             The optional callback to call when a message is received.
@@ -117,7 +117,7 @@ class YRoom:
         return self._on_message
 
     @on_message.setter
-    def on_message(self, value: Callable[[bytes], Awaitable[bool] | bool] | None):
+    def on_message(self, value: Callable[[bytes, Websocket], Awaitable[bool] | bool] | None):
         """
         Arguments:
             value: An optional callback to call when a message is received.
@@ -210,7 +210,7 @@ class YRoom:
                     # filter messages (e.g. awareness)
                     skip = False
                     if self.on_message:
-                        _skip = self.on_message(message)
+                        _skip = self.on_message(message, websocket)
                         skip = await _skip if isawaitable(_skip) else _skip
                     if skip:
                         continue

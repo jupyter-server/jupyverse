@@ -30,6 +30,7 @@ from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
 
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
+from .ywebsocket.websocket import Websocket
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywidgets import Widgets
 
@@ -174,6 +175,7 @@ class RoomManager:
         self.savers = {}  # a dictionary of file_id:task
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
+        self.room_write_permissions = {}  # a dictionary of room_name:set of websockets that can write
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
         self.room_lock = ResourceLock()
 
@@ -195,7 +197,11 @@ class RoomManager:
         async with self.room_lock(websocket.path):
             room = await self.websocket_server.get_room(websocket.path)
             can_write = permissions is None or "write" in permissions.get("yjs", [])
-            room.on_message = partial(self.filter_message, can_write)
+            if can_write:
+                if websocket.path not in self.room_write_permissions:
+                    self.room_write_permissions[websocket.path] = set()
+                self.room_write_permissions[websocket.path].add(websocket)
+            room.on_message = self.filter_message
             is_stored_document = websocket.path.count(":") >= 2
             if is_stored_document:
                 assert room.ystore is not None
@@ -267,12 +273,12 @@ class RoomManager:
                 self.task_group,
             )
 
-    async def filter_message(self, can_write: bool, message: bytes) -> bool:
+    async def filter_message(self, message: bytes, websocket: Websocket) -> bool:
         """
         Called whenever a message is received, before forwarding it to other clients.
 
-        :param can_write: True if updating the document is permitted, False otherwise.
         :param message: received message.
+        :param websocket: the websocket that sent the message.
         :returns: True if the message must be discarded, False otherwise (default: False).
         """
         skip = False
@@ -284,7 +290,7 @@ class RoomManager:
             # skip = True
             pass
         elif byte == YMessageType.SYNC:
-            if not can_write and msg[0] == YSyncMessageType.SYNC_UPDATE:
+            if websocket not in self.room_write_permissions[websocket.path] and msg[0] == YSyncMessageType.SYNC_UPDATE:
                 skip = True
         else:
             skip = True
