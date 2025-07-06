@@ -175,7 +175,7 @@ class RoomManager:
         self.savers = {}  # a dictionary of file_id:task
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
-        self.room_write_permissions = {}  # a dictionary of room_name:set of websockets that can write
+        self.room_write_permissions = {}  # a dictionary of room_name:websockets that can write
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
         self.room_lock = ResourceLock()
 
