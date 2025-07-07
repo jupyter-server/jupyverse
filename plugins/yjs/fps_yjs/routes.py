@@ -164,6 +164,7 @@ class RoomManager:
     cleaners: dict[YRoom, Task]
     last_modified: dict[str, datetime]
     websocket_server: JupyterWebsocketServer
+    room_write_permissions: dict[str, set[YWebsocket]]
     room_lock: ResourceLock
 
     def __init__(self, contents: Contents, file_id: FileId, lifespan: Lifespan):
