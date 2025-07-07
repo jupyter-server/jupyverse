@@ -202,8 +202,6 @@ class RoomManager:
                 self.room_write_permissions[websocket.path] = set()
             if can_write:
                 self.room_write_permissions[websocket.path].add(websocket)
-            else:
-                self.room_write_permissions[websocket.path].discard(websocket)
 
             room.on_message = self.filter_message
             is_stored_document = websocket.path.count(":") >= 2
@@ -269,6 +267,9 @@ class RoomManager:
                             )
 
         await self.websocket_server.serve(websocket, self.lifespan.shutdown_request)
+
+        if websocket in self.room_write_permissions.get(websocket.path, set()):
+            self.room_write_permissions[websocket.path].remove(websocket)
 
         if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients:
             # no client in this room after we disconnect
