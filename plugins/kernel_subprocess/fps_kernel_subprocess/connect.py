@@ -5,6 +5,7 @@ import os
 import socket
 import tempfile
 import uuid
+from typing import Union
 
 import zmq
 from zmq_anyio import Socket
@@ -19,7 +20,7 @@ channel_socket_types = {
 
 context = zmq.Context()
 
-cfg_t = dict[str, str | int]
+cfg_t = dict[str, Union[str, int]]
 
 
 def get_port(ip: str) -> int:
