@@ -18,7 +18,6 @@ from fastapi import (
 from jupyter_ydoc import ydocs as YDOCS
 from jupyter_ydoc.ybasedoc import YBaseDoc
 from pycrdt import Doc, YMessageType, YSyncMessageType
-from websockets.exceptions import ConnectionClosedOK
 
 from jupyverse_api import ResourceLock
 from jupyverse_api.app import App
@@ -146,7 +145,7 @@ class YWebsocket:
     async def send(self, message):
         try:
             await self._websocket.send_bytes(message)
-        except ConnectionClosedOK:
+        except BaseException:
             return
 
     async def recv(self):
