@@ -39,12 +39,12 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = ["fps-jupyterlab >=0.8.0,<0.9.0"]
-notebook = ["fps-notebook>=0.8.0,<0.9.0"]
-auth = ["fps-auth >=0.8.0,<0.9.0", "fps-login >=0.8.0,<0.9.0"]
-auth-fief = ["fps-auth-fief >=0.8.0,<0.9.0"]
-auth-jupyterhub = ["fps-auth-jupyterhub >=0.8.0,<0.9.0"]
-noauth = ["fps-noauth >=0.8.0,<0.9.0"]
+jupyterlab = ["fps-jupyterlab >=0.9.0,<0.10.0"]
+notebook = ["fps-notebook>=0.9.0,<0.10.0"]
+auth = ["fps-auth >=0.9.0,<0.10.0", "fps-login >=0.9.0,<0.10.0"]
+auth-fief = ["fps-auth-fief >=0.9.0,<0.10.0"]
+auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.0,<0.10.0"]
+noauth = ["fps-noauth >=0.9.0,<0.10.0"]
 test = [
     "ruff >=0.1.2",
     "mypy",
