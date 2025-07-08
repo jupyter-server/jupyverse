@@ -34,13 +34,16 @@ CONFIG = {
             "jupyterlab": {
                 "type": "jupyterlab",
             },
+            "kernel_subprocess": {
+                "type": "kernel_subprocess",
+            },
             "kernels": {
                 "type": "kernels",
             },
             "yjs": {
                 "type": "yjs",
             },
-        }
+        },
     }
 }
 
@@ -82,9 +85,9 @@ async def test_root_auth(auth_mode, unused_tcp_port):
                             "mode": auth_mode,
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config), AsyncClient() as http:
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
@@ -111,9 +114,9 @@ async def test_no_auth(auth_mode, unused_tcp_port):
                             "mode": auth_mode,
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config), AsyncClient() as http:
         response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/lab")
@@ -134,9 +137,9 @@ async def test_token_auth(auth_mode, unused_tcp_port):
                             "mode": auth_mode,
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config) as jupyverse, AsyncClient() as http:
         auth_config = await jupyverse.get(AuthConfig)
@@ -170,9 +173,9 @@ async def test_permissions(auth_mode, permissions, unused_tcp_port):
                             "mode": auth_mode,
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config), AsyncClient() as http:
         await authenticate_client(http, unused_tcp_port, permissions=permissions)

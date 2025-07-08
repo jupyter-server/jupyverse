@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import json
 import struct
-from typing import Any, cast
+from typing import Any
 
-from zmq_anyio import Socket
-
-from ..kernel_driver.message import DELIM, deserialize, feed_identities, sign, unpack
+from ..kernel_driver.message import unpack
 
 
 def to_binary(msg: dict[str, Any]) -> bytes | None:
@@ -36,13 +34,6 @@ def from_binary(bmsg: bytes) -> dict[str, Any]:
     return msg
 
 
-async def send_raw_message(parts: list[bytes], sock: Socket, key: str) -> None:
-    msg = parts[:4]
-    buffers = parts[4:]
-    to_send = [DELIM, sign(msg, key)] + msg + buffers
-    await sock.asend_multipart(to_send).wait()
-
-
 def deserialize_msg_from_ws_v1(ws_msg: bytes) -> tuple[str, list[bytes]]:
     offset_number = int.from_bytes(ws_msg[:8], "little")
     offsets = [
@@ -52,18 +43,6 @@ def deserialize_msg_from_ws_v1(ws_msg: bytes) -> tuple[str, list[bytes]]:
     channel = ws_msg[offsets[0] : offsets[1]].decode("utf-8")  # noqa
     msg_list = [ws_msg[offsets[i] : offsets[i + 1]] for i in range(1, offset_number - 1)]  # noqa
     return channel, msg_list
-
-
-async def get_zmq_parts(socket: Socket) -> list[bytes]:
-    parts = await socket.arecv_multipart().wait()
-    idents, parts = feed_identities(cast(list[bytes], parts))
-    return parts
-
-
-def get_msg_from_parts(
-    parts: list[bytes], parent_header: dict[str, Any] | None = None
-) -> dict[str, Any]:
-    return deserialize(parts, parent_header=parent_header)
 
 
 def serialize_msg_to_ws_v1(msg_list: list[bytes], channel: str) -> list[bytes]:

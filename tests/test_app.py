@@ -23,13 +23,8 @@ async def test_mount_path(mount_path, unused_tcp_port):
                 "port": unused_tcp_port,
             },
             "modules": {
-                "app": {
-                    "type": "app",
-                    "config": {
-                        "mount_path": mount_path
-                    }
-                },
-            }
+                "app": {"type": "app", "config": {"mount_path": mount_path}},
+            },
         }
     }
 

@@ -41,13 +41,16 @@ CONFIG = {
             "jupyterlab": {
                 "type": "jupyterlab",
             },
+            "kernel_subprocess": {
+                "type": "kernel_subprocess",
+            },
             "kernels": {
                 "type": "kernels",
             },
             "yjs": {
                 "type": "yjs",
             },
-        }
+        },
     }
 }
 
@@ -99,9 +102,9 @@ async def test_execute(auth_mode, unused_tcp_port):
                             "require_yjs": True,
                         }
                     },
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config), AsyncClient() as http:
         ws_url = url.replace("http", "ws", 1)
@@ -125,20 +128,23 @@ async def test_execute(auth_mode, unused_tcp_port):
             json={
                 "format": "json",
                 "type": "notebook",
-            }
+            },
         )
         file_id = response.json()["fileId"]
         document_id = f"json:notebook:{file_id}"
         ynb = ydocs["notebook"]()
+
         def callback(aevent, events, event):
             events.append(event)
             aevent.set()
+
         aevent = anyio.Event()
         events = []
         ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-        async with aconnect_ws(
-            f"{ws_url}/api/collaboration/room/{document_id}"
-        ) as websocket, WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)):
+        async with (
+            aconnect_ws(f"{ws_url}/api/collaboration/room/{document_id}") as websocket,
+            WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)),
+        ):
             # connect to the shared notebook document
             # wait for file to be loaded and Y model to be created in server and client
             await anyio.sleep(0.5)
@@ -149,7 +155,7 @@ async def test_execute(auth_mode, unused_tcp_port):
                     json={
                         "document_id": document_id,
                         "cell_id": ynb.ycells[cell_idx]["id"],
-                    }
+                    },
                 )
             while True:
                 await aevent.wait()
@@ -167,15 +173,16 @@ async def test_execute(auth_mode, unused_tcp_port):
                     json={
                         "document_id": document_id,
                         "cell_id": ynb.ycells[2]["id"],
-                    }
+                    },
                 )
 
 
 async def connect_ywidget(ws_url, guid):
     ywidget_doc = Doc()
-    async with aconnect_ws(
-        f"{ws_url}/api/collaboration/room/ywidget:{guid}"
-    ) as websocket, WebsocketProvider(ywidget_doc, Websocket(websocket, guid)):
+    async with (
+        aconnect_ws(f"{ws_url}/api/collaboration/room/ywidget:{guid}") as websocket,
+        WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
+    ):
         await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()

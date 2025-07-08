@@ -17,7 +17,7 @@ CONFIG = {
             "webdav": {
                 "type": "webdav",
             },
-        }
+        },
     }
 }
 
@@ -38,9 +38,9 @@ async def test_webdav(unused_tcp_port):
                             "account_mapping": [{"username": "foo", "password": "bar"}],
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config):
         webdav = easywebdav.connect(

@@ -34,13 +34,16 @@ CONFIG = {
             "jupyterlab": {
                 "type": "jupyterlab",
             },
+            "kernel_subprocess": {
+                "type": "kernel_subprocess",
+            },
             "kernels": {
                 "type": "kernels",
             },
             "yjs": {
                 "type": "yjs",
             },
-        }
+        },
     }
 }
 
@@ -59,9 +62,9 @@ async def test_settings(auth_mode, unused_tcp_port):
                             "mode": auth_mode,
                         }
                     }
-                }
+                },
             }
-        }
+        },
     )
     async with get_root_module(config), AsyncClient() as http:
         # get previous theme
@@ -73,7 +76,7 @@ async def test_settings(auth_mode, unused_tcp_port):
         # put new theme
         response = await http.put(
             f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
-            data=json.dumps(test_theme),
+            content=json.dumps(test_theme),
         )
         assert response.status_code == 204
         # get new theme
@@ -85,6 +88,6 @@ async def test_settings(auth_mode, unused_tcp_port):
         # put previous theme back
         response = await http.put(
             f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
-            data=json.dumps(theme),
+            content=json.dumps(theme),
         )
         assert response.status_code == 204
