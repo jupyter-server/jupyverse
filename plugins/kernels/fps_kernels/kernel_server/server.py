@@ -76,7 +76,7 @@ class KernelServer:
             message_types = [message_types]
         self.blocked_messages = list(message_types)
 
-    def allow_messages(self, message_types: Iterable[str] | None = None):
+    def allow_messages(self, message_types: Iterable[str] | str | None = None):
         # if using allowed messages, discard blocked messages
         self.blocked_messages = []
         if message_types is None:
@@ -122,7 +122,8 @@ class KernelServer:
                     )
                 await self.task_group.start(self.kernel.start)
             task_status.started()
-            await self._wait_for_ready()
+            if self.kernel.wait_for_ready:
+                await self._wait_for_ready()
             async with create_task_group() as tg:
                 tg.start_soon(lambda: self.listen("shell"))
                 tg.start_soon(lambda: self.listen("stdin"))
@@ -130,8 +131,8 @@ class KernelServer:
                 tg.start_soon(lambda: self.listen("iopub"))
 
     async def stop(self) -> None:
-        self.task_group.cancel_scope.cancel()
         await self.kernel.stop()
+        self.task_group.cancel_scope.cancel()
 
     async def interrupt(self) -> None:
         await self.kernel.interrupt()

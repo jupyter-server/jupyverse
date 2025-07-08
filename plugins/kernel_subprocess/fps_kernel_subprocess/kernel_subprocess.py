@@ -44,6 +44,7 @@ class KernelSubprocess(Kernel):
             if self.connection_cfg is None:
                 raise RuntimeError("No connection_cfg")
         self.key = cast(str, self.connection_cfg["key"])
+        self.wait_for_ready = True
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with (

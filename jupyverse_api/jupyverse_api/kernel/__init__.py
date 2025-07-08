@@ -10,6 +10,7 @@ from anyio.streams.stapled import StapledObjectStream
 
 class Kernel(ABC):
     key = "0"
+    wait_for_ready = False
 
     def __init__(self) -> None:
         self._to_shell_send_stream, self._to_shell_receive_stream = create_memory_object_stream[
@@ -44,7 +45,7 @@ class Kernel(ABC):
         )
 
     @abstractmethod
-    async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None: ...
+    async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED,) -> None: ...
 
     @abstractmethod
     async def stop(self) -> None: ...
