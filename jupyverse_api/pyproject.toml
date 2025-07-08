@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jupyverse_api"
-version = "0.9.0"
+version = "0.10.0"
 description = "The public API for Jupyverse"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -30,6 +30,7 @@ dependencies = [
   "pydantic >=2,<3",
   "fastapi >=0.95.0,<1",
   "fps >=0.4.0,<0.5.0",
+  "anyio >=3.6.2,<5",
 ]
 
 [project.license]
