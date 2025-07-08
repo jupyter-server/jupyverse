@@ -12,7 +12,12 @@ from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from starlette.requests import Request
-from watchfiles import Change, awatch
+
+try:
+    from watchfiles import Change, awatch
+    watchfiles_installed = True
+except ImportError:
+    watchfiles_installed = False
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
@@ -71,7 +76,10 @@ class _Kernels(Kernels):
                     path = Path(jupyter_runtime_dir()) / "external_kernels"
                 else:
                     path = Path(external_connection_dir)
-                tg.start_soon(lambda: self.watch_connection_files(path))
+                if watchfiles_installed:
+                    tg.start_soon(lambda: self.watch_connection_files(path))
+                else:
+                    logger.warning("Not watching kernel connection files (install watchfiles)")
             tg.start_soon(self.on_shutdown)
             task_status.started()
             await self.stop_event.wait()
