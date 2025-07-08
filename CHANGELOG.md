@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.1
+
+- Fix optional dependencies pinning.
+
 ## 0.10.0
 
 - Fix write permissions in RTC.
