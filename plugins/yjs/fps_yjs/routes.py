@@ -29,6 +29,7 @@ from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
 
+from .ywebsocket.websocket import Websocket
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
 from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywidgets import Widgets
@@ -163,6 +164,7 @@ class RoomManager:
     cleaners: dict[YRoom, Task]
     last_modified: dict[str, datetime]
     websocket_server: JupyterWebsocketServer
+    room_write_permissions: dict[str, set[YWebsocket]]
     room_lock: ResourceLock
 
     def __init__(self, contents: Contents, file_id: FileId, lifespan: Lifespan):
@@ -174,6 +176,7 @@ class RoomManager:
         self.savers = {}  # a dictionary of file_id:task
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
+        self.room_write_permissions = {}  # a dictionary of room_name:websockets that can write
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
         self.room_lock = ResourceLock()
 
@@ -195,7 +198,12 @@ class RoomManager:
         async with self.room_lock(websocket.path):
             room = await self.websocket_server.get_room(websocket.path)
             can_write = permissions is None or "write" in permissions.get("yjs", [])
-            room.on_message = partial(self.filter_message, can_write)
+            if websocket.path not in self.room_write_permissions:
+                self.room_write_permissions[websocket.path] = set()
+            if can_write:
+                self.room_write_permissions[websocket.path].add(websocket)
+
+            room.on_message = self.filter_message
             is_stored_document = websocket.path.count(":") >= 2
             if is_stored_document:
                 assert room.ystore is not None
@@ -260,6 +268,9 @@ class RoomManager:
 
         await self.websocket_server.serve(websocket, self.lifespan.shutdown_request)
 
+        if websocket in self.room_write_permissions.get(websocket.path, set()):
+            self.room_write_permissions[websocket.path].remove(websocket)
+
         if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients:
             # no client in this room after we disconnect
             self.cleaners[room] = create_task(
@@ -267,17 +278,18 @@ class RoomManager:
                 self.task_group,
             )
 
-    async def filter_message(self, can_write: bool, message: bytes) -> bool:
+    async def filter_message(self, message: bytes, websocket: Websocket) -> bool:
         """
         Called whenever a message is received, before forwarding it to other clients.
 
-        :param can_write: True if updating the document is permitted, False otherwise.
         :param message: received message.
+        :param websocket: the websocket that sent the message.
         :returns: True if the message must be discarded, False otherwise (default: False).
         """
         skip = False
         byte = message[0]
         msg = message[1:]
+        can_write = websocket in self.room_write_permissions.get(websocket.path, set())
         if byte == AWARENESS:
             # changes = self.room.awareness.get_changes(msg)
             # # filter out message depending on changes
@@ -288,6 +300,7 @@ class RoomManager:
                 skip = True
         else:
             skip = True
+
         return skip
 
     async def get_file_path(self, file_id: str, document) -> str | None:
@@ -403,6 +416,10 @@ class RoomManager:
                 del self.watchers[file_id]
         room_name = self.websocket_server.get_room_name(room)
         self.websocket_server.delete_room(room=room)
+
+        if ws_path in self.room_write_permissions:
+            del self.room_write_permissions[ws_path]
+
         file_path = await self.get_file_path(file_id, document)
         logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
         if room in self.cleaners:
