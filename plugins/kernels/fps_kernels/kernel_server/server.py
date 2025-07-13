@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group, move_on_after
 from anyio.abc import TaskStatus
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from starlette.websockets import WebSocketState
 
 from jupyverse_api.kernel import DefaultKernelFactory, KernelFactory
@@ -160,7 +160,7 @@ class KernelServer:
     async def listen_web(self, websocket: AcceptedWebSocket, stop_event: Event):
         try:
             await self.send_to_kernel(websocket)
-        except WebSocketDisconnect:
+        except BaseException:
             pass
         finally:
             stop_event.set()
