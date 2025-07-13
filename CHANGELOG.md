@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.2
+
+- Rework `test_kernels.py` to use ASGI transport.
+
 ## 0.10.1
 
 - Fix optional dependencies pinning.
