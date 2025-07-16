@@ -27,7 +27,7 @@ class YjsModule(Module):
         file_id = await self.get(FileId)  # type: ignore[type-abstract]
         lifespan = await self.get(Lifespan)
 
-        self.yjs = _Yjs(app, auth, contents, file_id, lifespan)
+        self.yjs = _Yjs(app, auth, contents, file_id, lifespan, self.config)
 
         async with create_task_group() as tg:
             await tg.start(self.yjs.start)

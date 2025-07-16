@@ -25,7 +25,7 @@ from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
 from jupyverse_api.file_id import FileId
 from jupyverse_api.main import Lifespan
-from jupyverse_api.yjs import Yjs
+from jupyverse_api.yjs import Yjs, YjsConfig
 from jupyverse_api.yjs.models import CreateDocumentSession
 
 from .ywebsocket.websocket import Websocket
@@ -51,11 +51,13 @@ class _Yjs(Yjs):
         contents: Contents,
         file_id: FileId,
         lifespan: Lifespan,
+        config: YjsConfig,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.contents = contents
         self.file_id = file_id
         self.lifespan = lifespan
+        self.config = config
         if Widgets is None:
             self.widgets = None
         else:
@@ -63,7 +65,7 @@ class _Yjs(Yjs):
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with create_task_group() as tg:
-            self.room_manager = RoomManager(self.contents, self.file_id, self.lifespan)
+            self.room_manager = RoomManager(self.contents, self.file_id, self.lifespan, self.config)
             tg.start_soon(self.room_manager.start)
             task_status.started()
 
@@ -166,7 +168,7 @@ class RoomManager:
     room_write_permissions: dict[str, set[YWebsocket]]
     room_lock: ResourceLock
 
-    def __init__(self, contents: Contents, file_id: FileId, lifespan: Lifespan):
+    def __init__(self, contents: Contents, file_id: FileId, lifespan: Lifespan, config: YjsConfig):
         self.contents = contents
         self.file_id = file_id
         self.lifespan = lifespan
@@ -178,6 +180,7 @@ class RoomManager:
         self.room_write_permissions = {}  # a dictionary of room_name:websockets that can write
         self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
         self.room_lock = ResourceLock()
+        self.config = config
 
     async def start(self):
         async with create_task_group() as self.task_group:
@@ -364,8 +367,8 @@ class RoomManager:
     async def maybe_save_document(
         self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
     ) -> None:
-        # save after 1 second of inactivity to prevent too frequent saving
-        await sleep(1)  # FIXME: pass in config
+        # save after configured delay to prevent too frequent saving
+        await sleep(self.config.document_save_delay)
         # if the room cannot be found, don't save
         try:
             file_path = await self.get_file_path(file_id, document)
@@ -401,7 +404,7 @@ class RoomManager:
     async def maybe_clean_room(self, room, ws_path: str) -> None:
         file_id = ws_path.split(":", 2)[2]
         # keep the document for a while in case someone reconnects
-        await sleep(60)  # FIXME: pass in config
+        await sleep(self.config.document_cleanup_delay)
         document = self.documents[ws_path]
         document.unobserve()
         del self.documents[ws_path]
