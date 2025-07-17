@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.3
+
+- Propagate `yjs` settings.
+
 ## 0.10.2
 
 - Rework `test_kernels.py` to use ASGI transport.
