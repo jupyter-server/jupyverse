@@ -268,13 +268,17 @@ class RoomManager:
 
         await self.websocket_server.serve(websocket, self.lifespan.shutdown_request)
 
-
-        # Obtain lock for cleanup - this is to prevent race conditions when multiple clients disconnect
+        # Obtain lock for cleanup to prevent race conditions when multiple clients disconnect
         async with self.room_lock(websocket.path):
             if websocket in self.room_write_permissions.get(websocket.path, set()):
                 self.room_write_permissions[websocket.path].remove(websocket)
 
-            if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients and room not in self.cleaners:
+            if (
+                not self.lifespan.shutdown_request.is_set()
+                and is_stored_document
+                and not room.clients
+                and room not in self.cleaners
+            ):
                 # no client in this room after we disconnect
                 self.cleaners[room] = create_task(
                     self.maybe_clean_room(room, websocket.path),
