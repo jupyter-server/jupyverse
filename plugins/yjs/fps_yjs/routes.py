@@ -414,8 +414,8 @@ class RoomManager:
         await sleep(self.config.document_cleanup_delay)
 
         async with self.room_lock(ws_path):
-            # If for some reason this room has already been cleaned, do nothing
             try:
+                # If for some reason this room has already been cleaned, do nothing
                 if ws_path not in self.documents or room not in self.websocket_server.rooms:
                     logger.warn("Room already cleaned", ws_path=ws_path)
                     return
