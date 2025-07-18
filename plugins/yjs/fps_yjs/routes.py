@@ -268,15 +268,18 @@ class RoomManager:
 
         await self.websocket_server.serve(websocket, self.lifespan.shutdown_request)
 
-        if websocket in self.room_write_permissions.get(websocket.path, set()):
-            self.room_write_permissions[websocket.path].remove(websocket)
 
-        if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients:
-            # no client in this room after we disconnect
-            self.cleaners[room] = create_task(
-                self.maybe_clean_room(room, websocket.path),
-                self.task_group,
-            )
+        # Obtain lock for cleanup - this is to prevent race conditions when multiple clients disconnect
+        async with self.room_lock(websocket.path):
+            if websocket in self.room_write_permissions.get(websocket.path, set()):
+                self.room_write_permissions[websocket.path].remove(websocket)
+
+            if not self.lifespan.shutdown_request.is_set() and is_stored_document and not room.clients and room not in self.cleaners:
+                # no client in this room after we disconnect
+                self.cleaners[room] = create_task(
+                    self.maybe_clean_room(room, websocket.path),
+                    self.task_group,
+                )
 
     async def filter_message(self, message: bytes, websocket: Websocket) -> bool:
         """
@@ -405,25 +408,32 @@ class RoomManager:
         file_id = ws_path.split(":", 2)[2]
         # keep the document for a while in case someone reconnects
         await sleep(self.config.document_cleanup_delay)
-        document = self.documents[ws_path]
-        document.unobserve()
-        del self.documents[ws_path]
-        documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
-        if not documents:
-            self.watchers[file_id].cancel(raise_exception=False)
-            await self.watchers[file_id].wait()
-            if file_id in self.watchers:
-                del self.watchers[file_id]
-        room_name = self.websocket_server.get_room_name(room)
-        self.websocket_server.delete_room(room=room)
 
-        if ws_path in self.room_write_permissions:
-            del self.room_write_permissions[ws_path]
+        async with self.room_lock(ws_path):
+            # If for some reason this room has already been cleaned, do nothing
+            if ws_path not in self.documents or room not in self.websocket_server.rooms:
+                logger.warn("Room already cleaned", ws_path=ws_path)
+                return
 
-        file_path = await self.get_file_path(file_id, document)
-        logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
-        if room in self.cleaners:
-            del self.cleaners[room]
+            document = self.documents[ws_path]
+            document.unobserve()
+            del self.documents[ws_path]
+            documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
+            if not documents:
+                self.watchers[file_id].cancel(raise_exception=False)
+                await self.watchers[file_id].wait()
+                if file_id in self.watchers:
+                    del self.watchers[file_id]
+            room_name = self.websocket_server.get_room_name(room)
+            self.websocket_server.delete_room(room=room)
+
+            if ws_path in self.room_write_permissions:
+                del self.room_write_permissions[ws_path]
+
+            file_path = await self.get_file_path(file_id, document)
+            logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
+            if room in self.cleaners:
+                del self.cleaners[room]
 
 
 class JupyterWebsocketServer(WebsocketServer):
