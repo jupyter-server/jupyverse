@@ -415,29 +415,31 @@ class RoomManager:
 
         async with self.room_lock(ws_path):
             # If for some reason this room has already been cleaned, do nothing
-            if ws_path not in self.documents or room not in self.websocket_server.rooms:
-                logger.warn("Room already cleaned", ws_path=ws_path)
-                return
+            try:
+                if ws_path not in self.documents or room not in self.websocket_server.rooms:
+                    logger.warn("Room already cleaned", ws_path=ws_path)
+                    return
 
-            document = self.documents[ws_path]
-            document.unobserve()
-            del self.documents[ws_path]
-            documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
-            if not documents:
-                self.watchers[file_id].cancel(raise_exception=False)
-                await self.watchers[file_id].wait()
-                if file_id in self.watchers:
-                    del self.watchers[file_id]
-            room_name = self.websocket_server.get_room_name(room)
-            self.websocket_server.delete_room(room=room)
+                document = self.documents[ws_path]
+                document.unobserve()
+                del self.documents[ws_path]
+                documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
+                if not documents:
+                    self.watchers[file_id].cancel(raise_exception=False)
+                    await self.watchers[file_id].wait()
+                    if file_id in self.watchers:
+                        del self.watchers[file_id]
+                room_name = self.websocket_server.get_room_name(room)
+                self.websocket_server.delete_room(room=room)
 
-            if ws_path in self.room_write_permissions:
-                del self.room_write_permissions[ws_path]
+                if ws_path in self.room_write_permissions:
+                    del self.room_write_permissions[ws_path]
 
-            file_path = await self.get_file_path(file_id, document)
-            logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
-            if room in self.cleaners:
-                del self.cleaners[room]
+                file_path = await self.get_file_path(file_id, document)
+                logger.info("Closing collaboration room", room_id=room_name, file_path=file_path)
+            finally:
+                if room in self.cleaners:
+                    del self.cleaners[room]
 
 
 class JupyterWebsocketServer(WebsocketServer):
