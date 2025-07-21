@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-import pyjs
+import pyjs  # type: ignore[import-not-found]
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskStatus
 
