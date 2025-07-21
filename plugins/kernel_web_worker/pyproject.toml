@@ -27,5 +27,4 @@ text = "BSD 3-Clause License"
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules"       = {kernel_web_worker = "fps_kernel_web_worker.main:KernelWebWorkerModule"}
-"jupyverse.modules" = {kernel_web_worker = "fps_kernel_web_worker.main:KernelWebWorkerModule"}
+"fps.modules" = {kernel_web_worker = "fps_kernel_web_worker.main:KernelWebWorkerModule"}
