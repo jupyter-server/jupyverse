@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from anyio import TASK_STATUS_IGNORED, create_memory_object_stream
+from anyio import TASK_STATUS_IGNORED, Event, create_memory_object_stream
 from anyio.abc import TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream
 from anyio.streams.stapled import StapledObjectStream
 
 
 class Kernel(ABC):
-    key = "0"
-    wait_for_ready = False
-
     def __init__(self) -> None:
+        self.key = "0"
+        self.wait_for_ready = False
+        self.started = Event()
+
         self._to_shell_send_stream, self._to_shell_receive_stream = create_memory_object_stream[
             list[bytes]
         ]()

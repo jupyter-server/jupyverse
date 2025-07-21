@@ -13,6 +13,7 @@ dependencies = [
     "fps-contents >=0.10.0,<0.11.0",
     "fps-file-id >=0.2.0,<0.3.0",
     "fps-kernel-subprocess >=0.1.0,<0.2.0",
+    "fps-kernel-web-worker >=0.1.0,<0.2.0",
     "fps-kernels >=0.9.1,<0.10.0",
     "fps-terminals >=0.9.0,<0.10.0",
     "fps-nbconvert >=0.9.0,<0.10.0",
@@ -73,6 +74,7 @@ pre-install-commands = [
   "pip install -e ./plugins/file_id",
   "pip install -e ./plugins/frontend",
   "pip install -e ./plugins/kernel_subprocess",
+  "pip install -e ./plugins/kernel_web_worker",
   "pip install -e ./plugins/kernels[watchfiles]",
   "pip install -e ./plugins/lab",
   "pip install -e ./plugins/nbconvert",
@@ -123,6 +125,7 @@ typecheck0 = """mypy --no-incremental \
 ./plugins/file_id \
 ./plugins/frontend \
 ./plugins/kernel_subprocess \
+./plugins/kernel_web_worker \
 ./plugins/kernels \
 ./plugins/lab \
 ./plugins/nbconvert \
@@ -178,6 +181,7 @@ fps-file_id = { workspace = true }
 fps-frontend = { workspace = true }
 fps-jupyterlab = { workspace = true }
 fps-kernel-subprocess = { workspace = true }
+fps-kernel-web-worker = { workspace = true }
 fps-kernels = { workspace = true }
 fps-lab = { workspace = true }
 fps-login = { workspace = true }
