@@ -1,6 +1,6 @@
 # Version history
 
-## 0.10.4
+## 0.10.5
 
 - Add `fps-kernel-web-worker` plugin.
 
