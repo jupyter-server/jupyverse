@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import cast
 
 import anyio
-from anyio import TASK_STATUS_IGNORED, create_task_group, open_process, sleep_forever
+from anyio import TASK_STATUS_IGNORED, create_task_group, open_process
 from anyio.abc import TaskStatus
 
 from jupyverse_api.kernel import Kernel
@@ -48,7 +48,6 @@ class KernelSubprocess(Kernel):
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with (
-            create_task_group() as self.task_group,
             self._to_shell_send_stream,
             self._to_shell_receive_stream,
             self._from_shell_send_stream,
@@ -63,6 +62,7 @@ class KernelSubprocess(Kernel):
             self._from_stdin_receive_stream,
             self._from_iopub_send_stream,
             self._from_iopub_receive_stream,
+            create_task_group() as self.task_group,
         ):
             with open(self.kernelspec_path) as f:
                 kernelspec = json.load(f)
@@ -105,7 +105,7 @@ class KernelSubprocess(Kernel):
             self.task_group.start_soon(self.forward_messages_from_iopub)
 
             task_status.started()
-            await sleep_forever()
+            self.started.set()
 
     async def stop(self) -> None:
         try:
