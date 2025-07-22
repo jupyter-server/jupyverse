@@ -1,13 +1,14 @@
 import asyncio
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fps import get_root_module, merge_config
+from httpx_ws import aconnect_ws
+
 from jupyverse_api.contents import Contents
 from jupyverse_api.file_id import FileId
-from httpx_ws import aconnect_ws
-import pytest
 from jupyverse_api.yjs import Yjs
-
 
 CONFIG = {
     "jupyverse": {
@@ -64,8 +65,8 @@ async def test_room_cleanup(patched: tuple[Yjs, int]):
                     first_ws.close(),
                     second_ws.close(),
                 )
-                
+
         # wait for the room to be cleaned up
         await asyncio.sleep(0.1)
         assert not yjs.room_manager.websocket_server.rooms
-        
+
