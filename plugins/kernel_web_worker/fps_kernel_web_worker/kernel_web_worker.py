@@ -33,17 +33,18 @@ class KernelWebWorker(Kernel):
             kernel_ready = Event()
 
             def callback(msg):
-                if msg["type"] == "started":
+                msg_type = msg["type"]
+                if msg_type == "started":
                     kernel_ready.set()
                 else:
                     msg = [bytes(pyjs.to_py(m)) for m in msg["msg"]]
-                    if msg["type"] == "shell":
+                    if msg_type == "shell":
                         self.task_group.start_soon(self._from_shell_send_stream.send, msg)
-                    elif msg["type"] == "control":
+                    elif msg_type == "control":
                         self.task_group.start_soon(self._from_control_send_stream.send, msg)
-                    elif msg["type"] == "stdin":
+                    elif msg_type == "stdin":
                         self.task_group.start_soon(self._from_stdin_send_stream.send, msg)
-                    elif msg["type"] == "iopub":
+                    elif msg_type == "iopub":
                         self.task_group.start_soon(self._from_iopub_send_stream.send, msg)
 
             js_callable, self.js_py_object = pyjs.create_callable(callback)
