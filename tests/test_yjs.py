@@ -3,7 +3,6 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
 import anyio
-
 import pytest
 from fps import get_root_module, merge_config
 from httpx_ws import aconnect_ws
@@ -72,4 +71,3 @@ async def test_room_cleanup(patched: tuple[Yjs, int]):
         # wait for the room to be cleaned up
         await anyio.sleep(0.1)
         assert not yjs.room_manager.websocket_server.rooms
-
