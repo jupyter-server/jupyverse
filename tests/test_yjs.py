@@ -52,6 +52,7 @@ async def patched(unused_tcp_port) -> AsyncGenerator[tuple[Yjs, int], None]:
             contents.read_content = AsyncMock(return_value=mock_content)
             contents.write_content = AsyncMock()
             yield yjs, unused_tcp_port
+            await jupyverse_module.stop()
 
 @pytest.mark.anyio
 async def test_room_cleanup(patched: tuple[Yjs, int]):
