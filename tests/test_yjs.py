@@ -2,6 +2,8 @@ import asyncio
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
+import anyio
+
 import pytest
 from fps import get_root_module, merge_config
 from httpx_ws import aconnect_ws
@@ -45,7 +47,8 @@ async def patched(unused_tcp_port) -> AsyncGenerator[tuple[Yjs, int], None]:
         contents = await jupyverse_module.get(Contents)
         yjs.get_file_path = MagicMock(return_value="test.ipynb")
         fileid.get_path = AsyncMock(return_value="test.ipynb")
-        contents.read_content = AsyncMock(return_value=MagicMock(last_modified="2021-01-01T00:00:00Z"))
+        mock_content = MagicMock(last_modified="2021-01-01T00:00:00Z")
+        contents.read_content = AsyncMock(return_value=mock_content)
         contents.write_content = AsyncMock()
         yield yjs, unused_tcp_port
 
@@ -61,12 +64,12 @@ async def test_room_cleanup(patched: tuple[Yjs, int]):
             ) as second_ws:
                 await asyncio.gather(
                     # sleep to make sure these two websockets are closed at the exact same time
-                    asyncio.sleep(0.1),
+                    anyio.sleep(0.1),
                     first_ws.close(),
                     second_ws.close(),
                 )
 
         # wait for the room to be cleaned up
-        await asyncio.sleep(0.1)
+        await anyio.sleep(0.1)
         assert not yjs.room_manager.websocket_server.rooms
 
