@@ -1,6 +1,6 @@
 import asyncio
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import anyio
 import pytest
@@ -41,15 +41,17 @@ CONFIG = {
 async def patched(unused_tcp_port) -> AsyncGenerator[tuple[Yjs, int], None]:
     config = merge_config(CONFIG, {"jupyverse": {"config": {"port": unused_tcp_port}}})
     async with get_root_module(config) as jupyverse_module:
-        yjs = await jupyverse_module.get(Yjs)
-        fileid = await jupyverse_module.get(FileId)
-        contents = await jupyverse_module.get(Contents)
-        yjs.get_file_path = MagicMock(return_value="test.ipynb")
-        fileid.get_path = AsyncMock(return_value="test.ipynb")
-        mock_content = MagicMock(last_modified="2021-01-01T00:00:00Z")
-        contents.read_content = AsyncMock(return_value=mock_content)
-        contents.write_content = AsyncMock()
-        yield yjs, unused_tcp_port
+        # patch aiosqlite
+        with patch("fps_yjs.ywebsocket.ystore.connect"):
+            yjs = await jupyverse_module.get(Yjs)
+            fileid = await jupyverse_module.get(FileId)
+            contents = await jupyverse_module.get(Contents)
+            yjs.get_file_path = MagicMock(return_value="test.ipynb")
+            fileid.get_path = AsyncMock(return_value="test.ipynb")
+            mock_content = MagicMock(last_modified="2021-01-01T00:00:00Z")
+            contents.read_content = AsyncMock(return_value=mock_content)
+            contents.write_content = AsyncMock()
+            yield yjs, unused_tcp_port
 
 @pytest.mark.anyio
 async def test_room_cleanup(patched: tuple[Yjs, int]):
