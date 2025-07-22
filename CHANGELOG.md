@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.4
+
+- Add `fps-kernel-web-worker` plugin.
+
 ## 0.10.3
 
 - Propagate `yjs` settings.
