@@ -59,6 +59,7 @@ class KernelWebWorker(Kernel):
             self.task_group.start_soon(self.forward_messages_to_stdin)
 
             task_status.started()
+            self.started.set()
 
     async def stop(self) -> None:
         self.js_py_object.delete()
