@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_file_id"
-version = "0.2.0"
+version = "0.2.1"
 description = "An FPS plugin for the file ID API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"

@@ -1,5 +1,10 @@
 # Version history
 
+## 0.10.6
+
+- Bump `fps >=0.5.1`.
+- Support stopping `fps-kernel-web-worker`.
+
 ## 0.10.5
 
 - Add `fps-kernel-web-worker` plugin.
