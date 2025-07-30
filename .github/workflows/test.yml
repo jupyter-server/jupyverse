@@ -29,12 +29,7 @@ jobs:
         python3 -m pip install hatch
     - name: Check types
       run: |
-        hatch run dev.jupyterlab-noauth:typecheck
-        hatch run dev.jupyterlab-auth:typecheck
-        hatch run dev.jupyterlab-auth_fief:typecheck
-        hatch run dev.notebook-noauth:typecheck
-        hatch run dev.notebook-auth:typecheck
-        hatch run dev.notebook-auth_fief:typecheck
+        hatch run dev:typecheck
 
   test:
     name: Tests
@@ -59,8 +54,5 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install hatch
 
-    - name: Create jupyterlab-auth dev environment
-      run: hatch env create dev.jupyterlab-auth
-
     - name: Run tests
-      run: hatch run dev.jupyterlab-auth:test
+      run: hatch run dev:test

@@ -81,44 +81,22 @@ pre-install-commands = [
   "pip install -e ./plugins/yjs",
   "pip install -e ./plugins/resource_usage",
   "pip install -e ./plugins/webdav[test]",
+  "pip install -e ./plugins/noauth",
+  "pip install -e ./plugins/auth -e ./plugins/login",
+  "pip install -e ./plugins/auth_fief",
+  "pip install -e ./plugins/auth_jupyterhub",
+  "pip install -e ./plugins/jupyterlab",
+  "pip install -e ./plugins/notebook",
 ]
 features = ["test"]
 
-[tool.hatch.envs.dev.overrides]
-matrix.frontend.post-install-commands = [
-  { value = "pip install -e ./plugins/jupyterlab", if = ["jupyterlab"]},
-  { value = "pip install -e ./plugins/notebook", if = ["notebook"]},
-]
-
-matrix.frontend.scripts = [
-  { key = "typecheck1", value = "typecheck0 ./plugins/jupyterlab", if = ["jupyterlab"] },
-  { key = "typecheck1", value = "typecheck0 ./plugins/notebook", if = ["notebook"] },
-]
-matrix.auth.post-install-commands = [
-  { value = "pip install -e ./plugins/noauth", if = ["noauth"] },
-  { value = "pip install -e ./plugins/auth -e ./plugins/login", if = ["auth"] },
-  { value = "pip install -e ./plugins/auth_fief", if = ["auth_fief"] },
-  { value = "pip install -e ./plugins/auth_jupyterhub", if = ["auth_jupyterhub"] },
-]
-
-matrix.auth.scripts = [
-  { key = "typecheck", value = "typecheck1 ./plugins/noauth", if = ["noauth"] },
-  { key = "typecheck", value = "typecheck1 ./plugins/auth ./plugins/login", if = ["auth"] },
-  { key = "typecheck", value = "typecheck1 ./plugins/auth_fief", if = ["auth_fief"] },
-  { key = "typecheck", value = "typecheck1 ./plugins/auth_jupyterhub", if = ["auth_jupyterhub"] },
-]
-
-[[tool.hatch.envs.dev.matrix]]
-frontend = ["jupyterlab", "notebook"]
-auth = ["noauth", "auth", "auth_fief", "auth_jupyterhub"]
-
 [tool.hatch.envs.dev.scripts]
-test = "pytest ./tests plugins/webdav/tests -v --reruns 5 --timeout=60 --color=yes"
+test = "pytest -v --reruns 5 --timeout=60 --color=yes"
 lint = [
   "ruff format jupyverse jupyverse_api notebooks plugins tests",
   "ruff check jupyverse jupyverse_api notebooks plugins tests --fix",
 ]
-typecheck0 = """mypy --no-incremental \
+typecheck = """mypy \
 ./jupyverse_api \
 ./plugins/contents \
 ./plugins/file_id \
@@ -132,6 +110,12 @@ typecheck0 = """mypy --no-incremental \
 ./plugins/yjs \
 ./plugins/resource_usage \
 ./plugins/webdav \
+./plugins/noauth \
+./plugins/auth \
+./plugins/auth_fief \
+./plugins/auth_jupyterhub \
+./plugins/jupyterlab \
+./plugins/notebook
 """
 
 [tool.hatch.envs.docs]

@@ -32,14 +32,14 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
     os.chdir(cwd)
     command_list = [
         "jupyverse",
-        "--set",
-        f"auth.mode={auth_mode}",
-        "--set",
-        f"auth.clear_users={str(clear_users).lower()}",
-        "--set",
-        "kernels.require_yjs=true",
-        "--port",
-        str(unused_tcp_port),
+        "--disable", "noauth",
+        "--disable", "auth_fief",
+        "--disable", "auth_jupyterhub",
+        "--disable", "notebook",
+        "--set", f"auth.mode={auth_mode}",
+        "--set", f"auth.clear_users={str(clear_users).lower()}",
+        "--set", "kernels.require_yjs=true",
+        "--port", str(unused_tcp_port),
     ]
     p = subprocess.Popen(command_list)
     url = f"http://127.0.0.1:{unused_tcp_port}"
