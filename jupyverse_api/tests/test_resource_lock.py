@@ -10,7 +10,7 @@ async def do_op(operation, resource_lock, operations):
     op, path = operation
     async with resource_lock(path):
         operations.append(operation + ["start"])
-        await sleep(0.1)
+        await sleep(0.5)
         operations.append(operation + ["done"])
 
 
@@ -22,7 +22,7 @@ async def test_resource_lock():
     operations = []
     async with create_task_group() as tg:
         tg.start_soon(do_op, [0, idx], resource_lock, operations)
-        await sleep(0.01)
+        await sleep(0.05)
         tg.start_soon(do_op, [1, idx], resource_lock, operations)
 
     assert operations == [
@@ -38,11 +38,11 @@ async def test_resource_lock():
     operations = []
     async with create_task_group() as tg:
         tg.start_soon(do_op, [0, idx0], resource_lock, operations)
-        await sleep(0.01)
+        await sleep(0.05)
         tg.start_soon(do_op, [1, idx1], resource_lock, operations)
-        await sleep(0.01)
+        await sleep(0.05)
         tg.start_soon(do_op, [2, idx0], resource_lock, operations)
-        await sleep(0.01)
+        await sleep(0.05)
         tg.start_soon(do_op, [3, idx1], resource_lock, operations)
 
     assert operations == [

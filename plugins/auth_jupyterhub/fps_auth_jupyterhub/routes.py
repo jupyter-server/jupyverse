@@ -12,8 +12,8 @@ from anyio.abc import TaskStatus
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
 from httpx import AsyncClient
-from jupyterhub.services.auth import HubOAuth
-from jupyterhub.utils import isoformat
+from jupyterhub.services.auth import HubOAuth  # type: ignore[import-untyped]
+from jupyterhub.utils import isoformat  # type: ignore[import-untyped]
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 
