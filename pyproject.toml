@@ -50,7 +50,6 @@ test = [
     "mypy",
     "types-setuptools",
     "pytest",
-    "pytest-rerunfailures",
     "pytest-timeout",
     "pytest-env",
     "httpx",
@@ -91,7 +90,7 @@ pre-install-commands = [
 features = ["test"]
 
 [tool.hatch.envs.dev.scripts]
-test = "pytest -v --reruns 5 --timeout=60 --color=yes"
+test = "pytest -v --timeout=60 --color=yes"
 lint = [
   "ruff format jupyverse jupyverse_api notebooks plugins tests",
   "ruff check jupyverse jupyverse_api notebooks plugins tests --fix",
