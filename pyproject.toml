@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jupyverse"
-version = "0.10.6"
+version = "0.10.7"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"
@@ -16,10 +16,10 @@ dependencies = [
     "fps-kernels >=0.9.1,<0.10.0",
     "fps-terminals >=0.9.0,<0.10.0",
     "fps-nbconvert >=0.9.0,<0.10.0",
-    "fps-yjs >=0.10.1,<0.11.0",
+    "fps-yjs >=0.10.2,<0.11.0",
     "fps-lab >=0.9.0,<0.10.0",
     "fps-frontend >=0.9.0,<0.10.0",
-    "jupyverse-api >=0.10.1,<0.11.0",
+    "jupyverse-api >=0.10.3,<0.11.0",
     "rich-click >=1.6.1,<2",
     "eval-type-backport; python_version<'3.10'",
 ]
@@ -43,8 +43,8 @@ jupyterlab = ["fps-jupyterlab >=0.9.0,<0.10.0"]
 notebook = ["fps-notebook>=0.9.0,<0.10.0"]
 auth = ["fps-auth >=0.9.0,<0.10.0", "fps-login >=0.9.0,<0.10.0"]
 auth-fief = ["fps-auth-fief >=0.9.0,<0.10.0"]
-auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.0,<0.10.0"]
-noauth = ["fps-noauth >=0.9.0,<0.10.0"]
+auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.1,<0.10.0"]
+noauth = ["fps-noauth >=0.9.1,<0.10.0"]
 test = [
     "ruff >=0.1.2",
     "mypy",

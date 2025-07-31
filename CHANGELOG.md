@@ -1,5 +1,10 @@
 # Version history
 
+## 0.10.7
+
+- Lock on collaboration room cleanup.
+- Move `ASGIWebSocketTransport` to `jupyverse_api`.
+
 ## 0.10.6
 
 - Bump `fps >=0.5.1`.
