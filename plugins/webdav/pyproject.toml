@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_webdav"
-version = "0.9.0"
+version = "0.9.1"
 description = "An FPS plugin for the WebDAV API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"

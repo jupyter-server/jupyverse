@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_kernel_subprocess"
-version = "0.1.1"
+version = "0.1.2"
 description = "An FPS plugin for the kernel subprocess API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"

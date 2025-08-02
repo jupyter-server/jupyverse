@@ -1,6 +1,6 @@
 # Version history
 
-## 0.10.8
+## 0.10.9
 
 - Move `ResourceLock` to `anyioutils`.
 
