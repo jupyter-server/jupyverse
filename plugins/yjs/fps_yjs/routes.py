@@ -7,7 +7,7 @@ from uuid import uuid4
 import structlog
 from anyio import TASK_STATUS_IGNORED, create_task_group, sleep
 from anyio.abc import TaskStatus
-from anyioutils import Task, create_task
+from anyioutils import ResourceLock, Task, create_task
 from fastapi import (
     HTTPException,
     Request,
@@ -19,7 +19,6 @@ from jupyter_ydoc import ydocs as YDOCS
 from jupyter_ydoc.ybasedoc import YBaseDoc
 from pycrdt import Doc, YMessageType, YSyncMessageType
 
-from jupyverse_api import ResourceLock
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
