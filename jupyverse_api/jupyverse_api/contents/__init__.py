@@ -3,9 +3,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from anyioutils import ResourceLock
 from fastapi import APIRouter, Depends, Request, Response
 
-from jupyverse_api import ResourceLock, Router
+from jupyverse_api import Router
 
 from ..app import App
 from ..auth import Auth, User
