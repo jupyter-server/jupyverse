@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jupyverse"
-version = "0.10.7"
+version = "0.10.8"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"
@@ -19,7 +19,7 @@ dependencies = [
     "fps-yjs >=0.10.2,<0.11.0",
     "fps-lab >=0.9.0,<0.10.0",
     "fps-frontend >=0.9.0,<0.10.0",
-    "jupyverse-api >=0.10.3,<0.11.0",
+    "jupyverse-api >=0.11.0,<0.12.0",
     "rich-click >=1.6.1,<2",
     "eval-type-backport; python_version<'3.10'",
 ]

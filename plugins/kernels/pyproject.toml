@@ -11,7 +11,7 @@ requires-python = ">=3.9"
 dependencies = [
     "python-dateutil",
     "types-python-dateutil",
-    "jupyverse-api >=0.10.0,<0.11.0",
+    "jupyverse-api >=0.11.0,<0.12.0",
     "pycrdt >=0.10.3,<0.13.0",
     "anyio",
 ]

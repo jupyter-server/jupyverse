@@ -12,7 +12,7 @@ dependencies = [
     "psutil >=5.9.4",
     "types-psutil",
     "anyio >=3.6.2,<5",
-    "jupyverse-api >=0.10.0,<0.11.0",
+    "jupyverse-api >=0.11.0,<0.12.0",
 ]
 [[project.authors]]
 name = "Jupyter Development Team"

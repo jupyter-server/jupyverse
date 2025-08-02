@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.8
+
+- Move `ResourceLock` to `anyioutils`.
+
 ## 0.10.7
 
 - Lock on collaboration room cleanup.
