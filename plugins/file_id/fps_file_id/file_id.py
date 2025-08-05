@@ -1,19 +1,16 @@
 from __future__ import annotations
 
-import logging
 import sqlite3
 from uuid import uuid4
 
 import structlog
 from anyio import Event, Lock, Path
 from sqlite_anyio import connect
-from watchfiles import Change, awatch
 
 from jupyverse_api.file_id import FileId
+from jupyverse_api.file_watcher import Change, FileWatcher
 
 logger = structlog.get_logger()
-watchfiles_logger = logging.getLogger("watchfiles")
-watchfiles_logger.setLevel(logging.WARNING)
 
 
 class Watcher:
@@ -40,7 +37,8 @@ class _FileId(FileId):
     watchers: dict[str, list[Watcher]]
     lock: Lock
 
-    def __init__(self, db_path: str = ".fileid.db"):
+    def __init__(self, file_watcher: FileWatcher, db_path: str = ".fileid.db"):
+        self.file_watcher = file_watcher
         self.db_path = db_path
         self.initialized = Event()
         self.watchers = {}
@@ -116,14 +114,15 @@ class _FileId(FileId):
             await self._db.commit()
             self.initialized.set()
 
-        async for changes in awatch(".", stop_event=self.stop_event):
+        here = await Path().absolute()
+        async for changes in self.file_watcher.watch(here, stop_event=self.stop_event):
             async with self.lock:
                 deleted_paths = set()
                 added_paths = set()
                 cursor = await self._db.cursor()
                 for change, changed_path in changes:
                     # get relative path
-                    changed_path = Path(changed_path).relative_to(await Path().absolute())
+                    changed_path = Path(changed_path).relative_to(here)
                     changed_path_str = str(changed_path)
 
                     if change == Change.deleted:

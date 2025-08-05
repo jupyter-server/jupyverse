@@ -48,6 +48,9 @@ CONFIG = {
             "kernels": {
                 "type": "kernels",
             },
+            "file_watcher": {
+                "type": "file_watcher",
+            },
         },
     }
 }

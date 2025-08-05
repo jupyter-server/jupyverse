@@ -13,14 +13,9 @@ from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from starlette.requests import Request
 
-try:
-    from watchfiles import Change, awatch
-    watchfiles_installed = True
-except ImportError:
-    watchfiles_installed = False
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
+from jupyverse_api.file_watcher import Change, FileWatcher
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.kernel import DefaultKernelFactory, KernelFactory
 from jupyverse_api.kernels import Kernels, KernelsConfig
@@ -50,6 +45,7 @@ class _Kernels(Kernels):
         yjs: Yjs | None,
         lifespan: Lifespan,
         default_kernel_factory: DefaultKernelFactory,
+        file_watcher: FileWatcher,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.kernels_config = kernels_config
@@ -57,6 +53,7 @@ class _Kernels(Kernels):
         self.yjs = yjs
         self.lifespan = lifespan
         self.default_kernel_factory = default_kernel_factory
+        self.file_watcher = file_watcher
 
         self.kernelspecs: dict = {}
         self.kernel_id_to_connection_file: dict[str, str] = {}
@@ -76,10 +73,7 @@ class _Kernels(Kernels):
                     path = Path(jupyter_runtime_dir()) / "external_kernels"
                 else:
                     path = Path(external_connection_dir)
-                if watchfiles_installed:
-                    tg.start_soon(lambda: self.watch_connection_files(path))
-                else:
-                    logger.warning("Not watching kernel connection files (install watchfiles)")
+                tg.start_soon(lambda: self.watch_connection_files(path))
             tg.start_soon(self.on_shutdown)
             task_status.started()
             await self.stop_event.wait()
@@ -406,7 +400,7 @@ class _Kernels(Kernels):
         initial_changes = {(Change.added, str(p)) for p in path.iterdir()}
         await self.process_connection_files(initial_changes)
         # then, on every change
-        async for changes in awatch(path, stop_event=self.stop_event):
+        async for changes in self.file_watcher.watch(path, stop_event=self.stop_event):  # type: ignore[attr-defined]
             await self.process_connection_files(changes)
 
     async def process_connection_files(self, changes: set[tuple[Change, str]]):

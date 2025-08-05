@@ -36,6 +36,9 @@ async def test_concurrent_disconnect(tmp_path):
                 "file_id": {
                     "type": "file_id",
                 },
+                "file_watcher": {
+                    "type": "file_watcher",
+                },
                 "frontend": {
                     "type": "frontend",
                 },

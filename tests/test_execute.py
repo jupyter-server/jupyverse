@@ -32,6 +32,9 @@ CONFIG = {
             "file_id": {
                 "type": "file_id",
             },
+            "file_watcher": {
+                "type": "file_watcher",
+            },
             "frontend": {
                 "type": "frontend",
             },
