@@ -36,6 +36,7 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
         "--disable", "auth_fief",
         "--disable", "auth_jupyterhub",
         "--disable", "notebook",
+        "--disable", "file_watcher_poll",
         "--set", f"auth.mode={auth_mode}",
         "--set", f"auth.clear_users={str(clear_users).lower()}",
         "--set", "kernels.require_yjs=true",

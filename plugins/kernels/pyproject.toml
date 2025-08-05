@@ -15,10 +15,6 @@ dependencies = [
     "pycrdt >=0.10.3,<0.13.0",
     "anyio",
 ]
-[project.optional-dependencies]
-watchfiles = [
-    "watchfiles >=1.0.4,<2",
-]
 
 [[project.authors]]
 name = "Jupyter Development Team"

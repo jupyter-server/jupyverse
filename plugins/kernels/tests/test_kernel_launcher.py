@@ -34,6 +34,9 @@ async def test_kernel_launcher():
                 "kernels": {
                     "type": "kernels",
                 },
+                "file_watcher": {
+                    "type": "file_watcher",
+                },
             },
         }
     }

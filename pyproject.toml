@@ -12,6 +12,7 @@ dependencies = [
     "fps[click,fastapi,anycorn] >=0.5.1,<0.6.0",
     "fps-contents >=0.10.1,<0.11.0",
     "fps-file-id >=0.2.2,<0.3.0",
+    "fps-file-watcher >=0.1.0,<0.2.0",
     "fps-kernel-subprocess >=0.1.2,<0.2.0",
     "fps-kernels >=0.9.2,<0.10.0",
     "fps-terminals >=0.9.1,<0.10.0",
@@ -70,10 +71,12 @@ pre-install-commands = [
   "pip install -e ./jupyverse_api",
   "pip install -e ./plugins/contents",
   "pip install -e ./plugins/file_id",
+  "pip install -e ./plugins/file_watcher",
+  "pip install -e ./plugins/file_watcher_poll",
   "pip install -e ./plugins/frontend",
   "pip install -e ./plugins/kernel_subprocess",
   "pip install -e ./plugins/kernel_web_worker",
-  "pip install -e ./plugins/kernels[watchfiles]",
+  "pip install -e ./plugins/kernels",
   "pip install -e ./plugins/lab",
   "pip install -e ./plugins/nbconvert",
   "pip install -e ./plugins/terminals",
@@ -99,6 +102,8 @@ typecheck = """mypy \
 ./jupyverse_api \
 ./plugins/contents \
 ./plugins/file_id \
+./plugins/file_watcher \
+./plugins/file_watcher_poll \
 ./plugins/frontend \
 ./plugins/kernel_subprocess \
 ./plugins/kernel_web_worker \
@@ -159,7 +164,9 @@ fps-auth = { workspace = true }
 fps-auth-fief = { workspace = true }
 fps-auth-jupyterhub = { workspace = true }
 fps-contents = { workspace = true }
-fps-file_id = { workspace = true }
+fps-file-id = { workspace = true }
+fps-file-watcher = { workspace = true }
+fps-file-watcher-poll = { workspace = true }
 fps-frontend = { workspace = true }
 fps-jupyterlab = { workspace = true }
 fps-kernel-subprocess = { workspace = true }

@@ -1,1 +1,1 @@
-`fps-contents` implements the `contents` API, i.e. everything related to reading/writing files, for the local file system. It also provides notifications for file changes using [watchfiles](https://github.com/samuelcolvin/watchfiles).
+`fps-contents` implements the `contents` API, i.e. everything related to reading/writing files, for the local file system.

@@ -6,6 +6,7 @@ from fps import Module
 
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
+from jupyverse_api.file_watcher import FileWatcher
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.kernel import DefaultKernelFactory
 from jupyverse_api.kernels import Kernels, KernelsConfig
@@ -35,6 +36,7 @@ class KernelsModule(Module):
             else None
         )
         default_kernel_factory = await self.get(DefaultKernelFactory)
+        file_watcher = await self.get(FileWatcher)  # type: ignore[type-abstract]
 
         self.kernels = _Kernels(
             app,
@@ -44,6 +46,7 @@ class KernelsModule(Module):
             yjs,
             lifespan,
             default_kernel_factory,
+            file_watcher,
         )
         self.put(self.kernels, Kernels, teardown_callback=self.kernels.stop)
 
