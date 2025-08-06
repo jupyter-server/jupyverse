@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_yjs"
-version = "0.10.4"
+version = "0.10.5"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.9"
@@ -29,10 +29,6 @@ text = "BSD 3-Clause License"
 
 [project.urls]
 Homepage = "https://jupyter.org"
-
-[tool.hatch.build.targets.wheel]
-ignore-vcs = true
-packages = ["src/zmq_anyio"]
 
 [project.entry-points]
 "fps.modules"       = {yjs = "fps_yjs.main:YjsModule"}
