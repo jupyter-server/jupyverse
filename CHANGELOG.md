@@ -1,6 +1,6 @@
 # Version history
 
-## 0.10.10
+## 0.10.11
 
 - Add `FileWatcher` API.
 - Add `fps-file-watcher`, which uses `watchfiles`.
