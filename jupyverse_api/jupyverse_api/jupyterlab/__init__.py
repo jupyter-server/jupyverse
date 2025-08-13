@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from jupyverse_api import Config, Router
@@ -16,23 +16,33 @@ class JupyterLab(Router, ABC):
         router = APIRouter()
 
         @router.get("/lab")
+        @router.get("/doc")
         async def get_lab(
             user: User = Depends(auth.current_user()),
         ):
             return await self.get_lab(user)
 
-        @router.get("/lab/tree/{path:path}")
+        @router.get("/{mode}/tree/{path:path}")
         async def load_workspace(
             path,
+            mode,
         ):
-            return await self.load_workspace(path)
+            if mode not in {"lab", "doc"}:
+                raise HTTPException(status_code=404, detail="Not found")
+            return await self.load_workspace(path, mode)
+            
 
         @router.get("/lab/api/workspaces/{name}")
+        @router.get("/doc/api/workspaces/{name}")
         async def get_workspace_data(user: User = Depends(auth.current_user())):
             return await self.get_workspace_data(user)
 
         @router.put(
             "/lab/api/workspaces/{name}",
+            status_code=204,
+        )
+        @router.put(
+            "/doc/api/workspaces/{name}",
             status_code=204,
         )
         async def set_workspace(
@@ -43,6 +53,7 @@ class JupyterLab(Router, ABC):
             return await self.set_workspace(request, user, user_update)
 
         @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
+        @router.get("/doc/workspaces/{name}", response_class=HTMLResponse)
         async def get_workspace(
             name,
             user: User = Depends(auth.current_user()),
