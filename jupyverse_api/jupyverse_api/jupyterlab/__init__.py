@@ -30,7 +30,7 @@ class JupyterLab(Router, ABC):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
             return await self.load_workspace(path, mode)
-            
+
 
         @router.get("/lab/api/workspaces/{name}")
         @router.get("/doc/api/workspaces/{name}")
