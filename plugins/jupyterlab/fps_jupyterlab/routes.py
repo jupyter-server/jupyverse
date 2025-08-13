@@ -110,7 +110,16 @@ class _JupyterLab(JupyterLab):
             self.frontend_config.base_url,
         )
 
-    def get_index(self, workspace, collaborative, server_side_execution, dev_mode, base_url="/", tree_path = None, mode = "lab"):
+    def get_index(
+        self,
+        workspace,
+        collaborative,
+        server_side_execution,
+        dev_mode,
+        base_url="/",
+        tree_path=None,
+        mode="lab",
+    ):
         for path in self.static_lab_dir.glob("main.*.js"):
             main_id = path.name.split(".")[1]
             break
