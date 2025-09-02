@@ -52,6 +52,7 @@ class KernelServer:
         self,
         default_kernel_factory: DefaultKernelFactory,
         kernelspec_path: str = "",
+        kernelenv_path: str = "",
         kernel_cwd: str = "",
         connection_file: str = "",
         write_connection_file: bool = True,
@@ -60,6 +61,7 @@ class KernelServer:
         self.default_kernel_factory = default_kernel_factory
         self.capture_kernel_output = capture_kernel_output
         self.kernelspec_path = kernelspec_path
+        self.kernelenv_path = kernelenv_path
         self.kernel_cwd = kernel_cwd
         self.connection_file = connection_file
         self.write_connection_file = write_connection_file
@@ -109,6 +111,7 @@ class KernelServer:
                     self.kernel = self.default_kernel_factory(
                         write_connection_file=self.write_connection_file,
                         kernelspec_path=self.kernelspec_path,
+                        kernelenv_path=self.kernelenv_path,
                         connection_file=self.connection_file,
                         kernel_cwd=self.kernel_cwd,
                         capture_output=self.capture_kernel_output,
@@ -116,6 +119,7 @@ class KernelServer:
                 else:
                     self.kernel = kernel_factory(
                         kernelspec_path=self.kernelspec_path,
+                        kernelenv_path=self.kernelenv_path,
                         connection_file=self.connection_file,
                         kernel_cwd=self.kernel_cwd,
                         capture_output=self.capture_kernel_output,

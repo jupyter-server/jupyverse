@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import signal
 import subprocess
 import sys
@@ -9,8 +10,9 @@ from dataclasses import dataclass
 from typing import cast
 
 import anyio
-from anyio import TASK_STATUS_IGNORED, create_task_group, open_process
+from anyio import TASK_STATUS_IGNORED, create_task_group, open_file, open_process, run_process
 from anyio.abc import TaskStatus
+from anyio.streams.text import TextReceiveStream
 
 from jupyverse_api.kernel import Kernel
 
@@ -32,6 +34,7 @@ class KernelSubprocess(Kernel):
     kernel_cwd: str | None
     capture_output: bool
     connection_cfg: cfg_t | None = None
+    kernelenv_path: str = ""
 
     def __post_init__(self):
         super().__init__()
@@ -45,6 +48,8 @@ class KernelSubprocess(Kernel):
                 raise RuntimeError("No connection_cfg")
         self.key = cast(str, self.connection_cfg["key"])
         self.wait_for_ready = True
+        self._process = None
+        self._pid = None
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with (
@@ -64,15 +69,12 @@ class KernelSubprocess(Kernel):
             self._from_iopub_receive_stream,
             create_task_group() as self.task_group,
         ):
-            with open(self.kernelspec_path) as f:
-                kernelspec = json.load(f)
-            cmd = [s.format(connection_file=self.connection_file) for s in kernelspec["argv"]]
-            if cmd and cmd[0] in {
-                "python",
-                f"python{sys.version_info[0]}",
-                "python" + ".".join(map(str, sys.version_info[:2])),
-            }:
-                cmd[0] = sys.executable
+            async with await open_file(self.kernelspec_path) as f:
+                contents = await f.read()
+            kernelspec = json.loads(contents)
+            launch_kernel_cmd = [
+                s.format(connection_file=self.connection_file) for s in kernelspec["argv"]
+            ]
             if self.capture_output:
                 stdout = subprocess.DEVNULL
                 stderr = subprocess.STDOUT
@@ -80,7 +82,34 @@ class KernelSubprocess(Kernel):
                 stdout = None
                 stderr = None
             kernel_cwd = self.kernel_cwd if self.kernel_cwd else None
-            self._process = await open_process(cmd, stdout=stdout, stderr=stderr, cwd=kernel_cwd)
+            kernelenv = ""
+            if self.kernelenv_path:
+                path = anyio.Path(self.kernelenv_path)
+                if await path.is_file():
+                    kernelenv = await path.read_text()
+            if kernelenv:
+                import yaml
+                env_name = yaml.load(kernelenv, Loader=yaml.CLoader)["name"]
+                cmd = f"micromamba create -f {self.kernelenv_path} --yes"
+                result = await run_process(cmd)
+                if result.returncode == 0:
+                    cmd = """bash -c 'eval "$(micromamba shell hook --shell bash)";""" + \
+                        f"micromamba activate {env_name};" + \
+                        " ".join(launch_kernel_cmd) + "' & echo $!"
+                    process = await open_process(cmd)
+                    async for text in TextReceiveStream(process.stdout):
+                        self._pid = int(text)
+                        break
+            else:
+                if launch_kernel_cmd and launch_kernel_cmd[0] in {
+                    "python",
+                    f"python{sys.version_info[0]}",
+                    "python" + ".".join(map(str, sys.version_info[:2])),
+                }:
+                    launch_kernel_cmd[0] = sys.executable
+                self._process = await open_process(
+                    launch_kernel_cmd, stdout=stdout, stderr=stderr, cwd=kernel_cwd
+                )
 
             assert self.connection_cfg is not None
             identity = uuid.uuid4().hex.encode("ascii")
@@ -108,14 +137,17 @@ class KernelSubprocess(Kernel):
             self.started.set()
 
     async def stop(self) -> None:
-        try:
-            self._process.terminate()
-        except ProcessLookupError:
-            pass
-        await self._process.wait()
-        if self.write_connection_file:
-            path = anyio.Path(self.connection_file)
-            await path.unlink(missing_ok=True)
+        if self._process:
+            try:
+                self._process.terminate()
+            except ProcessLookupError:
+                pass
+            await self._process.wait()
+            if self.write_connection_file:
+                path = anyio.Path(self.connection_file)
+                await path.unlink(missing_ok=True)
+        else:
+            os.kill(self._pid, signal.SIGTERM)
 
         await self.shell_channel.stop()
         await self.stdin_channel.stop()
@@ -124,7 +156,10 @@ class KernelSubprocess(Kernel):
         self.task_group.cancel_scope.cancel()
 
     async def interrupt(self) -> None:
-        self._process.send_signal(signal.SIGINT)
+        if self._process:
+            self._process.send_signal(signal.SIGINT)
+        else:
+            os.kill(self._pid, signal.SIGINT)
 
     async def forward_messages_to_shell(self) -> None:
         async for msg in self._to_shell_receive_stream:
