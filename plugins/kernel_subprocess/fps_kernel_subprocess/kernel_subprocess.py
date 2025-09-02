@@ -97,6 +97,7 @@ class KernelSubprocess(Kernel):
                         f"micromamba activate {env_name};" + \
                         " ".join(launch_kernel_cmd) + "' & echo $!"
                     process = await open_process(cmd)
+                    assert process.stdout is not None
                     async for text in TextReceiveStream(process.stdout):
                         self._pid = int(text)
                         break
