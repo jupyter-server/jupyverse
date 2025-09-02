@@ -52,8 +52,8 @@ class JupyterLab(Router, ABC):
         ):
             return await self.set_workspace(request, user, user_update)
 
-        @router.get("/lab/workspaces/{name}", response_class=HTMLResponse)
-        @router.get("/doc/workspaces/{name}", response_class=HTMLResponse)
+        @router.get("/lab/workspaces/{name:path}", response_class=HTMLResponse)
+        @router.get("/doc/workspaces/{name:path}", response_class=HTMLResponse)
         async def get_workspace(
             name,
             user: User = Depends(auth.current_user()),
