@@ -88,7 +88,7 @@ class KernelSubprocess(Kernel):
                 if await path.is_file():
                     kernelenv = await path.read_text()
             if kernelenv:
-                import yaml
+                import yaml  # type: ignore[import-untyped]
                 env_name = yaml.load(kernelenv, Loader=yaml.CLoader)["name"]
                 cmd = f"micromamba create -f {self.kernelenv_path} --yes"
                 result = await run_process(cmd)
