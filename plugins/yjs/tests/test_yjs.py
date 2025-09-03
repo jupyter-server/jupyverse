@@ -13,7 +13,12 @@ from jupyverse_api.yjs.models import CreateDocumentSession
 
 @pytest.mark.anyio
 async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
-    if anyio_backend_name == "trio" and sys.version_info >= (3, 13) and sys.version_info < (3, 14) and sys.platform == "darwin":
+    if (
+        anyio_backend_name == "trio" and
+        sys.version_info >= (3, 13) and
+        sys.version_info < (3, 14) and
+        sys.platform == "darwin"
+    ):
         pytest.skip("Timeout")
 
     config = {
