@@ -56,8 +56,19 @@ class JupyterLab(Router, ABC):
         ):
             return await self.set_workspace(request, user, user_update)
 
-        @router.get("/{mode}/workspaces/{name}/tree/{path:path}", response_class=HTMLResponse)
+        @router.get("/{mode}/workspaces/{name}", response_class=HTMLResponse)
         async def get_workspace(
+            mode,
+            name,
+            user: User = Depends(auth.current_user()),
+        ):
+            if mode not in {"lab", "doc"}:
+                raise HTTPException(status_code=404, detail="Not found")
+
+            return await self.get_workspace(mode, name, "", user)
+
+        @router.get("/{mode}/workspaces/{name}/tree/{path:path}", response_class=HTMLResponse)
+        async def get_workspace_with_tree(
             mode,
             name,
             path,
