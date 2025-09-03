@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.14
+
+- Fix document duplication with out-of-band changes.
+
 ## 0.10.13
 
 - Support separate kernel environment.
