@@ -89,6 +89,7 @@ pre-install-commands = [
   "pip install -e ./plugins/auth_jupyterhub",
   "pip install -e ./plugins/jupyterlab",
   "pip install -e ./plugins/notebook",
+  "pip install pyyaml",
 ]
 features = ["test"]
 
