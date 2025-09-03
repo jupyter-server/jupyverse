@@ -261,7 +261,7 @@ class RoomManager:
                         # update the document when file changes
                         if file_id not in self.watchers:
                             self.watchers[file_id] = create_task(
-                                self.watch_file(file_format, file_id, document),
+                                self.watch_file(file_format, file_id, document, room),
                                 self.task_group,
                             )
 
@@ -317,7 +317,13 @@ class RoomManager:
             document.path = file_path
         return file_path
 
-    async def watch_file(self, file_format: str, file_id: str, document: YBaseDoc) -> None:
+    async def watch_file(
+        self,
+        file_format: str,
+        file_id: str,
+        document: YBaseDoc,
+        room: YRoom,
+    ) -> None:
         file_path = await self.get_file_path(file_id, document)
         assert file_path is not None
         logger.info("Watching file", path=file_path)
@@ -332,11 +338,17 @@ class RoomManager:
                 self.file_id.unwatch(file_path, watcher)
                 file_path = new_file_path
                 # break
-            await self.maybe_load_file(file_format, file_path, file_id)
+            await self.maybe_load_file(file_format, file_path, file_id, room)
         if file_id in self.watchers:
             del self.watchers[file_id]
 
-    async def maybe_load_file(self, file_format: str, file_path: str, file_id: str) -> None:
+    async def maybe_load_file(
+        self,
+        file_format: str,
+        file_path: str,
+        file_id: str,
+        room: YRoom,
+    ) -> None:
         model = await self.contents.read_content(file_path, False)
         # do nothing if the file was saved by us
         assert model.last_modified is not None
@@ -347,6 +359,7 @@ class RoomManager:
             documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
             for document in documents:
                 document.source = model.content
+                await room.ystore.encode_state_as_update(room.ydoc)
             self.last_modified[file_id] = to_datetime(model.last_modified)
 
     def on_document_change(
