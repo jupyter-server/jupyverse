@@ -100,6 +100,8 @@ class _JupyterLab(JupyterLab):
     async def get_workspace(
         self,
         name,
+        path,
+        mode,
         user: User,
     ):
         return self.get_index(
@@ -108,6 +110,8 @@ class _JupyterLab(JupyterLab):
             self.jupyterlab_config.server_side_execution,
             self.jupyterlab_config.dev_mode,
             self.frontend_config.base_url,
+            tree_path=path,
+            mode=mode,
         )
 
     def get_index(
