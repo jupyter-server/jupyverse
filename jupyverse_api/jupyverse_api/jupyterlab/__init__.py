@@ -25,7 +25,7 @@ class JupyterLab(Router, ABC):
         async def get_doc(
             user: User = Depends(auth.current_user()),
         ):
-            return await self.get_lab("doc",user)
+            return await self.get_lab("doc", user)
 
         @router.get("/{mode}/tree/{path:path}")
         async def load_workspace(
@@ -35,7 +35,6 @@ class JupyterLab(Router, ABC):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
             return await self.load_workspace(mode, path)
-
 
         @router.get("/lab/api/workspaces/{name}")
         @router.get("/doc/api/workspaces/{name}")
