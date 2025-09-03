@@ -256,6 +256,7 @@ class RoomManager:
                                 file_type,
                                 file_format,
                                 document,
+                                room,
                             )
                         )
                         # update the document when file changes
@@ -364,7 +365,14 @@ class RoomManager:
             self.last_modified[file_id] = to_datetime(model.last_modified)
 
     def on_document_change(
-        self, file_id: str, file_type: str, file_format: str, document: YBaseDoc, target, event
+        self,
+        file_id: str,
+        file_type: str,
+        file_format: str,
+        document: YBaseDoc,
+        room: YRoom,
+        target,
+        event,
     ) -> None:
         if target == "state" and "dirty" in event.keys:
             dirty = event.keys["dirty"]["newValue"]
@@ -375,17 +383,22 @@ class RoomManager:
         # e.g. a new cell added to a notebook
         document.unobserve()
         document.observe(
-            partial(self.on_document_change, file_id, file_type, file_format, document)
+            partial(self.on_document_change, file_id, file_type, file_format, document, room)
         )
         if file_id in self.savers:
             self.savers[file_id].cancel(raise_exception=False)
         self.savers[file_id] = create_task(
-            self.maybe_save_document(file_id, file_type, file_format, document),
+            self.maybe_save_document(file_id, file_type, file_format, document, room),
             self.task_group,
         )
 
     async def maybe_save_document(
-        self, file_id: str, file_type: str, file_format: str, document: YBaseDoc
+        self,
+        file_id: str,
+        file_type: str,
+        file_format: str,
+        document: YBaseDoc,
+        room: YRoom,
     ) -> None:
         # save after configured delay to prevent too frequent saving
         await sleep(self.config.document_save_delay)
@@ -400,6 +413,8 @@ class RoomManager:
         if self.last_modified[file_id] < to_datetime(model.last_modified):
             # file changed on disk, let's revert
             document.source = model.content
+            assert room.ystore is not None
+            await room.ystore.encode_state_as_update(room.ydoc)
             self.last_modified[file_id] = to_datetime(model.last_modified)
             return
         if model.content != document.source:
