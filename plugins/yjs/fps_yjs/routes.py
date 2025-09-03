@@ -359,6 +359,7 @@ class RoomManager:
             documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
             for document in documents:
                 document.source = model.content
+                assert room.ystore is not None
                 await room.ystore.encode_state_as_update(room.ydoc)
             self.last_modified[file_id] = to_datetime(model.last_modified)
 
