@@ -223,6 +223,7 @@ class _Kernels(Kernels):
                 kernel_cwd = kernel_cwd.parent
             kernel_server = KernelServer(
                 kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
+                kernelenv_path=self.kernels_config.kernelenv_path,
                 kernel_cwd=str(kernel_cwd),
                 default_kernel_factory=self.default_kernel_factory,
             )
