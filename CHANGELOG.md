@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.15
+
+- Fix JupyterLab loading with document URL.
+
 ## 0.10.14
 
 - Fix document duplication with out-of-band changes.

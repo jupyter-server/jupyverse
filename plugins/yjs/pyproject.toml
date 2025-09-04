@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_yjs"
-version = "0.11.0"
+version = "0.11.1"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.9"
 dependencies = [
     "importlib_metadata >=3.6; python_version<'3.10'",
     "pycrdt >=0.9.0,<0.13.0",
-    "jupyverse-api >=0.11.0,<0.12.0",
+    "jupyverse-api >=0.12.0,<0.13.0",
     "sqlite-anyio >=0.2.0,<0.3.0",
     "jupyter_ydoc>3.0.1,<4.0.0",
     "anyioutils >=0.7.4",
