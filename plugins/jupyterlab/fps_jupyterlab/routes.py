@@ -53,6 +53,7 @@ class _JupyterLab(JupyterLab):
 
     async def get_lab(
         self,
+        mode,
         user: User,
     ):
         return HTMLResponse(
@@ -62,11 +63,13 @@ class _JupyterLab(JupyterLab):
                 self.jupyterlab_config.server_side_execution,
                 self.jupyterlab_config.dev_mode,
                 self.frontend_config.base_url,
+                mode=mode,
             )
         )
 
     async def load_workspace(
         self,
+        mode,
         path,
     ):
         return HTMLResponse(
@@ -76,6 +79,8 @@ class _JupyterLab(JupyterLab):
                 self.jupyterlab_config.server_side_execution,
                 self.jupyterlab_config.dev_mode,
                 self.frontend_config.base_url,
+                tree_path=path,
+                mode=mode,
             )
         )
 
@@ -96,7 +101,9 @@ class _JupyterLab(JupyterLab):
 
     async def get_workspace(
         self,
+        mode,
         name,
+        path,
         user: User,
     ):
         return self.get_index(
@@ -105,9 +112,20 @@ class _JupyterLab(JupyterLab):
             self.jupyterlab_config.server_side_execution,
             self.jupyterlab_config.dev_mode,
             self.frontend_config.base_url,
+            tree_path=path,
+            mode=mode,
         )
 
-    def get_index(self, workspace, collaborative, server_side_execution, dev_mode, base_url="/"):
+    def get_index(
+        self,
+        workspace,
+        collaborative,
+        server_side_execution,
+        dev_mode,
+        base_url="/",
+        tree_path=None,
+        mode="lab",
+    ):
         for path in self.static_lab_dir.glob("main.*.js"):
             main_id = path.name.split(".")[1]
             break
@@ -147,7 +165,7 @@ class _JupyterLab(JupyterLab):
             "licensesUrl": "/lab/api/licenses",
             "listingsUrl": "/lab/api/listings",
             "mathjaxConfig": "TeX-AMS-MML_HTMLorMML-full,Safe",
-            "mode": "multiple-document",
+            "mode": "multiple-document" if mode == "lab" else "single-document",
             "notebookVersion": "[1, 9, 0]",
             "quitButton": True,
             "settingsUrl": "/lab/api/settings",
@@ -160,7 +178,7 @@ class _JupyterLab(JupyterLab):
             "themesUrl": "/lab/api/themes",
             "token": "4e2804532de366abc81e32ab0c6bf68a73716fafbdbb2098",
             "translationsApiUrl": "/lab/api/translations",
-            "treePath": "",
+            "treePath": "" if tree_path is None else tree_path,
             "workspace": workspace,
             "treeUrl": "/lab/tree",
             "workspacesApiUrl": "/lab/api/workspaces",
