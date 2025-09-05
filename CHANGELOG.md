@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.16
+
+- Fix `fps-auth-fief` entry points.
+
 ## 0.10.15
 
 - Fix JupyterLab loading with document URL.
