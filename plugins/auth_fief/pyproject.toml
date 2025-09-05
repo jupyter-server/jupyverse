@@ -27,15 +27,6 @@ text = "BSD 3-Clause License"
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[tool.check-manifest]
-ignore = [ ".*",]
-
-[tool.jupyter-releaser]
-skip = [ "check-links",]
-
 [project.entry-points]
-"fps.components"       = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
-"jupyverse.components" = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
-
-[tool.hatch.version]
-path = "fps_auth_fief/__init__.py"
+"fps.modules"       = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
+"jupyverse.modules" = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
