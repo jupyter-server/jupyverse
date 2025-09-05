@@ -9,6 +9,7 @@ from .routes import auth_factory
 
 class AuthFiefModule(Module):
     def __init__(self, name: str, **kwargs):
+        super().__init__(name)
         self.config = _AuthFiefConfig(**kwargs)
 
     async def prepare(self) -> None:

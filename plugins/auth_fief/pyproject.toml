@@ -7,7 +7,7 @@ name = "fps_auth_fief"
 version = "0.9.2"
 description = "An FPS plugin for the authentication API, using Fief"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "fief-client[fastapi]",
     "jupyverse-api >=0.12.0,<0.13.0",
@@ -27,15 +27,6 @@ text = "BSD 3-Clause License"
 [project.urls]
 Homepage = "https://jupyter.org"
 
-[tool.check-manifest]
-ignore = [ ".*",]
-
-[tool.jupyter-releaser]
-skip = [ "check-links",]
-
 [project.entry-points]
-"fps.components"       = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
-"jupyverse.components" = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
-
-[tool.hatch.version]
-path = "fps_auth_fief/__init__.py"
+"fps.modules"       = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
+"jupyverse.modules" = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
