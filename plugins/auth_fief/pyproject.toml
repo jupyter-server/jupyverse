@@ -34,8 +34,8 @@ ignore = [ ".*",]
 skip = [ "check-links",]
 
 [project.entry-points]
-"fps.components"       = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
-"jupyverse.components" = {auth_fief = "fps_auth_fief.main:AuthFiefComponent"}
+"fps.modules"       = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
+"jupyverse.modules" = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
 
 [tool.hatch.version]
 path = "fps_auth_fief/__init__.py"
