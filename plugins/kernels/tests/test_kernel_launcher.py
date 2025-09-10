@@ -6,7 +6,6 @@ from fps import get_root_module
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 async def test_kernel_launcher():
     config = {
         "jupyverse": {
@@ -19,11 +18,10 @@ async def test_kernel_launcher():
                     "type": "app",
                 },
                 "auth": {
-                    "type": "auth",
-                    "config": {
-                        "test": True,
-                        "mode": "noauth",
-                    },
+                    "type": "noauth",
+                },
+                "environments": {
+                    "type": "environments",
                 },
                 "kernel_subprocess": {
                     "type": "kernel_subprocess",
@@ -41,7 +39,9 @@ async def test_kernel_launcher():
         }
     }
 
-    async with get_root_module(config) as root_module:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as root_module:
         app = root_module.app
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:

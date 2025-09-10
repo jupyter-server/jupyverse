@@ -251,4 +251,3 @@ class KernelsConfig(Config):
         default=None,
     )
     require_yjs: bool = False
-    kernelenv_path: str = ""

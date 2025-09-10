@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "hatchling",]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -9,8 +9,10 @@ description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"
 dependencies = [
-    "fps[click,fastapi,anycorn] >=0.5.1,<0.6.0",
+    "fps[click,fastapi,anycorn] >=0.5.2,<0.6.0",
     "fps-contents >=0.10.2,<0.11.0",
+    "fps-environments >=0.1.0,<0.2.0",
+    "fps-environment-micromamba >=0.1.0,<0.2.0",
     "fps-file-id >=0.3.3,<0.4.0",
     "fps-file-watcher >=0.1.2,<0.2.0",
     "fps-kernel-subprocess >=0.1.4,<0.2.0",
@@ -61,7 +63,7 @@ test = [
     "ypywidgets-textual >=0.5.0,<0.6.0",
     "trio",
 ]
-docs = [ "mkdocs", "mkdocs-material" ]
+docs = ["mkdocs", "mkdocs-material"]
 
 [tool.hatch.envs.dev]
 # TODO: if/when hatch gets support for defining editable dependencies, the
@@ -70,6 +72,8 @@ docs = [ "mkdocs", "mkdocs-material" ]
 pre-install-commands = [
   "pip install -e ./jupyverse_api",
   "pip install -e ./plugins/contents",
+  "pip install -e ./plugins/environments",
+  "pip install -e ./plugins/environment_micromamba",
   "pip install -e ./plugins/file_id",
   "pip install -e ./plugins/file_watcher",
   "pip install -e ./plugins/file_watcher_poll",
@@ -89,7 +93,6 @@ pre-install-commands = [
   "pip install -e ./plugins/auth_jupyterhub",
   "pip install -e ./plugins/jupyterlab",
   "pip install -e ./plugins/notebook",
-  "pip install pyyaml",
 ]
 features = ["test"]
 
@@ -102,6 +105,8 @@ lint = [
 typecheck = """mypy \
 ./jupyverse_api \
 ./plugins/contents \
+./plugins/environments \
+./plugins/environment_micromamba \
 ./plugins/file_id \
 ./plugins/file_watcher \
 ./plugins/file_watcher_poll \
@@ -130,9 +135,6 @@ features = ["docs"]
 build = "mkdocs build --clean --strict"
 serve = "mkdocs serve --dev-addr localhost:8000"
 
-[tool.check-manifest]
-ignore = [ ".*",]
-
 [tool.ruff.lint]
 select = [
   # pycodestyle
@@ -153,9 +155,6 @@ select = [
 line-length = 100
 exclude = ["binder"]
 
-[tool.hatch.version]
-path = "jupyverse/__init__.py"
-
 [tool.uv.workspace]
 members = ["plugins/*", "jupyverse_api"]
 
@@ -165,6 +164,8 @@ fps-auth = { workspace = true }
 fps-auth-fief = { workspace = true }
 fps-auth-jupyterhub = { workspace = true }
 fps-contents = { workspace = true }
+fps-environments = { workspace = true }
+fps-environment-micromamba = { workspace = true }
 fps-file-id = { workspace = true }
 fps-file-watcher = { workspace = true }
 fps-file-watcher-poll = { workspace = true }

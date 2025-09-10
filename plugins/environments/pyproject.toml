@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fps_environments"
+version = "0.1.0"
+description = "An FPS plugin for the environments API"
+keywords = ["jupyter", "server", "fastapi", "plugins"]
+requires-python = ">=3.9"
+dependencies = [
+    "jupyverse-api >=0.12.0,<0.13.0",
+]
+
+[[project.authors]]
+name = "Jupyter Development Team"
+email = "jupyter@googlegroups.com"
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+text = "BSD 3-Clause License"
+
+[project.urls]
+Homepage = "https://jupyter.org"
+
+[project.entry-points]
+"fps.modules"       = {environments = "fps_environments.main:EnvironmentsModule"}
+"jupyverse.modules" = {environments = "fps_environments.main:EnvironmentsModule"}

@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from typing import cast
 
 import anyio
-from anyio import TASK_STATUS_IGNORED, create_task_group, open_file, open_process, run_process
+from anyio import TASK_STATUS_IGNORED, create_task_group, open_file, open_process, to_thread
 from anyio.abc import TaskStatus
-from anyio.streams.text import TextReceiveStream
 
+from jupyverse_api.environments import Environments
 from jupyverse_api.kernel import Kernel
 
 from .connect import (
@@ -33,8 +33,9 @@ class KernelSubprocess(Kernel):
     connection_file: str
     kernel_cwd: str | None
     capture_output: bool
+    environments: Environments
     connection_cfg: cfg_t | None = None
-    kernelenv_path: str = ""
+    environment_id: str = ""
 
     def __post_init__(self):
         super().__init__()
@@ -82,25 +83,9 @@ class KernelSubprocess(Kernel):
                 stdout = None
                 stderr = None
             kernel_cwd = self.kernel_cwd if self.kernel_cwd else None
-            kernelenv = ""
-            if self.kernelenv_path:
-                path = anyio.Path(self.kernelenv_path)
-                if await path.is_file():
-                    kernelenv = await path.read_text()
-            if kernelenv:
-                import yaml  # type: ignore[import-untyped]
-                env_name = yaml.load(kernelenv, Loader=yaml.CLoader)["name"]
-                cmd = f"micromamba create -f {self.kernelenv_path} --yes"
-                result = await run_process(cmd)
-                if result.returncode == 0:
-                    cmd = """bash -c 'eval "$(micromamba shell hook --shell bash)";""" + \
-                        f"micromamba activate {env_name};" + \
-                        " ".join(launch_kernel_cmd) + "' & echo $!"
-                    process = await open_process(cmd)
-                    assert process.stdout is not None
-                    async for text in TextReceiveStream(process.stdout):
-                        self._pid = int(text)
-                        break
+            if self.environment_id:
+                cmd = " ".join(launch_kernel_cmd)
+                self._pid = await self.environments.run_in_environment(self.environment_id, cmd)
             else:
                 if launch_kernel_cmd and launch_kernel_cmd[0] in {
                     "python",
@@ -148,7 +133,14 @@ class KernelSubprocess(Kernel):
                 path = anyio.Path(self.connection_file)
                 await path.unlink(missing_ok=True)
         else:
-            os.kill(self._pid, signal.SIGTERM)
+            try:
+                os.kill(self._pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                await to_thread.run_sync(os.waitpid, self._pid, 0)
+            except ChildProcessError:
+                pass
 
         await self.shell_channel.stop()
         await self.stdin_channel.stop()
