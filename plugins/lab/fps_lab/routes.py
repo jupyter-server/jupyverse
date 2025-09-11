@@ -207,7 +207,7 @@ class _Lab(Lab):
                 continue
             extension = package["jupyterlab"]["_build"]
             extension["name"] = package["name"]
-            extension["description"] = package["description"]
+            extension["description"] = package.get("description", "")
             federated_extensions.append(extension)
 
             for ext in package["jupyterlab"].get("disabledExtensions", []):
