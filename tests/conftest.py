@@ -41,6 +41,7 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
         "--set", f"auth.clear_users={str(clear_users).lower()}",
         "--set", "kernels.require_yjs=true",
         "--port", str(unused_tcp_port),
+        "--timeout", "10",
     ]
     p = subprocess.Popen(command_list)
     url = f"http://127.0.0.1:{unused_tcp_port}"

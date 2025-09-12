@@ -17,9 +17,9 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse",
-            "config": {
-                "start_server": False,
-            },
+        "config": {
+            "start_server": False,
+        },
         "modules": {
             "app": {
                 "type": "app",
@@ -90,7 +90,9 @@ async def test_kernel_messages(auth_mode, capfd):
             }
         },
     )
-    async with get_root_module(config) as root_module:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as root_module:
         app = root_module.app
         transport = ASGIWebSocketTransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:

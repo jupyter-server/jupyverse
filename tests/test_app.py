@@ -28,7 +28,9 @@ async def test_mount_path(mount_path, unused_tcp_port):
         }
     }
 
-    async with AsyncClient() as http, get_root_module(config) as jupyverse_module:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with AsyncClient() as http, root_module as jupyverse_module:
         app = await jupyverse_module.get(App)
         router = APIRouter()
 
