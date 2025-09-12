@@ -84,6 +84,18 @@ else:
     type=str,
     help="Disable plugin.",
 )
+@click.option(
+    "--timeout",
+    type=float,
+    default=None,
+    help="The timeout for starting Jupyverse.",
+)
+@click.option(
+    "--stop-timeout",
+    type=float,
+    default=1,
+    help="The timeout for stopping Jupyverse.",
+)
 def main(
     debug: bool = False,
     show_config: bool = False,
@@ -96,6 +108,8 @@ def main(
     disable: tuple[str, ...] = (),
     allow_origin: tuple[str, ...] = (),
     query_param: tuple[str, ...] = (),
+    timeout: float | None = None,
+    stop_timeout: float = 1,
 ) -> None:
     query_params_dict = {}
     for qp in query_param:
@@ -118,6 +132,8 @@ def main(
         show_config=show_config,
         help_all=help_all,
         backend=backend,
+        timeout=timeout,
+        stop_timeout=stop_timeout,
     )  # type: ignore
 
 

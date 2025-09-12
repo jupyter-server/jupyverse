@@ -69,7 +69,9 @@ async def test_settings(auth_mode, unused_tcp_port):
             }
         },
     )
-    async with get_root_module(config), AsyncClient() as http:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module, AsyncClient() as http:
         # get previous theme
         response = await http.get(
             f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"

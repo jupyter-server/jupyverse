@@ -41,7 +41,9 @@ async def test_kernel_launcher():
         }
     }
 
-    async with get_root_module(config) as root_module:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as root_module:
         app = root_module.app
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:

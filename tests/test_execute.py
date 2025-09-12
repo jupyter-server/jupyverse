@@ -109,7 +109,9 @@ async def test_execute(auth_mode, unused_tcp_port):
             }
         },
     )
-    async with get_root_module(config), AsyncClient() as http:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module, AsyncClient() as http:
         ws_url = url.replace("http", "ws", 1)
         name = "notebook1.ipynb"
         path = (Path("tests") / "data" / name).as_posix()
