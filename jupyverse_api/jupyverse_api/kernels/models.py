@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class KernelInfo(BaseModel):
     name: str | None = None
     id: str | None = None
+    environment_id: str | None = None
 
 
 class CreateSession(BaseModel):

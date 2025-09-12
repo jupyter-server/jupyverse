@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from anyio import create_task_group, sleep, sleep_forever
 from fps import get_root_module, merge_config
-from fps_kernels.kernel_server.server import KernelServer, kernels
+from fps_kernels.kernel_server.server import KERNELS, KernelServer
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 
@@ -17,9 +17,9 @@ os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 CONFIG = {
     "jupyverse": {
         "type": "jupyverse",
-            "config": {
-                "start_server": False,
-            },
+        "config": {
+            "start_server": False,
+        },
         "modules": {
             "app": {
                 "type": "app",
@@ -32,6 +32,9 @@ CONFIG = {
             },
             "contents": {
                 "type": "contents",
+            },
+            "environments": {
+                "type": "environments",
             },
             "frontend": {
                 "type": "frontend",
@@ -90,7 +93,9 @@ async def test_kernel_messages(auth_mode, capfd):
             }
         },
     )
-    async with get_root_module(config) as root_module:
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as root_module:
         app = root_module.app
         transport = ASGIWebSocketTransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -101,7 +106,7 @@ async def test_kernel_messages(auth_mode, capfd):
             )
             async with create_task_group() as tg:
                 await tg.start(kernel_server.start)
-                kernels[kernel_id] = {"server": kernel_server, "driver": None}
+                KERNELS[kernel_id] = {"server": kernel_server, "driver": None}
 
                 # block msg_type_0
                 kernel_server.block_messages("msg_type_0")

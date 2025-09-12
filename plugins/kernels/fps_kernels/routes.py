@@ -27,9 +27,9 @@ from .kernel_driver.driver import KernelDriver
 from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs
 from .kernel_driver.paths import jupyter_runtime_dir
 from .kernel_server.server import (
+    KERNELS,
     AcceptedWebSocket,
     KernelServer,
-    kernels,
 )
 
 logger = structlog.get_logger()
@@ -58,7 +58,7 @@ class _Kernels(Kernels):
         self.kernelspecs: dict = {}
         self.kernel_id_to_connection_file: dict[str, str] = {}
         self.sessions: dict[str, Session] = {}
-        self.kernels = kernels
+        self.kernels = KERNELS
         self._app = app
         self.stop_event = Event()
         self._stop_lock = Lock()
@@ -89,6 +89,7 @@ class _Kernels(Kernels):
                     tg.start_soon(kernel["server"].stop)
                     if kernel["driver"] is not None:
                         tg.start_soon(kernel["driver"].stop)
+            self.kernels.clear()
             self.stop_event.set()
             self.task_group.cancel_scope.cancel()
 
@@ -103,12 +104,12 @@ class _Kernels(Kernels):
         started = self._app.started_time.isoformat().replace("+00:00", "Z")
         last_activity = self._app.last_activity.isoformat().replace("+00:00", "Z")
         connections = sum(
-            [kernel["server"].connections for kernel in kernels.values() if "server" in kernel]
+            [kernel["server"].connections for kernel in self.kernels.values() if "server" in kernel]
         )
         return {
             "started": started,
             "last_activity": last_activity,
-            "kernels": len(kernels),
+            "kernels": len(self.kernels),
             "connections": connections,
         }
 
@@ -149,7 +150,7 @@ class _Kernels(Kernels):
         user: User,
     ):
         results = []
-        for kernel_id, kernel in kernels.items():
+        for kernel_id, kernel in self.kernels.items():
             if kernel["server"]:
                 connections = kernel["server"].connections
                 last_activity = kernel["server"].last_activity["date"]
@@ -175,9 +176,9 @@ class _Kernels(Kernels):
         user: User,
     ):
         kernel_id = self.sessions[session_id].kernel.id
-        kernel_server = kernels[kernel_id]["server"]
+        kernel_server = self.kernels[kernel_id]["server"]
         await kernel_server.stop()
-        del kernels[kernel_id]
+        del self.kernels[kernel_id]
         if kernel_id in self.kernel_id_to_connection_file:
             del self.kernel_id_to_connection_file[kernel_id]
         del self.sessions[session_id]
@@ -200,8 +201,8 @@ class _Kernels(Kernels):
     ):
         for session in self.sessions.values():
             kernel_id = session.kernel.id
-            if kernel_id in kernels:
-                kernel_server = kernels[kernel_id]["server"]
+            if kernel_id in self.kernels:
+                kernel_server = self.kernels[kernel_id]["server"]
                 session.kernel.last_activity = kernel_server.last_activity["date"]
                 session.kernel.execution_state = kernel_server.last_activity["execution_state"]
         return list(self.sessions.values())
@@ -214,6 +215,7 @@ class _Kernels(Kernels):
         create_session = CreateSession(**(await request.json()))
         kernel_id = create_session.kernel.id
         kernel_name = create_session.kernel.name
+        environment_id = create_session.kernel.environment_id
         if kernel_name is not None:
             # launch a new ("internal") kernel
             kernel_cwd = Path(create_session.path).parent
@@ -223,30 +225,33 @@ class _Kernels(Kernels):
                 kernel_cwd = kernel_cwd.parent
             kernel_server = KernelServer(
                 kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
-                kernelenv_path=self.kernels_config.kernelenv_path,
+                environment_id=environment_id,
                 kernel_cwd=str(kernel_cwd),
                 default_kernel_factory=self.default_kernel_factory,
             )
             kernel_id = str(uuid.uuid4())
-            kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
-            logger.info("Starting kernel", kernel_id=kernel_id, kernel_name=kernel_name)
+            self.kernels[kernel_id] = {"name": kernel_name, "server": kernel_server, "driver": None}
+            kwargs = dict(kernel_id=kernel_id, kernel_name=kernel_name)
+            if environment_id:
+                kwargs["environment_id"] = environment_id
+            logger.info("Starting kernel", **kwargs)
             kernel_factory = self.kernel_factories.get(kernel_name)
             await self.task_group.start(partial(kernel_server.start, kernel_factory=kernel_factory))
         elif kernel_id is not None:
             # external or already running kernel
-            if kernel_id not in kernels:
+            if kernel_id not in self.kernels:
                 raise HTTPException(status_code=404, detail=f"Kernel ID not found: {kernel_id}")
-            kernel_name = kernels[kernel_id]["name"]
-            if kernels[kernel_id]["server"] is None:
+            kernel_name = self.kernels[kernel_id]["name"]
+            if self.kernels[kernel_id]["server"] is None:
                 kernel_server = KernelServer(
                     connection_file=self.kernel_id_to_connection_file[kernel_id],
                     write_connection_file=False,
                     default_kernel_factory=self.default_kernel_factory,
                 )
-                kernels[kernel_id]["server"] = kernel_server
+                self.kernels[kernel_id]["server"] = kernel_server
                 await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
             else:
-                kernel_server = kernels[kernel_id]["server"]
+                kernel_server = self.kernels[kernel_id]["server"]
         else:
             return
         session_id = str(uuid.uuid4())
@@ -275,8 +280,8 @@ class _Kernels(Kernels):
         kernel_id,
         user: User,
     ):
-        if kernel_id in kernels:
-            kernel = kernels[kernel_id]
+        if kernel_id in self.kernels:
+            kernel = self.kernels[kernel_id]
             await kernel["server"].interrupt()
             result = {
                 "id": kernel_id,
@@ -292,8 +297,8 @@ class _Kernels(Kernels):
         kernel_id,
         user: User,
     ):
-        if kernel_id in kernels:
-            kernel = kernels[kernel_id]
+        if kernel_id in self.kernels:
+            kernel = self.kernels[kernel_id]
             await self.task_group.start(kernel["server"].restart)
             result = {
                 "id": kernel_id,
@@ -315,7 +320,7 @@ class _Kernels(Kernels):
 
         r = await request.json()
         execution = Execution(**r)
-        if kernel_id in kernels:
+        if kernel_id in self.kernels:
             ynotebook = self.yjs.get_document(execution.document_id)
             ycells = [ycell for ycell in ynotebook.ycells if ycell["id"] == execution.cell_id]
             if not ycells:
@@ -324,7 +329,7 @@ class _Kernels(Kernels):
             ycell = ycells[0]
             del ycell["outputs"][:]
 
-            kernel = kernels[kernel_id]
+            kernel = self.kernels[kernel_id]
             if not kernel["driver"]:
                 kernel["driver"] = driver = KernelDriver(
                     default_kernel_factory=self.default_kernel_factory,
@@ -343,8 +348,8 @@ class _Kernels(Kernels):
         kernel_id,
         user: User,
     ):
-        if kernel_id in kernels:
-            kernel = kernels[kernel_id]
+        if kernel_id in self.kernels:
+            kernel = self.kernels[kernel_id]
             result = {
                 "id": kernel_id,
                 "name": kernel["name"],
@@ -360,9 +365,9 @@ class _Kernels(Kernels):
         user: User,
     ):
         logger.info("Stopping kernel", kernel_id=kernel_id)
-        if kernel_id in kernels:
-            await kernels[kernel_id]["server"].stop()
-            del kernels[kernel_id]
+        if kernel_id in self.kernels:
+            await self.kernels[kernel_id]["server"].stop()
+            del self.kernels[kernel_id]
         for session_id in [k for k, v in self.sessions.items() if v.kernel.id == kernel_id]:
             del self.sessions[session_id]
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
@@ -383,8 +388,8 @@ class _Kernels(Kernels):
         )
         await websocket.accept(subprotocol=subprotocol)
         accepted_websocket = AcceptedWebSocket(websocket, subprotocol)
-        if kernel_id in kernels:
-            kernel_server = kernels[kernel_id]["server"]
+        if kernel_id in self.kernels:
+            kernel_server = self.kernels[kernel_id]["server"]
             if kernel_server is None:
                 # this is an external kernel
                 # kernel is already launched, just start a kernel server
@@ -393,7 +398,7 @@ class _Kernels(Kernels):
                     write_connection_file=False,
                 )
                 await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
-                kernels[kernel_id]["server"] = kernel_server
+                self.kernels[kernel_id]["server"] = kernel_server
             await kernel_server.serve(accepted_websocket, session_id, permissions)
 
     async def watch_connection_files(self, path: Path) -> None:
@@ -430,7 +435,7 @@ class _Kernels(Kernels):
                             list(self.kernel_id_to_connection_file.values()).index(path)
                         ]
                         del self.kernel_id_to_connection_file[kernel_id]
-                        del kernels[kernel_id]
+                        del self.kernels[kernel_id]
                 elif change == Change.added:
                     try:
                         data = json.loads(Path(path).read_text())
@@ -441,7 +446,7 @@ class _Kernels(Kernels):
                     # looks like a kernel connection file
                     kernel_id = str(uuid.uuid4())
                     self.kernel_id_to_connection_file[kernel_id] = path
-                    kernels[kernel_id] = {
+                    self.kernels[kernel_id] = {
                         "name": data["kernel_name"],
                         "server": None,
                         "driver": None,

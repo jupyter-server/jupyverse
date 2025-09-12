@@ -32,9 +32,7 @@ class UnhandledWebSocketEvent(ASGIWebSocketTransportError):
 
 
 class ASGIWebSocketAsyncNetworkStream(AsyncNetworkStream):
-    def __init__(
-        self, app: ASGIApp, scope: Scope, task_group: anyio.abc.TaskGroup
-    ) -> None:
+    def __init__(self, app: ASGIApp, scope: Scope, task_group: anyio.abc.TaskGroup) -> None:
         self.app = app
         self.scope = scope
         self._task_group = task_group
@@ -71,9 +69,7 @@ class ASGIWebSocketAsyncNetworkStream(AsyncNetworkStream):
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> typing.Union[bool, None]:
         return await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def read(
-        self, max_bytes: int, timeout: typing.Optional[float] = None
-    ) -> bytes:
+    async def read(self, max_bytes: int, timeout: typing.Optional[float] = None) -> bytes:
         message: Message = await self.receive(timeout=timeout)
         type = message["type"]
 
@@ -93,9 +89,7 @@ class ASGIWebSocketAsyncNetworkStream(AsyncNetworkStream):
 
         return self.connection.send(event)
 
-    async def write(
-        self, buffer: bytes, timeout: typing.Optional[float] = None
-    ) -> None:
+    async def write(self, buffer: bytes, timeout: typing.Optional[float] = None) -> None:
         self.connection.receive_data(buffer)
         for event in self.connection.events():
             if isinstance(event, wsproto.events.Request):
@@ -169,9 +163,7 @@ class ASGIWebSocketTransport(ASGITransport):
 
     async def __aenter__(self) -> "ASGIWebSocketTransport":
         async with contextlib.AsyncExitStack() as stack:
-            self._task_group = await stack.enter_async_context(
-                anyio.create_task_group()
-            )
+            self._task_group = await stack.enter_async_context(anyio.create_task_group())
             self.exit_stack = stack.pop_all()
 
         return self
@@ -191,9 +183,7 @@ class ASGIWebSocketTransport(ASGITransport):
 
         if scheme in {"ws", "wss"} or headers.get("upgrade") == "websocket":
             subprotocols: list[str] = []
-            if (
-                subprotocols_header := headers.get("sec-websocket-protocol")
-            ) is not None:
+            if (subprotocols_header := headers.get("sec-websocket-protocol")) is not None:
                 subprotocols = subprotocols_header.split(",")
 
             scope = {

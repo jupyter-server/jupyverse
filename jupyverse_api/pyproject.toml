@@ -29,7 +29,7 @@ dependencies = [
   "importlib_metadata >=3.6; python_version<'3.10'",
   "pydantic >=2,<3",
   "fastapi >=0.95.0,<1",
-  "fps >=0.5.1,<0.6.0",
+  "fps >=0.5.2,<0.6.0",
   "anyio >=3.6.2,<5",
   "anyioutils >=0.7.4",
 ]

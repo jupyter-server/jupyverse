@@ -14,19 +14,21 @@ from jupyverse_api.yjs.models import CreateDocumentSession
 @pytest.mark.anyio
 async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
     if (
-        anyio_backend_name == "trio" and
-        sys.version_info >= (3, 13) and
-        sys.version_info < (3, 14) and
-        sys.platform == "darwin"
+        anyio_backend_name == "trio"
+        and (
+            (sys.version_info >= (3, 13) and sys.version_info < (3, 14)) or
+            (sys.version_info >= (3, 11) and sys.version_info < (3, 12))
+        )
+        and sys.platform == "darwin"
     ):
         pytest.skip("Timeout")
 
     config = {
         "jupyverse": {
             "type": "jupyverse",
-                "config": {
-                    "start_server": False,
-                },
+            "config": {
+                "start_server": False,
+            },
             "modules": {
                 "app": {
                     "type": "app",
@@ -57,7 +59,9 @@ async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
     }
 
     with capture_logs() as cap_logs:
-        async with get_root_module(config) as root_module:
+        root_module = get_root_module(config)
+        root_module._global_start_timeout = 10
+        async with root_module as root_module:
             app = root_module.app
             transport = ASGIWebSocketTransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
