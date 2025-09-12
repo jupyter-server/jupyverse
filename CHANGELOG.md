@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.17
+
+- Fix for JupyterLab extension package with no description.
+
 ## 0.10.16
 
 - Fix `fps-auth-fief` entry points.
