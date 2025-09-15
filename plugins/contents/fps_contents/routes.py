@@ -11,8 +11,6 @@ from typing import cast
 
 from anyio import CancelScope, open_file
 from fastapi import HTTPException, Response
-from starlette.requests import Request
-
 from jupyverse_api.auth import User
 from jupyverse_api.contents import Contents
 from jupyverse_api.contents.models import (
@@ -22,6 +20,7 @@ from jupyverse_api.contents.models import (
     RenameContent,
     SaveContent,
 )
+from starlette.requests import Request
 
 
 class _Contents(Contents):

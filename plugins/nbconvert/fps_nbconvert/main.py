@@ -1,5 +1,4 @@
 from fps import Module
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.nbconvert import Nbconvert

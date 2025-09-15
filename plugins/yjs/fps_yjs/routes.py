@@ -17,8 +17,6 @@ from fastapi import (
 )
 from jupyter_ydoc import ydocs as YDOCS
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from pycrdt import Doc, YMessageType, YSyncMessageType
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.contents import Contents
@@ -26,6 +24,7 @@ from jupyverse_api.file_id import FileId
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs, YjsConfig
 from jupyverse_api.yjs.models import CreateDocumentSession
+from pycrdt import Doc, YMessageType, YSyncMessageType
 
 from .ywebsocket.websocket import Websocket
 from .ywebsocket.websocket_server import WebsocketServer, YRoom

@@ -11,13 +11,12 @@ import json5  # type: ignore
 from babel import Locale
 from fastapi import Response, status
 from fastapi.responses import FileResponse, RedirectResponse
-from starlette.requests import Request
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLabConfig
 from jupyverse_api.lab import Lab
+from starlette.requests import Request
 
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points

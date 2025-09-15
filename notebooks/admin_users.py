@@ -4,11 +4,10 @@ from fps_auth.backends import get_backend
 from fps_auth.config import _AuthConfig
 from fps_auth.db import get_db
 from fps_auth.models import UserCreate, UserUpdate
+from jupyverse_api.frontend import FrontendConfig
 from rich.console import Console
 from rich.table import Table
 from sqlalchemy import select
-
-from jupyverse_api.frontend import FrontendConfig
 
 auth_config = _AuthConfig()
 frontend_config = FrontendConfig()

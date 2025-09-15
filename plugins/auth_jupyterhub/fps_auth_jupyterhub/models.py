@@ -1,6 +1,5 @@
-from pydantic import ConfigDict
-
 from jupyverse_api.auth import User
+from pydantic import ConfigDict
 
 
 class JupyterHubUser(User):

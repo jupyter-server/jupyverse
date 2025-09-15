@@ -3,7 +3,6 @@ from uuid import uuid4
 import pyjs  # type: ignore[import-not-found]
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskStatus
-
 from jupyverse_api.kernel import Kernel as Kernel
 
 

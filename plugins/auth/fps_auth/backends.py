@@ -21,10 +21,9 @@ from fastapi_users.authentication.strategy.base import Strategy
 from fastapi_users.authentication.transport.base import Transport
 from fastapi_users.db import SQLAlchemyUserDatabase
 from httpx_oauth.clients.github import GitHubOAuth2
-from starlette.requests import Request
-
 from jupyverse_api.exceptions import RedirectException
 from jupyverse_api.frontend import FrontendConfig
+from starlette.requests import Request
 
 from .config import _AuthConfig
 from .db import User

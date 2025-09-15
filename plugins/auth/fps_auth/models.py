@@ -1,7 +1,6 @@
 import uuid
 
 from fastapi_users import schemas
-
 from jupyverse_api.auth import User
 
 

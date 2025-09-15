@@ -1,6 +1,5 @@
 from anyio import create_task_group
 from fps import Module
-
 from jupyverse_api.file_id import FileId
 from jupyverse_api.file_watcher import FileWatcher
 

@@ -13,7 +13,6 @@ import anyio
 from anyio import TASK_STATUS_IGNORED, create_task_group, open_file, open_process, run_process
 from anyio.abc import TaskStatus
 from anyio.streams.text import TextReceiveStream
-
 from jupyverse_api.kernel import Kernel
 
 from .connect import (

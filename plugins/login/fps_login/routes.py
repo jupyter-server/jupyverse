@@ -5,7 +5,6 @@ from typing import cast
 
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import AuthConfig
 from jupyverse_api.login import Login
