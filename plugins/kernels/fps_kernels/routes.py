@@ -11,8 +11,6 @@ from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group
 from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
-from starlette.requests import Request
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.file_watcher import Change, FileWatcher
@@ -22,6 +20,7 @@ from jupyverse_api.kernels import Kernels, KernelsConfig
 from jupyverse_api.kernels.models import CreateSession, Execution, Kernel, Notebook, Session
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs
+from starlette.requests import Request
 
 from .kernel_driver.driver import KernelDriver
 from .kernel_driver.kernelspec import find_kernelspec, kernelspec_dirs

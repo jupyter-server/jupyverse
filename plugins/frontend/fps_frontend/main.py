@@ -1,5 +1,4 @@
 from fps import Module
-
 from jupyverse_api.frontend import FrontendConfig
 
 

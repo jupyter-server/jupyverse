@@ -6,9 +6,8 @@ from pathlib import Path
 
 import structlog
 from anyio import Event
-from watchfiles import awatch
-
 from jupyverse_api.file_watcher import FileChange, FileWatcher
+from watchfiles import awatch
 
 logger = structlog.get_logger()
 watchfiles_logger = logging.getLogger("watchfiles")

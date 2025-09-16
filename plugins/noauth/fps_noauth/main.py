@@ -1,5 +1,4 @@
 from fps import Module
-
 from jupyverse_api.auth import Auth
 
 from .backends import _NoAuth

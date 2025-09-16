@@ -2,9 +2,8 @@ import pytest
 from fps import get_root_module, merge_config
 from httpx import AsyncClient
 from httpx_ws import WebSocketUpgradeError, aconnect_ws
-from utils import authenticate_client
-
 from jupyverse_api.auth import AuthConfig
+from utils import authenticate_client
 
 CONFIG = {
     "jupyverse": {

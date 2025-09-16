@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import WebSocket
-
 from jupyverse_api.auth import Auth, User
 
 USER = User()

@@ -1,6 +1,5 @@
-from pydantic import Field
-
 from jupyverse_api.auth import AuthConfig
+from pydantic import Field
 
 
 class AuthJupyterHubConfig(AuthConfig):

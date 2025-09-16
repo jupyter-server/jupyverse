@@ -5,7 +5,6 @@ from pathlib import Path
 
 from anychange import awatch
 from anyio import Event
-
 from jupyverse_api.file_watcher import FileChange, FileWatcher
 
 

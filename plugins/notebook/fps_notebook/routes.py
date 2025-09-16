@@ -3,7 +3,6 @@ from pathlib import Path
 
 import notebook_frontend
 from fastapi.staticfiles import StaticFiles
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from jupyverse_api.frontend import FrontendConfig

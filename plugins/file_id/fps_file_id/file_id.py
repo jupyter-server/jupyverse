@@ -5,10 +5,9 @@ from uuid import uuid4
 
 import structlog
 from anyio import Event, Lock, Path
-from sqlite_anyio import connect
-
 from jupyverse_api.file_id import FileId
 from jupyverse_api.file_watcher import Change, FileWatcher
+from sqlite_anyio import connect
 
 logger = structlog.get_logger()
 

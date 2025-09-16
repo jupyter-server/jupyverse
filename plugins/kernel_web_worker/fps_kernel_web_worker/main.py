@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from fps import Module
-
 from jupyverse_api.kernel import DefaultKernelFactory
 
 from .kernel_web_worker import KernelWebWorker

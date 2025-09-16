@@ -1,7 +1,6 @@
 import structlog
 from fastapi_users.exceptions import UserAlreadyExists
 from fps import Module
-
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, AuthConfig
 from jupyverse_api.frontend import FrontendConfig
