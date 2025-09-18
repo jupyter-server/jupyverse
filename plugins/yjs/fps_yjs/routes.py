@@ -303,7 +303,10 @@ class RoomManager:
             # skip = True
             pass
         elif byte == YMessageType.SYNC:
-            if not can_write and msg[0] == YSyncMessageType.SYNC_UPDATE:
+            if not can_write and msg[0] in {
+                YSyncMessageType.SYNC_UPDATE,
+                YSyncMessageType.SYNC_STEP2,
+            }:
                 skip = True
         else:
             skip = True
