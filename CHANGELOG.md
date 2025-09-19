@@ -1,6 +1,6 @@
 # Version history
 
-## 0.10.19
+## 0.10.20
 
 - Filter `SYNC_STEP2` messages from read-only clients.
 
