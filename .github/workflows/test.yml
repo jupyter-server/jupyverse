@@ -26,7 +26,7 @@ jobs:
     - name: Install hatch
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install hatch
+        python3 -m pip install hatch "click <8.3.0"
     - name: Check types
       run: |
         hatch run dev:typecheck
@@ -52,7 +52,7 @@ jobs:
     - name: Install hatch
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install hatch
+        python3 -m pip install hatch "click <8.3.0"
 
     - name: Run tests
       run: hatch run dev:test
