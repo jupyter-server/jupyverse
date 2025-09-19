@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fps_auth_fief"
-version = "0.9.3"
+version = "0.9.4"
 description = "An FPS plugin for the authentication API, using Fief"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.9"
