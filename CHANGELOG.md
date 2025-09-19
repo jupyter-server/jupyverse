@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.18
+
+- Filter `SYNC_STEP2` messages from read-only clients.
+
 ## 0.10.17
 
 - Fix for JupyterLab extension package with no description.
