@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.21
+
+- Add shutdown API.
+
 ## 0.10.20
 
 - Filter `SYNC_STEP2` messages from read-only clients.
