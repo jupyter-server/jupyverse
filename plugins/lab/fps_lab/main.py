@@ -1,3 +1,4 @@
+from anyio import Event, create_task_group
 from fps import Module
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
@@ -15,5 +16,10 @@ class LabModule(Module):
         frontend_config = await self.get(FrontendConfig)
         jupyterlab_config = await self.get(JupyterLabConfig)
 
-        lab = _Lab(app, auth, frontend_config, jupyterlab_config)
-        self.put(lab, Lab)
+        async with create_task_group() as tg:
+            lab = _Lab(app, auth, frontend_config, jupyterlab_config, self.exit_app, tg)
+            self.put(lab, Lab)
+            self.done()
+            shutdown = Event()
+            self.add_teardown_callback(shutdown.set)
+            await shutdown.wait()

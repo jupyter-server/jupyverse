@@ -6,8 +6,11 @@ import sys
 from glob import glob
 from http import HTTPStatus
 from pathlib import Path
+from typing import Callable
 
 import json5  # type: ignore
+from anyio import sleep
+from anyio.abc import TaskGroup
 from babel import Locale
 from fastapi import Response, status
 from fastapi.responses import FileResponse, RedirectResponse
@@ -30,12 +33,16 @@ class _Lab(Lab):
         app: App,
         auth: Auth,
         frontend_config: FrontendConfig,
-        jupyterlab_config: JupyterLabConfig | None = None,
+        jupyterlab_config: JupyterLabConfig | None,
+        exit_app: Callable[[], None],
+        task_group: TaskGroup,
     ) -> None:
         super().__init__(app, auth, jupyterlab_config)
 
         self.frontend_config = frontend_config
         self.locale = "en"
+        self._exit_app = exit_app
+        self._task_group = task_group
 
     async def get_root(
         self,
@@ -157,6 +164,13 @@ class _Lab(Lab):
         settings[f"{name0}:{name1}"] = await request.json()
         await user_update({"settings": json.dumps(settings)})
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
+
+    async def shutdown(self, user: User):
+        async def exit_app():
+            await sleep(0.1)
+            self._exit_app()
+
+        self._task_group.start_soon(exit_app)
 
     async def get_settings(self, user: User):
         if user:

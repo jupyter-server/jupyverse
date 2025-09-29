@@ -120,6 +120,10 @@ class Lab(Router, ABC):
         async def get_settings(user: User = Depends(auth.current_user())):
             return await self.get_settings(user)
 
+        @router.post("/api/shutdown", status_code=200)
+        async def shutdown(user: User = Depends(auth.current_user())):
+            return await self.shutdown(user)
+
         self.include_router(router)
 
     @abstractmethod
@@ -181,3 +185,6 @@ class Lab(Router, ABC):
 
     @abstractmethod
     async def get_settings(self, user: User): ...
+
+    @abstractmethod
+    async def shutdown(self, user: User): ...
