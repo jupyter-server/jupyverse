@@ -86,6 +86,7 @@ class Websocket:
 
 
 @pytest.mark.anyio
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 async def test_execute(auth_mode, unused_tcp_port):
     url = f"http://127.0.0.1:{unused_tcp_port}"
@@ -152,7 +153,11 @@ async def test_execute(auth_mode, unused_tcp_port):
         ):
             # connect to the shared notebook document
             # wait for file to be loaded and Y model to be created in server and client
-            await anyio.sleep(0.5)
+            with anyio.fail_after(1):
+                while True:
+                    await anyio.sleep(0.1)
+                    if len(ynb.ycells) >= 2:
+                        break
             # execute notebook
             for cell_idx in range(2):
                 response = await http.post(

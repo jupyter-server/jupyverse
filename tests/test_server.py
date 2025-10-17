@@ -175,7 +175,11 @@ async def test_ywidgets(start_jupyverse):
     ):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
-        await anyio.sleep(0.5)
+        with anyio.fail_after(1):
+            while True:
+                await anyio.sleep(0.1)
+                if len(ynb.ycells) >= 2:
+                    break
         # execute notebook
         for cell_idx in range(2):
             response = requests.post(
@@ -215,10 +219,14 @@ async def connect_ywidget(url, guid):
         aconnect_ws(f"{url}/api/collaboration/room/ywidget:{guid}") as websocket,
         WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
     ):
-        await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()
         ywidget_doc["_attrs"] = attrs
         ywidget_doc["_model_name"] = model_name
+        with anyio.fail_after(1):
+            while True:
+                await anyio.sleep(0.1)
+                if len(attrs) > 0:
+                    break
         assert str(model_name) == "Switch"
         assert str(attrs) == '{"value":true}'
