@@ -4,11 +4,11 @@ import struct
 import tempfile
 import time
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import AsyncExitStack
 from inspect import isawaitable
 from pathlib import Path
-from typing import Callable, cast
+from typing import cast
 
 import anyio
 from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group

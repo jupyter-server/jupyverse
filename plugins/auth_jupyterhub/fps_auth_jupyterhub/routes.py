@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import partial
-from typing import Annotated, Any, Callable
+from typing import Annotated, Any
 
 from anyio import TASK_STATUS_IGNORED, Lock, create_task_group, sleep
 from anyio.abc import TaskStatus

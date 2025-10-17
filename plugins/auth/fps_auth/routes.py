@@ -3,8 +3,8 @@ from __future__ import annotations
 import contextlib
 import json
 import random
-from collections.abc import Awaitable
-from typing import Any, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from fastapi import APIRouter, Depends
 from jupyverse_api.app import App

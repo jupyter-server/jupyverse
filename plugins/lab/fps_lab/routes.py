@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 import os
-import sys
+from collections.abc import Callable
 from glob import glob
 from http import HTTPStatus
+from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Callable
 
 import json5  # type: ignore
 from anyio import sleep
@@ -20,11 +20,6 @@ from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLabConfig
 from jupyverse_api.lab import Lab
 from starlette.requests import Request
-
-if sys.version_info < (3, 10):
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
 
 
 class _Lab(Lab):
