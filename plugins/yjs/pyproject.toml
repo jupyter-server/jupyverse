@@ -9,7 +9,6 @@ description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.9"
 dependencies = [
-    "importlib_metadata >=3.6; python_version<'3.10'",
     "pycrdt >=0.9.0,<0.13.0",
     "jupyverse-api >=0.12.0,<0.13.0",
     "sqlite-anyio >=0.2.0,<0.3.0",

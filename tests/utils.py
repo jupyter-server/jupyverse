@@ -1,4 +1,3 @@
-from typing import Optional
 from uuid import uuid4
 
 from anyio import Lock
@@ -61,13 +60,13 @@ async def authenticate_client(http, port, permissions={}):
 
 
 def create_content(
-    content: Optional[list],
+    content: list | None,
     type: str,
-    size: Optional[int],
-    mimetype: Optional[str],
+    size: int | None,
+    mimetype: str | None,
     name: str,
     path: str,
-    format: Optional[str],
+    format: str | None,
 ) -> dict:
     return {
         "content": content,

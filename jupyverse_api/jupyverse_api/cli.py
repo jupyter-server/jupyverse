@@ -2,16 +2,11 @@ from __future__ import annotations
 
 import io
 import json
-import sys
+from importlib.metadata import entry_points
 from typing import Any
 
 import rich_click as click
 from fps.cli._cli import main as fps_main
-
-if sys.version_info < (3, 10):
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
 
 
 @click.command()  # type: ignore

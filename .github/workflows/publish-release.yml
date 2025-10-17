@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
       - run: |
           uv build --all-packages
@@ -30,7 +30,10 @@ jobs:
       id-token: write
     steps:
     - name: Retrieve packages
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
+      with:
+        name: dist
+        path: dist
     - name: Upload packages
       uses: pypa/gh-action-pypi-publish@release/v1
 
@@ -41,7 +44,7 @@ jobs:
       permissions:
         contents: write
       steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: changelog
         uses: agronholm/release-notes@v1
         with:

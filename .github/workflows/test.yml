@@ -18,41 +18,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+      uses: actions/checkout@v5
+    - uses: actions/setup-python@v6
       with:
-        python-version: '3.13'
+        python-version: '3.14'
         cache: 'pip'
     - name: Install hatch
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install hatch "click <8.3.0"
+        python -m pip install --upgrade pip
+        python -m pip install hatch
     - name: Check types
       run: |
         hatch run dev:typecheck
 
   test:
     name: Tests
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+        os: [ubuntu, macos, windows]
+        python-version: [ '3.10', '3.11', '3.12', '3.13', '3.14' ]
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
 
     - name: Install hatch
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install hatch "click <8.3.0"
+        python -m pip install --upgrade pip
+        python -m pip install hatch
 
     - name: Run tests
       run: hatch run dev:test
