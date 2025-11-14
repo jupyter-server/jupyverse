@@ -14,25 +14,45 @@ concurrency:
 
 jobs:
   types:
-    name: Types
+    name: Check types and lint
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v5
-    - uses: actions/setup-python@v6
-      with:
-        python-version: '3.14'
-        cache: 'pip'
-    - name: Install hatch
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install hatch
-    - name: Check types
-      run: |
-        hatch run dev:typecheck
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: "true"
+      - name: Check types
+        run: |
+          mypy \
+            ./jupyverse_api \
+            ./plugins/contents \
+            ./plugins/file_id \
+            ./plugins/file_watcher \
+            ./plugins/file_watcher_poll \
+            ./plugins/frontend \
+            ./plugins/kernel_subprocess \
+            ./plugins/kernel_web_worker \
+            ./plugins/kernels \
+            ./plugins/lab \
+            ./plugins/nbconvert \
+            ./plugins/terminals \
+            ./plugins/yjs \
+            ./plugins/resource_usage \
+            ./plugins/webdav \
+            ./plugins/noauth \
+            ./plugins/auth \
+            ./plugins/auth_fief \
+            ./plugins/auth_jupyterhub \
+            ./plugins/jupyterlab \
+            ./plugins/notebook
+      - name: Lint
+        run: |
+          ruff check src jupyverse_api notebooks plugins tests
+          ruff format --check src jupyverse_api notebooks plugins tests
 
   test:
-    name: Tests
+    name: Run tests
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
@@ -41,18 +61,14 @@ jobs:
         python-version: [ '3.10', '3.11', '3.12', '3.13', '3.14' ]
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v5
-
-    - uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-
-    - name: Install hatch
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install hatch
-
-    - name: Run tests
-      run: hatch run dev:test
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: "true"
+      - name: Install jupyverse and plugins
+        run: |
+          uv venv
+          uv pip install -e ".[]" --group test
+      - name: Run tests
+        run: pytest -v --timeout=60 --color=yes

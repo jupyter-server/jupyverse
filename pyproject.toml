@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "jupyverse"
@@ -22,20 +22,20 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-    "fps[click,fastapi,anycorn] >=0.5.2,<0.6.0",
-    "fps-contents >=0.10.2,<0.11.0",
-    "fps-file-id >=0.3.3,<0.4.0",
-    "fps-file-watcher >=0.1.2,<0.2.0",
-    "fps-kernel-subprocess >=0.1.4,<0.2.0",
-    "fps-kernels >=0.10.4,<0.11.0",
-    "fps-terminals >=0.9.2,<0.10.0",
-    "fps-nbconvert >=0.9.2,<0.10.0",
-    "fps-yjs >=0.11.2,<0.12.0",
-    "fps-lab >=0.9.5,<0.10.0",
-    "fps-frontend >=0.9.2,<0.10.0",
-    "jupyverse-api >=0.12.0,<0.13.0",
-    "rich-click >=1.6.1,<2",
-    "eval-type-backport; python_version<'3.10'",
+  "fps[click,fastapi,anycorn] >=0.5.2,<0.6.0",
+  "fps-contents >=0.10.2,<0.11.0",
+  "fps-file-id >=0.3.3,<0.4.0",
+  "fps-file-watcher >=0.1.2,<0.2.0",
+  "fps-kernel-subprocess >=0.1.4,<0.2.0",
+  "fps-kernels >=0.10.4,<0.11.0",
+  "fps-terminals >=0.9.2,<0.10.0",
+  "fps-nbconvert >=0.9.2,<0.10.0",
+  "fps-yjs >=0.11.2,<0.12.0",
+  "fps-lab >=0.9.5,<0.10.0",
+  "fps-frontend >=0.9.2,<0.10.0",
+  "jupyverse-api >=0.12.0,<0.13.0",
+  "rich-click >=1.6.1,<2",
+  "eval-type-backport; python_version<'3.10'",
 ]
 
 [[project.authors]]
@@ -59,89 +59,27 @@ auth = ["fps-auth >=0.9.2,<0.10.0", "fps-login >=0.9.2,<0.10.0"]
 auth-fief = ["fps-auth-fief >=0.9.3,<0.10.0"]
 auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.3,<0.10.0"]
 noauth = ["fps-noauth >=0.9.3,<0.10.0"]
+
+[dependency-groups]
 test = [
-    "ruff >=0.1.2",
-    "mypy",
-    "types-setuptools",
-    "pytest",
-    "pytest-timeout",
-    "pytest-env",
-    "httpx",
-    "httpx-ws >=0.4.1",
-    "requests",
-    "ipykernel",
-    "ypywidgets >=0.9.3,<0.10.0",
-    "ypywidgets-textual >=0.5.0,<0.6.0",
-    "trio",
+  "ruff >=0.1.2",
+  "mypy",
+  "types-setuptools",
+  "pytest",
+  "pytest-timeout",
+  "pytest-env",
+  "httpx",
+  "httpx-ws >=0.4.1",
+  "requests",
+  "ipykernel",
+  "ypywidgets >=0.9.3,<0.10.0",
+  "ypywidgets-textual >=0.5.0,<0.6.0",
+  "trio",
 ]
-docs = ["mkdocs", "mkdocs-material"]
-
-[tool.hatch.envs.dev]
-# TODO: if/when hatch gets support for defining editable dependencies, the
-# pre-install commands here and post-install commands in the matrix can be moved
-# to the dependencies section
-pre-install-commands = [
-  "pip install -e ./jupyverse_api",
-  "pip install -e ./plugins/contents",
-  "pip install -e ./plugins/file_id",
-  "pip install -e ./plugins/file_watcher",
-  "pip install -e ./plugins/file_watcher_poll",
-  "pip install -e ./plugins/frontend",
-  "pip install -e ./plugins/kernel_subprocess",
-  "pip install -e ./plugins/kernel_web_worker",
-  "pip install -e ./plugins/kernels",
-  "pip install -e ./plugins/lab",
-  "pip install -e ./plugins/nbconvert",
-  "pip install -e ./plugins/terminals",
-  "pip install -e ./plugins/yjs",
-  "pip install -e ./plugins/resource_usage",
-  "pip install -e ./plugins/webdav[test]",
-  "pip install -e ./plugins/noauth",
-  "pip install -e ./plugins/auth -e ./plugins/login",
-  "pip install -e ./plugins/auth_fief",
-  "pip install -e ./plugins/auth_jupyterhub",
-  "pip install -e ./plugins/jupyterlab",
-  "pip install -e ./plugins/notebook",
-  "pip install pyyaml",
+docs = [
+  "mkdocs",
+  "mkdocs-material",
 ]
-features = ["test"]
-
-[tool.hatch.envs.dev.scripts]
-test = "pytest -v --timeout=60 --color=yes"
-lint = [
-  "ruff format jupyverse jupyverse_api notebooks plugins tests",
-  "ruff check jupyverse jupyverse_api notebooks plugins tests --fix",
-]
-typecheck = """mypy \
-./jupyverse_api \
-./plugins/contents \
-./plugins/file_id \
-./plugins/file_watcher \
-./plugins/file_watcher_poll \
-./plugins/frontend \
-./plugins/kernel_subprocess \
-./plugins/kernel_web_worker \
-./plugins/kernels \
-./plugins/lab \
-./plugins/nbconvert \
-./plugins/terminals \
-./plugins/yjs \
-./plugins/resource_usage \
-./plugins/webdav \
-./plugins/noauth \
-./plugins/auth \
-./plugins/auth_fief \
-./plugins/auth_jupyterhub \
-./plugins/jupyterlab \
-./plugins/notebook
-"""
-
-[tool.hatch.envs.docs]
-features = ["docs"]
-
-[tool.hatch.envs.docs.scripts]
-build = "mkdocs build --clean --strict"
-serve = "mkdocs serve --dev-addr localhost:8000"
 
 [tool.ruff.lint]
 select = [
@@ -167,6 +105,7 @@ exclude = ["binder"]
 members = ["plugins/*", "jupyverse_api"]
 
 [tool.uv.sources]
+jupyverse = { workspace = true }
 jupyverse-api = { workspace = true }
 fps-auth = { workspace = true }
 fps-auth-fief = { workspace = true }
