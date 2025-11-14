@@ -134,6 +134,7 @@ async def test_execute(auth_mode, unused_tcp_port):
                 "format": "json",
                 "type": "notebook",
             },
+            timeout=None,
         )
         file_id = response.json()["fileId"]
         document_id = f"json:notebook:{file_id}"

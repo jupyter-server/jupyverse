@@ -48,8 +48,10 @@ class KernelWebWorker(Kernel):
 
             self.js_callable, self.js_py_object = pyjs.create_callable(callback)
             self.higher_order_function = pyjs.js.Function(
-                "callback", "action", "kernel_id",
-                "kernel_web_worker(action, kernel_id, 0, callback);"
+                "callback",
+                "action",
+                "kernel_id",
+                "kernel_web_worker(action, kernel_id, 0, callback);",
             )
             self.higher_order_function(self.js_callable, "start", self.kernel_id)
             await kernel_ready.wait()

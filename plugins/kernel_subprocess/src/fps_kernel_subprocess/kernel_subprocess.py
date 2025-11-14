@@ -88,13 +88,17 @@ class KernelSubprocess(Kernel):
                     kernelenv = await path.read_text()
             if kernelenv:
                 import yaml  # type: ignore[import-untyped]
+
                 env_name = yaml.load(kernelenv, Loader=yaml.CLoader)["name"]
                 cmd = f"micromamba create -f {self.kernelenv_path} --yes"
                 result = await run_process(cmd)
                 if result.returncode == 0:
-                    cmd = """bash -c 'eval "$(micromamba shell hook --shell bash)";""" + \
-                        f"micromamba activate {env_name};" + \
-                        " ".join(launch_kernel_cmd) + "' & echo $!"
+                    cmd = (
+                        """bash -c 'eval "$(micromamba shell hook --shell bash)";"""
+                        + f"micromamba activate {env_name};"
+                        + " ".join(launch_kernel_cmd)
+                        + "' & echo $!"
+                    )
                     process = await open_process(cmd)
                     assert process.stdout is not None
                     async for text in TextReceiveStream(process.stdout):
