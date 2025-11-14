@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_nbconvert"
-version = "0.9.3"
+version = "0.9.4"
 description = "An FPS plugin for the nbconvert API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_frontend"
-version = "0.9.3"
+version = "0.9.4"
 description = "An FPS plugin for the frontend related configuration"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"

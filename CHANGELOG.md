@@ -1,5 +1,10 @@
 # Version history
 
+## 0.10.22
+
+This release drops `hatch` for the build backend and the environment management,
+in favor of `uv`.
+
 ## 0.10.21
 
 - Add shutdown API.

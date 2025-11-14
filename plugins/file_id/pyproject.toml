@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_file_id"
-version = "0.3.4"
+version = "0.3.5"
 description = "An FPS plugin for the file ID API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
