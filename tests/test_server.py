@@ -102,28 +102,34 @@ async def test_rest_api(start_jupyverse):
                 ),
             )
         # wait for Y model to be updated
-        await anyio.sleep(0.5)
         # retrieve cells
-        cells = json.loads(str(ycells))
-        assert cells[0]["outputs"] == [
-            {
-                "data": {"text/plain": "3"},
-                "execution_count": 1,
-                "metadata": {},
-                "output_type": "execute_result",
-            }
-        ]
-        assert cells[1]["outputs"] == [
-            {"name": "stdout", "output_type": "stream", "text": "Hello World!\n"}
-        ]
-        assert cells[2]["outputs"] == [
-            {
-                "data": {"text/plain": "7"},
-                "execution_count": 3,
-                "metadata": {},
-                "output_type": "execute_result",
-            }
-        ]
+        with anyio.fail_after(1):
+            while True:
+                await anyio.sleep(0.1)
+                cells = json.loads(str(ycells))
+                if (
+                    cells[0]["outputs"]
+                    == [
+                        {
+                            "data": {"text/plain": "3"},
+                            "execution_count": 1,
+                            "metadata": {},
+                            "output_type": "execute_result",
+                        }
+                    ]
+                    and cells[1]["outputs"]
+                    == [{"name": "stdout", "output_type": "stream", "text": "Hello World!\n"}]
+                    and cells[2]["outputs"]
+                    == [
+                        {
+                            "data": {"text/plain": "7"},
+                            "execution_count": 3,
+                            "metadata": {},
+                            "output_type": "execute_result",
+                        }
+                    ]
+                ):
+                    break
 
 
 @pytest.mark.anyio
