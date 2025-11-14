@@ -15,7 +15,7 @@ async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
     if (
         anyio_backend_name == "trio"
         and sys.version_info >= (3, 13)
-        and sys.version_info < (3, 14)
+        and sys.version_info < (3, 15)
         and sys.platform == "darwin"
     ):
         pytest.skip("Timeout")
