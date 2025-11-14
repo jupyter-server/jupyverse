@@ -2,7 +2,7 @@ The single user mode is usually meant to run e.g. JupyterLab as a desktop applic
 
 Even though Jupyverse most often runs on a personal computer in this mode, it is not limited to this use case. For instance, if it runs on a network, it could be accessed by other people. It is thus important to limit access to the server, especially considering that Jupyter users can run potentially harmful code.
 
-This is why Jupyverse comes with built-in authentication. Please refer to the [auth plugins](../../plugins/auth) section for more details. The authentication mechanisms below make use of the [fps-auth](../../plugins/auth/#fps-auth) plugin.
+This is why Jupyverse comes with built-in authentication. Please refer to the [auth plugins](../plugins/auth.md) section for more details. The authentication mechanisms below make use of the [fps-auth](../plugins/auth.md#fps-auth) plugin.
 
 ## Token authentication
 
@@ -11,7 +11,7 @@ This is the default mode when launching Jupyverse, just enter in a terminal:
 jupyverse --open-browser
 # same as: jupyverse --set auth.mode=token --open-browser
 ```
-This should open a new window in a browser, and load JupyterLab or Jupyter Notebook, depending on the front-end you chose to install (see [Install](../../install)).
+This should open a new window in a browser, and load JupyterLab or Jupyter Notebook, depending on the front-end you chose to install (see [Install](../install.md)).
 
 If you look at the terminal, you should see among other things:
 ```

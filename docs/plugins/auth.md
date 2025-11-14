@@ -1,4 +1,4 @@
-The auth plugin has a special place because almost every other plugin depends on it for security reasons. It is possible to use any auth plugin as long as it follows a defined [API](./#api). Jupyverse comes with three auth plugins: [fps-noauth](./#fps-noauth), [fps-auth](./#fps-auth) and [fps-auth-fief](./#fps-auth-fief).
+The auth plugin has a special place because almost every other plugin depends on it for security reasons. It is possible to use any auth plugin as long as it follows a defined [API](#api). Jupyverse comes with three auth plugins: [fps-noauth](#fps-noauth), [fps-auth](#fps-auth) and [fps-auth-fief](#fps-auth-fief).
 
 ## API
 
