@@ -134,6 +134,7 @@ async def test_execute(auth_mode, unused_tcp_port):
                 "format": "json",
                 "type": "notebook",
             },
+            timeout=None,
         )
         file_id = response.json()["fileId"]
         document_id = f"json:notebook:{file_id}"
@@ -188,10 +189,12 @@ async def connect_ywidget(ws_url, guid):
         aconnect_ws(f"{ws_url}/api/collaboration/room/ywidget:{guid}") as websocket,
         WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
     ):
-        await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()
         ywidget_doc["_attrs"] = attrs
         ywidget_doc["_model_name"] = model_name
-        assert str(model_name) == "Switch"
-        assert str(attrs) == '{"value":true}'
+        with anyio.fail_after(3):
+            while True:
+                await anyio.sleep(0.1)
+                if str(model_name) == "Switch" and str(attrs) == '{"value":true}':
+                    break

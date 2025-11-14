@@ -46,7 +46,11 @@ class Kernel(ABC):
         )
 
     @abstractmethod
-    async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED,) -> None: ...
+    async def start(
+        self,
+        *,
+        task_status: TaskStatus[None] = TASK_STATUS_IGNORED,
+    ) -> None: ...
 
     @abstractmethod
     async def stop(self) -> None: ...

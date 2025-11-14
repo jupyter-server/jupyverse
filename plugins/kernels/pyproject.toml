@@ -1,20 +1,35 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "fps_kernels"
 version = "0.10.5"
 description = "An FPS plugin for the kernels API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.9"
-dependencies = [
-    "python-dateutil",
-    "types-python-dateutil",
-    "jupyverse-api >=0.12.0,<0.13.0",
-    "pycrdt >=0.10.3,<0.13.0",
-    "anyio",
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
 ]
+dependencies = [
+  "python-dateutil",
+  "types-python-dateutil",
+  "jupyverse-api >=0.12.0,<0.13.0",
+  "pycrdt >=0.10.3,<0.13.0",
+  "anyio",
+]
+license = "BSD-3-Clause"
+license-files = ["COPYING.md"]
 
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -24,17 +39,14 @@ email = "jupyter@googlegroups.com"
 file = "README.md"
 content-type = "text/markdown"
 
-[project.license]
-text = "BSD 3-Clause License"
-
 [project.urls]
 Homepage = "https://jupyter.org"
 
 [dependency-groups]
 test = [
-    "httpx",
+  "httpx",
 ]
 
 [project.entry-points]
-"fps.modules"       = {kernels = "fps_kernels.main:KernelsModule"}
+"fps.modules" = {kernels = "fps_kernels.main:KernelsModule"}
 "jupyverse.modules" = {kernels = "fps_kernels.main:KernelsModule"}

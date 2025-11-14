@@ -1,20 +1,36 @@
 [build-system]
-requires = [ "hatchling",]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "fps_yjs"
 version = "0.11.2"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
-requires-python = ">=3.9"
-dependencies = [
-    "pycrdt >=0.9.0,<0.13.0",
-    "jupyverse-api >=0.12.0,<0.13.0",
-    "sqlite-anyio >=0.2.0,<0.3.0",
-    "jupyter_ydoc>3.0.1,<4.0.0",
-    "anyioutils >=0.7.4",
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
 ]
+dependencies = [
+  "pycrdt >=0.9.0,<0.13.0",
+  "jupyverse-api >=0.12.0,<0.13.0",
+  "sqlite-anyio >=0.2.0,<0.3.0",
+  "jupyter_ydoc>3.0.1,<4.0.0",
+  "anyioutils >=0.7.4",
+]
+license = "BSD-3-Clause"
+license-files = ["COPYING.md"]
+
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -23,21 +39,9 @@ email = "jupyter@googlegroups.com"
 file = "README.md"
 content-type = "text/markdown"
 
-[project.license]
-text = "BSD 3-Clause License"
-
 [project.urls]
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules"       = {yjs = "fps_yjs.main:YjsModule"}
+"fps.modules" = {yjs = "fps_yjs.main:YjsModule"}
 "jupyverse.modules" = {yjs = "fps_yjs.main:YjsModule"}
-
-[project.entry-points.jupyverse_ydoc]
-blob = "fps_yjs.ydocs.yblob:YBlob"
-file = "fps_yjs.ydocs.yfile:YFile"
-unicode = "fps_yjs.ydocs.yunicode:YUnicode"
-notebook = "fps_yjs.ydocs.ynotebook:YNotebook"
-
-[tool.hatch.version]
-path = "fps_yjs/__init__.py"
