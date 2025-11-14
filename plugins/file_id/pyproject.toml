@@ -1,18 +1,34 @@
 [build-system]
-requires = [ "hatchling",]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "fps_file_id"
 version = "0.3.4"
 description = "An FPS plugin for the file ID API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.9"
-dependencies = [
-    "sqlite-anyio >=0.2.0,<0.3.0",
-    "anyio>=3.6.2,<5",
-    "jupyverse-api >=0.12.0,<0.13.0",
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
 ]
+dependencies = [
+  "sqlite-anyio >=0.2.0,<0.3.0",
+  "anyio>=3.6.2,<5",
+  "jupyverse-api >=0.12.0,<0.13.0",
+]
+license = "BSD-3-Clause"
+license-files = ["COPYING.md"]
+
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
@@ -21,12 +37,9 @@ email = "jupyter@googlegroups.com"
 file = "README.md"
 content-type = "text/markdown"
 
-[project.license]
-text = "BSD 3-Clause License"
-
 [project.urls]
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules"       = {file_id = "fps_file_id.main:FileIdModule"}
+"fps.modules" = {file_id = "fps_file_id.main:FileIdModule"}
 "jupyverse.modules" = {file_id = "fps_file_id.main:FileIdModule"}

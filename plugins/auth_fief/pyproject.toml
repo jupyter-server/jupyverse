@@ -1,17 +1,32 @@
 [build-system]
-requires = [ "hatchling",]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "fps_auth_fief"
 version = "0.9.4"
 description = "An FPS plugin for the authentication API, using Fief"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
-requires-python = ">=3.9"
-dependencies = [
-    "fief-client[fastapi]",
-    "jupyverse-api >=0.12.0,<0.13.0",
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
 ]
+dependencies = [
+  "fief-client[fastapi]",
+  "jupyverse-api >=0.12.0,<0.13.0",
+]
+license = "BSD-3-Clause"
+license-files = ["COPYING.md"]
 
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -21,12 +36,9 @@ email = "jupyter@googlegroups.com"
 file = "README.md"
 content-type = "text/markdown"
 
-[project.license]
-text = "BSD 3-Clause License"
-
 [project.urls]
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules"       = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
+"fps.modules" = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}
 "jupyverse.modules" = {auth_fief = "fps_auth_fief.main:AuthFiefModule"}

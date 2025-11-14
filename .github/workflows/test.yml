@@ -22,6 +22,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: "true"
+      - name: Install jupyverse and plugins
+        run: |
+          uv venv
+          uv pip install -e ".[jupyterlab,notebook,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker]" --group test
       - name: Check types
         run: |
           mypy \
@@ -69,6 +73,6 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv
-          uv pip install -e ".[]" --group test
+          uv pip install -e ".[jupyterlab,notebook,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker]" --group test
       - name: Run tests
         run: pytest -v --timeout=60 --color=yes
