@@ -87,7 +87,7 @@ class ASGIWebSocketAsyncNetworkStream(AsyncNetworkStream):
                 event = wsproto.events.TextMessage(data_str)
             data_bytes: bytes | None = message.get("bytes")
             if data_bytes is not None:
-                event = wsproto.events.BytesMessage(data_bytes)
+                event = wsproto.events.BytesMessage(bytearray(data_bytes))
         elif type == "websocket.close":
             event = wsproto.events.CloseConnection(message["code"], message["reason"])
 

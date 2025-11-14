@@ -60,6 +60,8 @@ auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.3,<0.10.0"]
 noauth = ["fps-noauth >=0.9.3,<0.10.0"]
 file-watcher-poll = ["fps-file-watcher-poll >=0.1.3,<0.2.0"]
 kernel-web-worker = ["fps-kernel-web-worker >=0.1.6,<0.2.0"]
+resource-usage = ["fps-resource-usage >=0.9.3,<0.10.0"]
+webdav = ["fps-webdav >=0.9.3,<0.10.0"]
 
 [dependency-groups]
 test = [

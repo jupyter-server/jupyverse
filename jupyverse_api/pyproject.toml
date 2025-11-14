@@ -1,29 +1,29 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "jupyverse_api"
 version = "0.12.2"
 description = "The public API for Jupyverse"
 readme = "README.md"
-requires-python = ">=3.9"
-keywords = [
-  "jupyverse", "api",
-]
-authors = [
-  { name = "Jupyter Development Team", email = "jupyter@googlegroups.com" },
-]
+requires-python = ">=3.10"
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
+]
+keywords = ["jupyverse", "api"]
+authors = [
+  { name = "Jupyter Development Team", email = "jupyter@googlegroups.com" },
 ]
 dependencies = [
   "pydantic >=2,<3",
@@ -32,9 +32,8 @@ dependencies = [
   "anyio >=3.6.2,<5",
   "anyioutils >=0.7.4",
 ]
-
-[project.license]
-text = "BSD 3-Clause License"
+license = "BSD-3-Clause"
+license-files = ["COPYING.md"]
 
 [project.urls]
 Source = "https://github.com/jupyter-server/jupyverse/jupyverse_api"
@@ -48,6 +47,3 @@ jupyverse = "jupyverse_api.main:JupyverseModule"
 
 [project.entry-points."jupyverse.modules"]
 app = "jupyverse_api.main:AppModule"
-
-[tool.hatch.version]
-path = "jupyverse_api/__init__.py"
