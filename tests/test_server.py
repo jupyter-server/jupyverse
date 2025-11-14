@@ -221,10 +221,12 @@ async def connect_ywidget(url, guid):
         aconnect_ws(f"{url}/api/collaboration/room/ywidget:{guid}") as websocket,
         WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
     ):
-        await anyio.sleep(0.5)
         attrs = Map()
         model_name = Text()
         ywidget_doc["_attrs"] = attrs
         ywidget_doc["_model_name"] = model_name
-        assert str(model_name) == "Switch"
-        assert str(attrs) == '{"value":true}'
+        with anyio.fail_after(2):
+            while True:
+                await anyio.sleep(0.1)
+                if str(model_name) == "Switch" and str(attrs) == '{"value":true}':
+                    break
