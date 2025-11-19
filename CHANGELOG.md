@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.23
+
+- Use `ASGIWebSocketTransport` from `httpx-ws`.
+
 ## 0.10.22
 
 This release drops `hatch` for the build backend and the environment management,
