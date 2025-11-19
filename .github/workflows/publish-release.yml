@@ -19,10 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
-      - run: uv build --all-packages
-      - run: |
+      - name: Build packages
+        run: uv build --all-packages
+      - name: Upload packages
+        run: |
           for filename in dist/*; do
-            uv publish "$filename"
+            uv publish "$filename" || continue
           done
 
   github-release:
