@@ -9,33 +9,18 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+rc[0-9]+"
 
 jobs:
-  build:
+  pypi-publish:
     runs-on: ubuntu-latest
+    environment:
+      name: release
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
-      - run: |
-          uv build --all-packages
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-  pypi-publish:
-    name: Upload release to PyPI
-    needs: build
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-    steps:
-    - name: Retrieve packages
-      uses: actions/download-artifact@v5
-      with:
-        name: dist
-        path: dist
-    - name: Upload packages
-      uses: pypa/gh-action-pypi-publish@release/v1
+      - run: uv build --all-packages
+      - run: uv publish
 
   github-release:
       name: Create GitHub release

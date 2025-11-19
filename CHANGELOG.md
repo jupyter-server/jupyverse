@@ -1,6 +1,6 @@
 # Version history
 
-## 0.10.23
+## 0.10.24
 
 - Use `ASGIWebSocketTransport` from `httpx-ws`.
 
