@@ -19,10 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.9.9"
       - run: uv build --all-packages
-      - run: uv publish
+      - run: |
+          for filename in dist/*; do
+            uv publish "$filename"
+          done
 
   github-release:
       name: Create GitHub release
