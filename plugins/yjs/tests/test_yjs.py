@@ -5,7 +5,7 @@ from anyio import create_task_group
 from fps import get_root_module
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
-from jupyverse_api.asgi_websocket_transport import ASGIWebSocketTransport
+from httpx_ws.transport import ASGIWebSocketTransport
 from jupyverse_api.yjs.models import CreateDocumentSession
 from structlog.testing import capture_logs
 

@@ -8,7 +8,7 @@ from fps import get_root_module, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
-from jupyverse_api.asgi_websocket_transport import ASGIWebSocketTransport
+from httpx_ws.transport import ASGIWebSocketTransport
 from jupyverse_api.kernel import Kernel
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
