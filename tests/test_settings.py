@@ -53,12 +53,12 @@ CONFIG = {
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_settings(auth_mode, unused_tcp_port):
+async def test_settings(auth_mode, free_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
@@ -74,25 +74,25 @@ async def test_settings(auth_mode, unused_tcp_port):
     async with root_module, AsyncClient() as http:
         # get previous theme
         response = await http.get(
-            f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
         )
         assert response.status_code == 200
         theme = {"raw": json.loads(response.content)["raw"]}
         # put new theme
         response = await http.put(
-            f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
             content=json.dumps(test_theme),
         )
         assert response.status_code == 204
         # get new theme
         response = await http.get(
-            f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
         )
         assert response.status_code == 200
         assert json.loads(response.content)["raw"] == test_theme["raw"]
         # put previous theme back
         response = await http.put(
-            f"http://127.0.0.1:{unused_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
             content=json.dumps(theme),
         )
         assert response.status_code == 204

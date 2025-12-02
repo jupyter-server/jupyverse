@@ -87,13 +87,13 @@ class Websocket:
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_execute(auth_mode, unused_tcp_port):
-    url = f"http://127.0.0.1:{unused_tcp_port}"
+async def test_execute(auth_mode, free_tcp_port):
+    url = f"http://127.0.0.1:{free_tcp_port}"
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
