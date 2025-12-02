@@ -51,27 +51,27 @@ CONFIG = {
 
 
 @pytest.mark.anyio
-async def test_kernel_channels_unauthenticated(unused_tcp_port):
-    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": unused_tcp_port}}})
+async def test_kernel_channels_unauthenticated(free_tcp_port):
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     async with root_module:
         with pytest.raises(WebSocketUpgradeError):
             async with aconnect_ws(
-                f"http://127.0.0.1:{unused_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
+                f"http://127.0.0.1:{free_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
             ):
                 pass
 
 
 @pytest.mark.anyio
-async def test_kernel_channels_authenticated(unused_tcp_port):
-    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": unused_tcp_port}}})
+async def test_kernel_channels_authenticated(free_tcp_port):
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
-        await authenticate_client(http, unused_tcp_port)
+        await authenticate_client(http, free_tcp_port)
         async with aconnect_ws(
-            f"http://127.0.0.1:{unused_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
+            f"http://127.0.0.1:{free_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
             http,
         ):
             pass
@@ -79,12 +79,12 @@ async def test_kernel_channels_authenticated(unused_tcp_port):
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth", "token", "user"))
-async def test_root_auth(auth_mode, unused_tcp_port):
+async def test_root_auth(auth_mode, free_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
@@ -98,7 +98,7 @@ async def test_root_auth(auth_mode, unused_tcp_port):
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
-        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
+        response = await http.get(f"http://127.0.0.1:{free_tcp_port}/")
         if auth_mode == "noauth":
             expected = 302
         elif auth_mode in ["token", "user"]:
@@ -110,12 +110,12 @@ async def test_root_auth(auth_mode, unused_tcp_port):
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_no_auth(auth_mode, unused_tcp_port):
+async def test_no_auth(auth_mode, free_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
@@ -129,18 +129,18 @@ async def test_no_auth(auth_mode, unused_tcp_port):
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
-        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/lab")
+        response = await http.get(f"http://127.0.0.1:{free_tcp_port}/lab")
         assert response.status_code == 200
 
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("token",))
-async def test_token_auth(auth_mode, unused_tcp_port):
+async def test_token_auth(auth_mode, free_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
@@ -157,10 +157,10 @@ async def test_token_auth(auth_mode, unused_tcp_port):
         auth_config = await jupyverse.get(AuthConfig)
 
         # no token provided, should not work
-        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/")
+        response = await http.get(f"http://127.0.0.1:{free_tcp_port}/")
         assert response.status_code == 403
         # token provided, should work
-        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/?token={auth_config.token}")
+        response = await http.get(f"http://127.0.0.1:{free_tcp_port}/?token={auth_config.token}")
         assert response.status_code == 302
 
 
@@ -173,12 +173,12 @@ async def test_token_auth(auth_mode, unused_tcp_port):
         {"admin": ["read"], "foo": ["bar", "baz"]},
     ),
 )
-async def test_permissions(auth_mode, permissions, unused_tcp_port):
+async def test_permissions(auth_mode, permissions, free_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
@@ -192,8 +192,8 @@ async def test_permissions(auth_mode, permissions, unused_tcp_port):
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
-        await authenticate_client(http, unused_tcp_port, permissions=permissions)
-        response = await http.get(f"http://127.0.0.1:{unused_tcp_port}/auth/user/me")
+        await authenticate_client(http, free_tcp_port, permissions=permissions)
+        response = await http.get(f"http://127.0.0.1:{free_tcp_port}/auth/user/me")
         if "admin" in permissions.keys():
             # we have the permissions
             assert response.status_code == 200

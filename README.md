@@ -41,7 +41,11 @@ git clone https://github.com/jupyter-server/jupyverse.git
 cd jupyverse
 ```
 
-Use `uv` to install all plugins:
+Then either use `uv` or `pip` to install in development mode.
+
+#### Using `uv`
+
+Install all plugins:
 
 ```bash
 uv venv
@@ -71,6 +75,56 @@ one authentication plugin:
 
 ```bash
 uv run jupyverse \
+    --disable auth_fief \
+    --disable auth_jupyterhub \
+    --disable noauth \
+    --disable file_watcher_poll \
+    --disable notebook
+```
+
+#### Using `pip`
+
+Using `pip` sometimes gives more control, for instance if you want to install third-party libraries
+in development mode too. It is recommended to create a virtual environment before running the
+following commands:
+
+```bash
+pip install --group test \
+    -e jupyverse_api \
+    -e plugins/auth \
+    -e plugins/auth_fief \
+    -e plugins/auth_jupyterhub \
+    -e plugins/contents \
+    -e plugins/file_id \
+    -e plugins/file_watcher \
+    -e plugins/file_watcher_poll \
+    -e plugins/frontend \
+    -e plugins/jupyterlab \
+    -e plugins/kernel_subprocess \
+    -e plugins/kernel_web_worker \
+    -e plugins/kernels \
+    -e plugins/lab \
+    -e plugins/login \
+    -e plugins/nbconvert \
+    -e plugins/noauth \
+    -e plugins/notebook \
+    -e plugins/resource_usage \
+    -e plugins/terminals \
+    -e plugins/webdav \
+    -e plugins/yjs \
+    -e .
+```
+
+Run tests with:
+
+```bash
+pytest -v
+```
+
+Run jupyverse with:
+
+```bash
+jupyverse \
     --disable auth_fief \
     --disable auth_jupyterhub \
     --disable noauth \

@@ -32,7 +32,7 @@ CONFIG = {
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_tree(auth_mode, tmp_path, unused_tcp_port):
+async def test_tree(auth_mode, tmp_path, free_tcp_port):
     prev_dir = os.getcwd()
     os.chdir(tmp_path)
     dname = Path(".")
@@ -82,7 +82,7 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
         CONFIG,
         {
             "jupyverse": {
-                "config": {"port": unused_tcp_port},
+                "config": {"port": free_tcp_port},
                 "modules": {
                     "auth": {
                         "config": {
@@ -97,7 +97,7 @@ async def test_tree(auth_mode, tmp_path, unused_tcp_port):
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
         response = await http.get(
-            f"http://127.0.0.1:{unused_tcp_port}/api/contents", params={"content": 1}
+            f"http://127.0.0.1:{free_tcp_port}/api/contents", params={"content": 1}
         )
         actual = response.json()
         # ignore modification and creation times

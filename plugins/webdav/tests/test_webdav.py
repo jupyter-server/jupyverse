@@ -24,13 +24,13 @@ CONFIG = {
 
 @pytest.mark.anyio
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Requires Python >=3.10")
-async def test_webdav(unused_tcp_port):
+async def test_webdav(free_tcp_port):
     config = merge_config(
         CONFIG,
         {
             "jupyverse": {
                 "config": {
-                    "port": unused_tcp_port,
+                    "port": free_tcp_port,
                 },
                 "modules": {
                     "webdav": {
@@ -46,7 +46,7 @@ async def test_webdav(unused_tcp_port):
     root_module._global_start_timeout = 10
     async with root_module:
         webdav = easywebdav.connect(
-            "127.0.0.1", port=unused_tcp_port, path="webdav", username="foo", password="bar"
+            "127.0.0.1", port=free_tcp_port, path="webdav", username="foo", password="bar"
         )
         dirname = str(uuid4())
         assert not Path(dirname).exists()

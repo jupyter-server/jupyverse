@@ -3,7 +3,6 @@ import signal
 import subprocess
 import time
 from pathlib import Path
-from socket import socket
 
 import pytest
 import requests
@@ -21,14 +20,7 @@ def cwd():
 
 
 @pytest.fixture()
-def unused_tcp_port() -> int:
-    with socket() as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
-
-
-@pytest.fixture()
-def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
+def start_jupyverse(auth_mode, clear_users, cwd, free_tcp_port):
     os.chdir(cwd)
     command_list = [
         "jupyverse",
@@ -49,12 +41,12 @@ def start_jupyverse(auth_mode, clear_users, cwd, unused_tcp_port):
         "--set",
         "kernels.require_yjs=true",
         "--port",
-        str(unused_tcp_port),
+        str(free_tcp_port),
         "--timeout",
         "10",
     ]
     p = subprocess.Popen(command_list)
-    url = f"http://127.0.0.1:{unused_tcp_port}"
+    url = f"http://127.0.0.1:{free_tcp_port}"
     while True:
         try:
             requests.get(url)
