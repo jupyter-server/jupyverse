@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import sqlite3
 from uuid import uuid4
 

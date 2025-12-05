@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path

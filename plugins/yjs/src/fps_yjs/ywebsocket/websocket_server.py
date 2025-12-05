@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskGroup, TaskStatus
 from pycrdt import Doc

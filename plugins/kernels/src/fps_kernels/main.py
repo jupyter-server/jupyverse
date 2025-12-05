@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import structlog
 from anyio import create_task_group
 from fps import Module
