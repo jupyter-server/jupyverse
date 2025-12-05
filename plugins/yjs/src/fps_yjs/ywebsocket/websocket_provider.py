@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from contextlib import AsyncExitStack
 from functools import partial
 
@@ -51,7 +49,7 @@ class WebsocketProvider:
             self._started = Event()
         return self._started
 
-    async def __aenter__(self) -> WebsocketProvider:
+    async def __aenter__(self) -> "WebsocketProvider":
         if self._task_group is not None:
             raise RuntimeError("WebsocketProvider already running")
 

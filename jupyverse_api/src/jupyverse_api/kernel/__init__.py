@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
 from anyio import TASK_STATUS_IGNORED, Event, create_memory_object_stream
