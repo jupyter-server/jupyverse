@@ -1,5 +1,10 @@
 # Version history
 
+## 0.10.28
+
+- Removed all the `from __future__ import annotations` because of a bug
+in FastAPI v0.123.7 (see [here](https://github.com/fastapi/fastapi/pull/11355/files#r2592995490)).
+
 ## 0.10.27
 
 - Use `ASGIWebSocketTransport` from `httpx-ws`.

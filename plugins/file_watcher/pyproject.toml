@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_file_watcher"
-version = "0.1.4"
+version = "0.1.5"
 description = "An FPS plugin for the file watcher API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
