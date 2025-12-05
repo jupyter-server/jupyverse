@@ -160,7 +160,7 @@ class RoomManager:
     savers: dict[str, Task]
     cleaners: dict[YRoom, Task]
     last_modified: dict[str, datetime]
-    websocket_server: JupyterWebsocketServer
+    websocket_server: "JupyterWebsocketServer"
     room_write_permissions: dict[str, set[YWebsocket]]
     room_lock: ResourceLock
 

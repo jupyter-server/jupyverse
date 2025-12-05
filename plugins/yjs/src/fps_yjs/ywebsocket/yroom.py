@@ -143,7 +143,7 @@ class YRoom:
                     self.log.debug("Writing Y update to YStore")
                     self._task_group.start_soon(self.ystore.write, update)
 
-    async def __aenter__(self) -> YRoom:
+    async def __aenter__(self) -> "YRoom":
         if self._task_group is not None:
             raise RuntimeError("YRoom already running")
 

@@ -46,7 +46,7 @@ class BaseYStore(ABC):
             self._started = Event()
         return self._started
 
-    async def __aenter__(self) -> BaseYStore:
+    async def __aenter__(self) -> "BaseYStore":
         if self._task_group is not None:
             raise RuntimeError("YStore already running")
 
