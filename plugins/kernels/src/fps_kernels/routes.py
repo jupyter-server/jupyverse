@@ -4,8 +4,9 @@ from functools import partial
 from http import HTTPStatus
 from pathlib import Path
 
+import anyio
 import structlog
-from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group
+from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group, open_file
 from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
@@ -52,7 +53,6 @@ class _Kernels(Kernels):
         self.default_kernel_factory = default_kernel_factory
         self.file_watcher = file_watcher
 
-        self.kernelspecs: dict = {}
         self.kernel_id_to_connection_file: dict[str, str] = {}
         self.sessions: dict[str, Session] = {}
         self.kernels = kernels
@@ -113,18 +113,28 @@ class _Kernels(Kernels):
         self,
         user: User,
     ):
+        kernelspecs: dict = {}
         for search_path in kernelspec_dirs():
-            for path in Path(search_path).glob("*/kernel.json"):
-                with open(path) as f:
-                    spec = json.load(f)
-                name = path.parent.name
-                resources = {
-                    f.stem: f"{self.frontend_config.base_url}kernelspecs/{name}/{f.name}"
-                    for f in path.parent.iterdir()
-                    if f.is_file() and f.name != "kernel.json"
-                }
-                self.kernelspecs[name] = {"name": name, "spec": spec, "resources": resources}
-        return {"default": self.kernels_config.default_kernel, "kernelspecs": self.kernelspecs}
+            p0 = anyio.Path(search_path)
+            if await p0.is_dir():
+                async for p1 in p0.iterdir():
+                    path = p1 / "kernel.json"
+                    if await p1.is_dir() and await path.is_file():
+                        async with await open_file(path) as f:
+                            data = await f.read()
+                        spec = json.loads(data)
+                        resources = {
+                            p2.stem: f"{self.frontend_config.base_url}"
+                            f"kernelspecs/{p1.name}/{p2.name}"
+                            async for p2 in p1.iterdir()
+                            if await p2.is_file() and p2.name != "kernel.json"
+                        }
+                        kernelspecs[p1.name] = {
+                            "name": p1.name,
+                            "spec": spec,
+                            "resources": resources,
+                        }
+        return {"default": self.kernels_config.default_kernel, "kernelspecs": kernelspecs}
 
     async def get_kernelspec(
         self,
