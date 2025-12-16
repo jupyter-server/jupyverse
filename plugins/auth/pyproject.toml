@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "aiosqlite",
+  "aiosqlite <0.22.0",
   "fastapi-users[sqlalchemy,oauth] >=14.0.1,<15.0.0",
   "jupyverse-api >=0.12.0,<0.13.0",
 ]
