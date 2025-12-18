@@ -132,6 +132,7 @@ class _JupyterLab(JupyterLab):
         mode="lab",
         request: Request | None = None,
     ):
+        print("###########", request)
         for path in self.static_lab_dir.glob("main.*.js"):
             main_id = path.name.split(".")[1]
             break
