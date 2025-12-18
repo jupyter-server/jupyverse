@@ -54,6 +54,7 @@ class _JupyterLab(JupyterLab):
         self,
         mode,
         user: User,
+        request: Request = None,
     ):
         return HTMLResponse(
             self.get_index(
@@ -63,6 +64,7 @@ class _JupyterLab(JupyterLab):
                 self.jupyterlab_config.dev_mode,
                 self.frontend_config.base_url,
                 mode=mode,
+                request=request,
             )
         )
 
@@ -70,6 +72,7 @@ class _JupyterLab(JupyterLab):
         self,
         mode,
         path,
+        request: Request = None,
     ):
         return HTMLResponse(
             self.get_index(
@@ -80,10 +83,11 @@ class _JupyterLab(JupyterLab):
                 self.frontend_config.base_url,
                 tree_path=path,
                 mode=mode,
+                request=request,
             )
         )
 
-    async def get_workspace_data(self, user: User):
+    async def get_workspace_data(self, user: User, request: Request = None):
         if user:
             return json.loads(user.workspace)
         return {}
@@ -104,6 +108,7 @@ class _JupyterLab(JupyterLab):
         name,
         path,
         user: User,
+        request: Request = None,
     ):
         return self.get_index(
             name,
@@ -113,6 +118,7 @@ class _JupyterLab(JupyterLab):
             self.frontend_config.base_url,
             tree_path=path,
             mode=mode,
+            request=request,
         )
 
     def get_index(
@@ -124,6 +130,7 @@ class _JupyterLab(JupyterLab):
         base_url="/",
         tree_path=None,
         mode="lab",
+        request: Request = None,
     ):
         for path in self.static_lab_dir.glob("main.*.js"):
             main_id = path.name.split(".")[1]

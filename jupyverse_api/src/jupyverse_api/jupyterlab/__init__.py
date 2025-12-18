@@ -17,29 +17,48 @@ class JupyterLab(Router, ABC):
 
         @router.get("/lab")
         async def get_lab(
+            request: Request,
             user: User = Depends(auth.current_user()),
         ):
-            return await self.get_lab("lab", user)
+            try:
+                return await self.get_lab("lab", user, request)
+            except TypeError:
+                # For backward API compatibility
+                return await self.get_lab("lab", user)
 
         @router.get("/doc")
         async def get_doc(
+            request: Request,
             user: User = Depends(auth.current_user()),
         ):
-            return await self.get_lab("doc", user)
+            try:
+                return await self.get_lab("doc", user, request)
+            except TypeError:
+                return await self.get_lab("doc", user)
 
         @router.get("/{mode}/tree/{path:path}")
         async def load_workspace(
+            request: Request,
             mode,
             path,
         ):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
-            return await self.load_workspace(mode, path)
+            try:
+                return await self.load_workspace(mode, path, request)
+            except TypeError:
+                return await self.load_workspace(mode, path)
 
         @router.get("/lab/api/workspaces/{name}")
         @router.get("/doc/api/workspaces/{name}")
-        async def get_workspace_data(user: User = Depends(auth.current_user())):
-            return await self.get_workspace_data(user)
+        async def get_workspace_data(
+            request: Request,
+            user: User = Depends(auth.current_user()),
+        ):
+            try:
+                return await self.get_workspace_data(user, request)
+            except TypeError:
+                return await self.get_workspace_data(user)
 
         @router.put(
             "/lab/api/workspaces/{name}",
@@ -58,17 +77,21 @@ class JupyterLab(Router, ABC):
 
         @router.get("/{mode}/workspaces/{name}", response_class=HTMLResponse)
         async def get_workspace(
+            request: Request,
             mode,
             name,
             user: User = Depends(auth.current_user()),
         ):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
-
-            return await self.get_workspace(mode, name, "", user)
+            try:
+                return await self.get_workspace(mode, name, "", user, request)
+            except TypeError:
+                return await self.get_workspace(mode, name, "", user)
 
         @router.get("/{mode}/workspaces/{name}/tree/{path:path}", response_class=HTMLResponse)
         async def get_workspace_with_tree(
+            request: Request,
             mode,
             name,
             path,
@@ -76,8 +99,10 @@ class JupyterLab(Router, ABC):
         ):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
-
-            return await self.get_workspace(mode, name, path, user)
+            try:
+                return await self.get_workspace(mode, name, path, user, request)
+            except TypeError:
+                return await self.get_workspace(mode, name, path, user)
 
         self.include_router(router)
 
@@ -86,6 +111,7 @@ class JupyterLab(Router, ABC):
         self,
         mode,
         user: User,
+        request: Request = None,
     ): ...
 
     @abstractmethod
@@ -93,10 +119,11 @@ class JupyterLab(Router, ABC):
         self,
         mode,
         path,
+        request: Request = None,
     ): ...
 
     @abstractmethod
-    async def get_workspace_data(self, user: User): ...
+    async def get_workspace_data(self, user: User, request: Request = None): ...
 
     @abstractmethod
     async def set_workspace(
@@ -113,6 +140,7 @@ class JupyterLab(Router, ABC):
         name,
         path,
         user: User,
+        request: Request = None,
     ): ...
 
 
