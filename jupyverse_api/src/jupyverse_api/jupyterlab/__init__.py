@@ -111,7 +111,7 @@ class JupyterLab(Router, ABC):
         self,
         mode,
         user: User,
-        request: Request = None,
+        request: Request | None = None,
     ): ...
 
     @abstractmethod
@@ -119,11 +119,11 @@ class JupyterLab(Router, ABC):
         self,
         mode,
         path,
-        request: Request = None,
+        request: Request | None = None,
     ): ...
 
     @abstractmethod
-    async def get_workspace_data(self, user: User, request: Request = None): ...
+    async def get_workspace_data(self, user: User, request: Request | None = None): ...
 
     @abstractmethod
     async def set_workspace(
@@ -140,7 +140,7 @@ class JupyterLab(Router, ABC):
         name,
         path,
         user: User,
-        request: Request = None,
+        request: Request | None = None,
     ): ...
 
 
