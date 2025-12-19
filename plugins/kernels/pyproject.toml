@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_kernels"
-version = "0.10.7"
+version = "0.10.8"
 description = "An FPS plugin for the kernels API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"

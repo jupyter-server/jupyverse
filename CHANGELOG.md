@@ -1,5 +1,12 @@
 # Version history
 
+## 0.10.29
+
+- Add `PageConfigModule`.
+- Pass FastAPI request to JupyterLab handlers.
+- Pin `aiosqlite` <0.22.0.
+- Make `get_kernelspecs` stateless and async.
+
 ## 0.10.28
 
 - Removed all the `from __future__ import annotations` because of a bug
