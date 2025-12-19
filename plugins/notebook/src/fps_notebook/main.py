@@ -4,7 +4,7 @@ from jupyverse_api.app import App
 from jupyverse_api.auth import Auth
 from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.jupyterlab import JupyterLabConfig
-from jupyverse_api.lab import Lab
+from jupyverse_api.lab import Lab, PageConfig
 from jupyverse_api.notebook import Notebook
 
 from .routes import _Notebook
@@ -19,6 +19,7 @@ class NotebookModule(Module):
         auth = await self.get(Auth)  # type: ignore[type-abstract]
         frontend_config = await self.get(FrontendConfig)
         lab = await self.get(Lab)  # type: ignore[type-abstract]
+        page_config = await self.get(PageConfig)
 
-        notebook = _Notebook(app, auth, frontend_config, lab)
+        notebook = _Notebook(app, auth, frontend_config, lab, page_config)
         self.put(notebook, Notebook)

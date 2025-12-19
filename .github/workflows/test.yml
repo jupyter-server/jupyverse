@@ -28,7 +28,7 @@ jobs:
           uv pip install -e ".[jupyterlab,notebook,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
       - name: Check types
         run: |
-          mypy \
+          uv run mypy \
             ./jupyverse_api \
             ./plugins/contents \
             ./plugins/file_id \
@@ -52,8 +52,8 @@ jobs:
             ./plugins/notebook
       - name: Lint
         run: |
-          ruff check src jupyverse_api notebooks plugins tests
-          ruff format --check src jupyverse_api notebooks plugins tests
+          uv run ruff check src jupyverse_api notebooks plugins tests
+          uv run ruff format --check src jupyverse_api notebooks plugins tests
 
   test:
     name: Run tests
@@ -75,4 +75,4 @@ jobs:
           uv venv
           uv pip install -e ".[jupyterlab,notebook,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
       - name: Run tests
-        run: pytest -v --timeout=60 --color=yes
+        run: uv run pytest -v --timeout=60 --color=yes
