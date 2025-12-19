@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fps import Context, put
 
 from jupyverse_api import Config, Router
 
@@ -20,10 +21,8 @@ class JupyterLab(Router, ABC):
             request: Request,
             user: User = Depends(auth.current_user()),
         ):
-            try:
-                return await self.get_lab("lab", user, request)
-            except TypeError:
-                # For backward API compatibility
+            async with Context():
+                put(request)
                 return await self.get_lab("lab", user)
 
         @router.get("/doc")
@@ -31,9 +30,8 @@ class JupyterLab(Router, ABC):
             request: Request,
             user: User = Depends(auth.current_user()),
         ):
-            try:
-                return await self.get_lab("doc", user, request)
-            except TypeError:
+            async with Context():
+                put(request)
                 return await self.get_lab("doc", user)
 
         @router.get("/{mode}/tree/{path:path}")
@@ -44,9 +42,9 @@ class JupyterLab(Router, ABC):
         ):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
-            try:
-                return await self.load_workspace(mode, path, request)
-            except TypeError:
+
+            async with Context():
+                put(request)
                 return await self.load_workspace(mode, path)
 
         @router.get("/lab/api/workspaces/{name}")
@@ -55,9 +53,8 @@ class JupyterLab(Router, ABC):
             request: Request,
             user: User = Depends(auth.current_user()),
         ):
-            try:
-                return await self.get_workspace_data(user, request)
-            except TypeError:
+            async with Context():
+                put(request)
                 return await self.get_workspace_data(user)
 
         @router.put(
@@ -84,9 +81,9 @@ class JupyterLab(Router, ABC):
         ):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
-            try:
-                return await self.get_workspace(mode, name, "", user, request)
-            except TypeError:
+
+            async with Context():
+                put(request)
                 return await self.get_workspace(mode, name, "", user)
 
         @router.get("/{mode}/workspaces/{name}/tree/{path:path}", response_class=HTMLResponse)
@@ -99,28 +96,18 @@ class JupyterLab(Router, ABC):
         ):
             if mode not in {"lab", "doc"}:
                 raise HTTPException(status_code=404, detail="Not found")
-            try:
-                return await self.get_workspace(mode, name, path, user, request)
-            except TypeError:
+
+            async with Context():
+                put(request)
                 return await self.get_workspace(mode, name, path, user)
 
         self.include_router(router)
 
     @abstractmethod
-    async def get_lab(
-        self,
-        mode,
-        user: User,
-        request: Request | None = None,
-    ): ...
+    async def get_lab(self, mode, user: User): ...
 
     @abstractmethod
-    async def load_workspace(
-        self,
-        mode,
-        path,
-        request: Request | None = None,
-    ): ...
+    async def load_workspace(self, mode, path): ...
 
     @abstractmethod
     async def get_workspace_data(self, user: User, request: Request | None = None): ...
@@ -134,14 +121,7 @@ class JupyterLab(Router, ABC):
     ): ...
 
     @abstractmethod
-    async def get_workspace(
-        self,
-        mode,
-        name,
-        path,
-        user: User,
-        request: Request | None = None,
-    ): ...
+    async def get_workspace(self, mode, name, path, user: User): ...
 
 
 class JupyterLabConfig(Config):
