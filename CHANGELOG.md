@@ -1,6 +1,6 @@
 # Version history
 
-## 0.10.29
+## 0.10.30
 
 - Add `PageConfigModule`.
 - Pass FastAPI request to JupyterLab handlers.
