@@ -44,6 +44,8 @@ jupyverse = "jupyverse_api.cli:main"
 [project.entry-points."fps.modules"]
 app = "jupyverse_api.main:AppModule"
 jupyverse = "jupyverse_api.main:JupyverseModule"
+page_config = "jupyverse_api.lab:PageConfigModule"
 
 [project.entry-points."jupyverse.modules"]
 app = "jupyverse_api.main:AppModule"
+page_config = "jupyverse_api.lab:PageConfigModule"

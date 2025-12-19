@@ -30,6 +30,9 @@ CONFIG = {
             "frontend": {
                 "type": "frontend",
             },
+            "page_config": {
+                "type": "page_config",
+            },
             "lab": {
                 "type": "lab",
             },
