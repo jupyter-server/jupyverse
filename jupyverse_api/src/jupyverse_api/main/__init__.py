@@ -82,10 +82,11 @@ class JupyverseModule(FastAPIModule):
             if self.jupyverse_config.query_params:
                 qp.update(**self.jupyverse_config.query_params)
             query_params_str = "?" + "&".join([f"{k}={v}" for k, v in qp.items()]) if qp else ""
-            url = f"{self._host}:{self._port}{query_params_str}"
-            logger.info("Server running", url=url)
-            if self.jupyverse_config.open_browser:
-                webbrowser.open_new_tab(url)
+            if self.jupyverse_config.start_server:
+                url = f"{self._host}:{self._port}{query_params_str}"
+                logger.info("Server running", url=url)
+                if self.jupyverse_config.open_browser:
+                    webbrowser.open_new_tab(url)
 
     async def stop(self) -> None:
         self.lifespan.shutdown_request.set()
