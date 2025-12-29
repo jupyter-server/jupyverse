@@ -1,5 +1,9 @@
 # Version history
 
+## 0.10.31
+
+- Defer setting `fullStaticUrl`.
+
 ## 0.10.30
 
 - Add `PageConfigModule`.

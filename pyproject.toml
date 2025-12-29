@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse"
-version = "0.10.30"
+version = "0.10.31"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -52,8 +52,8 @@ content-type = "text/markdown"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = ["fps-jupyterlab >=0.10.1,<0.11.0"]
-notebook = ["fps-notebook>=0.9.3,<0.10.0"]
+jupyterlab = ["fps-jupyterlab >=0.10.5,<0.11.0"]
+notebook = ["fps-notebook>=0.9.7,<0.10.0"]
 auth = ["fps-auth >=0.9.3,<0.10.0", "fps-login >=0.9.3,<0.10.0"]
 auth-fief = ["fps-auth-fief >=0.9.4,<0.10.0"]
 auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.4,<0.10.0"]
