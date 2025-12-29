@@ -127,7 +127,6 @@ class _Notebook(Notebook):
         collaborative,
         base_url="/",
     ):
-        full_static_url = f"{base_url}static/notebook"
         for path in (notebook_dir / "static").glob("main.*.js"):
             main_id = path.name.split(".")[1]
             break
@@ -174,12 +173,13 @@ class _Notebook(Notebook):
             workspacesApiUrl="/lab/api/workspaces",
             wsUrl="",
         )
+        _page_config = await self.page_config.get()
         index = (
-            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(await self.page_config.get()))
+            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(_page_config))
             .replace("MAIN_ID", main_id)
             .replace("DOC_NAME", doc_name)
             .replace("BASE_URL", base_url)
-            .replace("FULL_STATIC_URL", full_static_url)
+            .replace("FULL_STATIC_URL", _page_config["fullStaticUrl"])
         )
         return index
 

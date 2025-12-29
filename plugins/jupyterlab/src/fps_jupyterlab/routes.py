@@ -134,7 +134,6 @@ class _JupyterLab(JupyterLab):
         for path in (self.static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
             vendor_id = path.name.split(".")[1]
             break
-        full_static_url = f"{base_url}static/lab"
 
         self.page_config.set(
             appName="JupyterLab",
@@ -156,7 +155,7 @@ class _JupyterLab(JupyterLab):
             fullListingsUrl=f"{base_url}lab/api/listings",
             fullMathjaxUrl=f"{base_url}static/notebook/components/MathJax/MathJax.js",
             fullSettingsUrl=f"{base_url}lab/api/settings",
-            fullStaticUrl=full_static_url,
+            fullStaticUrl=f"{base_url}static/lab",
             fullThemesUrl=f"{base_url}lab/api/themes",
             fullTranslationsApiUrl=f"{base_url}lab/api/translations",
             fullTreeUrl=f"{base_url}lab/tree",
@@ -183,9 +182,10 @@ class _JupyterLab(JupyterLab):
             workspacesApiUrl="/lab/api/workspaces",
             wsUrl="",
         )
+        _page_config = await self.page_config.get()
         index = (
-            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(await self.page_config.get()))
-            .replace("FULL_STATIC_URL", full_static_url)
+            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(_page_config))
+            .replace("FULL_STATIC_URL", _page_config["fullStaticUrl"])
             .replace("MAIN_ID", main_id)
         )
         if vendor_id:
