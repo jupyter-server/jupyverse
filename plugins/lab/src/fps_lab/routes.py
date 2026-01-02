@@ -40,11 +40,14 @@ class _Lab(Lab):
     async def get_root(
         self,
         response: Response,
+        redirect: str | None,
         user: User,
     ):
         # auto redirect
         response.status_code = status.HTTP_302_FOUND
-        response.headers["Location"] = self.frontend_config.base_url + self.redirect_after_root
+        if redirect is None:
+            redirect = self.frontend_config.base_url + self.redirect_after_root
+        response.headers["Location"] = redirect
 
     async def get_favicon(self):
         return FileResponse(Path(__file__).parent / "static" / "favicon.ico")
