@@ -1,6 +1,6 @@
 # Version history
 
-## 0.11.0
+## 0.11.1
 
 - Allow setting Lab's redirection after root with a query parameter.
 
