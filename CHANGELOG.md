@@ -1,5 +1,9 @@
 # Version history
 
+## 0.11.0
+
+- Allow setting Lab's redirection after root with a query parameter.
+
 ## 0.10.31
 
 - Defer setting `fullStaticUrl`.

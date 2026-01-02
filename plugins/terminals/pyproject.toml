@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_terminals"
-version = "0.9.5"
+version = "0.9.6"
 description = "An FPS plugin for the terminals API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "pywinpty;platform_system=='Windows'",
-  "jupyverse-api >=0.12.0,<0.13.0",
+  "jupyverse-api >=0.13.0,<0.14.0",
   "anyio >=4.9.0,<5.0.0",
 ]
 license = "BSD-3-Clause"

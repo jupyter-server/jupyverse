@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_resource_usage"
-version = "0.9.5"
+version = "0.9.6"
 description = "An FPS plugin for the resource usage API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -25,7 +25,7 @@ dependencies = [
   "psutil >=5.9.4",
   "types-psutil",
   "anyio >=4.9.0,<5",
-  "jupyverse-api >=0.12.0,<0.13.0",
+  "jupyverse-api >=0.13.0,<0.14.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
