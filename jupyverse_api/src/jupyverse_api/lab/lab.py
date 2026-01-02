@@ -55,9 +55,10 @@ class Lab(Router, ABC):
         @router.get("/", name="root")
         async def get_root(
             response: Response,
+            redirect: str | None = None,
             user: User = Depends(auth.current_user()),
         ):
-            return await self.get_root(response, user)
+            return await self.get_root(response, redirect, user)
 
         @router.get("/favicon.ico")
         async def get_favicon():
@@ -131,6 +132,7 @@ class Lab(Router, ABC):
     async def get_root(
         self,
         response: Response,
+        redirect: str | None,
         user: User,
     ): ...
 
