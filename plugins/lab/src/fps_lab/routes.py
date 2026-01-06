@@ -185,6 +185,8 @@ class _Lab(Lab):
         for s in schemas:
             for d1 in s.iterdir():
                 for d2 in d1.iterdir():
+                    if not d2.is_dir():
+                        continue
                     package = json.loads((d2 / "package.json.orig").read_text())
                     for path in [p for p in d2.iterdir() if p.suffix == ".json"]:
                         schema = json.loads(path.read_text())
