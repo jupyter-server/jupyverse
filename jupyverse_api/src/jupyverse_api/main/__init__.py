@@ -40,6 +40,8 @@ class JupyverseModule(FastAPIModule):
         super().__init__(
             name,
             debug=self.jupyverse_config.debug,
+            openapi_url=self.jupyverse_config.openapi_url,
+            routes_url=self.jupyverse_config.routes_url,
         )
         self.lifespan = Lifespan()
         if self.jupyverse_config.start_server:
@@ -113,3 +115,5 @@ class JupyverseConfig(Config):
     open_browser: bool = False
     query_params: Json[dict[str, str]] = {}
     debug: bool = False
+    openapi_url: str | None = "/openapi.json"
+    routes_url: str | None = None
