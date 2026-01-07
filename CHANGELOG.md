@@ -1,5 +1,9 @@
 # Version history
 
+## 0.11.2
+
+- Fix loading of settings.
+
 ## 0.11.1
 
 - Allow setting Lab's redirection after root with a query parameter.
