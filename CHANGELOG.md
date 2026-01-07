@@ -1,5 +1,9 @@
 # Version history
 
+## 0.11.3
+
+- Allow setting `openapi_url` and `routes_url`.
+
 ## 0.11.2
 
 - Fix loading of settings.
