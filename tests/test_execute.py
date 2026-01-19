@@ -56,6 +56,9 @@ CONFIG = {
             "yjs": {
                 "type": "yjs",
             },
+            "ystore_sqlite": {
+                "type": "ystore_sqlite",
+            },
         },
     }
 }

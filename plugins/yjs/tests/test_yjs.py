@@ -36,6 +36,9 @@ async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
                         "document_cleanup_delay": 0,
                     },
                 },
+                "ystore_sqlite": {
+                    "type": "ystore_sqlite",
+                },
                 "auth": {
                     "type": "noauth",
                 },

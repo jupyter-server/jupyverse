@@ -131,3 +131,4 @@ fps-resource-usage = { workspace = true }
 fps-terminals = { workspace = true }
 fps-webdav = { workspace = true }
 fps-yjs = { workspace = true }
+fps-ystore-sqlite = { workspace = true }

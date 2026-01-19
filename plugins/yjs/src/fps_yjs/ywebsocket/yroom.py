@@ -11,6 +11,7 @@ from anyio import (
 )
 from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
+from jupyverse_api.ystore import YStore
 from pycrdt import (
     Doc,
     YMessageType,
@@ -23,14 +24,13 @@ from structlog import BoundLogger, get_logger
 
 from .awareness import Awareness
 from .websocket import Websocket
-from .ystore import BaseYStore
 from .yutils import put_updates
 
 
 class YRoom:
     clients: list
     ydoc: Doc
-    ystore: BaseYStore | None
+    ystore: YStore | None
     _on_message: Callable[[bytes, Websocket], Awaitable[bool] | bool] | None
     _update_send_stream: MemoryObjectSendStream
     _update_receive_stream: MemoryObjectReceiveStream
@@ -43,9 +43,9 @@ class YRoom:
         self,
         ydoc: Doc | None = None,
         ready: bool = True,
-        ystore: BaseYStore | None = None,
+        ystore: YStore | None = None,
         log: BoundLogger | None = None,
-    ):
+    ) -> None:
         """Initialize the object.
 
         The YRoom instance should preferably be used as an async context manager:
@@ -178,8 +178,9 @@ class YRoom:
         if self._task_group is not None:
             raise RuntimeError("YRoom already running")
 
-        async with create_task_group() as self._task_group:
-            self._task_group.start_soon(self._broadcast_updates)
+        async with create_task_group() as tg:
+            self._task_group = tg
+            tg.start_soon(self._broadcast_updates)
             self.started.set()
             self._starting = False
             task_status.started()
