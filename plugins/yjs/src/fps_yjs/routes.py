@@ -260,7 +260,12 @@ class RoomManager:
                         # update the document when file changes
                         if file_id not in self.watchers:
                             self.watchers[file_id] = create_task(
-                                self.watch_file(websocket.path, file_format, file_id, document, room),
+                                self.watch_file(
+                                    websocket.path,
+                                    file_format,
+                                    file_id,
+                                    document, room,
+                                ),
                                 self.task_group,
                             )
 
@@ -388,7 +393,15 @@ class RoomManager:
         # e.g. a new cell added to a notebook
         document.unobserve()
         document.observe(
-            partial(self.on_document_change, ws_path, file_id, file_type, file_format, document, room)
+            partial(
+                self.on_document_change,
+                ws_path,
+                file_id,
+                file_type,
+                file_format,
+                document,
+                room,
+            )
         )
         if file_id in self.savers:
             self.savers[file_id].cancel(raise_exception=False)
