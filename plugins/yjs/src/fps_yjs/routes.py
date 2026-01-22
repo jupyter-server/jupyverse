@@ -264,7 +264,8 @@ class RoomManager:
                                     websocket.path,
                                     file_format,
                                     file_id,
-                                    document, room,
+                                    document,
+                                    room,
                                 ),
                                 self.task_group,
                             )
