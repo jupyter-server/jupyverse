@@ -3,7 +3,7 @@ from functools import partial
 from uuid import uuid4
 
 import structlog
-from anyio import TASK_STATUS_IGNORED, create_task_group, sleep
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
 from anyio.abc import TaskStatus
 from anyioutils import ResourceLock, Task, create_task
 from fastapi import (
@@ -240,7 +240,7 @@ class RoomManager:
                             if document.source != model.content:
                                 read_from_source = True
                         if read_from_source:
-                            document.source = model.content
+                            await to_thread.run_sync(document.set, model.content)
                             await room.ystore.encode_state_as_update(room.ydoc)
 
                         document.dirty = False
@@ -249,6 +249,7 @@ class RoomManager:
                         document.observe(
                             partial(
                                 self.on_document_change,
+                                websocket.path,
                                 file_id,
                                 file_type,
                                 file_format,
@@ -259,7 +260,7 @@ class RoomManager:
                         # update the document when file changes
                         if file_id not in self.watchers:
                             self.watchers[file_id] = create_task(
-                                self.watch_file(file_format, file_id, document, room),
+                                self.watch_file(websocket.path, file_format, file_id, document, room),
                                 self.task_group,
                             )
 
@@ -320,6 +321,7 @@ class RoomManager:
 
     async def watch_file(
         self,
+        ws_path: str,
         file_format: str,
         file_id: str,
         document: YBaseDoc,
@@ -339,12 +341,13 @@ class RoomManager:
                 self.file_id.unwatch(file_path, watcher)
                 file_path = new_file_path
                 # break
-            await self.maybe_load_file(file_format, file_path, file_id, room)
+            await self.maybe_load_file(ws_path, file_format, file_path, file_id, room)
         if file_id in self.watchers:
             del self.watchers[file_id]
 
     async def maybe_load_file(
         self,
+        ws_path: str,
         file_format: str,
         file_path: str,
         file_id: str,
@@ -359,13 +362,15 @@ class RoomManager:
             assert model.last_modified is not None
             documents = [v for k, v in self.documents.items() if k.split(":", 2)[2] == file_id]
             for document in documents:
-                document.source = model.content
+                async with self.room_lock(ws_path):
+                    await to_thread.run_sync(document.set, model.content)
                 assert room.ystore is not None
                 await room.ystore.encode_state_as_update(room.ydoc)
             self.last_modified[file_id] = to_datetime(model.last_modified)
 
     def on_document_change(
         self,
+        ws_path,
         file_id: str,
         file_type: str,
         file_format: str,
@@ -383,17 +388,18 @@ class RoomManager:
         # e.g. a new cell added to a notebook
         document.unobserve()
         document.observe(
-            partial(self.on_document_change, file_id, file_type, file_format, document, room)
+            partial(self.on_document_change, ws_path, file_id, file_type, file_format, document, room)
         )
         if file_id in self.savers:
             self.savers[file_id].cancel(raise_exception=False)
         self.savers[file_id] = create_task(
-            self.maybe_save_document(file_id, file_type, file_format, document, room),
+            self.maybe_save_document(ws_path, file_id, file_type, file_format, document, room),
             self.task_group,
         )
 
     async def maybe_save_document(
         self,
+        ws_path: str,
         file_id: str,
         file_type: str,
         file_format: str,
@@ -412,17 +418,20 @@ class RoomManager:
         assert model.last_modified is not None
         if self.last_modified[file_id] < to_datetime(model.last_modified):
             # file changed on disk, let's revert
-            document.source = model.content
+            async with self.room_lock(ws_path):
+                await to_thread.run_sync(document.set, model.content)
             assert room.ystore is not None
             await room.ystore.encode_state_as_update(room.ydoc)
             self.last_modified[file_id] = to_datetime(model.last_modified)
             return
-        if model.content != document.source:
+        async with self.room_lock(ws_path):
+            document_source = await to_thread.run_sync(document.get)
+        if model.content != document_source:
             # don't save if not needed
             # this also prevents the dirty flag from bouncing between windows of
             # the same document opened as different types (e.g. notebook/text editor)
             content = {
-                "content": document.source,
+                "content": document_source,
                 "format": file_format,
                 "path": file_path,
                 "type": file_type,
