@@ -22,21 +22,17 @@ from jupyverse_api.file_id import FileId
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs, YjsConfig
 from jupyverse_api.yjs.models import CreateDocumentSession
+from jupyverse_api.ystore import YDocNotFound, YStoreFactory
 from pycrdt import Doc, YMessageType, YSyncMessageType
 
 from .ywebsocket.websocket import Websocket
 from .ywebsocket.websocket_server import WebsocketServer, YRoom
-from .ywebsocket.ystore import SQLiteYStore, YDocNotFound
 from .ywidgets import Widgets
 
 YFILE = YDOCS["file"]
 AWARENESS = 1
 SERVER_SESSION = uuid4().hex
 logger = structlog.get_logger()
-
-
-class JupyterSQLiteYStore(SQLiteYStore):
-    db_path = ".jupyter_ystore.db"  # FIXME: pass in config
 
 
 class _Yjs(Yjs):
@@ -47,12 +43,14 @@ class _Yjs(Yjs):
         contents: Contents,
         file_id: FileId,
         lifespan: Lifespan,
+        ystore_factory: YStoreFactory,
         config: YjsConfig,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.contents = contents
         self.file_id = file_id
         self.lifespan = lifespan
+        self.ystore_factory = ystore_factory
         self.config = config
         if Widgets is None:
             self.widgets = None
@@ -61,7 +59,13 @@ class _Yjs(Yjs):
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with create_task_group() as tg:
-            self.room_manager = RoomManager(self.contents, self.file_id, self.lifespan, self.config)
+            self.room_manager = RoomManager(
+                self.contents,
+                self.file_id,
+                self.lifespan,
+                self.ystore_factory,
+                self.config,
+            )
             tg.start_soon(self.room_manager.start)
             task_status.started()
 
@@ -164,7 +168,14 @@ class RoomManager:
     room_write_permissions: dict[str, set[YWebsocket]]
     room_lock: ResourceLock
 
-    def __init__(self, contents: Contents, file_id: FileId, lifespan: Lifespan, config: YjsConfig):
+    def __init__(
+        self,
+        contents: Contents,
+        file_id: FileId,
+        lifespan: Lifespan,
+        ystore_factory: YStoreFactory,
+        config: YjsConfig,
+    ) -> None:
         self.contents = contents
         self.file_id = file_id
         self.lifespan = lifespan
@@ -174,7 +185,11 @@ class RoomManager:
         self.cleaners = {}  # a dictionary of room:task
         self.last_modified = {}  # a dictionary of file_id:last_modification_date
         self.room_write_permissions = {}  # a dictionary of room_name:websockets that can write
-        self.websocket_server = JupyterWebsocketServer(rooms_ready=False, auto_clean_rooms=False)
+        self.websocket_server = JupyterWebsocketServer(
+            rooms_ready=False,
+            auto_clean_rooms=False,
+            ystore_factory=ystore_factory,
+        )
         self.room_lock = ResourceLock()
         self.config = config
 
@@ -464,14 +479,22 @@ class RoomManager:
 
 
 class JupyterWebsocketServer(WebsocketServer):
+    def __init__(self, *args, ystore_factory: YStoreFactory, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.ystore_factory = ystore_factory
+
     async def get_room(self, ws_path: str, ydoc: Doc | None = None) -> YRoom:
         if ws_path not in self.rooms:
             if ws_path.count(":") >= 2:
                 # it is a stored document (e.g. a notebook)
                 file_format, file_type, file_id = ws_path.split(":", 2)
                 updates_file_path = f".{file_type}:{file_id}.y"
-                ystore = JupyterSQLiteYStore(path=updates_file_path)  # FIXME: pass in config
-                self.rooms[ws_path] = YRoom(ydoc=ydoc, ready=False, ystore=ystore)
+                ystore = self.ystore_factory(path=updates_file_path)
+                self.rooms[ws_path] = YRoom(
+                    ydoc=ydoc,
+                    ready=False,
+                    ystore=ystore,
+                )
             else:
                 # it is a transient document (e.g. awareness)
                 self.rooms[ws_path] = YRoom(ydoc=ydoc)

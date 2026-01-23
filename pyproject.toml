@@ -31,6 +31,7 @@ dependencies = [
   "fps-terminals >=0.9.3,<0.10.0",
   "fps-nbconvert >=0.9.3,<0.10.0",
   "fps-yjs >=0.11.3,<0.12.0",
+  "fps-ystore-sqlite >=0.1.0,<0.2.0",
   "fps-lab >=0.10.2,<0.11.0",
   "fps-frontend >=0.9.3,<0.10.0",
   "jupyverse-api >=0.13.1,<0.14.0",
@@ -131,3 +132,4 @@ fps-resource-usage = { workspace = true }
 fps-terminals = { workspace = true }
 fps-webdav = { workspace = true }
 fps-yjs = { workspace = true }
+fps-ystore-sqlite = { workspace = true }

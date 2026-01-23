@@ -6,6 +6,7 @@ from jupyverse_api.contents import Contents
 from jupyverse_api.file_id import FileId
 from jupyverse_api.main import Lifespan
 from jupyverse_api.yjs import Yjs, YjsConfig
+from jupyverse_api.ystore import YStoreFactory
 
 from .routes import _Yjs
 
@@ -23,8 +24,9 @@ class YjsModule(Module):
         contents = await self.get(Contents)  # type: ignore[type-abstract]
         file_id = await self.get(FileId)  # type: ignore[type-abstract]
         lifespan = await self.get(Lifespan)
+        ystore_factory = await self.get(YStoreFactory)
 
-        self.yjs = _Yjs(app, auth, contents, file_id, lifespan, self.config)
+        self.yjs = _Yjs(app, auth, contents, file_id, lifespan, ystore_factory, self.config)
 
         async with create_task_group() as tg:
             await tg.start(self.yjs.start)

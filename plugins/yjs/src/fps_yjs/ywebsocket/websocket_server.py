@@ -25,7 +25,11 @@ class WebsocketServer:
 
     async def get_room(self, name: str, ydoc: Doc | None = None) -> YRoom:
         if name not in self.rooms.keys():
-            self.rooms[name] = YRoom(ydoc=ydoc, ready=self.rooms_ready, log=self.log)
+            self.rooms[name] = YRoom(
+                ydoc=ydoc,
+                ready=self.rooms_ready,
+                log=self.log,
+            )
         room = self.rooms[name]
         await self.start_room(room)
         return room
