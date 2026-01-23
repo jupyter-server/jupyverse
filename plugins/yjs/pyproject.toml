@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_yjs"
-version = "0.11.5"
+version = "0.12.0"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "pycrdt >=0.9.0,<0.13.0",
-  "jupyverse-api >=0.13.0,<0.14.0",
+  "jupyverse-api >=0.13.2,<0.14.0",
   "sqlite-anyio >=0.2.0,<0.3.0",
   "jupyter_ydoc>3.0.1,<4.0.0",
   "anyioutils >=0.7.4",

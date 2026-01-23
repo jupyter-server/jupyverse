@@ -1,5 +1,10 @@
 # Version history
 
+## 0.12.0
+
+- Extract `YStore` to its own plugin.
+- Add documentation about external server.
+
 ## 0.11.3
 
 - Allow setting `openapi_url` and `routes_url`.

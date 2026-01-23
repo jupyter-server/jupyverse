@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import AsyncExitStack
 from inspect import isawaitable
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group
 from anyio.abc import TaskGroup, TaskStatus
-from pycrdt import Doc
+
+if TYPE_CHECKING:
+    from pycrdt import Doc
 
 
 class YStore(ABC):
