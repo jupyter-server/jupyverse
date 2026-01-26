@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../login/">
+        <link rel="prev" href="../microservices/">
       
       
-        <link rel="next" href="../terminals/">
+        <link rel="next" href="../../tutorials/standalone_jupyverse_deployment/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>kernels - Jupyverse</title>
+        <title>External server - Jupyverse</title>
       
     
     
@@ -75,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#exposing-the-fastapi-app" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -106,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              kernels
+              External server
             
           </span>
         </div>
@@ -304,8 +309,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -316,11 +323,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -341,7 +348,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -359,7 +366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/single_user/" class="md-nav__link">
+      <a href="../single_user/" class="md-nav__link">
         
   
   
@@ -387,7 +394,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/multi_user/" class="md-nav__link">
+      <a href="../multi_user/" class="md-nav__link">
         
   
   
@@ -415,7 +422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/microservices/" class="md-nav__link">
+      <a href="../microservices/" class="md-nav__link">
         
   
   
@@ -440,10 +447,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../usage/external_server/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    External server
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -459,6 +491,35 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#exposing-the-fastapi-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exposing the FastAPI app
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -590,8 +651,6 @@
       
   
   
-    
-  
   
   
     
@@ -604,11 +663,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -629,7 +688,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -647,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../auth/" class="md-nav__link">
+      <a href="../../plugins/auth/" class="md-nav__link">
         
   
   
@@ -675,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contents/" class="md-nav__link">
+      <a href="../../plugins/contents/" class="md-nav__link">
         
   
   
@@ -703,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../frontend/" class="md-nav__link">
+      <a href="../../plugins/frontend/" class="md-nav__link">
         
   
   
@@ -731,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../lab/" class="md-nav__link">
+      <a href="../../plugins/lab/" class="md-nav__link">
         
   
   
@@ -759,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../jupyterlab/" class="md-nav__link">
+      <a href="../../plugins/jupyterlab/" class="md-nav__link">
         
   
   
@@ -787,7 +846,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../notebook/" class="md-nav__link">
+      <a href="../../plugins/notebook/" class="md-nav__link">
         
   
   
@@ -815,7 +874,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../nbconvert/" class="md-nav__link">
+      <a href="../../plugins/nbconvert/" class="md-nav__link">
         
   
   
@@ -843,7 +902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../login/" class="md-nav__link">
+      <a href="../../plugins/login/" class="md-nav__link">
         
   
   
@@ -868,17 +927,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../plugins/kernels/" class="md-nav__link">
         
   
   
@@ -894,7 +946,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -907,7 +958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../terminals/" class="md-nav__link">
+      <a href="../../plugins/terminals/" class="md-nav__link">
         
   
   
@@ -935,7 +986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../yjs/" class="md-nav__link">
+      <a href="../../plugins/yjs/" class="md-nav__link">
         
   
   
@@ -963,7 +1014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../resource_usage/" class="md-nav__link">
+      <a href="../../plugins/resource_usage/" class="md-nav__link">
         
   
   
@@ -1009,6 +1060,25 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#exposing-the-fastapi-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exposing the FastAPI app
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1027,9 +1097,61 @@
   
 
 
-  <h1>kernels</h1>
+  <h1>External server</h1>
 
-<p><code>fps-kernels</code> implements the kernels API, i.e. launching and stopping kernels, serving the kernel protocol over WebSocket, etc.</p>
+<p>When Jupyverse is run using the <code>jupyverse</code> CLI, it internally launches a server. But it is also
+possible to run Jupyverse through an external server. This allows to use any ASGI server you want,
+and to use process replication if this server supports it.</p>
+<h2 id="exposing-the-fastapi-app">Exposing the FastAPI app</h2>
+<p>The following <code>main.py</code> will expose the FastAPI application in the <code>app</code> object, and use the ASGI
+lifespan protocol to start and stop Jupyverse:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">entry_points</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fps</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_root_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Receive</span><span class="p">,</span> <span class="n">Scope</span><span class="p">,</span> <span class="n">Send</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">:</span> <span class="n">Receive</span><span class="p">,</span> <span class="n">send</span><span class="p">:</span> <span class="n">Send</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;lifespan&quot;</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="k">await</span> <span class="n">receive</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;lifespan.startup&quot;</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">()</span>
+                    <span class="k">await</span> <span class="n">send</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;lifespan.startup.complete&quot;</span><span class="p">})</span>
+                <span class="k">elif</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;lifespan.shutdown&quot;</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jupyverse_module</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">await</span> <span class="n">send</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;lifespan.shutdown.complete&quot;</span><span class="p">})</span>
+                    <span class="k">return</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">jupyverse_modules</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ep</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="s2">&quot;jupyverse.modules&quot;</span><span class="p">)]</span>
+        <span class="p">}</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jupyverse&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;jupyverse&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;modules&quot;</span><span class="p">:</span> <span class="n">jupyverse_modules</span><span class="p">,</span>
+                <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;start_server&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jupyverse_module</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_root_module</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="fm">__aenter__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jupyverse_module</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">FastAPI</span><span class="p">)</span>
+        <span class="n">auth_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jupyverse_module</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">&quot;auth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">token</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Auth token: </span><span class="si">{</span><span class="n">auth_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">App</span><span class="p">()</span>
+</code></pre></div>
+<p>You can then use <code>uvicorn</code> to run the server, for instance:</p>
+<div class="highlight"><pre><span></span><code>uvicorn<span class="w"> </span>main:app
+</code></pre></div>
 
 
 
