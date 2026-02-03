@@ -58,5 +58,5 @@ class Yjs(Router, ABC):
     async def get_room(
         self,
         id: str,
-        doc: "Doc" | None = None,
+        doc: Doc | None = None,
     ): ...
