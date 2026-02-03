@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import APIRouter, Depends, Request, Response
 
@@ -58,5 +58,5 @@ class Yjs(Router, ABC):
     async def get_room(
         self,
         id: str,
-        doc: Doc | None = None,
+        doc: Optional["Doc"] = None,
     ): ...

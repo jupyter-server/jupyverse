@@ -24,7 +24,6 @@ class YRoomModule(Module):
             partial(_YRoom, contents, file_id, ystore_factory, self.config)  # type: ignore[arg-type]
         )
         yroom_manager = _YRoomManager(yroom_factory)
-        # self.put(yroom_factory, YRoomFactory)
         async with yroom_manager as yroom_manager:
             self.put(yroom_manager, YRoomManager)
             self.done()
