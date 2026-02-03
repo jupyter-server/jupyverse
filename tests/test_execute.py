@@ -5,10 +5,9 @@ from pathlib import Path
 import anyio
 import pytest
 from fps import get_root_module, merge_config
-from fps_yjs.ywebsocket import WebsocketProvider
 from httpx import AsyncClient
-from httpx_ws import aconnect_ws
 from jupyter_ydoc import ydocs
+from jupyverse_api.yroom import AsyncWebSocketClient
 from pycrdt import Doc, Map, Text
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
@@ -56,39 +55,15 @@ CONFIG = {
             "yjs": {
                 "type": "yjs",
             },
+            "yroom": {
+                "type": "yroom",
+            },
             "ystore_sqlite": {
                 "type": "ystore_sqlite",
             },
         },
     }
 }
-
-
-class Websocket:
-    def __init__(self, websocket, roomid: str):
-        self.websocket = websocket
-        self.roomid = roomid
-
-    @property
-    def path(self) -> str:
-        return self.roomid
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self) -> bytes:
-        try:
-            message = await self.recv()
-        except Exception:
-            raise StopAsyncIteration()
-        return message
-
-    async def send(self, message: bytes):
-        await self.websocket.send_bytes(message)
-
-    async def recv(self) -> bytes:
-        b = await self.websocket.receive_bytes()
-        return bytes(b)
 
 
 @pytest.mark.anyio
@@ -153,9 +128,10 @@ async def test_execute(auth_mode, free_tcp_port):
         aevent = anyio.Event()
         events = []
         ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-        async with (
-            aconnect_ws(f"{ws_url}/api/collaboration/room/{document_id}") as websocket,
-            WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)),
+        async with AsyncWebSocketClient(
+            id=f"api/collaboration/room/{document_id}",
+            doc=ynb.ydoc,
+            url=ws_url,
         ):
             # connect to the shared notebook document
             # wait for file to be loaded and Y model to be created in server and client
@@ -191,9 +167,10 @@ async def test_execute(auth_mode, free_tcp_port):
 
 async def connect_ywidget(ws_url, guid):
     ywidget_doc = Doc()
-    async with (
-        aconnect_ws(f"{ws_url}/api/collaboration/room/ywidget:{guid}") as websocket,
-        WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
+    async with AsyncWebSocketClient(
+        id=f"api/collaboration/room/ywidget:{guid}",
+        doc=ywidget_doc,
+        url=ws_url,
     ):
         attrs = Map()
         model_name = Text()

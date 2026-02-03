@@ -1,18 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Request, Response
-from pydantic import Field
 
-from jupyverse_api import Config, Router
+from jupyverse_api import Router
 
 from ..app import App
 from ..auth import Auth, User
 
+if TYPE_CHECKING:
+    from pycrdt import Doc
+
 
 class Yjs(Router, ABC):
-    websocket_server: Any
-
     def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
 
@@ -55,23 +55,8 @@ class Yjs(Router, ABC):
     ): ...
 
     @abstractmethod
-    def get_document(
+    async def get_room(
         self,
-        document_id: str,
+        id: str,
+        doc: "Doc" | None = None,
     ): ...
-
-
-class YjsConfig(Config):
-    document_cleanup_delay: float = Field(
-        description=(
-            "The time to wait (in seconds) after the last client has leaved "
-            "before cleaning the room."
-        ),
-        default=60,
-    )
-    document_save_delay: float = Field(
-        description=(
-            "The time to wait (in seconds) after the last change before saving a document to disk."
-        ),
-        default=1,
-    )

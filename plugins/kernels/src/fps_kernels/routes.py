@@ -323,7 +323,8 @@ class _Kernels(Kernels):
         r = await request.json()
         execution = Execution(**r)
         if kernel_id in kernels:
-            ynotebook = self.yjs.get_document(execution.document_id)
+            room = await self.yjs.get_room(execution.document_id)
+            ynotebook = room.jupyter_ydoc
             ycells = [ycell for ycell in ynotebook.ycells if ycell["id"] == execution.cell_id]
             if not ycells:
                 return  # FIXME

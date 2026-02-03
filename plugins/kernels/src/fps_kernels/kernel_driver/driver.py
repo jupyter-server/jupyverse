@@ -256,7 +256,7 @@ class KernelDriver:
                     if model_id in self.yjs.widgets.widgets:  # type: ignore
                         doc = self.yjs.widgets.widgets[model_id]["model"].ydoc  # type: ignore
                         path = f"ywidget:{doc.guid}"
-                        await self.yjs.room_manager.websocket_server.get_room(path, ydoc=doc)  # type: ignore
+                        await self.yjs.get_room(path, doc=doc)
                         outputs.append(doc)
             else:
                 output = {

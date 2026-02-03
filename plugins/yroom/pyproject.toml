@@ -3,9 +3,9 @@ requires = ["uv_build"]
 build-backend = "uv_build"
 
 [project]
-name = "fps_yjs"
-version = "0.12.0"
-description = "An FPS plugin for the Yjs API"
+name = "fps_yroom"
+version = "0.1.0"
+description = "An FPS plugin for a YRoom"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"
 classifiers = [
@@ -22,11 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "pycrdt >=0.9.0,<0.13.0",
-  "jupyverse-api >=0.13.2,<0.14.0",
-  "sqlite-anyio >=0.2.0,<0.3.0",
-  "jupyter_ydoc >=3.3.5,<4.0.0",
-  "anyioutils >=0.7.4",
+  "jupyverse-api >=0.13.0,<0.14.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
@@ -43,5 +39,5 @@ content-type = "text/markdown"
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules" = {yjs = "fps_yjs.main:YjsModule"}
-"jupyverse.modules" = {yjs = "fps_yjs.main:YjsModule"}
+"fps.modules" = {yroom = "fps_yroom.main:YRoomModule"}
+"jupyverse.modules" = {yroom = "fps_yroom.main:YRoomModule"}

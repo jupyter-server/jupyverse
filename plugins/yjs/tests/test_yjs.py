@@ -32,6 +32,9 @@ async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
                 },
                 "yjs": {
                     "type": "yjs",
+                },
+                "yroom": {
+                    "type": "yroom",
                     "config": {
                         "document_cleanup_delay": 0,
                     },
