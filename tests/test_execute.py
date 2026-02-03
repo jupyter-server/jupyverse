@@ -7,7 +7,7 @@ import pytest
 from fps import get_root_module, merge_config
 from httpx import AsyncClient
 from jupyter_ydoc import ydocs
-from jupyverse_api.yroom import AsyncWebSocketClient
+from jupyverse_api.yrooms import AsyncWebSocketClient
 from pycrdt import Doc, Map, Text
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
@@ -55,8 +55,8 @@ CONFIG = {
             "yjs": {
                 "type": "yjs",
             },
-            "yroom": {
-                "type": "yroom",
+            "yrooms": {
+                "type": "yrooms",
             },
             "ystore_sqlite": {
                 "type": "ystore_sqlite",

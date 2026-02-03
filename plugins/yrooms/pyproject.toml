@@ -3,9 +3,9 @@ requires = ["uv_build"]
 build-backend = "uv_build"
 
 [project]
-name = "fps_yroom"
+name = "fps_yrooms"
 version = "0.1.0"
-description = "An FPS plugin for a YRoom"
+description = "An FPS plugin for YRooms"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"
 classifiers = [
@@ -39,5 +39,5 @@ content-type = "text/markdown"
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules" = {yroom = "fps_yroom.main:YRoomModule"}
-"jupyverse.modules" = {yroom = "fps_yroom.main:YRoomModule"}
+"fps.modules" = {yrooms = "fps_yrooms.main:YRoomsModule"}
+"jupyverse.modules" = {yrooms = "fps_yrooms.main:YRoomsModule"}

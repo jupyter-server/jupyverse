@@ -6,7 +6,7 @@ import anyio
 import pytest
 import requests
 from jupyter_ydoc import ydocs
-from jupyverse_api.yroom import AsyncWebSocketClient
+from jupyverse_api.yrooms import AsyncWebSocketClient
 from pycrdt import Array, Doc, Map, Text
 
 prev_theme = {}

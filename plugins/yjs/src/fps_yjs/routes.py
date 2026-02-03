@@ -11,7 +11,7 @@ from jupyverse_api.auth import Auth, User
 from jupyverse_api.file_id import FileId
 from jupyverse_api.yjs import Yjs
 from jupyverse_api.yjs.models import CreateDocumentSession
-from jupyverse_api.yroom import AsyncWebSocket, YRoom, YRoomManager
+from jupyverse_api.yrooms import AsyncWebSocket, YRoom, YRooms
 from pycrdt import Doc
 
 from .widgets import Widgets
@@ -25,11 +25,11 @@ class _Yjs(Yjs):
         app: App,
         auth: Auth,
         file_id: FileId,
-        yroom_manager: YRoomManager,
+        yrooms: YRooms,
     ) -> None:
         super().__init__(app=app, auth=auth)
         self.file_id = file_id
-        self.yroom_manager = yroom_manager
+        self.yrooms = yrooms
         if Widgets is None:
             self.widgets = None
         else:
@@ -45,7 +45,7 @@ class _Yjs(Yjs):
         websocket, permissions = websocket_permissions
         await websocket.accept()
         ywebsocket = AsyncWebSocket(websocket, path)
-        await self.yroom_manager.serve(ywebsocket, permissions)
+        await self.yrooms.serve(ywebsocket, permissions)
 
     async def create_roomid(
         self,
@@ -76,4 +76,4 @@ class _Yjs(Yjs):
         return res
 
     async def get_room(self, id: str, doc: Doc | None = None) -> YRoom:
-        return await self.yroom_manager.get_room(id, doc=doc)
+        return await self.yrooms.get_room(id, doc=doc)

@@ -3,7 +3,7 @@ from pydantic import Field
 from jupyverse_api import Config
 
 
-class YRoomConfig(Config):
+class YRoomsConfig(Config):
     document_cleanup_delay: float = Field(
         description=(
             "The time to wait (in seconds) after the last client has leaved "

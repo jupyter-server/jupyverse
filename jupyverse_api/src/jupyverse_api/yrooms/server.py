@@ -159,7 +159,7 @@ class YRoomFactory:
         return self._yroom_factory(*args, **kwargs)
 
 
-class YRoomManager(AsyncContextManagerMixin):
+class YRooms(AsyncContextManagerMixin):
     def __init__(self, room_factory: Callable[[str], YRoom] = YRoom) -> None:
         self._room_factory = room_factory
         self._rooms: dict[str, YRoom] = {}

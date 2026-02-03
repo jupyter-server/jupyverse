@@ -4,17 +4,17 @@ from typing import Any
 from fps import Module
 from jupyverse_api.contents import Contents
 from jupyverse_api.file_id import FileId
-from jupyverse_api.yroom import YRoomFactory, YRoomManager
+from jupyverse_api.yrooms import YRoomFactory, YRooms
 from jupyverse_api.ystore import YStoreFactory
 
-from .config import YRoomConfig
-from .yroom import _YRoom, _YRoomManager
+from .config import YRoomsConfig
+from .yrooms import _YRoom, _YRooms
 
 
-class YRoomModule(Module):
+class YRoomsModule(Module):
     def __init__(self, name: str, **kwargs: Any):
         super().__init__(name)
-        self.config = YRoomConfig(**kwargs)
+        self.config = YRoomsConfig(**kwargs)
 
     async def prepare(self) -> None:
         contents = await self.get(Contents)  # type: ignore[type-abstract]
@@ -23,9 +23,8 @@ class YRoomModule(Module):
         yroom_factory = YRoomFactory(
             partial(_YRoom, contents, file_id, ystore_factory, self.config)  # type: ignore[arg-type]
         )
-        yroom_manager = _YRoomManager(yroom_factory)
-        async with yroom_manager as yroom_manager:
-            self.put(yroom_manager, YRoomManager)
+        async with _YRooms(yroom_factory) as yrooms:
+            self.put(yrooms, YRooms)
             self.done()
             await self.started.wait()
-            await self.freed(yroom_manager)
+            await self.freed(yrooms)

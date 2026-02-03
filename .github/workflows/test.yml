@@ -42,7 +42,7 @@ jobs:
             ./plugins/nbconvert \
             ./plugins/terminals \
             ./plugins/yjs \
-            ./plugins/yroom \
+            ./plugins/yrooms \
             ./plugins/ystore_sqlite \
             ./plugins/resource_usage \
             ./plugins/webdav \
