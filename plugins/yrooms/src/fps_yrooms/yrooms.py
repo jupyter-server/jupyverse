@@ -14,6 +14,7 @@ from jupyverse_api.ystore import YDocNotFound, YStoreFactory
 from pycrdt import (
     Doc,
     YMessageType,
+    YSyncMessageType,
     handle_sync_message,
 )
 
@@ -43,6 +44,7 @@ class _YRoom(YRoom):
         self._close_room_cancel_scope: CancelScope | None = None
         self._write_to_file_cancel_scope: CancelScope | None = None
         self._id_of_file: str | None = None
+        self._can_write = permissions is None or "write" in permissions.get("yjs", [])
 
     async def serve(self, client: AsyncChannel) -> None:
         # cancel the closing of the room if it was scheduled:
@@ -193,9 +195,14 @@ class _YRoom(YRoom):
     async def handle_message(self, message: bytes, client: AsyncChannel) -> None:
         match message[0]:
             case YMessageType.SYNC:
-                reply = handle_sync_message(message[1:], self._doc)
-                if reply is not None:
-                    await client.send(reply)
+                _message = message[1:]
+                if self._can_write or _message[0] not in {
+                    YSyncMessageType.SYNC_UPDATE,
+                    YSyncMessageType.SYNC_STEP2,
+                }:
+                    reply = handle_sync_message(_message, self._doc)
+                    if reply is not None:
+                        await client.send(reply)
             case YMessageType.AWARENESS:
                 for client in self.clients:
                     await client.send(message)
