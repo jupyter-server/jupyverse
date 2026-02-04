@@ -160,8 +160,11 @@ class YRoomFactory:
 
 
 class YRooms(AsyncContextManagerMixin):
-    def __init__(self, room_factory: Callable[[str], YRoom] = YRoom) -> None:
+    def __init__(
+        self, room_factory: Callable[[str], YRoom] = YRoom, stop_event: Event | None = None
+    ) -> None:
         self._room_factory = room_factory
+        self._stop_event = stop_event or Event()
         self._rooms: dict[str, YRoom] = {}
         self._lock = ResourceLock()
 
@@ -177,6 +180,7 @@ class YRooms(AsyncContextManagerMixin):
     async def __asynccontextmanager__(self) -> AsyncGenerator[Self]:
         async with create_task_group() as self._task_group:
             yield self
+            await self._stop_event.wait()
             self._task_group.cancel_scope.cancel()
 
     async def _create_room(self, id: str, *, task_status: TaskStatus[YRoom], **kwargs: Any):
