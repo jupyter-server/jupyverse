@@ -24,7 +24,6 @@ classifiers = [
 dependencies = [
   "pywinpty;platform_system=='Windows'",
   "jupyverse-api >=0.13.0,<0.14.0",
-  "anyio >=4.9.0,<5.0.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

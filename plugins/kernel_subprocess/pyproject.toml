@@ -23,8 +23,6 @@ classifiers = [
 ]
 dependencies = [
   "jupyverse-api >=0.13.0,<0.14.0",
-  "anyio",
-  "pyzmq",
   "zmq-anyio >=0.3.1,<0.4.0",
 ]
 license = "BSD-3-Clause"

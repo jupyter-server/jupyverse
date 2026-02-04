@@ -23,7 +23,6 @@ classifiers = [
 ]
 dependencies = [
   "sqlite-anyio >=0.2.0,<0.3.0",
-  "anyio >=4.9.0,<5",
   "jupyverse-api >=0.13.0,<0.14.0",
 ]
 license = "BSD-3-Clause"

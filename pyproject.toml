@@ -37,7 +37,6 @@ dependencies = [
   "fps-frontend >=0.9.3,<0.10.0",
   "jupyverse-api >=0.13.1,<0.14.0",
   "rich-click >=1.6.1,<2",
-  "eval-type-backport; python_version<'3.10'",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

@@ -1,15 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional
 
 from fastapi import APIRouter, Depends, Request, Response
+from pycrdt import Doc
 
 from jupyverse_api import Router
 
 from ..app import App
 from ..auth import Auth, User
-
-if TYPE_CHECKING:
-    from pycrdt import Doc
 
 
 class Yjs(Router, ABC):
@@ -58,5 +55,5 @@ class Yjs(Router, ABC):
     async def get_room(
         self,
         id: str,
-        doc: Optional["Doc"] = None,
+        doc: Doc | None = None,
     ): ...

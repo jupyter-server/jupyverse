@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Awaitable, Callable
 from inspect import isawaitable
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
-if TYPE_CHECKING:
-    from pycrdt import Doc
+from pycrdt import Doc
 
 
 class YStore(ABC):
@@ -42,7 +41,7 @@ class YStore(ABC):
         metadata = cast(bytes, metadata)
         return metadata
 
-    async def encode_state_as_update(self, ydoc: "Doc") -> None:
+    async def encode_state_as_update(self, ydoc: Doc) -> None:
         """Store a YDoc state.
 
         Arguments:
@@ -51,7 +50,7 @@ class YStore(ABC):
         update = ydoc.get_update()
         await self.write(update)
 
-    async def apply_updates(self, ydoc: "Doc") -> None:
+    async def apply_updates(self, ydoc: Doc) -> None:
         """Apply all stored updates to the YDoc.
 
         Arguments:

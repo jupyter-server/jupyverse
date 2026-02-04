@@ -25,8 +25,6 @@ dependencies = [
   "python-dateutil",
   "types-python-dateutil",
   "jupyverse-api >=0.13.0,<0.14.0",
-  "pycrdt >=0.10.3,<0.13.0",
-  "anyio",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
