@@ -45,7 +45,7 @@ class _Yjs(Yjs):
         websocket, permissions = websocket_permissions
         await websocket.accept()
         ywebsocket = AsyncWebSocket(websocket, path)
-        await self.yrooms.serve(ywebsocket, permissions)
+        await self.yrooms.serve(ywebsocket, permissions=permissions)
 
     async def create_roomid(
         self,

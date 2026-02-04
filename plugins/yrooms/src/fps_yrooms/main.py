@@ -8,7 +8,7 @@ from jupyverse_api.yrooms import YRoomFactory, YRooms
 from jupyverse_api.ystore import YStoreFactory
 
 from .config import YRoomsConfig
-from .yrooms import _YRoom, _YRooms
+from .yrooms import YRoom
 
 
 class YRoomsModule(Module):
@@ -21,9 +21,9 @@ class YRoomsModule(Module):
         file_id = await self.get(FileId)  # type: ignore[type-abstract]
         ystore_factory = await self.get(YStoreFactory)
         yroom_factory = YRoomFactory(
-            partial(_YRoom, contents, file_id, ystore_factory, self.config)  # type: ignore[arg-type]
+            partial(YRoom, contents, file_id, ystore_factory, self.config)  # type: ignore[arg-type]
         )
-        async with _YRooms(yroom_factory) as yrooms:
+        async with YRooms(yroom_factory) as yrooms:
             self.put(yrooms, YRooms)
             self.done()
             await self.started.wait()

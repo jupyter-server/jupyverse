@@ -9,7 +9,8 @@ from anyio.abc import TaskStatus
 from jupyter_ydoc import ydocs as YDOCS
 from jupyverse_api.contents import Contents
 from jupyverse_api.file_id import FileId
-from jupyverse_api.yrooms import AsyncChannel, YRoom, YRooms
+from jupyverse_api.yrooms import AsyncChannel
+from jupyverse_api.yrooms import YRoom as _YRoom
 from jupyverse_api.ystore import YDocNotFound, YStoreFactory
 from pycrdt import (
     Doc,
@@ -24,7 +25,7 @@ logger = structlog.get_logger()
 YFILE = YDOCS["file"]
 
 
-class _YRoom(YRoom):
+class YRoom(_YRoom):
     def __init__(
         self,
         contents: Contents,
@@ -217,12 +218,6 @@ class _YRoom(YRoom):
                 await sleep(self._config.document_cleanup_delay)
             await super().close()
             logger.info("Closed collaboration room", **kwargs)
-
-
-class _YRooms(YRooms):
-    async def serve(self, websocket: AsyncChannel, permissions: dict[str, list[str]]) -> None:
-        room = await self.get_room(websocket.id, permissions=permissions)
-        await room.serve(websocket)
 
 
 def to_datetime(iso_date: str) -> datetime:

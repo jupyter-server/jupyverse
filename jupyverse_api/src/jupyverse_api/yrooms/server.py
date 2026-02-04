@@ -193,3 +193,7 @@ class YRooms(AsyncContextManagerMixin):
             else:
                 room = self._rooms[id]
         return room
+
+    async def serve(self, channel: AsyncChannel, **kwargs: Any) -> None:
+        room = await self.get_room(channel.id, **kwargs)
+        await room.serve(channel)
