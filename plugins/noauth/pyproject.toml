@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_noauth"
-version = "0.9.7"
+version = "0.9.8"
 description = "An FPS plugin for an unprotected API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "jupyverse-api >=0.13.0,<0.14.0",
+  "jupyverse-api >=0.14.0,<0.15.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

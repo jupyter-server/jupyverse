@@ -1,5 +1,16 @@
 # Version history
 
+## 0.13.0
+
+In this release, a new `fps-yrooms` plugin was added. It publishes a `YRoomFactory` object, that
+`fps-yjs` needs to create a `YRooms` object that is responsible for managing collaboration rooms.
+A `YRoomFactory` is used to create a `YRoom`, which can be customized. For instance, `fps-yrooms`
+does additional things beyond just synchronizing clients in a room: it dumps documents to file
+and watches files for out-of-band changes, it saves document updates into a `YStore`, etc.
+An important extension point of a `YRoom` is its `handle_message(message, client)` method:
+this is where one can process Y messages and typically reject them if a client has not enough
+rights to modify the shared document.
+
 ## 0.12.0
 
 - Extract `YStore` to its own plugin.

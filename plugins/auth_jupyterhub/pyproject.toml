@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_auth_jupyterhub"
-version = "0.9.8"
+version = "0.9.9"
 description = "An FPS plugin for the authentication API, using JupyterHub"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -24,7 +24,7 @@ classifiers = [
 dependencies = [
   "aiosqlite <0.22.0",
   "jupyterhub >=4.0.1,<5",
-  "jupyverse-api >=0.13.0,<0.14.0",
+  "jupyverse-api >=0.14.0,<0.15.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

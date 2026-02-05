@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_file_id"
-version = "0.3.7"
+version = "0.3.8"
 description = "An FPS plugin for the file ID API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "sqlite-anyio >=0.2.0,<0.3.0",
-  "jupyverse-api >=0.13.0,<0.14.0",
+  "jupyverse-api >=0.14.0,<0.15.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
