@@ -30,9 +30,6 @@ dependencies = [
   "fps-kernels >=0.10.5,<0.11.0",
   "fps-terminals >=0.9.3,<0.10.0",
   "fps-nbconvert >=0.9.3,<0.10.0",
-  "fps-yjs >=0.13.0,<0.14.0",
-  "fps-ystore-sqlite >=0.1.0,<0.2.0",
-  "fps-yrooms >=0.1.0,<0.2.0",
   "fps-lab >=0.10.2,<0.11.0",
   "fps-frontend >=0.9.3,<0.10.0",
   "jupyverse-api >=0.14.0,<0.15.0",
@@ -55,7 +52,13 @@ Homepage = "https://jupyter.org"
 [project.optional-dependencies]
 jupyterlab = ["fps-jupyterlab >=0.10.5,<0.11.0"]
 notebook = ["fps-notebook>=0.9.7,<0.10.0"]
-collaboration = ["jupyter-collaboration-ui", "jupyter-docprovider"]
+collaboration = [
+  "jupyter-collaboration-ui",
+  "jupyter-docprovider",
+  "fps-yjs >=0.13.0,<0.14.0",
+  "fps-ystore-sqlite >=0.1.0,<0.2.0",
+  "fps-yrooms >=0.1.0,<0.2.0",
+]
 auth = ["fps-auth >=0.9.3,<0.10.0", "fps-login >=0.9.3,<0.10.0"]
 auth-fief = ["fps-auth-fief >=0.9.4,<0.10.0"]
 auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.4,<0.10.0"]
