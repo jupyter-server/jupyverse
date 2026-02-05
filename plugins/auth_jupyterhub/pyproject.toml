@@ -23,10 +23,8 @@ classifiers = [
 ]
 dependencies = [
   "aiosqlite <0.22.0",
-  "httpx >=0.24.1,<1",
   "jupyterhub >=4.0.1,<5",
   "jupyverse-api >=0.13.0,<0.14.0",
-  "anyio",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

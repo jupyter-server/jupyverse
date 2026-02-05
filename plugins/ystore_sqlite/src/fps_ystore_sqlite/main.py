@@ -15,7 +15,7 @@ class YStoreSQLiteModule(Module):
         self.config = YStoreSQLiteConfig(**kwargs)
 
     async def prepare(self) -> None:
-        sqlite_ystore_factory = YStoreFactory(partial(SQLiteYStore, db_path=self.config.db_path))
+        sqlite_ystore_factory = YStoreFactory(partial(SQLiteYStore, db_path=self.config.db_path))  # type: ignore[arg-type]
         self.put(sqlite_ystore_factory)
 
 

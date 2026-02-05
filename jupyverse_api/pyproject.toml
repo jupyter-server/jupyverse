@@ -28,9 +28,13 @@ authors = [
 dependencies = [
   "pydantic >=2,<3",
   "fastapi >=0.95.0,<1",
-  "fps >=0.5.7,<0.6.0",
-  "anyio >=4.9.0,<5",
+  "fps >=0.6.0,<0.7.0",
+  "anyio >=4.12.1,<5",
   "anyioutils >=0.7.4",
+  "typing-extensions >=4.15.0",
+  "pycrdt >=0.12.46,<0.13.0",
+  "httpx",
+  "httpx-ws",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

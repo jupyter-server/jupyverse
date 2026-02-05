@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "fps[click,fastapi,anycorn] >=0.5.9,<0.6.0",
+  "fps[click,fastapi,anycorn] >=0.6.0,<0.7.0",
   "fps-contents >=0.10.3,<0.11.0",
   "fps-file-id >=0.3.4,<0.4.0",
   "fps-file-watcher >=0.1.3,<0.2.0",
@@ -32,11 +32,11 @@ dependencies = [
   "fps-nbconvert >=0.9.3,<0.10.0",
   "fps-yjs >=0.12.0,<0.13.0",
   "fps-ystore-sqlite >=0.1.0,<0.2.0",
+  "fps-yrooms >=0.1.0,<0.2.0",
   "fps-lab >=0.10.2,<0.11.0",
   "fps-frontend >=0.9.3,<0.10.0",
   "jupyverse-api >=0.13.1,<0.14.0",
   "rich-click >=1.6.1,<2",
-  "eval-type-backport; python_version<'3.10'",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
@@ -133,3 +133,4 @@ fps-terminals = { workspace = true }
 fps-webdav = { workspace = true }
 fps-yjs = { workspace = true }
 fps-ystore-sqlite = { workspace = true }
+fps-yrooms = { workspace = true }

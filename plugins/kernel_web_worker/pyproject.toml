@@ -23,7 +23,6 @@ classifiers = [
 ]
 dependencies = [
   "jupyverse-api >=0.13.0,<0.14.0",
-  "anyio",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

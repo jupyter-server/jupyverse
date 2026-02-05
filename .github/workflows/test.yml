@@ -42,6 +42,8 @@ jobs:
             ./plugins/nbconvert \
             ./plugins/terminals \
             ./plugins/yjs \
+            ./plugins/yrooms \
+            ./plugins/ystore_sqlite \
             ./plugins/resource_usage \
             ./plugins/webdav \
             ./plugins/noauth \

@@ -49,6 +49,9 @@ CONFIG = {
             "yjs": {
                 "type": "yjs",
             },
+            "yrooms": {
+                "type": "yrooms",
+            },
             "ystore_sqlite": {
                 "type": "ystore_sqlite",
             },

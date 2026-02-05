@@ -24,7 +24,6 @@ classifiers = [
 dependencies = [
   "psutil >=5.9.4",
   "types-psutil",
-  "anyio >=4.9.0,<5",
   "jupyverse-api >=0.13.0,<0.14.0",
 ]
 license = "BSD-3-Clause"

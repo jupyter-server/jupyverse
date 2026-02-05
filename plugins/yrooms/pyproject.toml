@@ -3,10 +3,10 @@ requires = ["uv_build"]
 build-backend = "uv_build"
 
 [project]
-name = "fps_terminals"
-version = "0.9.6"
-description = "An FPS plugin for the terminals API"
-keywords = ["jupyter", "server", "fastapi", "plugins"]
+name = "fps_yrooms"
+version = "0.1.0"
+description = "An FPS plugin for YRooms"
+keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -22,8 +22,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "pywinpty;platform_system=='Windows'",
   "jupyverse-api >=0.13.0,<0.14.0",
+  "jupyter-ydoc >=3.3.5,<4.0.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
@@ -40,5 +40,5 @@ content-type = "text/markdown"
 Homepage = "https://jupyter.org"
 
 [project.entry-points]
-"fps.modules" = {terminals = "fps_terminals.main:TerminalsModule"}
-"jupyverse.modules" = {terminals = "fps_terminals.main:TerminalsModule"}
+"fps.modules" = {yrooms = "fps_yrooms.main:YRoomsModule"}
+"jupyverse.modules" = {yrooms = "fps_yrooms.main:YRoomsModule"}

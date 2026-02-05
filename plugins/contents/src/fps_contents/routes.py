@@ -182,9 +182,6 @@ class _Contents(Contents):
                             content = cast(str, content)
                             nb = json.loads(content)
                         for cell in nb["cells"]:
-                            if "metadata" not in cell:
-                                cell["metadata"] = {}
-                            cell["metadata"].update({"trusted": False})
                             if cell["cell_type"] == "code":
                                 cell_source = cell["source"]
                                 if not isinstance(cell_source, str):

@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "asgiwebdav>=1.3.2,<2; python_version >= '3.10'",
+  "asgiwebdav>=1.3.2,<2",
   "jupyverse-api >=0.13.0,<0.14.0",
 ]
 license = "BSD-3-Clause"

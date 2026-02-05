@@ -5,11 +5,9 @@ from pathlib import Path
 import anyio
 import pytest
 import requests
-from fps_yjs.ywebsocket import WebsocketProvider
-from httpx_ws import aconnect_ws
 from jupyter_ydoc import ydocs
+from jupyverse_api.yrooms import AsyncWebSocketClient
 from pycrdt import Array, Doc, Map, Text
-from utils import Websocket
 
 prev_theme = {}
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
@@ -82,10 +80,7 @@ async def test_rest_api(start_jupyverse):
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
     ydoc = Doc()
-    async with (
-        aconnect_ws(f"{url}/api/collaboration/room/{document_id}") as websocket,
-        WebsocketProvider(ydoc, Websocket(websocket, document_id)),
-    ):
+    async with AsyncWebSocketClient(id=f"api/collaboration/room/{document_id}", doc=ydoc, url=url):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
         await anyio.sleep(0.5)
@@ -175,9 +170,10 @@ async def test_ywidgets(start_jupyverse):
     aevent = anyio.Event()
     events = []
     ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-    async with (
-        aconnect_ws(f"{url}/api/collaboration/room/{document_id}") as websocket,
-        WebsocketProvider(ynb.ydoc, Websocket(websocket, document_id)),
+    async with AsyncWebSocketClient(
+        id=f"api/collaboration/room/{document_id}",
+        doc=ynb.ydoc,
+        url=url,
     ):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
@@ -217,9 +213,10 @@ async def test_ywidgets(start_jupyverse):
 
 async def connect_ywidget(url, guid):
     ywidget_doc = Doc()
-    async with (
-        aconnect_ws(f"{url}/api/collaboration/room/ywidget:{guid}") as websocket,
-        WebsocketProvider(ywidget_doc, Websocket(websocket, guid)),
+    async with AsyncWebSocketClient(
+        id=f"api/collaboration/room/ywidget:{guid}",
+        doc=ywidget_doc,
+        url=url,
     ):
         attrs = Map()
         model_name = Text()
