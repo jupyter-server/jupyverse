@@ -25,7 +25,7 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv
-          uv pip install -e ".[jupyterlab,notebook,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
+          uv pip install -e ".[jupyterlab,notebook,collaboration,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
       - name: Check types
         run: |
           uv run mypy \
@@ -75,6 +75,6 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv
-          uv pip install -e ".[jupyterlab,notebook,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
+          uv pip install -e ".[jupyterlab,notebook,collaboration,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
       - name: Run tests
         run: uv run pytest -v --timeout=60 --color=yes
