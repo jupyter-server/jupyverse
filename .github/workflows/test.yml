@@ -24,7 +24,7 @@ jobs:
           activate-environment: "true"
       - name: Install jupyverse and plugins
         run: |
-          uv venv
+          uv venv --clear
           uv pip install -e ".[jupyterlab,notebook,collaboration,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
       - name: Check types
         run: |
