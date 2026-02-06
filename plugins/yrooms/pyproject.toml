@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "jupyverse-api >=0.14.0,<0.15.0",
-  "jupyter-ydoc >=3.3.5,<4.0.0",
+  "jupyter-ydoc >=3.4.0,<4.0.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
