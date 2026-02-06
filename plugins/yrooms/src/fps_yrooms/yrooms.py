@@ -89,7 +89,7 @@ class YRoom(_YRoom):
                 if not read_from_source:
                     # if YStore updates and source file are out-of-sync, resync updates
                     # with source
-                    if self._jupyter_ydoc.source != model.content:
+                    if await self._jupyter_ydoc.aget() != model.content:
                         read_from_source = True
                         logger.info(
                             "Document in YStore differs from file content",
@@ -100,7 +100,7 @@ class YRoom(_YRoom):
                 await self.task_group.start(self._write_to_file)
                 await self.task_group.start(self._watch_file)
                 if read_from_source:
-                    self._jupyter_ydoc.source = model.content
+                    await self._jupyter_ydoc.aset(model.content)
                     await self._ystore.encode_state_as_update(self.doc)
                     logger.info("Document read from file", file_path=file_path, id=self.id)
                 else:
@@ -134,12 +134,13 @@ class YRoom(_YRoom):
             file_path = await self._get_file_path(self._id_of_file)
             assert file_path is not None
             model = await self._contents.read_content(file_path, True, self._file_format)
-            if model.content != self._jupyter_ydoc.source:
+            jupyter_ydoc_source = await self._jupyter_ydoc.aget()
+            if model.content != jupyter_ydoc_source:
                 # don't save if not needed
                 # this also prevents the dirty flag from bouncing between windows of
                 # the same document opened as different types (e.g. notebook/text editor)
                 content = {
-                    "content": self._jupyter_ydoc.source,
+                    "content": jupyter_ydoc_source,
                     "format": self._file_format,
                     "path": file_path,
                     "type": self._file_type,
@@ -179,7 +180,7 @@ class YRoom(_YRoom):
             # the file was not saved by us, update the shared document
             model = await self._contents.read_content(file_path, True, self._file_format)
             assert model.last_modified is not None
-            self._jupyter_ydoc.source = model.content
+            await self._jupyter_ydoc.aset(model.content)
             self._jupyter_ydoc.dirty = False
             logger.info("Document read from file", file_path=file_path, id=self.id)
             await self._ystore.encode_state_as_update(self._doc)
