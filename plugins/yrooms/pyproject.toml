@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_yrooms"
-version = "0.1.1"
+version = "0.1.2"
 description = "An FPS plugin for YRooms"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"

@@ -1,5 +1,10 @@
 # Version history
 
+## 0.13.1
+
+- Use jupyter-ydoc's `aget` and `aset` methods to not block the event loop for big notebooks.
+- Add `collaboration` optional dependency.
+
 ## 0.13.0
 
 In this release, a new `fps-yrooms` plugin was added. It publishes a `YRoomFactory` object, that

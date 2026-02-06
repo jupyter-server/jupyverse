@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse"
-version = "0.13.0"
+version = "0.13.1"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -57,7 +57,7 @@ collaboration = [
   "jupyter-docprovider",
   "fps-yjs >=0.13.0,<0.14.0",
   "fps-ystore-sqlite >=0.1.0,<0.2.0",
-  "fps-yrooms >=0.1.0,<0.2.0",
+  "fps-yrooms >=0.1.2,<0.2.0",
 ]
 auth = ["fps-auth >=0.9.3,<0.10.0", "fps-login >=0.9.3,<0.10.0"]
 auth-fief = ["fps-auth-fief >=0.9.4,<0.10.0"]
