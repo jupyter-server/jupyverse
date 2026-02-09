@@ -250,3 +250,4 @@ class KernelsConfig(Config):
     )
     require_yjs: bool = False
     kernelenv_path: str = ""
+    wait_for_kernelenv: bool = False
