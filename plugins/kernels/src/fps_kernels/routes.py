@@ -231,7 +231,7 @@ class _Kernels(Kernels):
             kernelspec_path = anyio.Path(find_kernelspec(kernel_name))
             if self.kernels_config.wait_for_kernelenv:
                 while True:
-                    if not await kernelspec_path.is_dir():
+                    if await kernelspec_path.is_file():
                         break
                     logger.info("Waiting for kernelspec", kernel_name=kernel_name)
                     await sleep(1)
