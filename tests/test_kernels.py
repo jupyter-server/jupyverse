@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -157,7 +158,7 @@ async def test_kernel_messages(auth_mode, capfd):
 
 
 @pytest.mark.anyio
-async def test_wait_for_kernelspec(tmp_path):
+async def test_wait_for_kernelspec(tmp_path, caplog):
     kernel_name = "python-wait-test"
     kernelspec_dir = tmp_path / kernel_name
     kernelspec_json = kernelspec_dir / "kernel.json"
@@ -208,6 +209,18 @@ async def test_wait_for_kernelspec(tmp_path):
                     )
 
             assert response.status_code == 201
+            with caplog.at_level(logging.INFO):
+                assert (
+                    len(
+                        [
+                            record
+                            for record in caplog.records
+                            if "Waiting for kernelspec" in record.message
+                        ]
+                    )
+                    >= 1
+                )
+                assert any(kernel_name in record.message for record in caplog.records)
 
 
 class KernelFactory:
