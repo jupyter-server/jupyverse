@@ -229,7 +229,7 @@ class _Kernels(Kernels):
                     break
                 kernel_cwd = kernel_cwd.parent
             kernelspec_path = anyio.Path(find_kernelspec(kernel_name))
-            if self.kernels_config.wait_for_kernelenv:
+            if self.kernels_config.wait_for_kernelspec:
                 while True:
                     if await kernelspec_path.is_file():
                         break

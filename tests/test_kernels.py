@@ -169,7 +169,7 @@ async def test_wait_for_kernelspec(tmp_path, caplog):
             "jupyverse": {
                 "modules": {
                     "auth": {"config": {"mode": "noauth"}},
-                    "kernels": {"config": {"wait_for_kernelenv": True}},
+                    "kernels": {"config": {"wait_for_kernelspec": True}},
                 }
             }
         },
