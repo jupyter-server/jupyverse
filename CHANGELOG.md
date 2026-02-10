@@ -1,5 +1,9 @@
 # Version history
 
+## 0.13.2
+
+- Allow waiting for kernelspec to be present when launching kernel.
+
 ## 0.13.1
 
 - Use jupyter-ydoc's `aget` and `aset` methods to not block the event loop for big notebooks.
