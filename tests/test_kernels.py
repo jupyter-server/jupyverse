@@ -1,6 +1,9 @@
+import json
+import logging
 import os
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from anyio import create_task_group, sleep, sleep_forever
@@ -152,6 +155,72 @@ async def test_kernel_messages(auth_mode, capfd):
                 assert err.count("msg_type_0") >= 1
 
                 await kernel_server.stop()
+
+
+@pytest.mark.anyio
+async def test_wait_for_kernelspec(tmp_path, caplog):
+    kernel_name = "python-wait-test"
+    kernelspec_dir = tmp_path / kernel_name
+    kernelspec_json = kernelspec_dir / "kernel.json"
+
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "modules": {
+                    "auth": {"config": {"mode": "noauth"}},
+                    "kernels": {"config": {"wait_for_kernelspec": True}},
+                }
+            }
+        },
+    )
+
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    with patch("fps_kernels.kernel_driver.kernelspec.kernelspec_dirs", return_value=[tmp_path]):
+        async with root_module as root_module:
+            app = root_module.app
+            transport = ASGIWebSocketTransport(app=app)
+            kernelspec_dir.mkdir(parents=True)
+
+            async def create_kernelspec_later():
+                await sleep(0.2)
+                kernel_spec = {
+                    "argv": ["python", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+                    "display_name": "Python 3",
+                    "language": "python",
+                }
+                kernelspec_json.write_text(json.dumps(kernel_spec))
+
+            async with create_task_group() as tg:
+                tg.start_soon(create_kernelspec_later)
+                async with AsyncClient(
+                    transport=transport,
+                    base_url="http://testserver",
+                ) as client:
+                    response = await client.post(
+                        "/api/sessions",
+                        json={
+                            "kernel": {"name": kernel_name},
+                            "name": "test",
+                            "path": "test.ipynb",
+                            "type": "notebook",
+                        },
+                    )
+
+            assert response.status_code == 201
+            with caplog.at_level(logging.INFO):
+                assert (
+                    len(
+                        [
+                            record
+                            for record in caplog.records
+                            if "Waiting for kernelspec" in record.message
+                        ]
+                    )
+                    >= 1
+                )
+                assert any(kernel_name in record.message for record in caplog.records)
 
 
 class KernelFactory:

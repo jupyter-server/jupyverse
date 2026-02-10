@@ -250,3 +250,9 @@ class KernelsConfig(Config):
     )
     require_yjs: bool = False
     kernelenv_path: str = ""
+    wait_for_kernelspec: bool = Field(
+        description=(
+            "Whether to wait for the kernelspec file to be present when launching a kernel."
+        ),
+        default=False,
+    )

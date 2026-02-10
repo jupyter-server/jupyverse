@@ -6,7 +6,7 @@ from pathlib import Path
 
 import anyio
 import structlog
-from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group, open_file
+from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group, open_file, sleep
 from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
@@ -228,8 +228,16 @@ class _Kernels(Kernels):
                 if kernel_cwd.is_dir():
                     break
                 kernel_cwd = kernel_cwd.parent
+            kernelspec_path = anyio.Path(find_kernelspec(kernel_name))
+            if self.kernels_config.wait_for_kernelspec:
+                while True:
+                    if await kernelspec_path.is_file():
+                        break
+                    logger.info("Waiting for kernelspec", kernel_name=kernel_name)
+                    await sleep(1)
+                    kernelspec_path = anyio.Path(find_kernelspec(kernel_name))
             kernel_server = KernelServer(
-                kernelspec_path=Path(find_kernelspec(kernel_name)).as_posix(),
+                kernelspec_path=kernelspec_path.as_posix(),
                 kernelenv_path=self.kernels_config.kernelenv_path,
                 kernel_cwd=str(kernel_cwd),
                 default_kernel_factory=self.default_kernel_factory,
