@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse"
-version = "0.13.2"
+version = "0.13.3"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -67,6 +67,7 @@ file-watcher-poll = ["fps-file-watcher-poll >=0.1.4,<0.2.0"]
 kernel-web-worker = ["fps-kernel-web-worker >=0.1.7,<0.2.0"]
 resource-usage = ["fps-resource-usage >=0.9.4,<0.10.0"]
 webdav = ["fps-webdav >=0.9.4,<0.10.0"]
+jupyterlab-git = ["fps-jupyterlab-git >=0.1.1,<0.2.0"]
 
 [dependency-groups]
 test = [

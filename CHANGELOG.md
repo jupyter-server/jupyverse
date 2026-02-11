@@ -1,5 +1,12 @@
 # Version history
 
+## 0.13.3
+
+A new `fps-jupyter-server` plugin was added, that proxies a Jupyter server. This allows to support
+Jupyter server extensions, which are otherwise incompatible with Jupyverse. This is still experimental,
+but it seems to work fine with the new `fps-jupyterlab-git` plugin, bringing support for
+[jupyterlab-git](https://github.com/jupyterlab/jupyterlab-git).
+
 ## 0.13.2
 
 - Allow waiting for kernelspec to be present when launching kernel.

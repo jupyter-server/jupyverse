@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_jupyterlab_git"
-version = "0.1.0"
+version = "0.1.1"
 description = "An FPS plugin for serving jupyterlab-git through a Jupyter server"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"
