@@ -138,3 +138,5 @@ fps-webdav = { workspace = true }
 fps-yjs = { workspace = true }
 fps-ystore-sqlite = { workspace = true }
 fps-yrooms = { workspace = true }
+fps-jupyter-server = { workspace = true }
+fps-jupyterlab-git = { workspace = true }
