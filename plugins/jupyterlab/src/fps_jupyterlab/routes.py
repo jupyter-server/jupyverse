@@ -15,6 +15,8 @@ from starlette.requests import Request
 
 from .index import INDEX_HTML
 
+CWD = Path.cwd()
+
 
 class _JupyterLab(JupyterLab):
     def __init__(
@@ -149,6 +151,8 @@ class _JupyterLab(JupyterLab):
             exposeAppInBrowser=False,
             extraLabextensionsPath=[],
             federated_extensions=self.federated_extensions,
+            rootUri=f"file://{CWD}",
+            virtualDocumentsUri=f"file://{CWD / '.virtual_documents'}",
             fullAppUrl=f"{base_url}lab",
             fullLabextensionsUrl=f"{base_url}lab/extensions",
             fullLicensesUrl=f"{base_url}lab/api/licenses",
