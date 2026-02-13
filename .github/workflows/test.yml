@@ -50,7 +50,10 @@ jobs:
             ./plugins/auth \
             ./plugins/auth_fief \
             ./plugins/auth_jupyterhub \
+            ./plugins/jupyter_server \
             ./plugins/jupyterlab \
+            ./plugins/jupyterlab_git \
+            ./plugins/jupyterlab_lsp \
             ./plugins/notebook
       - name: Lint
         run: |

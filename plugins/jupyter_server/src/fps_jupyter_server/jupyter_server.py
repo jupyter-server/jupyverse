@@ -1,6 +1,6 @@
 import sys
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from socket import socket
 from typing import Any
 from urllib.parse import parse_qs
@@ -81,10 +81,12 @@ class JupyterServer(Router, AsyncContextManagerMixin):
             await sleep_forever()
 
     async def _show_stdout(self) -> None:
+        assert self._process.stdout is not None
         async for text in TextReceiveStream(self._process.stdout):
             logger.debug(text)
 
     async def _show_stderr(self) -> None:
+        assert self._process.stderr is not None
         async for text in TextReceiveStream(self._process.stderr):
             logger.debug(text)
 
@@ -148,7 +150,7 @@ class _AsyncClient:
         self._client = client
         self._url = f"http://127.0.0.1:{port}"
         self._cookies = Cookies()
-        self._headers = {}
+        self._headers: dict[str, str] = {}
 
     async def get(self, url: str, *args: Any, **kwargs: Any) -> Response:
         response = await self._client.get(
@@ -177,7 +179,7 @@ class _AsyncClient:
             self._headers.update({"X-Xsrftoken": xsrf})
         return response
 
-    def ws(self, url: str) -> AsyncGenerator[AsyncWebSocketSession]:
+    def ws(self, url: str) -> AbstractAsyncContextManager[AsyncWebSocketSession]:
         return aconnect_ws(
             url,
             self._client,
