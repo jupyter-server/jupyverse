@@ -1,5 +1,9 @@
 # Version history
 
+## 0.13.4
+
+- Added `fps-jupyterlab-lsp` to support [jupyterlab-lsp](https://github.com/jupyter-lsp/jupyterlab-lsp).
+
 ## 0.13.3
 
 A new `fps-jupyter-server` plugin was added, that proxies a Jupyter server. This allows to support
