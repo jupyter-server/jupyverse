@@ -68,6 +68,7 @@ kernel-web-worker = ["fps-kernel-web-worker >=0.1.7,<0.2.0"]
 resource-usage = ["fps-resource-usage >=0.9.4,<0.10.0"]
 webdav = ["fps-webdav >=0.9.4,<0.10.0"]
 jupyterlab-git = ["fps-jupyterlab-git >=0.1.1,<0.2.0"]
+jupyterlab-lsp = ["fps-jupyterlab-lsp >=0.1.0,<0.2.0"]
 
 [dependency-groups]
 test = [
@@ -141,3 +142,4 @@ fps-ystore-sqlite = { workspace = true }
 fps-yrooms = { workspace = true }
 fps-jupyter-server = { workspace = true }
 fps-jupyterlab-git = { workspace = true }
+fps-jupyterlab-lsp = { workspace = true }

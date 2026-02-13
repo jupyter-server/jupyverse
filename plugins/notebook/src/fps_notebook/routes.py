@@ -9,6 +9,8 @@ from jupyverse_api.frontend import FrontendConfig
 from jupyverse_api.lab import Lab, PageConfig
 from jupyverse_api.notebook import Notebook
 
+CWD = Path.cwd()
+
 
 class _Notebook(Notebook):
     def __init__(
@@ -142,6 +144,8 @@ class _Notebook(Notebook):
             disabledExtensions=disabled_extensions,
             extraLabextensionsPath=[],
             federated_extensions=federated_extensions,
+            rootUri=f"file://{CWD}",
+            virtualDocumentsUri=f"file://{CWD / '.virtual_documents'}",
             frontendUrl="/notebook/",
             fullAppUrl=f"{base_url}lab",
             fullLabextensionsUrl=f"{base_url}lab/extensions",

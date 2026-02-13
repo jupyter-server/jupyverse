@@ -17,8 +17,9 @@ from anyio import (
 )
 from anyio.abc import TaskStatus
 from anyio.streams.text import TextReceiveStream
-from fastapi import APIRouter, Depends, Request
-from httpx import AsyncClient, ConnectError, Cookies
+from fastapi import APIRouter, Depends, Request, WebSocket
+from httpx import AsyncClient, ConnectError, Cookies, Response
+from httpx_ws import AsyncWebSocketSession, aconnect_ws
 from jupyverse_api.app import App
 from jupyverse_api.auth import Auth, User
 from structlog import get_logger
@@ -94,7 +95,7 @@ class JupyterServer(Router, AsyncContextManagerMixin):
         async def get(
             request: Request,
             user: User = Depends(self._auth.current_user()),
-        ):
+        ) -> dict[str, Any]:
             params = parse_qs(request.url.query)
             response = await self._client.get(request.url.path, params=params)
             return response.json()
@@ -103,13 +104,43 @@ class JupyterServer(Router, AsyncContextManagerMixin):
         async def post(
             request: Request,
             user: User = Depends(self._auth.current_user()),
-        ):
+        ) -> dict[str, Any]:
             params = parse_qs(request.url.query)
             content = await request.body()
             response = await self._client.post(request.url.path, params=params, content=content)
             return response.json()
 
+        @router.websocket(root_path + "/{path:path}")
+        async def ws(
+            websocket: WebSocket,
+            websocket_permissions=Depends(self._auth.websocket_auth()),
+        ) -> None:
+            await websocket.accept()
+            url = f"http://127.0.0.1:{self._port}" + websocket.url.path
+            async with (
+                self._client.ws(url) as client_ws,
+                create_task_group() as tg,
+            ):
+                tg.start_soon(self._ws_receive, websocket, client_ws, tg)
+                tg.start_soon(self._ws_send, websocket, client_ws, tg)
+
         self.include_router(router)
+
+    async def _ws_receive(self, server_ws, client_ws, tg):
+        try:
+            while True:
+                message = await server_ws.receive_json()
+                await client_ws.send_json(message)
+        except Exception:
+            tg.cancel_scope.cancel()
+
+    async def _ws_send(self, server_ws, client_ws, tg):
+        try:
+            while True:
+                message = await client_ws.receive_json()
+                await server_ws.send_json(message)
+        except Exception:
+            tg.cancel_scope.cancel()
 
 
 class _AsyncClient:
@@ -119,7 +150,7 @@ class _AsyncClient:
         self._cookies = Cookies()
         self._headers = {}
 
-    async def get(self, url: str, *args: Any, **kwargs: Any):
+    async def get(self, url: str, *args: Any, **kwargs: Any) -> Response:
         response = await self._client.get(
             f"{self._url}{url}",
             *args,
@@ -132,7 +163,7 @@ class _AsyncClient:
             self._headers.update({"X-Xsrftoken": xsrf})
         return response
 
-    async def post(self, url: str, *args: Any, **kwargs: Any):
+    async def post(self, url: str, *args: Any, **kwargs: Any) -> Response:
         response = await self._client.post(
             f"{self._url}{url}",
             *args,
@@ -145,6 +176,14 @@ class _AsyncClient:
         if xsrf:
             self._headers.update({"X-Xsrftoken": xsrf})
         return response
+
+    def ws(self, url: str) -> AsyncGenerator[AsyncWebSocketSession]:
+        return aconnect_ws(
+            url,
+            self._client,
+            cookies=self._cookies,
+            headers=self._headers,
+        )
 
 
 def get_unused_tcp_port() -> int:
