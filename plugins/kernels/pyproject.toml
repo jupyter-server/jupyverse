@@ -24,6 +24,7 @@ classifiers = [
 dependencies = [
   "python-dateutil",
   "types-python-dateutil",
+  "packaging",
   "jupyverse-api >=0.14.1,<0.15.0",
 ]
 license = "BSD-3-Clause"
