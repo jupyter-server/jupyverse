@@ -14,6 +14,7 @@ from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.stapled import StapledObjectStream
 from jupyverse_api.kernel import DefaultKernelFactory, Kernel
 from jupyverse_api.yjs import Yjs
+from packaging.version import Version
 from pycrdt import Array, Map, Text
 
 from .kernelspec import find_kernelspec
@@ -223,10 +224,17 @@ class KernelDriver:
                 error_message = f"Kernel didn't respond in {timeout} seconds"
                 raise RuntimeError(error_message)
             if msg["msg_type"] == "kernel_info_reply":
+                protocol_version = msg["content"].get("protocol_version")
+                if protocol_version is not None and Version(protocol_version) >= Version("5.4"):
+                    # kernel implements XPUB, wait for IOPub welcome message
+                    while True:
+                        msg_ser = await self.kernel.iopub_stream.receive()
+                        idents, msg_list = feed_identities(msg_ser)
+                        msg = deserialize_message(msg_list)
+                        if msg["msg_type"] == "iopub_welcome":
+                            return
                 with move_on_after(0.2):
                     msg_ser = await self.kernel.iopub_stream.receive()
-                    idents, msg_list = feed_identities(msg_ser)
-                    msg = deserialize_message(msg_list, change_str_to_date=True)
                     return
             new_timeout = deadline_to_timeout(deadline)
 

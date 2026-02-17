@@ -6,6 +6,7 @@ from anyio import TASK_STATUS_IGNORED, Event, create_task_group, move_on_after
 from anyio.abc import TaskStatus
 from fastapi import WebSocket
 from jupyverse_api.kernel import DefaultKernelFactory, KernelFactory
+from packaging.version import Version
 from starlette.websockets import WebSocketState
 
 from ..kernel_driver.message import (
@@ -199,15 +200,19 @@ class KernelServer:
                 idents, msg_list = feed_identities(msg_ser)
                 msg = deserialize_message(msg_list)
             if not scope.cancelled_caught and msg["msg_type"] == "kernel_info_reply":
-                with move_on_after(0.2) as scope:
-                    msg_ser = await self.kernel.iopub_stream.receive()
-                    idents, msg_list = feed_identities(msg_ser)
-                    msg = deserialize_message(msg_list)
-                if scope.cancelled_caught:
-                    # IOPub not connected, start over
-                    pass
-                else:
+                protocol_version = msg["content"].get("protocol_version")
+                if protocol_version is not None and Version(protocol_version) >= Version("5.4"):
+                    # kernel implements XPUB, wait for IOPub welcome message
+                    while True:
+                        msg_ser = await self.kernel.iopub_stream.receive()
+                        idents, msg_list = feed_identities(msg_ser)
+                        msg = deserialize_message(msg_list)
+                        if msg["msg_type"] == "iopub_welcome":
+                            return
+                with move_on_after(0.2):
+                    await self.kernel.iopub_stream.receive()
                     return
+                # IOPub not connected, start over
 
     async def send_to_kernel(self, websocket):
         if not websocket.accepted_subprotocol:
