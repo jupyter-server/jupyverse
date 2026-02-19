@@ -136,7 +136,11 @@ class _Contents(Contents):
         return await self.read_content(rename_content.path, False)
 
     async def read_content(
-        self, path: str | Path, get_content: bool, file_format: str | None = None
+        self,
+        path: str | Path,
+        get_content: bool,
+        file_format: str | None = None,
+        untrust: bool = True,
     ) -> Content:
         if isinstance(path, str):
             path = Path(path)
@@ -182,6 +186,10 @@ class _Contents(Contents):
                             content = cast(str, content)
                             nb = json.loads(content)
                         for cell in nb["cells"]:
+                            if untrust:
+                                if "metadata" not in cell:
+                                    cell["metadata"] = {}
+                                cell["metadata"].update({"trusted": False})
                             if cell["cell_type"] == "code":
                                 cell_source = cell["source"]
                                 if not isinstance(cell_source, str):

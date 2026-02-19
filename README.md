@@ -45,22 +45,12 @@ Then either use `uv` or `pip` to install in development mode.
 
 #### Using `uv`
 
-Install all plugins:
+Install all plugins in editable mode:
 
 ```bash
 uv venv
-uv pip install --group test -e ".[ \
-    jupyterlab, \
-    notebook, \
-    auth, \
-    auth-fief, \
-    auth-jupyterhub, \
-    noauth, \
-    file-watcher-poll, \
-    kernel-web-worker, \
-    resource-usage, \
-    webdav \
-]"
+uv pip install --group test -e jupyverse_api -e .
+for plugin in plugins/*; do uv pip install -e "$plugin"; done
 ```
 
 Run tests with:
