@@ -133,7 +133,9 @@ class YRoom(_YRoom):
             assert self._id_of_file is not None
             file_path = await self._get_file_path(self._id_of_file)
             assert file_path is not None
-            model = await self._contents.read_content(file_path, True, self._file_format)
+            model = await self._contents.read_content(
+                file_path, True, self._file_format, untrust=False
+            )
             jupyter_ydoc_source = await self._jupyter_ydoc.aget()
             if model.content != jupyter_ydoc_source:
                 # don't save if not needed

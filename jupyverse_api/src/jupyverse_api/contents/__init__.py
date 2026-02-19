@@ -91,7 +91,11 @@ class Contents(Router, ABC):
 
     @abstractmethod
     async def read_content(
-        self, path: str | Path, get_content: bool, file_format: str | None = None
+        self,
+        path: str | Path,
+        get_content: bool,
+        file_format: str | None = None,
+        untrust: bool = True,
     ) -> Content: ...
 
     @abstractmethod

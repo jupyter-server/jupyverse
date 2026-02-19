@@ -48,8 +48,6 @@ class JupyterServer(Router, AsyncContextManagerMixin):
             yield self
             await self._stop_event.wait()
             self._task_group.cancel_scope.cancel()
-            self._process.terminate()
-            await self._process.wait()
 
     async def _run(self, *, task_status: TaskStatus[None]):
         self._token = uuid4().hex
