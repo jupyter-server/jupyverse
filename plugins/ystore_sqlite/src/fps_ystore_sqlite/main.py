@@ -46,10 +46,14 @@ async def init_db(config: YStoreSQLiteConfig) -> Connection:
         await cursor.execute(
             "SELECT count(name) FROM sqlite_master WHERE type='table' and name='yupdates'"
         )
-        table_exists = (await cursor.fetchone())[0]
+        res = await cursor.fetchone()
+        assert res is not None
+        table_exists = res[0]
         if table_exists:
             await cursor.execute("pragma user_version")
-            version = (await cursor.fetchone())[0]
+            res = await cursor.fetchone()
+            assert res is not None
+            version = res[0]
             if version != config.version:
                 move_db = True
                 create_db = True

@@ -36,7 +36,7 @@ async def test_move_db(tmp_path):
         assert updates[0][:2] == (b"foo", b"")
         timestamp = updates[0][2]
         assert t0 < timestamp < t1
-        assert list(tmp_path.iterdir()) == [db_path, db_path1]
+        assert set(tmp_path.iterdir()) == {db_path, db_path1}
 
     # try to connect to database with different storage version
     async with YStoreSQLiteModule(
