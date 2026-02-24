@@ -63,8 +63,8 @@ async def init_db(config: YStoreSQLiteConfig) -> Connection:
             create_db = True
     if move_db:
         new_path = await get_new_path(config.db_path)
-        await anyio.Path(config.db_path).rename(new_path)
         await db.close()
+        await anyio.Path(config.db_path).rename(new_path)
         db = await connect(config.db_path)
     if create_db:
         cursor = await db.cursor()
