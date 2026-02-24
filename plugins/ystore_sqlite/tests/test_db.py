@@ -1,4 +1,4 @@
-from time import monotonic
+from time import time
 
 import pytest
 from anyio import create_task_group, wait_all_tasks_blocked
@@ -21,9 +21,9 @@ async def test_move_db(tmp_path):
     ) as ystore_sqlite:
         ystore_factory = await ystore_sqlite.get(YStoreFactory)
         ystore = ystore_factory(path)
-        t0 = monotonic()
+        t0 = time()
         await ystore.write(b"foo")
-        t1 = monotonic()
+        t1 = time()
 
     # check that the content can be retrieved
     async with YStoreSQLiteModule(
@@ -54,9 +54,9 @@ async def test_move_db(tmp_path):
             async for data in ystore.read():
                 pass
 
-        t0 = monotonic()
+        t0 = time()
         await ystore.write(b"bar")
-        t1 = monotonic()
+        t1 = time()
 
     # check that the content of the backup database can be retrieved
     async with YStoreSQLiteModule(
