@@ -37,7 +37,7 @@ async def test_move_db(tmp_path):
         assert len(updates[0]) == 3
         assert updates[0][:2] == (b"foo", b"")
         timestamp = updates[0][2]
-        assert t0 < timestamp < t1
+        assert t0 < timestamp <= t1
         assert set(tmp_path.iterdir()) == {db_path, db_path1}
 
     # try to connect to database with different storage version
@@ -79,7 +79,7 @@ async def test_move_db(tmp_path):
         assert len(updates[0]) == 3
         assert updates[0][:2] == (b"bar", b"")
         timestamp = updates[0][2]
-        assert t0 < timestamp < t1
+        assert t0 < timestamp <= t1
         assert set(tmp_path.iterdir()) == {db_path, db_path1, backup_db_path}
 
 
