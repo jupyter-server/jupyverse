@@ -17,10 +17,12 @@ class YStoreSQLiteModule(Module):
         self.config = YStoreSQLiteConfig(**kwargs)
 
     async def prepare(self) -> None:
-        connection = await init_db(self.config)
-        sqlite_ystore_factory = YStoreFactory(partial(SQLiteYStore, connection=connection))  # type: ignore[arg-type]
-        self.add_teardown_callback(connection.close)
-        self.put(sqlite_ystore_factory)
+        async with await init_db(self.config) as connection:
+            sqlite_ystore_factory = YStoreFactory(partial(SQLiteYStore, connection=connection))  # type: ignore[arg-type]
+            self.put(sqlite_ystore_factory)
+            self.add_teardown_callback(connection.close)
+            self.done()
+            await anyio.sleep_forever()
 
 
 class YStoreSQLiteConfig(Config):

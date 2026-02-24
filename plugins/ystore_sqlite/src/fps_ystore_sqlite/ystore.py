@@ -1,6 +1,6 @@
 import sys
 from collections.abc import AsyncIterator
-from time import monotonic
+from time import time
 
 from jupyverse_api.ystore import YDocNotFound, YStore
 from sqlite_anyio import Connection
@@ -18,7 +18,7 @@ class SQLiteYStore(YStore):
         connection: Connection,
     ) -> None:
         self._path = path
-        self._db = connection
+        self._connection = connection
 
     async def __aenter__(self) -> Self:
         return self
@@ -27,7 +27,7 @@ class SQLiteYStore(YStore):
         return None
 
     async def read(self) -> AsyncIterator[tuple[bytes, bytes, float]]:  # type: ignore
-        cursor = await self._db.execute(
+        cursor = await self._connection.execute(
             "SELECT yupdate, metadata, timestamp FROM yupdates WHERE path = ?",
             (self._path,),
         )
@@ -35,13 +35,15 @@ class SQLiteYStore(YStore):
         for update, metadata, timestamp in await cursor.fetchall():
             found = True
             yield update, metadata, timestamp
+        await cursor.close()
         if not found:
             raise YDocNotFound
 
     async def write(self, data: bytes) -> None:
         metadata = b""
-        await self._db.execute(
+        cursor = await self._connection.execute(
             "INSERT INTO yupdates VALUES (?, ?, ?, ?)",
-            (self._path, data, metadata, monotonic()),
+            (self._path, data, metadata, time()),
         )
-        await self._db.commit()
+        await self._connection.commit()
+        await cursor.close()
