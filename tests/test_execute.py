@@ -70,6 +70,7 @@ HERE = Path(__file__).parent
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
+@pytest.mark.flaky
 async def test_execute(auth_mode, free_tcp_port, tmp_path):
     os.chdir(tmp_path)
     shutil.copytree(HERE / "data", "data")

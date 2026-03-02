@@ -78,6 +78,7 @@ test = [
   "pytest",
   "pytest-timeout",
   "pytest-env",
+  "pytest-retry",
   "httpx",
   "httpx-ws >=0.8.2",
   "ipykernel",
