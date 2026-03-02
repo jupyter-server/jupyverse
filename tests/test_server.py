@@ -135,7 +135,6 @@ async def test_rest_api(start_jupyverse):
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
-@pytest.mark.skip(reason="Test is too flaky")
 async def test_ywidgets(start_jupyverse):
     url = start_jupyverse
     name = "notebook1.ipynb"
@@ -218,7 +217,7 @@ async def connect_ywidget(url, guid):
     ):
         attrs = ywidget_doc.get("_attrs", type=Map)
         model_name = ywidget_doc.get("_model_name", type=Text)
-        with anyio.fail_after(3):
+        with anyio.fail_after(5):
             while True:
                 await anyio.sleep(0.1)
                 if str(model_name) == "Switch" and str(attrs) == '{"value":true}':

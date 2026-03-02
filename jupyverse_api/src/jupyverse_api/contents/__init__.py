@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
 
+from anyio import Path
 from anyioutils import ResourceLock
 from fastapi import APIRouter, Depends, Request, Response
 

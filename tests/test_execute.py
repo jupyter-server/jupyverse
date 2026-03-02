@@ -168,7 +168,7 @@ async def connect_ywidget(ws_url, guid):
     ):
         attrs = ywidget_doc.get("_attrs", type=Map)
         model_name = ywidget_doc.get("_model_name", type=Text)
-        with anyio.fail_after(3):
+        with anyio.fail_after(5):
             while True:
                 await anyio.sleep(0.1)
                 if str(model_name) == "Switch" and str(attrs) == '{"value":true}':
