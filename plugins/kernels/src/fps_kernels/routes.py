@@ -335,7 +335,7 @@ class _Kernels(Kernels):
             ynotebook = room.jupyter_ydoc
             ycells = [ycell for ycell in ynotebook.ycells if ycell["id"] == execution.cell_id]
             if not ycells:
-                return  # FIXME
+                raise RuntimeError(f"No cell with ID: {execution.cell_id}")
 
             ycell = ycells[0]
             del ycell["outputs"][:]

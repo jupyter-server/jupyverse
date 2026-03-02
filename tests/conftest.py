@@ -1,11 +1,14 @@
 import os
+import shutil
 import signal
 import subprocess
 import time
 from pathlib import Path
 
+import httpx
 import pytest
-import requests
+
+HERE = Path(__file__).parent
 
 
 @pytest.fixture
@@ -20,8 +23,17 @@ def cwd():
 
 
 @pytest.fixture()
-def start_jupyverse(auth_mode, clear_users, cwd, free_tcp_port):
-    os.chdir(cwd)
+def tmp_cwd(tmp_path):
+    prev_dir = Path.cwd()
+    os.chdir(tmp_path)
+    yield tmp_path
+    os.chdir(prev_dir)
+
+
+@pytest.fixture()
+def start_jupyverse(auth_mode, clear_users, tmp_cwd, free_tcp_port):
+    os.chdir(tmp_cwd)
+    shutil.copytree(HERE / "data", "data")
     command_list = [
         "jupyverse",
         "--disable",
@@ -49,8 +61,8 @@ def start_jupyverse(auth_mode, clear_users, cwd, free_tcp_port):
     url = f"http://127.0.0.1:{free_tcp_port}"
     while True:
         try:
-            requests.get(url)
-        except requests.exceptions.ConnectionError:
+            httpx.get(url)
+        except Exception:
             time.sleep(0.1)
         else:
             break

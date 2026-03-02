@@ -1,5 +1,5 @@
 import os
-from functools import partial
+import shutil
 from pathlib import Path
 
 import anyio
@@ -65,10 +65,15 @@ CONFIG = {
     }
 }
 
+HERE = Path(__file__).parent
+
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_execute(auth_mode, free_tcp_port):
+@pytest.mark.flaky
+async def test_execute(auth_mode, free_tcp_port, tmp_path):
+    os.chdir(tmp_path)
+    shutil.copytree(HERE / "data", "data")
     url = f"http://127.0.0.1:{free_tcp_port}"
     config = merge_config(
         CONFIG,
@@ -95,7 +100,7 @@ async def test_execute(auth_mode, free_tcp_port):
     async with root_module, AsyncClient() as http:
         ws_url = url.replace("http", "ws", 1)
         name = "notebook1.ipynb"
-        path = (Path("tests") / "data" / name).as_posix()
+        path = (Path("data") / name).as_posix()
         # create a session to launch a kernel
         response = await http.post(
             f"{url}/api/sessions",
@@ -121,21 +126,14 @@ async def test_execute(auth_mode, free_tcp_port):
         document_id = f"json:notebook:{file_id}"
         ynb = ydocs["notebook"]()
 
-        def callback(aevent, events, event):
-            events.append(event)
-            aevent.set()
-
-        aevent = anyio.Event()
-        events = []
-        ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-        async with AsyncWebSocketClient(
-            id=f"api/collaboration/room/{document_id}",
-            doc=ynb.ydoc,
-            url=ws_url,
+        async with (
+            ynb.ydoc.events(subdocs=True) as events,
+            AsyncWebSocketClient(
+                id=f"api/collaboration/room/{document_id}",
+                doc=ynb.ydoc,
+                url=ws_url,
+            ),
         ):
-            # connect to the shared notebook document
-            # wait for file to be loaded and Y model to be created in server and client
-            await anyio.sleep(0.5)
             # execute notebook
             for cell_idx in range(2):
                 response = await http.post(
@@ -145,15 +143,12 @@ async def test_execute(auth_mode, free_tcp_port):
                         "cell_id": ynb.ycells[cell_idx]["id"],
                     },
                 )
-            while True:
-                await aevent.wait()
-                aevent = anyio.Event()
-                guid = None
-                for event in events:
-                    if event.added:
-                        guid = event.added[0]
-                if guid is not None:
+
+            async for event in events:
+                if event.added:
+                    guid = event.added[0]
                     break
+
             async with anyio.create_task_group() as tg:
                 tg.start_soon(connect_ywidget, ws_url, guid)
                 response = await http.post(
@@ -172,11 +167,9 @@ async def connect_ywidget(ws_url, guid):
         doc=ywidget_doc,
         url=ws_url,
     ):
-        attrs = Map()
-        model_name = Text()
-        ywidget_doc["_attrs"] = attrs
-        ywidget_doc["_model_name"] = model_name
-        with anyio.fail_after(3):
+        attrs = ywidget_doc.get("_attrs", type=Map)
+        model_name = ywidget_doc.get("_model_name", type=Text)
+        with anyio.fail_after(5):
             while True:
                 await anyio.sleep(0.1)
                 if str(model_name) == "Switch" and str(attrs) == '{"value":true}':

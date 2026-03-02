@@ -1,17 +1,37 @@
-from anyio import create_task_group
+from anyio import Event
 from fps import Module
 from jupyverse_api.file_id import FileId
 from jupyverse_api.file_watcher import FileWatcher
+from pydantic import Field
+
+from jupyverse_api import Config
 
 from .file_id import _FileId
 
 
 class FileIdModule(Module):
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name)
+        self.config = FileIdConfig(**kwargs)
+
     async def prepare(self) -> None:
         file_watcher = await self.get(FileWatcher)  # type: ignore[type-abstract]
-        self.file_id = _FileId(file_watcher)
+        self._stop_event0 = Event()
+        self._stop_event1 = Event()
 
-        async with create_task_group() as tg:
-            tg.start_soon(self.file_id.start)
-            self.put(self.file_id, FileId, teardown_callback=self.file_id.stop)
+        async with _FileId(file_watcher, self.config.db_path, self._stop_event0) as file_id:
+            self.put(file_id, FileId)
             self.done()
+
+        self._stop_event1.set()
+
+    async def stop(self) -> None:
+        self._stop_event0.set()
+        await self._stop_event1.wait()
+
+
+class FileIdConfig(Config):
+    db_path: str = Field(
+        description="The path to the SQLite database.",
+        default=".fileid.db",
+    )
