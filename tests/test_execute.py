@@ -65,7 +65,7 @@ CONFIG = {
     }
 }
 
-HERE = Path.cwd()
+HERE = Path(__file__).parent
 
 
 @pytest.mark.anyio
@@ -98,7 +98,7 @@ async def test_execute(auth_mode, free_tcp_port, tmp_path):
     async with root_module, AsyncClient() as http:
         ws_url = url.replace("http", "ws", 1)
         name = "notebook1.ipynb"
-        path = (HERE / "tests" / "data" / name).as_posix()
+        path = (HERE / "data" / name).as_posix()
         # create a session to launch a kernel
         response = await http.post(
             f"{url}/api/sessions",

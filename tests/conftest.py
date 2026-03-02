@@ -20,8 +20,16 @@ def cwd():
 
 
 @pytest.fixture()
-def start_jupyverse(auth_mode, clear_users, cwd, free_tcp_port):
-    os.chdir(cwd)
+def tmp_cwd(tmp_path):
+    prev_dir = Path.cwd()
+    os.chdir(tmp_path)
+    yield tmp_path
+    os.chdir(prev_dir)
+
+
+@pytest.fixture()
+def start_jupyverse(auth_mode, clear_users, tmp_cwd, free_tcp_port):
+    os.chdir(tmp_cwd)
     command_list = [
         "jupyverse",
         "--disable",
