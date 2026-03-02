@@ -1,11 +1,18 @@
-import sqlite3
+import sys
+from contextlib import AsyncExitStack
+from types import TracebackType
 from uuid import uuid4
 
 import structlog
-from anyio import Event, Lock, Path
+from anyio import Event, Path, create_task_group
 from jupyverse_api.file_id import FileId
 from jupyverse_api.file_watcher import Change, FileWatcher
 from sqlite_anyio import connect
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 logger = structlog.get_logger()
 
@@ -29,65 +36,61 @@ class Watcher:
 
 
 class _FileId(FileId):
-    db_path: str
-    initialized: Event
     watchers: dict[str, list[Watcher]]
-    lock: Lock
 
-    def __init__(self, file_watcher: FileWatcher, db_path: str = ".fileid.db"):
+    def __init__(self, file_watcher: FileWatcher, db_path: str, stop_event: Event):
         self.file_watcher = file_watcher
         self.db_path = db_path
-        self.initialized = Event()
         self.watchers = {}
-        self.stop_event = Event()
-        self.lock = Lock()
+        self.stop_event = stop_event
 
-    async def start(self) -> None:
-        self._db = await connect(self.db_path)
-        try:
-            await self.watch_files()
-        except sqlite3.ProgrammingError:
-            pass
+    async def __aenter__(self) -> Self:
+        async with AsyncExitStack() as exit_stack:
+            self.task_group = await exit_stack.enter_async_context(create_task_group())
+            self._db = await exit_stack.enter_async_context(await connect(self.db_path))
+            await self.init_db()
+            self.task_group.start_soon(self.watch_files)
+            self._exit_stack = exit_stack.pop_all()
+        return self
 
-    async def stop(self) -> None:
-        await self._db.close()
-        self.stop_event.set()
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        return await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
 
     async def get_id(self, path: str) -> str | None:
-        await self.initialized.wait()
-        async with self.lock:
-            cursor = await self._db.cursor()
+        async with await self._db.cursor() as cursor:
             await cursor.execute("SELECT id FROM fileids WHERE path = ?", (path,))
             for (idx,) in await cursor.fetchall():
                 return idx
             return None
 
     async def get_path(self, idx: str) -> str | None:
-        await self.initialized.wait()
-        async with self.lock:
-            cursor = await self._db.cursor()
+        async with await self._db.cursor() as cursor:
             await cursor.execute("SELECT path FROM fileids WHERE id = ?", (idx,))
             for (path,) in await cursor.fetchall():
                 return path
             return None
 
     async def index(self, path: str) -> str | None:
-        await self.initialized.wait()
-        async with self.lock:
-            apath = Path(path)
-            if not await apath.exists():
-                return None
+        apath = Path(path)
+        if not await apath.exists():
+            return None
 
-            idx = uuid4().hex
-            mtime = (await apath.stat()).st_mtime
-            cursor = await self._db.cursor()
+        idx = uuid4().hex
+        mtime = (await apath.stat()).st_mtime
+        async with await self._db.cursor() as cursor:
             await cursor.execute("INSERT INTO fileids VALUES (?, ?, ?)", (idx, path, mtime))
             await self._db.commit()
             return idx
 
-    async def watch_files(self):
-        async with self.lock:
-            cursor = await self._db.cursor()
+    async def init_db(self):
+        cwd = await Path.cwd()
+        logger.info("Indexing files", cwd=str(cwd))
+        async with await self._db.cursor() as cursor:
             await cursor.execute("DROP TABLE IF EXISTS fileids")
             await cursor.execute(
                 "CREATE TABLE fileids "
@@ -95,10 +98,8 @@ class _FileId(FileId):
             )
             await self._db.commit()
 
-        # index files
-        async with self.lock:
-            cursor = await self._db.cursor()
-            async for path in Path().rglob("*"):
+            # index files
+            async for path in cwd.rglob("*"):
                 idx = uuid4().hex
                 try:
                     mtime = (await path.stat()).st_mtime
@@ -109,14 +110,14 @@ class _FileId(FileId):
                         "INSERT INTO fileids VALUES (?, ?, ?)", (idx, str(path), mtime)
                     )
             await self._db.commit()
-            self.initialized.set()
+            logger.info("Done indexing files", cwd=str(cwd))
 
+    async def watch_files(self):
         here = await Path().absolute()
         async for changes in self.file_watcher.watch(here, stop_event=self.stop_event):
-            async with self.lock:
+            async with await self._db.cursor() as cursor:
                 deleted_paths = set()
                 added_paths = set()
-                cursor = await self._db.cursor()
                 for change, changed_path in changes:
                     # get relative path
                     changed_path = Path(changed_path).relative_to(here)
@@ -168,13 +169,13 @@ class _FileId(FileId):
                     await cursor.execute("DELETE FROM fileids WHERE path = ?", (path,))
                 await self._db.commit()
 
-            for change in changes:
-                changed_path = change[1]
-                # get relative path
-                relative_changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
-                relative_change = (change[0], relative_changed_path)
-                for watcher in self.watchers.get(relative_changed_path, []):
-                    watcher.notify(relative_change)
+                for change in changes:
+                    changed_path = change[1]
+                    # get relative path
+                    relative_changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
+                    relative_change = (change[0], relative_changed_path)
+                    for watcher in self.watchers.get(relative_changed_path, []):
+                        watcher.notify(relative_change)
 
     def watch(self, path: str) -> Watcher:
         watcher = Watcher(path)
@@ -187,12 +188,12 @@ class _FileId(FileId):
 
 async def get_mtime(path, db) -> float | None:
     if db:
-        cursor = await db.cursor()
-        await cursor.execute("SELECT mtime FROM fileids WHERE path = ?", (path,))
-        for (mtime,) in await cursor.fetchall():
-            return mtime
-        # deleted file is not in database, shouldn't happen
-        return None
+        async with await db.cursor() as cursor:
+            await cursor.execute("SELECT mtime FROM fileids WHERE path = ?", (path,))
+            for (mtime,) in await cursor.fetchall():
+                return mtime
+            # deleted file is not in database, shouldn't happen
+            return None
     try:
         mtime = (await Path(path).stat()).st_mtime
     except FileNotFoundError:
@@ -218,8 +219,8 @@ async def maybe_rename(
             if is_added_path:
                 path1, path2 = path2, path1
             logger.debug("File was renamed", from_path=path1, to_path=path2)
-            cursor = await db.cursor()
-            await cursor.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
-            other_paths.remove(other_path)
-            return
+            async with await db.cursor() as cursor:
+                await cursor.execute("UPDATE fileids SET path = ? WHERE path = ?", (path2, path1))
+                other_paths.remove(other_path)
+                return
     changed_paths.add(changed_path)
