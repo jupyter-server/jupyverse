@@ -1,5 +1,4 @@
 import json
-from functools import partial
 from pathlib import Path
 
 import anyio
@@ -80,11 +79,14 @@ async def test_rest_api(start_jupyverse):
     file_id = response.json()["fileId"]
     document_id = f"json:notebook:{file_id}"
     ydoc = Doc()
-    async with AsyncWebSocketClient(id=f"api/collaboration/room/{document_id}", doc=ydoc, url=url):
-        # connect to the shared notebook document
-        # wait for file to be loaded and Y model to be created in server and client
-        await anyio.sleep(0.5)
-        ydoc["cells"] = ycells = Array()
+    ycells = ydoc.get("cells", type=Array)
+    async with (
+        ydoc.events() as events,
+        AsyncWebSocketClient(id=f"api/collaboration/room/{document_id}", doc=ydoc, url=url),
+    ):
+        async for event in events:
+            if len(ycells) == 3:
+                break
         # execute notebook
         for cell_idx in range(3):
             response = requests.post(
@@ -165,17 +167,13 @@ async def test_ywidgets(start_jupyverse):
     document_id = f"json:notebook:{file_id}"
     ynb = ydocs["notebook"]()
 
-    def callback(aevent, events, event):
-        events.append(event)
-        aevent.set()
-
-    aevent = anyio.Event()
-    events = []
-    ynb.ydoc.observe_subdocs(partial(callback, aevent, events))
-    async with AsyncWebSocketClient(
-        id=f"api/collaboration/room/{document_id}",
-        doc=ynb.ydoc,
-        url=url,
+    async with (
+        ynb.ydoc.events(subdocs=True) as events,
+        AsyncWebSocketClient(
+            id=f"api/collaboration/room/{document_id}",
+            doc=ynb.ydoc,
+            url=url,
+        ),
     ):
         # connect to the shared notebook document
         # wait for file to be loaded and Y model to be created in server and client
@@ -191,15 +189,11 @@ async def test_ywidgets(start_jupyverse):
                     }
                 ),
             )
-        while True:
-            await aevent.wait()
-            aevent = anyio.Event()
-            guid = None
-            for event in events:
-                if event.added:
-                    guid = event.added[0]
-            if guid is not None:
+        async for event in events:
+            if event.added:
+                guid = event.added[0]
                 break
+
         async with anyio.create_task_group() as tg:
             tg.start_soon(connect_ywidget, url, guid)
             response = requests.post(
