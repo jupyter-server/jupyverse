@@ -172,7 +172,9 @@ class _FileId(FileId):
                 for change in changes:
                     changed_path = change[1]
                     # get relative path
-                    relative_changed_path = str(Path(changed_path).relative_to(await Path().absolute()))
+                    relative_changed_path = str(
+                        Path(changed_path).relative_to(await Path().absolute())
+                    )
                     relative_change = (change[0], relative_changed_path)
                     for watcher in self.watchers.get(relative_changed_path, []):
                         watcher.notify(relative_change)

@@ -68,7 +68,8 @@ CONFIG = {
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
-async def test_execute(auth_mode, free_tcp_port):
+async def test_execute(auth_mode, free_tcp_port, tmp_path):
+    os.chdir(tmp_path)
     url = f"http://127.0.0.1:{free_tcp_port}"
     config = merge_config(
         CONFIG,
