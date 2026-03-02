@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 
 import anyio
+import httpx
 import pytest
-import requests
 from jupyter_ydoc import ydocs
 from jupyverse_api.yrooms import AsyncWebSocketClient
 from pycrdt import Array, Doc, Map, Text
@@ -17,12 +17,13 @@ test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 def test_settings_persistence_put(start_jupyverse):
     url = start_jupyverse
     # get previous theme
-    response = requests.get(url + "/lab/api/settings/@jupyterlab/apputils-extension:themes")
+    response = httpx.get(url + "/lab/api/settings/@jupyterlab/apputils-extension:themes")
     assert response.status_code == 200
     prev_theme["raw"] = json.loads(response.content)["raw"]
     # put new theme
-    response = requests.put(
-        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes", data=json.dumps(test_theme)
+    response = httpx.put(
+        url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
+        content=json.dumps(test_theme),
     )
     assert response.status_code == 204
 
@@ -32,15 +33,15 @@ def test_settings_persistence_put(start_jupyverse):
 def test_settings_persistence_get(start_jupyverse):
     url = start_jupyverse
     # get new theme
-    response = requests.get(
+    response = httpx.get(
         url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
     )
     assert response.status_code == 200
     assert json.loads(response.content)["raw"] == test_theme["raw"]
     # put previous theme back
-    response = requests.put(
+    response = httpx.put(
         url + "/lab/api/settings/@jupyterlab/apputils-extension:themes",
-        data=json.dumps(prev_theme),
+        content=json.dumps(prev_theme),
     )
     assert response.status_code == 204
 
@@ -53,9 +54,9 @@ async def test_rest_api(start_jupyverse):
     name = "notebook0.ipynb"
     path = (Path("data") / name).as_posix()
     # create a session to launch a kernel
-    response = requests.post(
+    response = httpx.post(
         f"{url}/api/sessions",
-        data=json.dumps(
+        content=json.dumps(
             {
                 "kernel": {"name": "python3"},
                 "name": name,
@@ -67,9 +68,9 @@ async def test_rest_api(start_jupyverse):
     r = response.json()
     kernel_id = r["kernel"]["id"]
     # get the room ID for the document
-    response = requests.put(
+    response = httpx.put(
         f"{url}/api/collaboration/session/{path}",
-        data=json.dumps(
+        content=json.dumps(
             {
                 "format": "json",
                 "type": "notebook",
@@ -88,11 +89,12 @@ async def test_rest_api(start_jupyverse):
         async for event in events:
             if len(ycells) == 3:
                 break
+
         # execute notebook
         for cell_idx in range(3):
-            response = requests.post(
+            response = httpx.post(
                 f"{url}/api/kernels/{kernel_id}/execute",
-                data=json.dumps(
+                content=json.dumps(
                     {
                         "document_id": document_id,
                         "cell_id": ycells[cell_idx]["id"],
@@ -105,7 +107,6 @@ async def test_rest_api(start_jupyverse):
             while True:
                 await anyio.sleep(0.1)
                 cells = json.loads(str(ycells))
-                print(f"{cells=}")
                 if (
                     cells[0]["outputs"]
                     == [
@@ -140,9 +141,9 @@ async def test_ywidgets(start_jupyverse):
     name = "notebook1.ipynb"
     path = (Path("data") / name).as_posix()
     # create a session to launch a kernel
-    response = requests.post(
+    response = httpx.post(
         f"{url}/api/sessions",
-        data=json.dumps(
+        content=json.dumps(
             {
                 "kernel": {"name": "python3"},
                 # "kernel": {"name": "akernel"},
@@ -155,9 +156,9 @@ async def test_ywidgets(start_jupyverse):
     r = response.json()
     kernel_id = r["kernel"]["id"]
     # get the room ID for the document
-    response = requests.put(
+    response = httpx.put(
         f"{url}/api/collaboration/session/{path}",
-        data=json.dumps(
+        content=json.dumps(
             {
                 "format": "json",
                 "type": "notebook",
@@ -181,9 +182,9 @@ async def test_ywidgets(start_jupyverse):
         await anyio.sleep(0.5)
         # execute notebook
         for cell_idx in range(2):
-            response = requests.post(
+            response = httpx.post(
                 f"{url}/api/kernels/{kernel_id}/execute",
-                data=json.dumps(
+                content=json.dumps(
                     {
                         "document_id": document_id,
                         "cell_id": ynb.ycells[cell_idx]["id"],
@@ -197,9 +198,9 @@ async def test_ywidgets(start_jupyverse):
 
         async with anyio.create_task_group() as tg:
             tg.start_soon(connect_ywidget, url, guid)
-            response = requests.post(
+            response = httpx.post(
                 f"{url}/api/kernels/{kernel_id}/execute",
-                data=json.dumps(
+                content=json.dumps(
                     {
                         "document_id": document_id,
                         "cell_id": ynb.ycells[2]["id"],

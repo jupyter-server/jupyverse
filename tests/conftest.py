@@ -5,8 +5,8 @@ import subprocess
 import time
 from pathlib import Path
 
+import httpx
 import pytest
-import requests
 
 HERE = Path(__file__).parent
 
@@ -61,8 +61,8 @@ def start_jupyverse(auth_mode, clear_users, tmp_cwd, free_tcp_port):
     url = f"http://127.0.0.1:{free_tcp_port}"
     while True:
         try:
-            requests.get(url)
-        except requests.exceptions.ConnectionError:
+            httpx.get(url)
+        except Exception:
             time.sleep(0.1)
         else:
             break

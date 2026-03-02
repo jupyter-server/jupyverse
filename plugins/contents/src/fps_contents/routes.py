@@ -250,7 +250,9 @@ class _Contents(Contents):
                             try:
                                 await f.write(json.dumps(dict_content, indent=2))
                             except Exception as exception:
-                                logger.warning("Error saving file", path=content.path, exc_info=exception)
+                                logger.warning(
+                                    "Error saving file", path=content.path, exc_info=exception
+                                )
                         else:
                             content.content = cast(str, content.content)
                             await f.write(content.content)
