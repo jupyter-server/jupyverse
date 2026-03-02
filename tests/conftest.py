@@ -1,4 +1,5 @@
 import os
+import shutil
 import signal
 import subprocess
 import time
@@ -6,6 +7,8 @@ from pathlib import Path
 
 import pytest
 import requests
+
+HERE = Path(__file__).parent
 
 
 @pytest.fixture
@@ -30,6 +33,7 @@ def tmp_cwd(tmp_path):
 @pytest.fixture()
 def start_jupyverse(auth_mode, clear_users, tmp_cwd, free_tcp_port):
     os.chdir(tmp_cwd)
+    shutil.copytree(HERE / "data", "data")
     command_list = [
         "jupyverse",
         "--disable",

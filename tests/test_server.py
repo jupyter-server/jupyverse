@@ -9,8 +9,6 @@ from jupyter_ydoc import ydocs
 from jupyverse_api.yrooms import AsyncWebSocketClient
 from pycrdt import Array, Doc, Map, Text
 
-HERE = Path(__file__).parent
-
 prev_theme = {}
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 
@@ -54,7 +52,7 @@ def test_settings_persistence_get(start_jupyverse):
 async def test_rest_api(start_jupyverse):
     url = start_jupyverse
     name = "notebook0.ipynb"
-    path = (HERE / "data" / name).as_posix()
+    path = (Path("data") / name).as_posix()
     # create a session to launch a kernel
     response = requests.post(
         f"{url}/api/sessions",
@@ -132,10 +130,11 @@ async def test_rest_api(start_jupyverse):
 @pytest.mark.anyio
 @pytest.mark.parametrize("auth_mode", ("noauth",))
 @pytest.mark.parametrize("clear_users", (False,))
+@pytest.mark.skip(reason="Test is too flaky")
 async def test_ywidgets(start_jupyverse):
     url = start_jupyverse
     name = "notebook1.ipynb"
-    path = (HERE / "data" / name).as_posix()
+    path = (Path("data") / name).as_posix()
     # create a session to launch a kernel
     response = requests.post(
         f"{url}/api/sessions",

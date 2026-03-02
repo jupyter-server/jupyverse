@@ -16,18 +16,18 @@ class FileIdModule(Module):
 
     async def prepare(self) -> None:
         file_watcher = await self.get(FileWatcher)  # type: ignore[type-abstract]
-        self._stop0_event = Event()
-        self._stop1_event = Event()
+        self._stop_event0 = Event()
+        self._stop_event1 = Event()
 
-        async with _FileId(file_watcher, self.config.db_path, self._stop0_event) as file_id:
+        async with _FileId(file_watcher, self.config.db_path, self._stop_event0) as file_id:
             self.put(file_id, FileId)
             self.done()
 
-        self._stop1_event.set()
+        self._stop_event1.set()
 
     async def stop(self) -> None:
-        self._stop0_event.set()
-        await self._stop1_event.wait()
+        self._stop_event0.set()
+        await self._stop_event1.wait()
 
 
 class FileIdConfig(Config):
