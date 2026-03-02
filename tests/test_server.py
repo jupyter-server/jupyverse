@@ -80,6 +80,7 @@ async def test_rest_api(start_jupyverse):
     document_id = f"json:notebook:{file_id}"
     ydoc = Doc()
     ycells = ydoc.get("cells", type=Array)
+
     async with (
         ydoc.events() as events,
         AsyncWebSocketClient(id=f"api/collaboration/room/{document_id}", doc=ydoc, url=url),
@@ -214,10 +215,8 @@ async def connect_ywidget(url, guid):
         doc=ywidget_doc,
         url=url,
     ):
-        attrs = Map()
-        model_name = Text()
-        ywidget_doc["_attrs"] = attrs
-        ywidget_doc["_model_name"] = model_name
+        attrs = ywidget_doc.get("_attrs", type=Map)
+        model_name = ywidget_doc.get("_model_name", type=Text)
         with anyio.fail_after(3):
             while True:
                 await anyio.sleep(0.1)

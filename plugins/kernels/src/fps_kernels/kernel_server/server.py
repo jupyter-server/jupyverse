@@ -123,7 +123,6 @@ class KernelServer:
                         capture_output=self.capture_kernel_output,
                     )
                 await self.task_group.start(self.kernel.start)
-            task_status.started()
             if self.kernel.wait_for_ready:
                 await self._wait_for_ready()
             async with create_task_group() as tg:
@@ -131,6 +130,7 @@ class KernelServer:
                 tg.start_soon(lambda: self.listen("stdin"))
                 tg.start_soon(lambda: self.listen("control"))
                 tg.start_soon(lambda: self.listen("iopub"))
+                task_status.started()
 
     async def stop(self) -> None:
         await self.kernel.stop()

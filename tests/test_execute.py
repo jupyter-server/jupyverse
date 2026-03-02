@@ -166,10 +166,8 @@ async def connect_ywidget(ws_url, guid):
         doc=ywidget_doc,
         url=ws_url,
     ):
-        attrs = Map()
-        model_name = Text()
-        ywidget_doc["_attrs"] = attrs
-        ywidget_doc["_model_name"] = model_name
+        attrs = ywidget_doc.get("_attrs", type=Map)
+        model_name = ywidget_doc.get("_model_name", type=Text)
         with anyio.fail_after(3):
             while True:
                 await anyio.sleep(0.1)

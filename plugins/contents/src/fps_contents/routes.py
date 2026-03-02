@@ -7,6 +7,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import cast
 
+import structlog
 from anyio import CancelScope, open_file
 from fastapi import HTTPException, Response
 from jupyverse_api.auth import User
@@ -19,6 +20,8 @@ from jupyverse_api.contents.models import (
     SaveContent,
 )
 from starlette.requests import Request
+
+logger = structlog.get_logger()
 
 
 class _Contents(Contents):
@@ -244,7 +247,10 @@ class _Contents(Contents):
                                     and "orig_nbformat" in dict_content["metadata"]
                                 ):
                                     del dict_content["metadata"]["orig_nbformat"]
-                            await f.write(json.dumps(dict_content, indent=2))
+                            try:
+                                await f.write(json.dumps(dict_content, indent=2))
+                            except Exception as exception:
+                                logger.warning("Error saving file", path=content.path, exc_info=exception)
                         else:
                             content.content = cast(str, content.content)
                             await f.write(content.content)
