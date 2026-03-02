@@ -125,29 +125,28 @@ async def test_execute(auth_mode, free_tcp_port, tmp_path):
         document_id = f"json:notebook:{file_id}"
         ynb = ydocs["notebook"]()
 
-        async with AsyncWebSocketClient(
-            id=f"api/collaboration/room/{document_id}",
-            doc=ynb.ydoc,
-            url=ws_url,
+        async with (
+            ynb.ydoc.events(subdocs=True) as events,
+            AsyncWebSocketClient(
+                id=f"api/collaboration/room/{document_id}",
+                doc=ynb.ydoc,
+                url=ws_url,
+            ),
         ):
-            # connect to the shared notebook document
-            # wait for file to be loaded and Y model to be created in server and client
-            await anyio.sleep(0.5)
-            async with ynb.ydoc.events(subdocs=True) as events:
-                # execute notebook
-                for cell_idx in range(2):
-                    response = await http.post(
-                        f"{url}/api/kernels/{kernel_id}/execute",
-                        json={
-                            "document_id": document_id,
-                            "cell_id": ynb.ycells[cell_idx]["id"],
-                        },
-                    )
+            # execute notebook
+            for cell_idx in range(2):
+                response = await http.post(
+                    f"{url}/api/kernels/{kernel_id}/execute",
+                    json={
+                        "document_id": document_id,
+                        "cell_id": ynb.ycells[cell_idx]["id"],
+                    },
+                )
 
-                async for event in events:
-                    if event.added:
-                        guid = event.added[0]
-                        break
+            async for event in events:
+                if event.added:
+                    guid = event.added[0]
+                    break
 
             async with anyio.create_task_group() as tg:
                 tg.start_soon(connect_ywidget, ws_url, guid)

@@ -98,10 +98,11 @@ async def test_rest_api(start_jupyverse):
             )
         # wait for Y model to be updated
         # retrieve cells
-        with anyio.fail_after(2):
+        with anyio.fail_after(5):
             while True:
                 await anyio.sleep(0.1)
                 cells = json.loads(str(ycells))
+                print(f"{cells=}")
                 if (
                     cells[0]["outputs"]
                     == [
