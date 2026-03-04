@@ -3,11 +3,11 @@ from pathlib import Path
 
 import notebook_frontend
 from fastapi.staticfiles import StaticFiles
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.lab import Lab, PageConfig
-from jupyverse_api.notebook import Notebook
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_frontend import FrontendConfig
+from jupyverse_lab import Lab, PageConfig
+from jupyverse_notebook import Notebook
 
 CWD = Path.cwd()
 

@@ -20,11 +20,9 @@ from anyio.streams.text import TextReceiveStream
 from fastapi import APIRouter, Depends, Request, WebSocket
 from httpx import AsyncClient, ConnectError, Cookies, Response
 from httpx_ws import AsyncWebSocketSession, aconnect_ws
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
+from jupyverse_api import App, Router
+from jupyverse_auth import Auth, User
 from structlog import get_logger
-
-from jupyverse_api import Router
 
 if sys.version_info >= (3, 11):
     from typing import Self

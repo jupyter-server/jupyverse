@@ -6,6 +6,7 @@ from asgi_middleware_static_file import ASGIMiddlewareStaticFile  # type: ignore
 from asgi_webdav import __name__ as app_name  # type: ignore
 from asgi_webdav import __version__  # type: ignore
 from asgi_webdav.middleware.cors import ASGIMiddlewareCORS  # type: ignore
+from jupyverse_api import App
 
 try:
     from asgi_webdav.config import (  # type: ignore
@@ -19,7 +20,6 @@ try:
     asgi_webdav_installed = True
 except BaseException:
     asgi_webdav_installed = False
-from jupyverse_api.app import App
 
 from .config import WebDAVConfig
 

@@ -1,7 +1,7 @@
 from anyio import create_task_group
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, AuthConfig
+from jupyverse_api import App
+from jupyverse_auth import Auth, AuthConfig
 
 from .config import AuthJupyterHubConfig
 from .routes import auth_factory

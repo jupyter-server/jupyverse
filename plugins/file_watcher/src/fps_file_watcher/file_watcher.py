@@ -4,7 +4,7 @@ from pathlib import Path
 
 import structlog
 from anyio import Event
-from jupyverse_api.file_watcher import FileChange, FileWatcher
+from jupyverse_file_watcher import FileChange, FileWatcher
 from watchfiles import awatch
 
 logger = structlog.get_logger()

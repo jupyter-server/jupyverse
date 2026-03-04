@@ -2,9 +2,7 @@ import pytest
 from fastapi import APIRouter
 from fps import get_root_module
 from httpx import AsyncClient
-from jupyverse_api.app import App
-
-from jupyverse_api import Router
+from jupyverse_api import App, Router
 
 
 @pytest.mark.anyio

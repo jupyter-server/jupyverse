@@ -49,8 +49,8 @@ Install all plugins in editable mode:
 
 ```bash
 uv venv
-uv pip install --group test -e jupyverse_api -e .
-for plugin in plugins/*; do uv pip install -e "$plugin"; done
+uv pip install --group test -e .
+for package in api/* plugins/*; do uv pip install -e "$package"; done
 ```
 
 Run tests with:
@@ -79,30 +79,8 @@ in development mode too. It is recommended to create a virtual environment befor
 following commands:
 
 ```bash
-pip install --group test \
-    -e jupyverse_api \
-    -e plugins/auth \
-    -e plugins/auth_fief \
-    -e plugins/auth_jupyterhub \
-    -e plugins/contents \
-    -e plugins/file_id \
-    -e plugins/file_watcher \
-    -e plugins/file_watcher_poll \
-    -e plugins/frontend \
-    -e plugins/jupyterlab \
-    -e plugins/kernel_subprocess \
-    -e plugins/kernel_web_worker \
-    -e plugins/kernels \
-    -e plugins/lab \
-    -e plugins/login \
-    -e plugins/nbconvert \
-    -e plugins/noauth \
-    -e plugins/notebook \
-    -e plugins/resource_usage \
-    -e plugins/terminals \
-    -e plugins/webdav \
-    -e plugins/yjs \
-    -e .
+pip install --group test -e .
+for package in api/* plugins/*; do pip install -e "$package"; done
 ```
 
 Run tests with:

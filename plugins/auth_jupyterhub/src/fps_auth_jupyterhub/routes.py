@@ -12,12 +12,10 @@ from fastapi.responses import RedirectResponse
 from httpx import AsyncClient
 from jupyterhub.services.auth import HubOAuth  # type: ignore[import-untyped]
 from jupyterhub.utils import isoformat  # type: ignore[import-untyped]
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
+from jupyverse_api import App, Router
+from jupyverse_auth import Auth, User
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
-
-from jupyverse_api import Router
 
 from .config import AuthJupyterHubConfig
 from .db import Base, UserDB

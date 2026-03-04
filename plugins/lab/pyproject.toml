@@ -24,7 +24,7 @@ classifiers = [
 dependencies = [
   "babel",
   "json5",
-  "jupyverse-api >=0.14.0,<0.15.0",
+  "jupyverse-api >=0.15.0,<0.16.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

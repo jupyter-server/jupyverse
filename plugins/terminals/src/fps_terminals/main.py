@@ -2,9 +2,9 @@ import sys
 
 from anyio import create_task_group
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.terminals import Terminals, TerminalServer
+from jupyverse_api import App
+from jupyverse_auth import Auth
+from jupyverse_terminals import Terminals, TerminalServer
 
 from .routes import _Terminals
 

@@ -1,10 +1,10 @@
 import structlog
 from fastapi_users.exceptions import UserAlreadyExists
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, AuthConfig
-from jupyverse_api.frontend import FrontendConfig
+from jupyverse_api import App
 from jupyverse_api.main import QueryParams
+from jupyverse_auth import Auth, AuthConfig
+from jupyverse_frontend import FrontendConfig
 
 from .config import _AuthConfig
 from .routes import auth_factory

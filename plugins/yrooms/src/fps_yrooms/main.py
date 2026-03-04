@@ -2,10 +2,10 @@ from functools import partial
 from typing import Any
 
 from fps import Module
-from jupyverse_api.contents import Contents
-from jupyverse_api.file_id import FileId
-from jupyverse_api.yrooms import YRoomFactory
-from jupyverse_api.ystore import YStoreFactory
+from jupyverse_contents import Contents
+from jupyverse_file_id import FileId
+from jupyverse_yrooms import YRoomFactory
+from jupyverse_ystore import YStoreFactory
 
 from .config import YRoomsConfig
 from .yrooms import YRoom

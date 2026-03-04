@@ -5,12 +5,10 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.frontend import FrontendConfig
+from jupyverse_api import App, Router
+from jupyverse_auth import Auth
+from jupyverse_frontend import FrontendConfig
 from sqlalchemy import select  # type: ignore
-
-from jupyverse_api import Router
 
 from .backends import get_backend
 from .config import _AuthConfig

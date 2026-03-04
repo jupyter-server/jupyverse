@@ -1,14 +1,14 @@
 import structlog
 from anyio import create_task_group
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.file_watcher import FileWatcher
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.kernel import DefaultKernelFactory
-from jupyverse_api.kernels import Kernels, KernelsConfig
+from jupyverse_api import App
 from jupyverse_api.main import Lifespan
-from jupyverse_api.yjs import Yjs
+from jupyverse_auth import Auth
+from jupyverse_file_watcher import FileWatcher
+from jupyverse_frontend import FrontendConfig
+from jupyverse_kernel import DefaultKernelFactory
+from jupyverse_kernels import Kernels, KernelsConfig
+from jupyverse_yjs import Yjs
 
 from .routes import _Kernels
 

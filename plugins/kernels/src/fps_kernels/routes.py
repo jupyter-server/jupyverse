@@ -10,15 +10,15 @@ from anyio import TASK_STATUS_IGNORED, Event, Lock, create_task_group, open_file
 from anyio.abc import TaskStatus
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.file_watcher import Change, FileWatcher
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.kernel import DefaultKernelFactory, KernelFactory
-from jupyverse_api.kernels import Kernels, KernelsConfig
-from jupyverse_api.kernels.models import CreateSession, Execution, Kernel, Notebook, Session
+from jupyverse_api import App
 from jupyverse_api.main import Lifespan
-from jupyverse_api.yjs import Yjs
+from jupyverse_auth import Auth, User
+from jupyverse_file_watcher import Change, FileWatcher
+from jupyverse_frontend import FrontendConfig
+from jupyverse_kernel import DefaultKernelFactory, KernelFactory
+from jupyverse_kernels import Kernels, KernelsConfig
+from jupyverse_kernels.models import CreateSession, Execution, Kernel, Notebook, Session
+from jupyverse_yjs import Yjs
 from starlette.requests import Request
 
 from .kernel_driver.driver import KernelDriver

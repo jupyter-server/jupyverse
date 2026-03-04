@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse"
-version = "0.13.4"
+version = "0.13.5"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -23,16 +23,16 @@ classifiers = [
 ]
 dependencies = [
   "fps[click,fastapi,anycorn] >=0.6.0,<0.7.0",
-  "fps-contents >=0.10.3,<0.11.0",
-  "fps-file-id >=0.3.4,<0.4.0",
+  "fps-contents >=0.11.0,<0.12.0",
+  "fps-file-id >=0.4.0,<0.5.0",
   "fps-file-watcher >=0.1.3,<0.2.0",
   "fps-kernel-subprocess >=0.1.5,<0.2.0",
-  "fps-kernels >=0.10.11,<0.11.0",
+  "fps-kernels >=0.10.12,<0.11.0",
   "fps-terminals >=0.9.3,<0.10.0",
   "fps-nbconvert >=0.9.3,<0.10.0",
   "fps-lab >=0.10.2,<0.11.0",
   "fps-frontend >=0.9.3,<0.10.0",
-  "jupyverse-api >=0.14.0,<0.15.0",
+  "jupyverse-api >=0.15.0,<0.16.0",
   "rich-click >=1.6.1,<2",
 ]
 license = "BSD-3-Clause"
@@ -56,13 +56,13 @@ collaboration = [
   "jupyter-collaboration-ui",
   "jupyter-docprovider",
   "fps-yjs >=0.13.0,<0.14.0",
-  "fps-ystore-sqlite >=0.1.0,<0.2.0",
+  "fps-ystore-sqlite >=0.2.0,<0.3.0",
   "fps-yrooms >=0.1.2,<0.2.0",
 ]
-auth = ["fps-auth >=0.9.3,<0.10.0", "fps-login >=0.9.3,<0.10.0"]
-auth-fief = ["fps-auth-fief >=0.9.4,<0.10.0"]
-auth-jupyterhub = ["fps-auth-jupyterhub >=0.9.4,<0.10.0"]
-noauth = ["fps-noauth >=0.9.4,<0.10.0"]
+auth = ["fps-auth >=0.10.0,<0.11.0", "fps-login >=0.9.3,<0.10.0"]
+auth-fief = ["fps-auth-fief >=0.10.0,<0.11.0"]
+auth-jupyterhub = ["fps-auth-jupyterhub >=0.10.0,<0.11.0"]
+noauth = ["fps-noauth >=0.10.0,<0.11.0"]
 file-watcher-poll = ["fps-file-watcher-poll >=0.1.4,<0.2.0"]
 kernel-web-worker = ["fps-kernel-web-worker >=0.1.7,<0.2.0"]
 resource-usage = ["fps-resource-usage >=0.9.4,<0.10.0"]
@@ -112,12 +112,30 @@ line-length = 100
 exclude = ["binder"]
 
 [tool.uv.workspace]
-members = ["plugins/*", "jupyverse_api"]
+members = ["api/*", "plugins/*"]
 
 [tool.uv.sources]
 jupyverse = { workspace = true }
 jupyverse-api = { workspace = true }
+jupyverse-auth = { workspace = true }
+jupyverse-contents = { workspace = true }
+jupyverse-file-id = { workspace = true }
+jupyverse-file-watcher = { workspace = true }
+jupyverse-frontend = { workspace = true }
+jupyverse-jupyterlab = { workspace = true }
+jupyverse-kernel = { workspace = true }
+jupyverse-kernels = { workspace = true }
+jupyverse-lab = { workspace = true }
+jupyverse-login = { workspace = true }
+jupyverse-nbconvert = { workspace = true }
+jupyverse-notebook = { workspace = true }
+jupyverse-resource-usage = { workspace = true }
+jupyverse-terminals = { workspace = true }
+jupyverse-yjs = { workspace = true }
+jupyverse-yrooms = { workspace = true }
+jupyverse-ystore = { workspace = true }
 fps-auth = { workspace = true }
+fps-auth-api = { workspace = true }
 fps-auth-fief = { workspace = true }
 fps-auth-jupyterhub = { workspace = true }
 fps-contents = { workspace = true }

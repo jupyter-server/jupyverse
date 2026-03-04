@@ -1,5 +1,11 @@
 # Version history
 
+## 0.13.5
+
+- Refactor `fps-ystore-sqlite` and `fps-file-id`.
+- Untrust notebooks when loading.
+- Add support for kernel XPUB.
+
 ## 0.13.4
 
 - Added `fps-jupyterlab-lsp` to support [jupyterlab-lsp](https://github.com/jupyter-lsp/jupyterlab-lsp).

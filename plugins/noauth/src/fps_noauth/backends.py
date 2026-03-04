@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import WebSocket
-from jupyverse_api.auth import Auth, User
+from jupyverse_auth import Auth, User
 
 USER = User()
 

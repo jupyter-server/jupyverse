@@ -6,11 +6,11 @@ import jupyterlab_js
 from fastapi import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.jupyterlab import JupyterLab, JupyterLabConfig
-from jupyverse_api.lab import Lab, PageConfig
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_frontend import FrontendConfig
+from jupyverse_jupyterlab import JupyterLab, JupyterLabConfig
+from jupyverse_lab import Lab, PageConfig
 from starlette.requests import Request
 
 from .index import INDEX_HTML

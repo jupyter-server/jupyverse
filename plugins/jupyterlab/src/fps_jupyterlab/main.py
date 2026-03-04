@@ -1,9 +1,9 @@
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.jupyterlab import JupyterLab, JupyterLabConfig
-from jupyverse_api.lab import Lab, PageConfig
+from jupyverse_api import App
+from jupyverse_auth import Auth
+from jupyverse_frontend import FrontendConfig
+from jupyverse_jupyterlab import JupyterLab, JupyterLabConfig
+from jupyverse_lab import Lab, PageConfig
 
 from .routes import _JupyterLab
 

@@ -23,7 +23,8 @@ classifiers = [
 ]
 dependencies = [
   "anychange >=0.2.0",
-  "jupyverse-api >=0.14.0,<0.15.0",
+  "jupyverse-api >=0.15.0,<0.16.0",
+  "jupyverse-file-watcher >=0.1.0,<0.2.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

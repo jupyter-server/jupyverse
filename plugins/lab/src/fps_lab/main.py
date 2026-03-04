@@ -1,10 +1,10 @@
 from anyio import Event, create_task_group
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.jupyterlab import JupyterLabConfig
-from jupyverse_api.lab import Lab
+from jupyverse_api import App
+from jupyverse_auth import Auth
+from jupyverse_frontend import FrontendConfig
+from jupyverse_jupyterlab import JupyterLabConfig
+from jupyverse_lab import Lab
 
 from .routes import _Lab
 

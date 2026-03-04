@@ -1,8 +1,8 @@
 import psutil
 from anyio import to_thread
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.resource_usage import ResourceUsage, ResourceUsageConfig
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_resource_usage import ResourceUsage, ResourceUsageConfig
 
 
 class _ResourceUsage(ResourceUsage):

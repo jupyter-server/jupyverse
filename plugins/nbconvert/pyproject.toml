@@ -22,8 +22,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "jupyverse-api >=0.15.0,<0.16.0",
   "nbconvert",
-  "jupyverse-api >=0.14.0,<0.15.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

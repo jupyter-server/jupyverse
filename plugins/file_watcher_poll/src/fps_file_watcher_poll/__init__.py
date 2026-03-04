@@ -1,6 +1,3 @@
-import importlib.metadata
+from importlib.metadata import version
 
-try:
-    __version__ = importlib.metadata.version("fps_file_watcher_poll")
-except importlib.metadata.PackageNotFoundError:
-    __version__ = "unknown"
+_version__ = version("fps_file_watcher_poll")

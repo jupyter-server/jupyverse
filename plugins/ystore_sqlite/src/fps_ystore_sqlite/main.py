@@ -2,11 +2,10 @@ from functools import partial
 
 import anyio
 from fps import Module
-from jupyverse_api.ystore import YStoreFactory
+from jupyverse_api import Config
+from jupyverse_ystore import YStoreFactory
 from pydantic import Field
 from sqlite_anyio import Connection, connect
-
-from jupyverse_api import Config
 
 from .ystore import SQLiteYStore
 

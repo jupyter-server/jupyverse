@@ -24,7 +24,8 @@ classifiers = [
 dependencies = [
   "aiosqlite <0.22.0",
   "fastapi-users[sqlalchemy,oauth] >=14.0.1,<15.0.0",
-  "jupyverse-api >=0.14.0,<0.15.0",
+  "jupyverse-api >=0.15.0,<0.16.0",
+  "jupyverse-auth >=0.1.0,<0.2.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

@@ -1,7 +1,7 @@
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.nbconvert import Nbconvert
+from jupyverse_api import App
+from jupyverse_auth import Auth
+from jupyverse_nbconvert import Nbconvert
 
 from .routes import _Nbconvert
 
