@@ -25,40 +25,15 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv --clear
-          uv pip install -e ".[jupyterlab,notebook,collaboration,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
+          uv pip install --group test -e . -e api/* -e plugins/*
+        shell: bash
       - name: Check types
         run: |
-          uv run mypy \
-            ./jupyverse_api \
-            ./plugins/contents \
-            ./plugins/file_id \
-            ./plugins/file_watcher \
-            ./plugins/file_watcher_poll \
-            ./plugins/frontend \
-            ./plugins/kernel_subprocess \
-            ./plugins/kernel_web_worker \
-            ./plugins/kernels \
-            ./plugins/lab \
-            ./plugins/nbconvert \
-            ./plugins/terminals \
-            ./plugins/yjs \
-            ./plugins/yrooms \
-            ./plugins/ystore_sqlite \
-            ./plugins/resource_usage \
-            ./plugins/webdav \
-            ./plugins/noauth \
-            ./plugins/auth \
-            ./plugins/auth_fief \
-            ./plugins/auth_jupyterhub \
-            ./plugins/jupyter_server \
-            ./plugins/jupyterlab \
-            ./plugins/jupyterlab_git \
-            ./plugins/jupyterlab_lsp \
-            ./plugins/notebook
+          uv run mypy ./api ./plugins
       - name: Lint
         run: |
-          uv run ruff check src jupyverse_api notebooks plugins tests
-          uv run ruff format --check src jupyverse_api notebooks plugins tests
+          uv run ruff check src api notebooks plugins tests
+          uv run ruff format --check src api notebooks plugins tests
 
   test:
     name: Run tests
@@ -78,6 +53,7 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv --clear
-          uv pip install -e ".[jupyterlab,notebook,collaboration,auth,auth-fief,auth-jupyterhub,noauth,file-watcher-poll,kernel-web-worker,resource-usage,webdav]" --group test
+          uv pip install --group test -e . -e api/* -e plugins/*
+        shell: bash
       - name: Run tests
         run: uv run pytest -v --timeout=60 --color=yes

@@ -9,10 +9,10 @@ from fps import get_root_module, merge_config
 
 CONFIG = {
     "jupyverse": {
-        "type": "jupyverse_api.main:JupyverseModule",
+        "type": "jupyverse",
         "modules": {
             "app": {
-                "type": "jupyverse_api.main:AppModule",
+                "type": "app",
             },
             "webdav": {
                 "type": "webdav",

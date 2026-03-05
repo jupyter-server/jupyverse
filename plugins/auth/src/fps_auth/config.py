@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from jupyverse_api.auth import AuthConfig
+from jupyverse_auth import AuthConfig
 
 
 class _AuthConfig(AuthConfig):

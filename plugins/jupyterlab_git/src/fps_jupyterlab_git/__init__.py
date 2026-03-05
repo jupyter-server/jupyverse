@@ -1,6 +1,3 @@
-import importlib.metadata
+from importlib.metadata import version
 
-try:
-    __version__ = importlib.metadata.version("fps_jupyterlab_git")
-except importlib.metadata.PackageNotFoundError:
-    __version__ = "unknown"
+__version__ = version("fps_jupyterlab_git")

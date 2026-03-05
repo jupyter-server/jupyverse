@@ -3,7 +3,7 @@ from functools import partial
 
 from anyio import create_task_group, to_thread
 from fastapi import WebSocketDisconnect
-from jupyverse_api.terminals import TerminalServer
+from jupyverse_terminals import TerminalServer
 from winpty import PTY  # type: ignore
 
 

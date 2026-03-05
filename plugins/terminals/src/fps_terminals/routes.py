@@ -5,9 +5,9 @@ from typing import Any
 import structlog
 from anyio import Event
 from fastapi import Response
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.terminals import Terminal, Terminals, TerminalServer
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_terminals import Terminal, Terminals, TerminalServer
 
 TERMINALS: dict[str, dict[str, Any]] = {}
 

@@ -1,10 +1,9 @@
 from anyio import Event
 from fps import Module
-from jupyverse_api.file_id import FileId
-from jupyverse_api.file_watcher import FileWatcher
-from pydantic import Field
-
 from jupyverse_api import Config
+from jupyverse_file_id import FileId
+from jupyverse_file_watcher import FileWatcher
+from pydantic import Field
 
 from .file_id import _FileId
 

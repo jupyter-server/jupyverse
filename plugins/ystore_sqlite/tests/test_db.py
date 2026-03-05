@@ -3,7 +3,7 @@ from time import time
 import pytest
 from anyio import create_task_group, wait_all_tasks_blocked
 from fps_ystore_sqlite.main import YStoreSQLiteModule
-from jupyverse_api.ystore import YDocNotFound, YStoreFactory
+from jupyverse_ystore import YDocNotFound, YStoreFactory
 from pycrdt import Doc, Text
 
 

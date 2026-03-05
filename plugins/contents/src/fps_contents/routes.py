@@ -9,9 +9,9 @@ from typing import cast
 import structlog
 from anyio import CancelScope, Path, to_thread
 from fastapi import HTTPException, Response
-from jupyverse_api.auth import User
-from jupyverse_api.contents import Contents
-from jupyverse_api.contents.models import (
+from jupyverse_auth import User
+from jupyverse_contents import Contents
+from jupyverse_contents.models import (
     Checkpoint,
     Content,
     CreateContent,

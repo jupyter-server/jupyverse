@@ -7,11 +7,11 @@ from anyio import (
 )
 from anyio.abc import TaskStatus
 from jupyter_ydoc import ydocs as YDOCS
-from jupyverse_api.contents import Contents
-from jupyverse_api.file_id import FileId
-from jupyverse_api.yrooms import AsyncChannel
-from jupyverse_api.yrooms import YRoom as _YRoom
-from jupyverse_api.ystore import YDocNotFound, YStoreFactory
+from jupyverse_contents import Contents
+from jupyverse_file_id import FileId
+from jupyverse_yrooms import AsyncChannel
+from jupyverse_yrooms import YRoom as _YRoom
+from jupyverse_ystore import YDocNotFound, YStoreFactory
 from pycrdt import (
     Doc,
     YMessageType,

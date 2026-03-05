@@ -1,0 +1,49 @@
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[project]
+name = "jupyverse-api"
+version = "0.15.0"
+description = "The API for Jupyverse"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+keywords = ["jupyverse", "api"]
+authors = [
+  { name = "Jupyter Development Team", email = "jupyter@googlegroups.com" },
+]
+dependencies = [
+  "anyio >=4.12.1,<5",
+  "fastapi >=0.95.0,<1",
+  "fps >=0.6.0,<0.7.0",
+  "structlog",
+  "pydantic >=2,<3",
+]
+license = "BSD-3-Clause"
+license-files = ["COPYING.md"]
+
+[project.urls]
+Source = "https://github.com/jupyter-server/jupyverse/tree/main/api/api"
+
+[project.scripts]
+jupyverse = "jupyverse_api.cli:main"
+
+[project.entry-points."fps.modules"]
+app = "jupyverse_api.main:AppModule"
+jupyverse = "jupyverse_api.main:JupyverseModule"
+
+[project.entry-points."jupyverse.modules"]
+app = "jupyverse_api.main:AppModule"

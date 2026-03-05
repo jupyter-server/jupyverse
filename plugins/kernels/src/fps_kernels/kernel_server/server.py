@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group, move_on_after
 from anyio.abc import TaskStatus
 from fastapi import WebSocket
-from jupyverse_api.kernel import DefaultKernelFactory, KernelFactory
+from jupyverse_kernel import DefaultKernelFactory, KernelFactory
 from packaging.version import Version
 from starlette.websockets import WebSocketState
 

@@ -1,7 +1,7 @@
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.resource_usage import ResourceUsage, ResourceUsageConfig
+from jupyverse_api import App
+from jupyverse_auth import Auth
+from jupyverse_resource_usage import ResourceUsage, ResourceUsageConfig
 
 from .routes import _ResourceUsage
 

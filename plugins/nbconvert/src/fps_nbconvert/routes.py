@@ -3,9 +3,9 @@ from pathlib import Path
 
 import nbconvert
 from fastapi.responses import FileResponse
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.nbconvert import Nbconvert
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_nbconvert import Nbconvert
 
 
 class _Nbconvert(Nbconvert):

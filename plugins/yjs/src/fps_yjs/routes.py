@@ -6,12 +6,12 @@ from fastapi import (
     Response,
     status,
 )
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.file_id import FileId
-from jupyverse_api.yjs import Yjs
-from jupyverse_api.yjs.models import CreateDocumentSession
-from jupyverse_api.yrooms import AsyncWebSocket, YRoom, YRooms
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_file_id import FileId
+from jupyverse_yjs import Yjs
+from jupyverse_yjs.models import CreateDocumentSession
+from jupyverse_yrooms import AsyncWebSocket, YRoom, YRooms
 from pycrdt import Doc
 
 from .widgets import Widgets

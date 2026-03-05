@@ -6,7 +6,7 @@ from fps import get_root_module
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 from httpx_ws.transport import ASGIWebSocketTransport
-from jupyverse_api.yjs.models import CreateDocumentSession
+from jupyverse_yjs.models import CreateDocumentSession
 from structlog.testing import capture_logs
 
 

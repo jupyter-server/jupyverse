@@ -1,5 +1,5 @@
 from fps import Module
-from jupyverse_api.app import App
+from jupyverse_api import App
 
 from .config import WebDAVConfig
 from .routes import WebDAV

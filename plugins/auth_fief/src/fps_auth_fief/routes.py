@@ -6,10 +6,8 @@ import httpx
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import RedirectResponse
 from fief_client import FiefAccessTokenInfo
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-
-from jupyverse_api import Router
+from jupyverse_api import App, Router
+from jupyverse_auth import Auth, User
 
 from .backend import get_backend
 from .config import _AuthFiefConfig

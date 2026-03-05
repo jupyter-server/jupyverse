@@ -1,5 +1,5 @@
 from fps import Module
-from jupyverse_api.file_watcher import FileWatcher
+from jupyverse_file_watcher import FileWatcher
 
 from .file_watcher import _FileWatcher
 

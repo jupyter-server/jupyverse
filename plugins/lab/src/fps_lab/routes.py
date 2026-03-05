@@ -12,11 +12,11 @@ from anyio.abc import TaskGroup
 from babel import Locale
 from fastapi import Response, status
 from fastapi.responses import FileResponse, RedirectResponse
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth, User
-from jupyverse_api.frontend import FrontendConfig
-from jupyverse_api.jupyterlab import JupyterLabConfig
-from jupyverse_api.lab import Lab
+from jupyverse_api import App
+from jupyverse_auth import Auth, User
+from jupyverse_frontend import FrontendConfig
+from jupyverse_jupyterlab import JupyterLabConfig
+from jupyverse_lab import Lab
 from starlette.requests import Request
 
 

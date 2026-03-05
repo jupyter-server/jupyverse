@@ -1,6 +1,5 @@
-from pydantic import Field
-
 from jupyverse_api import Config
+from pydantic import Field
 
 
 class YRoomsConfig(Config):

@@ -12,8 +12,8 @@ from anyio import (
 )
 from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.stapled import StapledObjectStream
-from jupyverse_api.kernel import DefaultKernelFactory, Kernel
-from jupyverse_api.yjs import Yjs
+from jupyverse_kernel import DefaultKernelFactory, Kernel
+from jupyverse_yjs import Yjs
 from packaging.version import Version
 from pycrdt import Array, Map, Text
 

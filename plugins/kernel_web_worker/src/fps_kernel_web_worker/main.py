@@ -1,5 +1,5 @@
 from fps import Module
-from jupyverse_api.kernel import DefaultKernelFactory
+from jupyverse_kernel import DefaultKernelFactory
 
 from .kernel_web_worker import KernelWebWorker
 

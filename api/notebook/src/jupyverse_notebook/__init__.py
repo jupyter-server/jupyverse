@@ -1,0 +1,86 @@
+from abc import ABC, abstractmethod
+from importlib.metadata import version
+
+from fastapi import APIRouter, Depends
+from fastapi.responses import HTMLResponse
+from jupyverse_api import App, Router
+from jupyverse_auth import Auth, User
+
+__version__ = version("jupyverse_notebook")
+
+
+class Notebook(Router, ABC):
+    def __init__(self, app: App, auth: Auth):
+        super().__init__(app=app)
+
+        router = APIRouter()
+
+        @router.get("/tree", response_class=HTMLResponse)
+        async def get_tree(
+            user: User = Depends(auth.current_user()),
+        ):
+            return await self.get_tree(user)
+
+        @router.get("/notebooks/{path:path}", response_class=HTMLResponse)
+        async def get_notebook(
+            path,
+            user: User = Depends(auth.current_user()),
+        ):
+            return await self.get_notebook(path, user)
+
+        @router.get("/edit/{path:path}", response_class=HTMLResponse)
+        async def edit_file(
+            path,
+            user: User = Depends(auth.current_user()),
+        ):
+            return await self.edit_file(path, user)
+
+        @router.get("/consoles/{path:path}", response_class=HTMLResponse)
+        async def get_console(
+            path,
+            user: User = Depends(auth.current_user()),
+        ):
+            return await self.get_console(path, user)
+
+        @router.get("/terminals/{name}", response_class=HTMLResponse)
+        async def get_terminal(
+            name: str,
+            user: User = Depends(auth.current_user()),
+        ):
+            return await self.get_terminal(name, user)
+
+        self.include_router(router)
+
+    @abstractmethod
+    async def get_tree(
+        self,
+        user: User,
+    ): ...
+
+    @abstractmethod
+    async def get_notebook(
+        self,
+        path,
+        user: User,
+    ): ...
+
+    @abstractmethod
+    async def edit_file(
+        self,
+        path,
+        user: User,
+    ): ...
+
+    @abstractmethod
+    async def get_console(
+        self,
+        path,
+        user: User,
+    ): ...
+
+    @abstractmethod
+    async def get_terminal(
+        self,
+        name: str,
+        user: User,
+    ): ...

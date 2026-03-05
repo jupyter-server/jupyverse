@@ -14,7 +14,7 @@ from anyio import (
 )
 from anyio.abc import ByteReceiveStream, ByteSendStream
 from fastapi import WebSocketDisconnect
-from jupyverse_api.terminals import TerminalServer
+from jupyverse_terminals import TerminalServer
 
 
 class _TerminalServer(TerminalServer):

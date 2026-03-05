@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_auth"
-version = "0.9.8"
+version = "0.10.0"
 description = "An FPS plugin for the authentication API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -23,8 +23,17 @@ classifiers = [
 ]
 dependencies = [
   "aiosqlite <0.22.0",
+  "fastapi",
   "fastapi-users[sqlalchemy,oauth] >=14.0.1,<15.0.0",
-  "jupyverse-api >=0.14.0,<0.15.0",
+  "fps",
+  "httpx",
+  "httpx-oauth",
+  "jupyverse-api >=0.15.0,<0.16.0",
+  "jupyverse-auth >=0.2.0,<0.3.0",
+  "jupyverse-frontend >=0.1.0,<0.2.0",
+  "sqlalchemy",
+  "starlette",
+  "structlog",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

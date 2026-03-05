@@ -1,10 +1,10 @@
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import Auth
-from jupyverse_api.file_id import FileId
+from jupyverse_api import App
 from jupyverse_api.main import Lifespan
-from jupyverse_api.yjs import Yjs
-from jupyverse_api.yrooms import YRoomFactory, YRooms
+from jupyverse_auth import Auth
+from jupyverse_file_id import FileId
+from jupyverse_yjs import Yjs
+from jupyverse_yrooms import YRoomFactory, YRooms
 
 from .routes import _Yjs
 

@@ -1,7 +1,7 @@
 from fps import Module
-from jupyverse_api.app import App
-from jupyverse_api.auth import AuthConfig
-from jupyverse_api.login import Login
+from jupyverse_api import App
+from jupyverse_auth import AuthConfig
+from jupyverse_login import Login
 
 from .routes import _Login
 

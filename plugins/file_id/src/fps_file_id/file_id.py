@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import structlog
 from anyio import Event, Path, create_task_group
-from jupyverse_api.file_id import FileId
-from jupyverse_api.file_watcher import Change, FileWatcher
+from jupyverse_file_id import FileId
+from jupyverse_file_watcher import Change, FileWatcher
 from sqlite_anyio import connect
 
 if sys.version_info >= (3, 11):

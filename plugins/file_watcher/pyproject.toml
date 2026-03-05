@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_file_watcher"
-version = "0.1.7"
+version = "0.2.0"
 description = "An FPS plugin for the file watcher API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -22,8 +22,11 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "anyio",
+  "fps",
+  "jupyverse-file-watcher >=0.1.0,<0.2.0",
+  "structlog",
   "watchfiles >=1.0.4,<2",
-  "jupyverse-api >=0.14.0,<0.15.0",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
