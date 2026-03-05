@@ -1,5 +1,27 @@
 # Version history
 
+## 0.14.0
+
+This release has breaking changes. The biggest change is that the `jupyverse-api` package has been
+split into separate packages for each individual API. The reason is that it was not sustainable
+to have a global API for Jupyverse, since one breaking change in one of the APIs meant we had to
+bump `jupyverse-api` minor version and update all plugins to use this version. Although an API can
+depend on another one, they are mostly independent of each other, so it is better for them to live
+in their own package. With that, a plugin can depend just on the API(s) that it depends on. It is
+a better separation of concerns and it will lead to better maintainability.
+
+The naming scheme for the API is the following:
+- `jupyverse-api` is the minimal Jupyverse API (it previously was the global API).
+- `jupyverse-auth` is the API for authentication. Note that it depends on `jupyverse-api`.
+- `jupyverse-contents` is the API for contents. Note that it depends on `jupyverse-auth` and that `fps-contents` depends on `jupyverse-contents`, while it previously depended on the global `jupyverse-api`.
+- etc.
+
+Other changes in this release include:
+- Add support for kernel XPUB.
+- Untrust notebooks when loading.
+- Rework `fps-ystore-sqlite`.
+- Rework `fps-file-id`.
+
 ## 0.13.5
 
 - Refactor `fps-ystore-sqlite` and `fps-file-id`.
