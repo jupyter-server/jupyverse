@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.1
+
+Just some dependency updates.
+
 ## 0.14.0
 
 This release has breaking changes. The biggest change is that the `jupyverse-api` package has been
