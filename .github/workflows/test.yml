@@ -25,8 +25,7 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv --clear
-          uv pip install --group test -e .
-          for package in api/* plugins/*; do uv pip install -e "$package"; done
+          uv pip install --group test -e . -e api/* -e plugins/*
         shell: bash
       - name: Check types
         run: |
@@ -54,8 +53,7 @@ jobs:
       - name: Install jupyverse and plugins
         run: |
           uv venv --clear
-          uv pip install --group test -e .
-          for package in api/* plugins/*; do uv pip install -e "$package"; done
+          uv pip install --group test -e . -e api/* -e plugins/*
         shell: bash
       - name: Run tests
         run: uv run pytest -v --timeout=60 --color=yes

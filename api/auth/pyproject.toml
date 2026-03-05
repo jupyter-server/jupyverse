@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse-auth"
-version = "0.1.0"
+version = "0.2.0"
 description = "The API for Jupyverse's authentication"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"

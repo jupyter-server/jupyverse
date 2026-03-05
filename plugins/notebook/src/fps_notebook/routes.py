@@ -21,7 +21,7 @@ class _Notebook(Notebook):
         lab: Lab,
         page_config: PageConfig,
     ) -> None:
-        super().__init__(app, auth, lab)
+        super().__init__(app, auth)
         self.frontend_config = frontend_config
         self.lab = lab
         self.page_config = page_config

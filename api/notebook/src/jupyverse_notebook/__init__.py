@@ -5,13 +5,12 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
-from jupyverse_lab import Lab
 
 __version__ = version("jupyverse_notebook")
 
 
 class Notebook(Router, ABC):
-    def __init__(self, app: App, auth: Auth, lab: Lab):
+    def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
 
         router = APIRouter()

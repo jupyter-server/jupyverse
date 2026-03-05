@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_yjs"
-version = "0.13.0"
+version = "0.14.0"
 description = "An FPS plugin for the Yjs API"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
 requires-python = ">=3.10"
@@ -22,7 +22,14 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "fastapi",
+  "fps",
   "jupyverse-api >=0.15.0,<0.16.0",
+  "jupyverse-auth >=0.2.0,<0.3.0",
+  "jupyverse-file-id >=0.1.0,<0.2.0",
+  "jupyverse-yjs >=0.1.0,<0.2.0",
+  "jupyverse-yrooms >=0.1.0,<0.2.0",
+  "pycrdt",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

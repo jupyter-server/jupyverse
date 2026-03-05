@@ -22,9 +22,13 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "fastapi",
   "fief-client[fastapi]",
+  "fps",
+  "httpx",
   "jupyverse-api >=0.15.0,<0.16.0",
-  "jupyverse-auth >=0.1.0,<0.2.0",
+  "jupyverse-auth >=0.2.0,<0.3.0",
+  "pydantic",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

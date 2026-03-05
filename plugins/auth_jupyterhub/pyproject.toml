@@ -23,9 +23,15 @@ classifiers = [
 ]
 dependencies = [
   "aiosqlite <0.22.0",
+  "anyio",
+  "fastapi",
+  "fps",
+  "httpx",
   "jupyterhub >=4.0.1,<5",
   "jupyverse-api >=0.15.0,<0.16.0",
-  "jupyverse-auth >=0.1.0,<0.2.0",
+  "jupyverse-auth >=0.2.0,<0.3.0",
+  "pydantic",
+  "sqlalchemy",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

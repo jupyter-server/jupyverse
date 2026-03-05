@@ -25,7 +25,7 @@ dependencies = [
   "fastapi",
   "fps",
   "jupyverse-api >=0.15.0,<0.16.0",
-  "jupyverse-auth >=0.1.0,<0.2.0",
+  "jupyverse-auth >=0.2.0,<0.3.0",
   "jupyverse-jupyterlab >=0.1.0,<0.2.0",
 ]
 license = "BSD-3-Clause"

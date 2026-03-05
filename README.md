@@ -49,8 +49,7 @@ Install all plugins in editable mode:
 
 ```bash
 uv venv
-uv pip install --group test -e .
-for package in api/* plugins/*; do uv pip install -e "$package"; done
+uv pip install --group test -e . -e api/* -e plugins/*
 ```
 
 Run tests with:
@@ -79,8 +78,7 @@ in development mode too. It is recommended to create a virtual environment befor
 following commands:
 
 ```bash
-pip install --group test -e .
-for package in api/* plugins/*; do pip install -e "$package"; done
+pip install --group test -e . -e api/* -e plugins/*
 ```
 
 Run tests with:
