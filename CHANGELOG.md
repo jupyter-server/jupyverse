@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.3
+
+- Add back `fps-file-watcher` in jupyverse dependencies (needed by `fps-kernels`).
+
 ## 0.14.2
 
 The `fps-file-id` and `fps-file-watcher` plugins have been moved to the `collaboration`
