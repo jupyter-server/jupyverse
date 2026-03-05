@@ -1,5 +1,10 @@
 # Version history
 
+## 0.14.2
+
+The `fps-file-id` and `fps-file-watcher` plugins have been moved to the `collaboration`
+optional dependency. They are indeed not needed in when RTC is not enabled.
+
 ## 0.14.1
 
 Just some dependency updates.
