@@ -135,12 +135,12 @@ class Lab(Router, ABC):
         self.include_router(router)
 
     async def get_page_config(self, config: dict[str, Any]) -> None:
-        page_config_json = anyio.Path(
+        page_config_path = anyio.Path(
             self.prefix_dir / "etc" / "jupyter" / "labconfig" / "page_config.json"
         )
-        if await page_config_json.is_file():
-            page_config_dict = json.loads(await page_config_json.read_text())
-            config.update(page_config_dict)
+        if await page_config_path.is_file():
+            page_config = json.loads(await page_config_path.read_text())
+            config.update(page_config)
 
     @abstractmethod
     def get_federated_extensions(self, extensions_dir: Path) -> tuple[list, list]: ...
