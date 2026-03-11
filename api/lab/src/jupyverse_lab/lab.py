@@ -21,7 +21,13 @@ class Lab(Router, ABC):
     extensions_dir: Path
     redirect_after_root: str
 
-    def __init__(self, app: App, auth: Auth, jupyterlab_config: JupyterLabConfig | None, page_config: PageConfig):
+    def __init__(
+        self,
+        app: App,
+        auth: Auth,
+        jupyterlab_config: JupyterLabConfig | None,
+        page_config: PageConfig,
+    ):
         super().__init__(app)
 
         self.prefix_dir = Path(sys.prefix)
@@ -129,7 +135,9 @@ class Lab(Router, ABC):
         self.include_router(router)
 
     async def get_page_config(self, config: dict[str, Any]) -> None:
-        page_config_json = anyio.Path(self.prefix_dir / "etc" / "jupyter" / "labconfig" / "page_config.json")
+        page_config_json = anyio.Path(
+            self.prefix_dir / "etc" / "jupyter" / "labconfig" / "page_config.json"
+        )
         if await page_config_json.is_file():
             page_config_dict = json.loads(await page_config_json.read_text())
             config.update(page_config_dict)

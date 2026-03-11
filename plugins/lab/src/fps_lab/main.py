@@ -18,7 +18,9 @@ class LabModule(Module):
         jupyterlab_config = await self.get(JupyterLabConfig)
 
         async with create_task_group() as tg:
-            lab = _Lab(app, auth, frontend_config, jupyterlab_config, page_config, self.exit_app, tg)
+            lab = _Lab(
+                app, auth, frontend_config, jupyterlab_config, page_config, self.exit_app, tg
+            )
             self.put(lab, Lab)
             self.done()
             shutdown = Event()
