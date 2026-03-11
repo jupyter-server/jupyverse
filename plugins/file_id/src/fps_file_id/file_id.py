@@ -45,8 +45,10 @@ class _FileId(FileId):
         self.stop_event = stop_event
 
     async def __aenter__(self) -> Self:
+        self._exit_stack = None
         async with AsyncExitStack() as exit_stack:
             self.task_group = await exit_stack.enter_async_context(create_task_group())
+            self.task_group.start_soon(self._cancel_on_stop)
             self._db = await exit_stack.enter_async_context(await connect(self.db_path))
             await self.init_db()
             self.task_group.start_soon(self.watch_files)
@@ -59,7 +61,13 @@ class _FileId(FileId):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> bool | None:
+        if self._exit_stack is None:
+            return None
         return await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
+
+    async def _cancel_on_stop(self) -> None:
+        await self.stop_event.wait()
+        self.task_group.cancel_scope.cancel()
 
     async def get_id(self, path: str) -> str | None:
         async with await self._db.cursor() as cursor:

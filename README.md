@@ -49,7 +49,9 @@ Install all plugins in editable mode:
 
 ```bash
 uv venv
-uv pip install --group test -e . -e api/* -e plugins/*
+for dir in ./api/*; do dirname=$(basename "$dir"); uv pip install -e "jupyverse-$dirname @ ./api/$dirname"; done
+for dir in ./plugins/*; do dirname=$(basename "$dir"); uv pip install -e "fps-$dirname @ ./plugins/$dirname"; done
+uv pip install --group test -e .
 ```
 
 Run tests with:
@@ -78,7 +80,9 @@ in development mode too. It is recommended to create a virtual environment befor
 following commands:
 
 ```bash
-pip install --group test -e . -e api/* -e plugins/*
+for dir in ./api/*; do dirname=$(basename "$dir"); pip install -e "jupyverse-$dirname @ ./api/$dirname"; done
+for dir in ./plugins/*; do dirname=$(basename "$dir"); pip install -e "fps-$dirname @ ./plugins/$dirname"; done
+pip install --group test -e .
 ```
 
 Run tests with:

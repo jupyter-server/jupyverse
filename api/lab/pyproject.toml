@@ -22,6 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "anyio",
   "fastapi",
   "fps",
   "jupyverse-api >=0.15.0,<0.16.0",

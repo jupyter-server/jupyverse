@@ -16,7 +16,7 @@ from jupyverse_api import App
 from jupyverse_auth import Auth, User
 from jupyverse_frontend import FrontendConfig
 from jupyverse_jupyterlab import JupyterLabConfig
-from jupyverse_lab import Lab
+from jupyverse_lab import Lab, PageConfig
 from starlette.requests import Request
 
 
@@ -27,10 +27,11 @@ class _Lab(Lab):
         auth: Auth,
         frontend_config: FrontendConfig,
         jupyterlab_config: JupyterLabConfig | None,
+        page_config: PageConfig,
         exit_app: Callable[[], None],
         task_group: TaskGroup,
     ) -> None:
-        super().__init__(app, auth, jupyterlab_config)
+        super().__init__(app, auth, jupyterlab_config, page_config)
 
         self.frontend_config = frontend_config
         self.locale = "en"
