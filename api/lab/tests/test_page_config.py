@@ -1,11 +1,15 @@
+import json
+import sys
+from pathlib import Path
+
 import pytest
-from fps import Context, Module, get, put
+from fps import Context, Module, get, get_root_module, put
 from jupyverse_lab import PageConfig
 
 pytestmark = pytest.mark.anyio
 
 
-async def test_page_config():
+async def test_page_config_basic():
     page_config = PageConfig()
 
     async def hook(config):
@@ -48,3 +52,34 @@ async def test_context_in_hook():
         pass
 
     assert value == "foo"
+
+
+@pytest.fixture
+def tmp_page_config():
+    page_config_dir = Path(sys.prefix) / "etc" / "jupyter" / "labconfig"
+    page_config_dir.mkdir(exist_ok=True)
+    page_config_path = page_config_dir / "page_config.json"
+    page_config_path.write_text(json.dumps({"terminalsAvailable": False}))
+    yield
+    page_config_path.unlink()
+
+
+async def test_page_config_file(tmp_page_config):
+    config = {
+        "jupyverse": {
+            "type": "jupyverse",
+            "modules": {
+                "app": {"type": "app"},
+                "auth": {"type": "noauth"},
+                "frontend": {"type": "frontend"},
+                "page_config": {"type": "page_config"},
+                "lab": {"type": "lab"},
+                "jupyterlab": {"type": "jupyterlab"},
+            },
+        },
+    }
+
+    async with get_root_module(config) as module:
+        page_config = await module.get(PageConfig)
+        page_config_dict = await page_config.get()
+        assert page_config_dict == {"terminalsAvailable": False}

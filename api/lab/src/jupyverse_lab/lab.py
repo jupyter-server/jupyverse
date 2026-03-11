@@ -1,12 +1,17 @@
+import json
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Any
 
+import anyio
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.staticfiles import StaticFiles
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 from jupyverse_jupyterlab import JupyterLabConfig
+
+from .page_config import PageConfig
 
 
 class Lab(Router, ABC):
@@ -16,10 +21,17 @@ class Lab(Router, ABC):
     extensions_dir: Path
     redirect_after_root: str
 
-    def __init__(self, app: App, auth: Auth, jupyterlab_config: JupyterLabConfig | None):
+    def __init__(
+        self,
+        app: App,
+        auth: Auth,
+        jupyterlab_config: JupyterLabConfig | None,
+        page_config: PageConfig,
+    ):
         super().__init__(app)
 
         self.prefix_dir = Path(sys.prefix)
+        page_config.register(self.get_page_config)
         self.extensions_dir = self.prefix_dir / "share" / "jupyter" / "labextensions"
         self.federated_extensions, disabled_extensions = self.get_federated_extensions(
             self.extensions_dir
@@ -121,6 +133,14 @@ class Lab(Router, ABC):
             return await self.shutdown(user)
 
         self.include_router(router)
+
+    async def get_page_config(self, config: dict[str, Any]) -> None:
+        page_config_path = anyio.Path(
+            self.prefix_dir / "etc" / "jupyter" / "labconfig" / "page_config.json"
+        )
+        if await page_config_path.is_file():
+            page_config = json.loads(await page_config_path.read_text())
+            config.update(page_config)
 
     @abstractmethod
     def get_federated_extensions(self, extensions_dir: Path) -> tuple[list, list]: ...
