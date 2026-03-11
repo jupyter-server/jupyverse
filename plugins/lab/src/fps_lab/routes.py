@@ -1,11 +1,11 @@
 import json
-import os
+import sys
 from collections.abc import Callable
-from glob import glob
 from http import HTTPStatus
 from importlib.metadata import entry_points
 from pathlib import Path
 
+import anyio
 import json5  # type: ignore
 from anyio import sleep
 from anyio.abc import TaskGroup
@@ -170,6 +170,13 @@ class _Lab(Lab):
         self._task_group.start_soon(exit_app)
 
     async def get_settings(self, user: User):
+        overrides_path = (
+            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
+        )
+        if await overrides_path.is_file():
+            overrides = json.loads(await overrides_path.read_text())
+        else:
+            overrides = {}
         if user:
             user_settings = json.loads(user.settings)
         else:
@@ -192,12 +199,14 @@ class _Lab(Lab):
                     for path in [p for p in d2.iterdir() if p.suffix == ".json"]:
                         schema = json.loads(path.read_text())
                         key = f"{path.parent.name}:{path.stem}"
+                        id_ = f"{d1.name}/{key}"
+                        settings_ = overrides.get(id_, {})
                         setting = {
-                            "id": f"{d1.name}/{key}",
+                            "id": id_,
                             "schema": schema,
                             "version": package["version"],
                             "raw": "{}",
-                            "settings": {},
+                            "settings": settings_,
                             "warning": None,
                             "last_modified": None,
                             "created": None,
@@ -212,9 +221,8 @@ class _Lab(Lab):
         federated_extensions = []
         disabled_extensions = []
 
-        for path in glob(os.path.join(extensions_dir, "**", "package.json"), recursive=True):
-            with open(path) as f:
-                package = json.load(f)
+        for path in extensions_dir.glob("**/package.json"):
+            package = json.loads(path.read_text())
             if "jupyterlab" not in package:
                 continue
             extension = package["jupyterlab"]["_build"]
