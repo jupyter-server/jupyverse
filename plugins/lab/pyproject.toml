@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_lab"
-version = "0.11.0"
+version = "0.11.1"
 description = "An FPS plugin for the JupyterLab/Notebook API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -31,7 +31,7 @@ dependencies = [
   "jupyverse-auth >=0.2.0,<0.3.0",
   "jupyverse-frontend >=0.1.0,<0.2.0",
   "jupyverse-jupyterlab >=0.1.0,<0.2.0",
-  "jupyverse-lab >=0.1.0,<0.2.0",
+  "jupyverse-lab >=0.2.0,<0.3.0",
   "starlette",
 ]
 license = "BSD-3-Clause"

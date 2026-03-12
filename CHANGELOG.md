@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.4
+
+- Support `overrides.json` and `page_config.json`.
+
 ## 0.14.3
 
 - Add back `fps-file-watcher` in jupyverse dependencies (needed by `fps-kernels`).
