@@ -124,17 +124,23 @@ class _Lab(Lab):
         name2,
         user: User,
     ):
-        with open(self.jlab_dir / "static" / "package.json") as f:
-            package = json.load(f)
+        overrides_path = (
+            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
+        )
+        if await overrides_path.is_file():
+            overrides = json.loads(await overrides_path.read_text())
+        else:
+            overrides = {}
+        package = json.loads(await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text())
         if name0 in ["@jupyterlab", "@notebook"]:
             schemas_parent = self.jlab_dir
         else:
             schemas_parent = self.extensions_dir / name0 / name1
-        with open(schemas_parent / "schemas" / name0 / name1 / f"{name2}.json") as f:
-            schema = json.load(f)
+        schema = json.loads(await (anyio.Path(schemas_parent) / "schemas" / name0 / name1 / f"{name2}.json").read_text())
         key = f"{name1}:{name2}"
+        id_ = f"@jupyterlab/{key}"
         setting = {
-            "id": f"@jupyterlab/{key}",
+            "id": id_,
             "schema": schema,
             "version": package["version"],
             "raw": "{}",
@@ -147,6 +153,10 @@ class _Lab(Lab):
             if key in user_settings:
                 setting.update(user_settings[key])
                 setting["settings"] = json5.loads(user_settings[key]["raw"])
+        settings_overrides = overrides.get(id_)
+        if settings_overrides is not None:
+            setting["settings"] = settings_overrides
+            setting["raw"] = json.dumps(settings_overrides)
         return setting
 
     async def change_setting(
@@ -200,13 +210,12 @@ class _Lab(Lab):
                         schema = json.loads(path.read_text())
                         key = f"{path.parent.name}:{path.stem}"
                         id_ = f"{d1.name}/{key}"
-                        settings_ = overrides.get(id_, {})
                         setting = {
                             "id": id_,
                             "schema": schema,
                             "version": package["version"],
                             "raw": "{}",
-                            "settings": settings_,
+                            "settings": {},
                             "warning": None,
                             "last_modified": None,
                             "created": None,
@@ -214,6 +223,10 @@ class _Lab(Lab):
                         if key in user_settings:
                             setting.update(user_settings[key])
                             setting["settings"] = json5.loads(user_settings[key]["raw"])
+                        settings_overrides = overrides.get(id_)
+                        if settings_overrides is not None:
+                            setting["settings"] = settings_overrides
+                            setting["raw"] = json.dumps(settings_overrides)
                         settings.append(setting)
         return {"settings": settings}
 
