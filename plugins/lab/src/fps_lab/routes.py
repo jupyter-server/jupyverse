@@ -1,11 +1,11 @@
 import json
-import os
+import sys
 from collections.abc import Callable
-from glob import glob
 from http import HTTPStatus
 from importlib.metadata import entry_points
 from pathlib import Path
 
+import anyio
 import json5  # type: ignore
 from anyio import sleep
 from anyio.abc import TaskGroup
@@ -124,17 +124,29 @@ class _Lab(Lab):
         name2,
         user: User,
     ):
-        with open(self.jlab_dir / "static" / "package.json") as f:
-            package = json.load(f)
+        overrides_path = (
+            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
+        )
+        if await overrides_path.is_file():
+            overrides = json.loads(await overrides_path.read_text())
+        else:
+            overrides = {}
+        package = json.loads(
+            await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
+        )
         if name0 in ["@jupyterlab", "@notebook"]:
             schemas_parent = self.jlab_dir
         else:
             schemas_parent = self.extensions_dir / name0 / name1
-        with open(schemas_parent / "schemas" / name0 / name1 / f"{name2}.json") as f:
-            schema = json.load(f)
+        schema = json.loads(
+            await (
+                anyio.Path(schemas_parent) / "schemas" / name0 / name1 / f"{name2}.json"
+            ).read_text()
+        )
         key = f"{name1}:{name2}"
+        id_ = f"@jupyterlab/{key}"
         setting = {
-            "id": f"@jupyterlab/{key}",
+            "id": id_,
             "schema": schema,
             "version": package["version"],
             "raw": "{}",
@@ -147,6 +159,10 @@ class _Lab(Lab):
             if key in user_settings:
                 setting.update(user_settings[key])
                 setting["settings"] = json5.loads(user_settings[key]["raw"])
+        settings_overrides = overrides.get(id_)
+        if settings_overrides is not None:
+            setting["settings"] = settings_overrides
+            setting["raw"] = json.dumps(settings_overrides)
         return setting
 
     async def change_setting(
@@ -170,6 +186,13 @@ class _Lab(Lab):
         self._task_group.start_soon(exit_app)
 
     async def get_settings(self, user: User):
+        overrides_path = (
+            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
+        )
+        if await overrides_path.is_file():
+            overrides = json.loads(await overrides_path.read_text())
+        else:
+            overrides = {}
         if user:
             user_settings = json.loads(user.settings)
         else:
@@ -192,8 +215,9 @@ class _Lab(Lab):
                     for path in [p for p in d2.iterdir() if p.suffix == ".json"]:
                         schema = json.loads(path.read_text())
                         key = f"{path.parent.name}:{path.stem}"
+                        id_ = f"{d1.name}/{key}"
                         setting = {
-                            "id": f"{d1.name}/{key}",
+                            "id": id_,
                             "schema": schema,
                             "version": package["version"],
                             "raw": "{}",
@@ -205,6 +229,10 @@ class _Lab(Lab):
                         if key in user_settings:
                             setting.update(user_settings[key])
                             setting["settings"] = json5.loads(user_settings[key]["raw"])
+                        settings_overrides = overrides.get(id_)
+                        if settings_overrides is not None:
+                            setting["settings"] = settings_overrides
+                            setting["raw"] = json.dumps(settings_overrides)
                         settings.append(setting)
         return {"settings": settings}
 
@@ -212,9 +240,8 @@ class _Lab(Lab):
         federated_extensions = []
         disabled_extensions = []
 
-        for path in glob(os.path.join(extensions_dir, "**", "package.json"), recursive=True):
-            with open(path) as f:
-                package = json.load(f)
+        for path in extensions_dir.glob("**/package.json"):
+            package = json.loads(path.read_text())
             if "jupyterlab" not in package:
                 continue
             extension = package["jupyterlab"]["_build"]

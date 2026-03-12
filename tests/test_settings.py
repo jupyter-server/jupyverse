@@ -1,4 +1,6 @@
 import json
+import sys
+from pathlib import Path
 
 import pytest
 from fps import get_root_module, merge_config
@@ -81,6 +83,10 @@ async def test_settings(auth_mode, free_tcp_port):
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
+        overrides_dir = Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings"
+        overrides_dir.mkdir(exist_ok=True)
+        overrides_path = overrides_dir / "overrides.json"
+        overrides_path.unlink(missing_ok=True)
         # get previous theme
         response = await http.get(
             f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
@@ -99,6 +105,17 @@ async def test_settings(auth_mode, free_tcp_port):
         )
         assert response.status_code == 200
         assert json.loads(response.content)["raw"] == test_theme["raw"]
+        # write other theme in overrides.json
+        overrides_path.write_text(
+            json.dumps({"@jupyterlab/apputils-extension:themes": {"theme": "JupyterLab Other"}})
+        )
+        # get other theme
+        response = await http.get(
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
+        )
+        assert response.status_code == 200
+        assert json.loads(json.loads(response.content)["raw"]) == {"theme": "JupyterLab Other"}
+        overrides_path.unlink()
         # put previous theme back
         response = await http.put(
             f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes",
