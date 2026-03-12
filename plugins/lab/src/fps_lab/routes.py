@@ -131,12 +131,18 @@ class _Lab(Lab):
             overrides = json.loads(await overrides_path.read_text())
         else:
             overrides = {}
-        package = json.loads(await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text())
+        package = json.loads(
+            await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
+        )
         if name0 in ["@jupyterlab", "@notebook"]:
             schemas_parent = self.jlab_dir
         else:
             schemas_parent = self.extensions_dir / name0 / name1
-        schema = json.loads(await (anyio.Path(schemas_parent) / "schemas" / name0 / name1 / f"{name2}.json").read_text())
+        schema = json.loads(
+            await (
+                anyio.Path(schemas_parent) / "schemas" / name0 / name1 / f"{name2}.json"
+            ).read_text()
+        )
         key = f"{name1}:{name2}"
         id_ = f"@jupyterlab/{key}"
         setting = {
