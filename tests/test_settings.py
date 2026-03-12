@@ -106,11 +106,9 @@ async def test_settings(auth_mode, free_tcp_port):
         assert response.status_code == 200
         assert json.loads(response.content)["raw"] == test_theme["raw"]
         # write other theme in overrides.json
-        overrides_path.write_text(json.dumps({
-            "@jupyterlab/apputils-extension:themes": {
-                "theme": "JupyterLab Other"
-            }
-        }))
+        overrides_path.write_text(
+            json.dumps({"@jupyterlab/apputils-extension:themes": {"theme": "JupyterLab Other"}})
+        )
         # get other theme
         response = await http.get(
             f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@jupyterlab/apputils-extension:themes"
