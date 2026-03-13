@@ -1,3 +1,3 @@
-import importlib.metadata
+from importlib.metadata import version
 
-__version__ = importlib.metadata.version("jupyverse")
+__version__ = version(__package__)

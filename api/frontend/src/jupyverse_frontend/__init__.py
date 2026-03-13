@@ -2,7 +2,7 @@ from importlib.metadata import version
 
 from jupyverse_api import Config
 
-__version__ = version("jupyverse_frontend")
+__version__ = version(__package__)
 
 
 class FrontendConfig(Config):

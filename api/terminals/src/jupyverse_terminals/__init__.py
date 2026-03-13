@@ -7,7 +7,7 @@ from jupyverse_auth import Auth, User
 
 from .models import Terminal
 
-__version__ = version("jupyverse_terminals")
+__version__ = version(__package__)
 
 
 class Terminals(Router, ABC):

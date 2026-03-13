@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from importlib.metadata import version
 
-__version__ = version("jupyverse_file_id")
+__version__ = version(__package__)
 
 
 class FileId(ABC):

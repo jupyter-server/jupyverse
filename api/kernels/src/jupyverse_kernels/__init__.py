@@ -10,7 +10,7 @@ from pydantic import Field
 
 from .models import Session
 
-__version__ = version("jupyverse_kernels")
+__version__ = version(__package__)
 
 
 class Kernels(Router, ABC):

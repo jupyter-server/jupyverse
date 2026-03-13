@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from .app import App
 
-__version__ = version("jupyverse_api")
+__version__ = version(__package__)
 
 
 class Singleton(type):

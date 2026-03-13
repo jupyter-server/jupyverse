@@ -6,7 +6,7 @@ from pathlib import Path
 
 from anyio import Event
 
-__version__ = version("jupyverse_file_watcher")
+__version__ = version(__package__)
 
 
 class Change(IntEnum):

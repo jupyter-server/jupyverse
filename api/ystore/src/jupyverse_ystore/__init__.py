@@ -6,7 +6,7 @@ from typing import cast
 
 from pycrdt import Doc
 
-__version__ = version("jupyverse_ystore")
+__version__ = version(__package__)
 
 
 class YStore(ABC):

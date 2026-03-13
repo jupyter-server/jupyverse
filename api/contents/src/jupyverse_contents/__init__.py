@@ -9,7 +9,7 @@ from jupyverse_auth import Auth, User
 
 from .models import Checkpoint, Content, SaveContent
 
-__version__ = version("jupyverse_contents")
+__version__ = version(__package__)
 
 
 class Contents(Router, ABC):

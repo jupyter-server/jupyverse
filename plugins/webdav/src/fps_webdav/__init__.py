@@ -1,3 +1,3 @@
 from importlib.metadata import version
 
-__version__ = version("fps_webdav")
+__version__ = version(__package__)
