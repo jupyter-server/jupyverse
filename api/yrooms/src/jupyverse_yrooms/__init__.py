@@ -7,4 +7,4 @@ from .server import YRoom as YRoom
 from .server import YRoomFactory as YRoomFactory
 from .server import YRooms as YRooms
 
-__version__ = version("jupyverse_yrooms")
+__version__ = version(__package__)

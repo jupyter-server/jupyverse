@@ -6,7 +6,7 @@ from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 from pycrdt import Doc
 
-__version__ = version("jupyverse_yjs")
+__version__ = version(__package__)
 
 
 class Yjs(Router, ABC):

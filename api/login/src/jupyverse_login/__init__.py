@@ -4,7 +4,7 @@ from importlib.metadata import version
 from fastapi import APIRouter
 from jupyverse_api import App, Router
 
-__version__ = version("jupyverse_login")
+__version__ = version(__package__)
 
 
 class Login(Router, ABC):

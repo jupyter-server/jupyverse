@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from jupyverse_api import App, Config, Router
 from jupyverse_auth import Auth, User
 
-__version__ = version("jupyverse_resource_usage")
+__version__ = version(__package__)
 
 
 class ResourceUsage(Router, ABC):

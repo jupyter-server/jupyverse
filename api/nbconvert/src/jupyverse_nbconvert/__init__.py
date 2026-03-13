@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 
-__version__ = version("jupyverse_nbconvert")
+__version__ = version(__package__)
 
 
 class Nbconvert(Router, ABC):

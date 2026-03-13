@@ -7,7 +7,7 @@ from fps import Context, put
 from jupyverse_api import App, Config, Router
 from jupyverse_auth import Auth, User
 
-__version__ = version("jupyverse_jupyterlab")
+__version__ = version(__package__)
 
 
 class JupyterLab(Router, ABC):

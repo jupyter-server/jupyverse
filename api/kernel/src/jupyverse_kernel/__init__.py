@@ -6,7 +6,7 @@ from anyio.abc import TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream
 from anyio.streams.stapled import StapledObjectStream
 
-__version__ = version("jupyverse_kernel")
+__version__ = version(__package__)
 
 
 class Kernel(ABC):

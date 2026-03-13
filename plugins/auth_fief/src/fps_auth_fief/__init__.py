@@ -1,3 +1,3 @@
 from importlib.metadata import version
 
-__version__ = version("fps_auth_fief")
+__version__ = version(__package__)

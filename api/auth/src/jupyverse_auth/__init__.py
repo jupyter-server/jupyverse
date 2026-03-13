@@ -7,7 +7,7 @@ from jupyverse_api import Config
 
 from .models import User as User
 
-__version__ = version("jupyverse_auth")
+__version__ = version(__package__)
 
 
 class Auth(ABC):
