@@ -50,6 +50,7 @@ class JupyverseModule(FastAPIModule):
                 "server",
                 host=self.jupyverse_config.host,
                 port=self.jupyverse_config.port,
+                websocket_permessage_deflate=self.jupyverse_config.websocket_permessage_deflate,
             )
 
     async def prepare(self) -> None:
@@ -111,6 +112,7 @@ class JupyverseConfig(Config):
     start_server: bool = True
     host: str = "127.0.0.1"
     port: int = 8000
+    websocket_permessage_deflate: bool = False
     allow_origins: Json[list[str]] = []
     open_browser: bool = False
     query_params: Json[dict[str, str]] = {}

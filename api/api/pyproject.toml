@@ -28,7 +28,7 @@ authors = [
 dependencies = [
   "anyio >=4.12.1,<5",
   "fastapi >=0.95.0,<1",
-  "fps >=0.6.0,<0.7.0",
+  "fps >=0.6.3,<0.7.0",
   "structlog",
   "pydantic >=2,<3",
 ]

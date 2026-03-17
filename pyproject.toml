@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "fps[click,fastapi,anycorn] >=0.6.0,<0.7.0",
+  "fps[click,fastapi,anycorn] >=0.6.3,<0.7.0",
   "fps-contents >=0.11.0,<0.12.0",
   "fps-file-watcher >=0.2.0,<0.3.0",
   "fps-kernel-subprocess >=0.2.0,<0.3.0",

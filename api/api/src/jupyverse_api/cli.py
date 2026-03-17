@@ -55,6 +55,11 @@ from fps.cli._cli import main as fps_main
     help="The host port.",
 )
 @click.option(
+    "--websocket-permessage-deflate",
+    is_flag=True,
+    help='Enable WebSocket "permessage-deflate" compression.',
+)
+@click.option(
     "--query-param",
     multiple=True,
     type=str,
@@ -99,6 +104,7 @@ def main(
     open_browser: bool = False,
     host: str = "127.0.0.1",
     port: int = 8000,
+    websocket_permessage_deflate: bool = False,
     set_: tuple[str, ...] = (),
     disable: tuple[str, ...] = (),
     allow_origin: tuple[str, ...] = (),
@@ -117,6 +123,7 @@ def main(
     set_list.append(f"open_browser={open_browser}")
     set_list.append(f"host={host}")
     set_list.append(f"port={port}")
+    set_list.append(f"websocket_permessage_deflate={websocket_permessage_deflate}")
     set_list.append(f"allow_origins={allow_origins_str}")
     set_list.append(f"query_params={query_params_str}")
     pluggin_config = io.StringIO(json.dumps(get_pluggin_config(disable)))
