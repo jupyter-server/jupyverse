@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse-nbconvert"
-version = "0.1.0"
+version = "0.1.1"
 description = "The API for Jupyverse's nbconvert"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"

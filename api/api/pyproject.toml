@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse-api"
-version = "0.15.0"
+version = "0.15.1"
 description = "The API for Jupyverse"
 readme = "README.md"
 requires-python = ">=3.10"

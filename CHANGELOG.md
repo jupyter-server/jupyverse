@@ -1,5 +1,10 @@
 # Version history
 
+## 0.14.5
+
+- Disable WebSocket permessage-deflate by default.
+- Use `version(__package__)` instead of hardcoded package names.
+
 ## 0.14.4
 
 - Support `overrides.json` and `page_config.json`.
