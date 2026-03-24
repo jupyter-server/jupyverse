@@ -5,7 +5,7 @@ import tempfile
 import uuid
 
 import zmq
-from zmq_anyio import Socket
+import zmq.asyncio
 
 channel_socket_types = {
     "hb": zmq.REQ,
@@ -15,7 +15,7 @@ channel_socket_types = {
     "control": zmq.DEALER,
 }
 
-context = zmq.Context()
+context = zmq.asyncio.Context()
 
 cfg_t = dict[str, str | int]
 
@@ -66,12 +66,12 @@ def read_connection_file(fname: str) -> cfg_t:
     return cfg
 
 
-def create_socket(channel: str, cfg: cfg_t, identity: bytes | None = None) -> Socket:
+def create_socket(channel: str, cfg: cfg_t, identity: bytes | None = None) -> zmq.asyncio.Socket:
     ip = cfg["ip"]
     port = cfg[f"{channel}_port"]
     url = f"tcp://{ip}:{port}"
     socket_type = channel_socket_types[channel]
-    sock = Socket(context.socket(socket_type))
+    sock = context.socket(socket_type)
     sock.linger = 1000  # set linger to 1s to prevent hangs at exit
     if identity:
         sock.identity = identity
@@ -79,7 +79,9 @@ def create_socket(channel: str, cfg: cfg_t, identity: bytes | None = None) -> So
     return sock
 
 
-def connect_channel(channel_name: str, cfg: cfg_t, identity: bytes | None = None) -> Socket:
+def connect_channel(
+    channel_name: str, cfg: cfg_t, identity: bytes | None = None
+) -> zmq.asyncio.Socket:
     sock = create_socket(channel_name, cfg, identity)
     if channel_name == "iopub":
         sock.setsockopt(zmq.SUBSCRIBE, b"")

@@ -68,6 +68,7 @@ class KernelServer:
         self.blocked_messages: list[str] = []
         self.allowed_messages: list[str] | None = None  # when None, all messages are allowed
         # when [], no message is allowed
+        self.kernel_factory: KernelFactory | None = None
 
     def block_messages(self, message_types: Iterable[str] = []):
         # if using blocked messages, discard allowed messages
@@ -97,7 +98,12 @@ class KernelServer:
         *,
         task_status: TaskStatus[None] = TASK_STATUS_IGNORED,
     ) -> None:
-        async with create_task_group() as self.task_group:
+        self._stopped = Event()
+        # keep the previous kernel factory for kernel restart
+        if kernel_factory is not None:
+            self.kernel_factory = kernel_factory
+
+        async with create_task_group() as self.task_group0:
             self.last_activity = {
                 "date": datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
                 "execution_state": "starting",
@@ -105,7 +111,8 @@ class KernelServer:
             if launch_kernel:
                 if not self.kernelspec_path:
                     raise RuntimeError("Could not find a kernel, maybe you forgot to install one?")
-                if kernel_factory is None:
+
+                if self.kernel_factory is None:
                     self.kernel = self.default_kernel_factory(
                         write_connection_file=self.write_connection_file,
                         kernelspec_path=self.kernelspec_path,
@@ -115,26 +122,31 @@ class KernelServer:
                         capture_output=self.capture_kernel_output,
                     )
                 else:
-                    self.kernel = kernel_factory(
+                    self.kernel = self.kernel_factory(
                         kernelspec_path=self.kernelspec_path,
                         kernelenv_path=self.kernelenv_path,
                         connection_file=self.connection_file,
                         kernel_cwd=self.kernel_cwd,
                         capture_output=self.capture_kernel_output,
                     )
-                await self.task_group.start(self.kernel.start)
+                await self.task_group0.start(self.kernel.start)
             if self.kernel.wait_for_ready:
                 await self._wait_for_ready()
-            async with create_task_group() as tg:
-                tg.start_soon(lambda: self.listen("shell"))
-                tg.start_soon(lambda: self.listen("stdin"))
-                tg.start_soon(lambda: self.listen("control"))
-                tg.start_soon(lambda: self.listen("iopub"))
+
+            async with create_task_group() as self.task_group1:
+                self.task_group1.start_soon(self.listen, "shell")
+                self.task_group1.start_soon(self.listen, "stdin")
+                self.task_group1.start_soon(self.listen, "control")
+                self.task_group1.start_soon(self.listen, "iopub")
                 task_status.started()
 
+        self._stopped.set()
+
     async def stop(self) -> None:
+        self.task_group1.cancel_scope.cancel()
         await self.kernel.stop()
-        self.task_group.cancel_scope.cancel()
+        await self._stopped.wait()
+        self.task_group0.cancel_scope.cancel()
 
     async def interrupt(self) -> None:
         await self.kernel.interrupt()
@@ -150,22 +162,16 @@ class KernelServer:
         permissions: dict[str, list[str]] | None,
     ):
         self.sessions[session_id] = websocket
-        self.can_execute = permissions is None or "execute" in permissions.get("kernels", [])
-        stop_event = Event()
-        self.task_group.start_soon(self.listen_web, websocket, stop_event)
-        await stop_event.wait()
+        can_execute = permissions is None or "execute" in permissions.get("kernels", [])
 
-        # the session could have been removed through the REST API, so check if it still exists
-        if session_id in self.sessions:
-            del self.sessions[session_id]
-
-    async def listen_web(self, websocket: AcceptedWebSocket, stop_event: Event):
         try:
-            await self.send_to_kernel(websocket)
-        except BaseException:
+            await self.send_to_kernel(websocket, can_execute)
+        except Exception:
             pass
         finally:
-            stop_event.set()
+            # the session could have been removed through the REST API, so check if it still exists
+            if session_id in self.sessions:
+                del self.sessions[session_id]
 
     async def listen(self, channel_name: str):
         channel = {
@@ -214,11 +220,11 @@ class KernelServer:
                     return
                 # IOPub not connected, start over
 
-    async def send_to_kernel(self, websocket):
+    async def send_to_kernel(self, websocket: AcceptedWebSocket, can_execute: bool):
         if not websocket.accepted_subprotocol:
             while True:
                 msg = await receive_json_or_bytes(websocket.websocket)
-                if not self.can_execute:
+                if not can_execute:
                     continue
                 msg_type = msg["header"]["msg_type"]
                 if (msg_type in self.blocked_messages) or (
@@ -227,16 +233,17 @@ class KernelServer:
                     continue
                 channel = msg.pop("channel")
                 msg_ser = serialize_message(msg, self.kernel.key)
-                if channel == "shell":
-                    await self.kernel.shell_stream.send(msg_ser)
-                elif channel == "control":
-                    await self.kernel.control_stream.send(msg_ser)
-                elif channel == "stdin":
-                    await self.kernel.stdin_stream.send(msg_ser)
+                match channel:
+                    case "shell":
+                        await self.kernel.shell_stream.send(msg_ser)
+                    case "control":
+                        await self.kernel.control_stream.send(msg_ser)
+                    case "stdin":
+                        await self.kernel.stdin_stream.send(msg_ser)
         elif websocket.accepted_subprotocol == "v1.kernel.websocket.jupyter.org":
             while True:
                 msg = await websocket.websocket.receive_bytes()
-                if not self.can_execute:
+                if not can_execute:
                     continue
                 channel, parts = deserialize_msg_from_ws_v1(msg)
                 # NOTE: we parse the header for message filtering
@@ -250,12 +257,13 @@ class KernelServer:
                 msg = parts[:4]
                 buffers = parts[4:]
                 to_send = [DELIM, sign(msg, self.kernel.key)] + msg + buffers
-                if channel == "shell":
-                    await self.kernel.shell_stream.send(to_send)
-                elif channel == "control":
-                    await self.kernel.control_stream.send(to_send)
-                elif channel == "stdin":
-                    await self.kernel.stdin_stream.send(to_send)
+                match channel:
+                    case "shell":
+                        await self.kernel.shell_stream.send(to_send)
+                    case "control":
+                        await self.kernel.control_stream.send(to_send)
+                    case "stdin":
+                        await self.kernel.stdin_stream.send(to_send)
 
     async def send_to_ws(self, websocket, parts, parent_header, channel_name):
         if not websocket.accepted_subprotocol:

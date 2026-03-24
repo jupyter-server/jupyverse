@@ -8,7 +8,14 @@ from dataclasses import dataclass
 from typing import cast
 
 import anyio
-from anyio import TASK_STATUS_IGNORED, create_task_group, open_file, open_process, run_process
+from anyio import (
+    TASK_STATUS_IGNORED,
+    Event,
+    create_task_group,
+    open_file,
+    open_process,
+    run_process,
+)
 from anyio.abc import TaskStatus
 from anyio.streams.text import TextReceiveStream
 from jupyverse_kernel import Kernel
@@ -43,10 +50,12 @@ class KernelSubprocess(Kernel):
         else:
             if self.connection_cfg is None:
                 raise RuntimeError("No connection_cfg")
+
         self.key = cast(str, self.connection_cfg["key"])
         self.wait_for_ready = True
         self._process = None
         self._pid = None
+        self._stopped = Event()
 
     async def start(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
         async with (
@@ -64,7 +73,6 @@ class KernelSubprocess(Kernel):
             self._from_stdin_receive_stream,
             self._from_iopub_send_stream,
             self._from_iopub_receive_stream,
-            create_task_group() as self.task_group,
         ):
             async with await open_file(self.kernelspec_path) as f:
                 contents = await f.read()
@@ -122,40 +130,42 @@ class KernelSubprocess(Kernel):
             )
             self.iopub_channel = connect_channel("iopub", self.connection_cfg)
 
-            await self.task_group.start(self.shell_channel.start)
-            await self.task_group.start(self.stdin_channel.start)
-            await self.task_group.start(self.control_channel.start)
-            await self.task_group.start(self.iopub_channel.start)
+            async with (
+                create_task_group() as tg,
+            ):
+                tg.start_soon(self.forward_messages_to_shell)
+                tg.start_soon(self.forward_messages_from_shell)
+                tg.start_soon(self.forward_messages_to_control)
+                tg.start_soon(self.forward_messages_from_control)
+                tg.start_soon(self.forward_messages_to_stdin)
+                tg.start_soon(self.forward_messages_from_stdin)
+                tg.start_soon(self.forward_messages_from_iopub)
 
-            self.task_group.start_soon(self.forward_messages_to_shell)
-            self.task_group.start_soon(self.forward_messages_from_shell)
-            self.task_group.start_soon(self.forward_messages_to_control)
-            self.task_group.start_soon(self.forward_messages_from_control)
-            self.task_group.start_soon(self.forward_messages_to_stdin)
-            self.task_group.start_soon(self.forward_messages_from_stdin)
-            self.task_group.start_soon(self.forward_messages_from_iopub)
+                task_status.started()
+                self.started.set()
+                await self._stopped.wait()
 
-            task_status.started()
-            self.started.set()
+                if self._process:
+                    try:
+                        self._process.terminate()
+                    except ProcessLookupError:
+                        pass
+                    await self._process.wait()
+                    if self.write_connection_file:
+                        path = anyio.Path(self.connection_file)
+                        await path.unlink(missing_ok=True)
+                else:
+                    os.kill(self._pid, signal.SIGTERM)
+
+                tg.cancel_scope.cancel()
+
+                self.shell_channel.close()
+                self.stdin_channel.close()
+                self.control_channel.close()
+                self.iopub_channel.close()
 
     async def stop(self) -> None:
-        if self._process:
-            try:
-                self._process.terminate()
-            except ProcessLookupError:
-                pass
-            await self._process.wait()
-            if self.write_connection_file:
-                path = anyio.Path(self.connection_file)
-                await path.unlink(missing_ok=True)
-        else:
-            os.kill(self._pid, signal.SIGTERM)
-
-        await self.shell_channel.stop()
-        await self.stdin_channel.stop()
-        await self.control_channel.stop()
-        await self.iopub_channel.stop()
-        self.task_group.cancel_scope.cancel()
+        self._stopped.set()
 
     async def interrupt(self) -> None:
         if self._process:
@@ -165,32 +175,32 @@ class KernelSubprocess(Kernel):
 
     async def forward_messages_to_shell(self) -> None:
         async for msg in self._to_shell_receive_stream:
-            await self.shell_channel.asend_multipart(msg, copy=True).wait()
+            await self.shell_channel.send_multipart(msg, copy=True)
 
     async def forward_messages_from_shell(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.shell_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.shell_channel.recv_multipart(copy=True))
             await self._from_shell_send_stream.send(msg)
 
     async def forward_messages_to_control(self) -> None:
         async for msg in self._to_control_receive_stream:
-            await self.control_channel.asend_multipart(msg, copy=True).wait()
+            await self.control_channel.send_multipart(msg, copy=True)
 
     async def forward_messages_from_control(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.control_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.control_channel.recv_multipart(copy=True))
             await self._from_control_send_stream.send(msg)
 
     async def forward_messages_to_stdin(self) -> None:
         async for msg in self._to_stdin_receive_stream:
-            await self.stdin_channel.asend_multipart(msg, copy=True).wait()
+            await self.stdin_channel.send_multipart(msg, copy=True)
 
     async def forward_messages_from_stdin(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.stdin_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.stdin_channel.recv_multipart(copy=True))
             await self._from_stdin_send_stream.send(msg)
 
     async def forward_messages_from_iopub(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.iopub_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.iopub_channel.recv_multipart(copy=True))
             await self._from_iopub_send_stream.send(msg)
