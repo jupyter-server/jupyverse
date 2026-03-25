@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.6
+
+- Fix kernel restart.
+
 ## 0.14.5
 
 - Disable WebSocket permessage-deflate by default.
