@@ -264,6 +264,7 @@ class _Kernels(Kernels):
                 kernel_server = kernels[kernel_id]["server"]
         else:
             return
+
         session_id = str(uuid.uuid4())
         session = Session(
             id=session_id,
@@ -308,6 +309,7 @@ class _Kernels(Kernels):
         user: User,
     ):
         if kernel_id in kernels:
+            logger.info("Restarting kernel", kernel_id=kernel_id)
             kernel = kernels[kernel_id]
             await self.task_group.start(kernel["server"].restart)
             result = {
@@ -318,6 +320,8 @@ class _Kernels(Kernels):
                 "execution_state": kernel["server"].last_activity["execution_state"],
             }
             return result
+
+        logger.warning("Cannot restart unknown kernel", kernel_id=kernel_id)
 
     async def execute_cell(
         self,
