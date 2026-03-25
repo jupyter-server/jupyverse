@@ -72,6 +72,7 @@ def create_socket(channel: str, cfg: cfg_t, identity: bytes | None = None) -> So
     url = f"tcp://{ip}:{port}"
     socket_type = channel_socket_types[channel]
     sock = Socket(context.socket(socket_type))
+    sock.linger = 1000  # set linger to 1s to prevent hangs at exit
     if identity:
         sock.identity = identity
     sock.connect(url)
