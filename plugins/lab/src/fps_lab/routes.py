@@ -240,7 +240,14 @@ class _Lab(Lab):
         federated_extensions = []
         disabled_extensions = []
 
-        for path in extensions_dir.glob("**/package.json"):
+        # Match JupyterLab: single-level glob handles both plain and @org dirs,
+        # and works with symlinked extensions (Path.glob("**") does not follow symlinks)
+        from itertools import chain
+
+        for path in chain(
+            extensions_dir.glob("[!@]*/package.json"),
+            extensions_dir.glob("@*/*/package.json"),
+        ):
             package = json.loads(path.read_text())
             if "jupyterlab" not in package:
                 continue
