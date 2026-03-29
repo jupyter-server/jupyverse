@@ -1,3 +1,4 @@
+import glob
 import json
 import sys
 from collections.abc import Callable
@@ -240,15 +241,9 @@ class _Lab(Lab):
         federated_extensions = []
         disabled_extensions = []
 
-        # Match JupyterLab: single-level glob handles both plain and @org dirs,
-        # and works with symlinked extensions (Path.glob("**") does not follow symlinks)
-        from itertools import chain
-
-        for path in chain(
-            extensions_dir.glob("[!@]*/package.json"),
-            extensions_dir.glob("@*/*/package.json"),
-        ):
-            package = json.loads(path.read_text())
+        pattern = str(extensions_dir / "**" / "package.json")
+        for path in glob.glob(pattern, recursive=True):
+            package = json.loads(Path(path).read_text())
             if "jupyterlab" not in package:
                 continue
             extension = package["jupyterlab"]["_build"]
