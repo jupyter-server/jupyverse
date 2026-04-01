@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.7
+
+- Support symlinked labextensions in federated extension discovery.
+
 ## 0.14.6
 
 - Fix kernel restart.
