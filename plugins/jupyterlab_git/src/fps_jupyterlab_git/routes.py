@@ -9,7 +9,7 @@ from jupyterlab_git.git import (  # type: ignore[import-untyped]
     Git,
     RebaseAction,
 )
-from jupyverse_api import App, Router
+from jupyverse_api import Router
 from jupyverse_contents import Contents
 from packaging.version import parse
 
