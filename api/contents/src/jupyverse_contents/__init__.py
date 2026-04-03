@@ -14,7 +14,6 @@ __version__ = version(__package__)
 
 class Contents(Router, ABC):
     file_lock: ResourceLock
-    root_dir: str | None
 
     def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
@@ -117,9 +116,6 @@ class Contents(Router, ABC):
         request: Request,
         user: User,
     ) -> Content: ...
-
-    @abstractmethod
-    async def set_root_dir(self, user: User | None = None) -> None: ...
 
     @abstractmethod
     async def get_root_content(
