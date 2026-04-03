@@ -57,9 +57,7 @@ def git_factory(app: App, contents: Contents):
 
             @router.post("/git/init")
             @router.post("/git/{path:path}/init")
-            async def git_init(
-                path: str = "", checked_path: str = Depends(check_excluded_path)
-            ):
+            async def git_init(path: str = "", checked_path: str = Depends(check_excluded_path)):
                 path = checked_path or self.contents.root_dir
                 result = await self.git.init(path)
                 if result["code"] == 0:
@@ -304,15 +302,11 @@ def git_factory(app: App, contents: Contents):
             ):
                 path = checked_path or self.contents.root_dir
                 options = body.get("options", {})
-                filtered_options = {
-                    k: v for k, v in options.items() if k in ALLOWED_OPTIONS
-                }
+                filtered_options = {k: v for k, v in options.items() if k in ALLOWED_OPTIONS}
                 result = await self.git.config(path, **filtered_options)
                 if "options" in result:
                     result["options"] = {
-                        k: v
-                        for k, v in result["options"].items()
-                        if k in ALLOWED_OPTIONS
+                        k: v for k, v in result["options"].items() if k in ALLOWED_OPTIONS
                     }
                 return JSONResponse(
                     status_code=201 if result["code"] == 0 else 500,
@@ -424,9 +418,7 @@ def git_factory(app: App, contents: Contents):
                 filename = body["filename"]
                 reference = body["reference"]
                 cm = ContentsManagerAdapter(self.contents)
-                result = await self.git.get_content_at_reference(
-                    filename, reference, path, cm
-                )
+                result = await self.git.get_content_at_reference(filename, reference, path, cm)
                 return JSONResponse(
                     status_code=200,
                     content=result,
@@ -550,9 +542,7 @@ def git_factory(app: App, contents: Contents):
                     )
                 try:
                     base_content = body.get("baseContent")
-                    content = await self.git.get_nbdiff(
-                        prev_content, curr_content, base_content
-                    )
+                    content = await self.git.get_nbdiff(prev_content, curr_content, base_content)
                 except Exception as e:
                     return JSONResponse(
                         status_code=500,
@@ -637,9 +627,7 @@ def git_factory(app: App, contents: Contents):
                 body = json.loads(raw_body)
                 tag = body.get("tag_id")
                 if not tag:
-                    return JSONResponse(
-                        status_code=400, content={"message": "tag_id is required"}
-                    )
+                    return JSONResponse(status_code=400, content={"message": "tag_id is required"})
                 result = await self.git.tag_checkout(path, tag)
                 return JSONResponse(
                     status_code=200 if result["code"] == 0 else 500,
