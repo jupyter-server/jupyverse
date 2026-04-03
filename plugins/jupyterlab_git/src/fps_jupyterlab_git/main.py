@@ -4,7 +4,7 @@ from fps import Module
 from jupyverse_api import App
 from jupyverse_contents import Contents
 
-from .routes import git_factory
+from .routes import GitRouter
 
 logger = logging.getLogger(__name__)
 
@@ -20,5 +20,5 @@ class JupyterLabGitModule(Module):
         except RuntimeError as e:
             logger.error("jupyterlab-git: cannot start, failed to get root directory: %s", e)
             raise
-        git_router = git_factory(app, contents)
+        git_router = GitRouter(app, contents)
         self.put(git_router)
