@@ -28,7 +28,7 @@ class _Contents(Contents):
         super().__init__(*args, **kwargs)
         self.root_dir: str | None = None
 
-    async def init_root_dir(self, user: User | None = None) -> None:
+    async def set_root_dir(self, user: User | None = None) -> None:
         try:
             content = await self.get_root_content(content=0, user=user)
             self.root_dir = content.path
