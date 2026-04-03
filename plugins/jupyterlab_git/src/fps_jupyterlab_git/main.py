@@ -1,12 +1,8 @@
-import logging
-
 from fps import Module
 from jupyverse_api import App
 from jupyverse_contents import Contents
 
 from .routes import GitRouter
-
-logger = logging.getLogger(__name__)
 
 
 class JupyterLabGitModule(Module):
