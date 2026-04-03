@@ -90,7 +90,7 @@ class _Contents(Contents):
     async def get_root_content(
         self,
         content: int,
-        user: User,
+        user: User | None,
     ):
         return await self.read_content("", bool(content))
 
@@ -110,7 +110,7 @@ class _Contents(Contents):
         self,
         path: str,
         content: int,
-        user: User,
+        user: User | None,
     ):
         return await self.read_content(path, bool(content))
 

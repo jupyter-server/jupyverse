@@ -14,6 +14,7 @@ __version__ = version(__package__)
 
 class Contents(Router, ABC):
     file_lock: ResourceLock
+    root_dir: str | None
 
     def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
@@ -118,10 +119,13 @@ class Contents(Router, ABC):
     ) -> Content: ...
 
     @abstractmethod
+    async def init_root_dir(self, user: User | None = None) -> None: ...
+
+    @abstractmethod
     async def get_root_content(
         self,
         content: int,
-        user: User,
+        user: User | None,
     ) -> Content:
         return await self.get_root_content(content, user)
 
@@ -137,7 +141,7 @@ class Contents(Router, ABC):
         self,
         path: str,
         content: int,
-        user: User,
+        user: User | None,
     ) -> Content: ...
 
     @abstractmethod
