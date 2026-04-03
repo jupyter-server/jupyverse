@@ -18,9 +18,7 @@ class JupyterLabGitModule(Module):
         try:
             await contents.init_root_dir()
         except RuntimeError as e:
-            logger.error(
-                "jupyterlab-git: cannot start, failed to get root directory: %s", e
-            )
+            logger.error("jupyterlab-git: cannot start, failed to get root directory: %s", e)
             raise
         self.git_router = git_factory(app, contents)
         self.put(self.git_router)

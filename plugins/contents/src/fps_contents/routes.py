@@ -24,7 +24,6 @@ logger = structlog.get_logger()
 
 
 class _Contents(Contents):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.root_dir: str | None = None
@@ -43,9 +42,7 @@ class _Contents(Contents):
         user: User,
     ):
         src_path = Path(path)
-        dst_path = (
-            Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-        )
+        dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
         try:
             await dst_path.parent.mkdir(exist_ok=True)
             await to_thread.run_sync(shutil.copyfile, src_path, dst_path)
@@ -66,15 +63,10 @@ class _Contents(Contents):
         if create_content.type == "notebook":
             available_path = await get_available_path(content_path / "Untitled.ipynb")
             await available_path.write_text(
-                json.dumps(
-                    {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}
-                )
+                json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5})
             )
             src_path = available_path
-            dst_path = (
-                Path(".ipynb_checkpoints")
-                / f"{src_path.stem}-checkpoint{src_path.suffix}"
-            )
+            dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
             try:
                 await dst_path.parent.mkdir(exist_ok=True)
                 await to_thread.run_sync(shutil.copyfile, src_path, dst_path)
@@ -107,9 +99,7 @@ class _Contents(Contents):
         user: User,
     ):
         src_path = Path(path)
-        dst_path = (
-            Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
-        )
+        dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
         if not await dst_path.exists():
             return []
         mtime = await get_file_modification_time(dst_path)
@@ -173,9 +163,7 @@ class _Contents(Contents):
             if get_content:
                 if await path.is_dir():
                     content = [
-                        (
-                            await self.read_content(subpath, get_content=False)
-                        ).model_dump()
+                        (await self.read_content(subpath, get_content=False)).model_dump()
                         async for subpath in path.iterdir()
                         if not subpath.name.startswith(".")
                     ]
