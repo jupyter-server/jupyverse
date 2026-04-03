@@ -3,14 +3,14 @@ import json
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
-from jupyterlab_git import __version__ as git_server_version
-from jupyterlab_git.git import DEFAULT_REMOTE_NAME, Git, RebaseAction
+from jupyterlab_git import __version__ as git_server_version  # type: ignore[import-untyped]
+from jupyterlab_git.git import DEFAULT_REMOTE_NAME, Git, RebaseAction  # type: ignore[import-untyped]
 from jupyverse_api import App, Router
 from jupyverse_contents import Contents
 from packaging.version import parse
 
 try:
-    from jupyterlab_git.ssh import SSH
+    from jupyterlab_git.ssh import SSH  # type: ignore[import-untyped]
 except ImportError:
     SSH = None
 

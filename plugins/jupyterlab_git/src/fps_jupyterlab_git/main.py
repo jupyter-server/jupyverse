@@ -14,7 +14,7 @@ class JupyterLabGitModule(Module):
 
     async def prepare(self) -> None:
         app = await self.get(App)
-        contents = await self.get(Contents)
+        contents = await self.get(Contents)  # type: ignore[type-abstract]
         try:
             await contents.init_root_dir()
         except RuntimeError as e:
