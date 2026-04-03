@@ -121,7 +121,7 @@ class Contents(Router, ABC):
     async def get_root_content(
         self,
         content: int,
-        user: User,
+        user: User | None,
     ) -> Content:
         return await self.get_root_content(content, user)
 
@@ -137,7 +137,7 @@ class Contents(Router, ABC):
         self,
         path: str,
         content: int,
-        user: User,
+        user: User | None,
     ) -> Content: ...
 
     @abstractmethod

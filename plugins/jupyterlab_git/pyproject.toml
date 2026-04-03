@@ -23,7 +23,6 @@ classifiers = [
 ]
 dependencies = [
   "fps",
-  "fps-jupyter-server >=0.1.0,<0.2.0",
   "jupyterlab-git",
 ]
 license = "BSD-3-Clause"

@@ -77,7 +77,7 @@ class _Contents(Contents):
     async def get_root_content(
         self,
         content: int,
-        user: User,
+        user: User | None,
     ):
         return await self.read_content("", bool(content))
 
@@ -97,7 +97,7 @@ class _Contents(Contents):
         self,
         path: str,
         content: int,
-        user: User,
+        user: User | None,
     ):
         return await self.read_content(path, bool(content))
 
@@ -247,7 +247,9 @@ class _Contents(Contents):
                             str_content = json.dumps(dict_content, indent=2)
                         except TypeError as exception:
                             logger.warning(
-                                "Error saving file", path=content.path, exc_info=exception
+                                "Error saving file",
+                                path=content.path,
+                                exc_info=exception,
                             )
                         else:
                             await Path(content.path).write_text(str_content)
