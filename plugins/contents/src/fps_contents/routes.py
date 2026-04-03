@@ -24,9 +24,6 @@ logger = structlog.get_logger()
 
 
 class _Contents(Contents):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     async def create_checkpoint(
         self,
         path,
