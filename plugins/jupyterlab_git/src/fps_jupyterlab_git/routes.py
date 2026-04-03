@@ -9,6 +9,11 @@ from jupyverse_api import App, Router
 from jupyverse_contents import Contents
 from packaging.version import parse
 
+try:
+    from jupyterlab_git.ssh import SSH
+except ImportError:
+    SSH = None
+
 ALLOWED_OPTIONS = ["user.name", "user.email"]
 EXCLUDED_PATHS = [
     "*.ipynb_checkpoints",
@@ -474,6 +479,20 @@ def git_factory(app: App, contents: Contents):
                     content=result,
                 )
 
+            @router.post("/git/upstream")
+            @router.post("/git/{path:path}/upstream")
+            async def git_upstream(
+                path: str = "",
+                checked_path: str = Depends(check_excluded_path),
+            ):
+                path = checked_path or self.contents.root_dir
+                current_branch = await self.git.get_current_branch(path)
+                result = await self.git.get_upstream_branch(path, current_branch)
+                return JSONResponse(
+                    status_code=200 if result["code"] == 0 else 500,
+                    content=result,
+                )
+
             @router.get("/git/check_notebooks")
             @router.get("/git/{path:path}/check_notebooks")
             async def check_notebooks(
@@ -486,6 +505,31 @@ def git_factory(app: App, contents: Contents):
                     status_code=200,
                     content=result,
                 )
+
+            @router.post("/git/strip_notebooks")
+            @router.post("/git/{path:path}/strip_notebooks")
+            async def strip_notebooks(
+                path: str = "",
+                raw_body: str = Body(default="{}"),
+                checked_path: str = Depends(check_excluded_path),
+            ):
+                path = checked_path or self.contents.root_dir
+                body = json.loads(raw_body)
+                notebooks = body.get("notebooks", [])
+                try:
+                    await self.git.strip_notebook_outputs(notebooks, path)
+                    return JSONResponse(
+                        status_code=200,
+                        content={"code": 0, "message": "Notebooks stripped"},
+                    )
+                except Exception as e:
+                    return JSONResponse(
+                        status_code=500,
+                        content={
+                            "code": 1,
+                            "message": f"Failed to strip notebook outputs: {str(e)}",
+                        },
+                    )
 
             @router.post("/git/diffnotebook")
             async def diff_notebook(
@@ -888,6 +932,26 @@ def git_factory(app: App, contents: Contents):
                         status_code=500,
                         content=result,
                     )
+
+            if SSH is not None:
+
+                @router.get("/git/known_hosts")
+                async def ssh_known_hosts_get(
+                    hostname: str = Query(...),
+                ):
+                    ssh = SSH()
+                    is_known_host = ssh.is_known_host(hostname)
+                    return JSONResponse(status_code=200, content=is_known_host)
+
+                @router.post("/git/known_hosts")
+                async def ssh_known_hosts_post(
+                    raw_body: str = Body(...),
+                ):
+                    body = json.loads(raw_body)
+                    hostname = body["hostname"]
+                    ssh = SSH()
+                    ssh.add_host(hostname)
+                    return JSONResponse(status_code=200, content={})
 
             self.include_router(router)
 
