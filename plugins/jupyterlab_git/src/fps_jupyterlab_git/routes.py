@@ -4,7 +4,11 @@ import json
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from jupyterlab_git import __version__ as git_server_version  # type: ignore[import-untyped]
-from jupyterlab_git.git import DEFAULT_REMOTE_NAME, Git, RebaseAction  # type: ignore[import-untyped]
+from jupyterlab_git.git import (  # type: ignore[import-untyped]
+    DEFAULT_REMOTE_NAME,
+    Git,
+    RebaseAction,
+)
 from jupyverse_api import App, Router
 from jupyverse_contents import Contents
 from packaging.version import parse
