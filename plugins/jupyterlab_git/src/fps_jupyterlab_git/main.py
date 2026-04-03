@@ -16,7 +16,7 @@ class JupyterLabGitModule(Module):
         app = await self.get(App)
         contents = await self.get(Contents)  # type: ignore[type-abstract]
         try:
-            await contents.init_root_dir()
+            await contents.set_root_dir()
         except RuntimeError as e:
             logger.error("jupyterlab-git: cannot start, failed to get root directory: %s", e)
             raise
