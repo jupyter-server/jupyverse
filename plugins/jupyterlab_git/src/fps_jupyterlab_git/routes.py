@@ -259,9 +259,7 @@ class GitRouter(Router):
 
         @router.get("/git/submodules")
         @router.get("/git/{path:path}/submodules")
-        async def git_submodules(
-            path: str = "", checked_path: str = Depends(check_excluded_path)
-        ):
+        async def git_submodules(path: str = "", checked_path: str = Depends(check_excluded_path)):
             path = checked_path or self.contents.root_dir
             result = await self.git.submodule(path)
             return JSONResponse(
@@ -281,9 +279,7 @@ class GitRouter(Router):
             except Exception as e:
                 return JSONResponse(
                     status_code=500,
-                    content={
-                        "message": f"[jupyterlab_git] Failed to execute 'git' command: {e}"
-                    },
+                    content={"message": f"[jupyterlab_git] Failed to execute 'git' command: {e}"},
                 )
             server_version = str(git_server_version)
             return {

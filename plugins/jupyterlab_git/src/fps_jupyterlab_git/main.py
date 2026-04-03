@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class JupyterLabGitModule(Module):
-    dependencies = [Contents]
-
     async def prepare(self) -> None:
         app = await self.get(App)
         contents = await self.get(Contents)  # type: ignore[type-abstract]
