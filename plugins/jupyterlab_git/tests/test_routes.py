@@ -3,8 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException
-from fps_jupyterlab_git.routes import (ContentsManagerAdapter,
-                                       check_excluded_path)
+from fps_jupyterlab_git.routes import ContentsManagerAdapter, check_excluded_path
 
 # ---------------------------------------------------------------------------
 # Unit tests: check_excluded_path
