@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "fps",
-  "jupyterlab-git",
+  "jupyterlab-git-core",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]
