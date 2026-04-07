@@ -108,7 +108,7 @@ class Lab(Router, ABC):
             name1,
             user: User = Depends(auth.current_user()),
         ):
-            return await self.get_plugin_setting(name0, name1, user)
+            return await self.get_setting(name0, name1, user)
 
         @router.get("/lab/api/settings/{name0}/{name1}:{name2}")
         async def get_setting(
@@ -117,7 +117,7 @@ class Lab(Router, ABC):
             name2,
             user: User = Depends(auth.current_user()),
         ):
-            return await self.get_plugin_setting(f"{name0}/{name1}", name2, user)
+            return await self.get_setting(f"{name0}/{name1}", name2, user)
 
         @router.put(
             "/lab/api/settings/@jupyterlab/{name0}:{name1}",
@@ -192,16 +192,7 @@ class Lab(Router, ABC):
     @abstractmethod
     async def get_setting(
         self,
-        name0,
-        name1,
-        name2,
-        user: User,
-    ): ...
-
-    @abstractmethod
-    async def get_plugin_setting(
-        self,
-        plugin_name: str,
+        extension_name: str,
         setting_name: str,
         user: User,
     ): ...
