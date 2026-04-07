@@ -166,6 +166,66 @@ class _Lab(Lab):
             setting["raw"] = json.dumps(settings_overrides)
         return setting
 
+    async def get_plugin_setting(
+        # Handles both scoped (@org/ext:setting) and flat (plugin:setting) URLs with
+        # semantic inputs, without changing get_setting's signature for backward compat.
+        self,
+        plugin_name: str,
+        setting_name: str,
+        user: User,
+    ):
+        overrides_path = (
+            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
+        )
+        if await overrides_path.is_file():
+            overrides = json.loads(await overrides_path.read_text())
+        else:
+            overrides = {}
+        if "/" in plugin_name:
+            # scoped: e.g. @jupyterlab/notebook-extension
+            name0, name1 = plugin_name.split("/", 1)
+            if name0 in ["@jupyterlab", "@notebook"]:
+                schemas_parent = self.jlab_dir
+            else:
+                schemas_parent = self.extensions_dir / name0 / name1
+            package = json.loads(
+                await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
+            )
+            schema = json.loads(
+                await (
+                    anyio.Path(schemas_parent) / "schemas" / name0 / name1 / f"{setting_name}.json"
+                ).read_text()
+            )
+            key = f"{name1}:{setting_name}"
+        else:
+            # flat: e.g. nbdime-jupyterlab
+            ext_dir = anyio.Path(self.extensions_dir) / plugin_name
+            package = json.loads(await (ext_dir / "package.json").read_text())
+            schema = json.loads(
+                await (ext_dir / "schemas" / plugin_name / f"{setting_name}.json").read_text()
+            )
+            key = f"{plugin_name}:{setting_name}"
+        id_ = f"{plugin_name}:{setting_name}"
+        setting = {
+            "id": id_,
+            "schema": schema,
+            "version": package["version"],
+            "raw": "{}",
+            "settings": {},
+            "last_modified": None,
+            "created": None,
+        }
+        if user:
+            user_settings = json.loads(user.settings)
+            if key in user_settings:
+                setting.update(user_settings[key])
+                setting["settings"] = json5.loads(user_settings[key]["raw"])
+        settings_overrides = overrides.get(id_)
+        if settings_overrides is not None:
+            setting["settings"] = settings_overrides
+            setting["raw"] = json.dumps(settings_overrides)
+        return setting
+
     async def change_setting(
         self,
         request: Request,
