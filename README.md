@@ -80,8 +80,8 @@ in development mode too. It is recommended to create a virtual environment befor
 following commands:
 
 ```bash
-for dir in ./api/*; do dirname=$(basename "$dir"); pip install -e "jupyverse-$dirname @ ./api/$dirname"; done
-for dir in ./plugins/*; do dirname=$(basename "$dir"); pip install -e "fps-$dirname @ ./plugins/$dirname"; done
+for dir in ./api/*; do dirname=$(basename "$dir"); pip install -e "./api/$dirname"; done
+for dir in ./plugins/*; do dirname=$(basename "$dir"); pip install -e "./plugins/$dirname"; done
 pip install --group test -e .
 ```
 
