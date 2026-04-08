@@ -42,7 +42,7 @@ class Contents(Router, ABC):
 
         @router.get("/api/contents")
         async def get_root_content(
-            content: int,
+            content: int = 1,
             user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ) -> Content:
             return await self.get_root_content(content, user)
@@ -56,7 +56,7 @@ class Contents(Router, ABC):
         @router.get("/api/contents/{path:path}")
         async def get_content(
             path: str,
-            content: int = 0,
+            content: int = 1,
             user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ) -> Content:
             return await self.get_content(path, content, user)

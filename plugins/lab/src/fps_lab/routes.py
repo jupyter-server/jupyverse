@@ -1,6 +1,5 @@
 import glob
 import json
-import sys
 from collections.abc import Callable
 from http import HTTPStatus
 from importlib.metadata import entry_points
@@ -120,32 +119,43 @@ class _Lab(Lab):
 
     async def get_setting(
         self,
-        name0,
-        name1,
-        name2,
+        extension_name: str,
+        setting_name: str,
         user: User,
     ):
-        overrides_path = (
-            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
-        )
+        overrides_path = anyio.Path(self.jlab_dir) / "settings" / "overrides.json"
         if await overrides_path.is_file():
             overrides = json.loads(await overrides_path.read_text())
         else:
             overrides = {}
-        package = json.loads(
-            await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
-        )
-        if name0 in ["@jupyterlab", "@notebook"]:
-            schemas_parent = self.jlab_dir
+        if "/" in extension_name:
+            # scoped: e.g. @jupyterlab/notebook-extension
+            org, name = extension_name.split("/", 1)
+            if org in ["@jupyterlab", "@notebook"]:
+                schemas_parent = self.jlab_dir
+                package = json.loads(
+                    await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
+                )
+            else:
+                schemas_parent = self.extensions_dir / org / name
+                package = json.loads(
+                    await (anyio.Path(schemas_parent) / "package.json").read_text()
+                )
+            schema = json.loads(
+                await (
+                    anyio.Path(schemas_parent) / "schemas" / org / name / f"{setting_name}.json"
+                ).read_text()
+            )
+            key = f"{name}:{setting_name}"
         else:
-            schemas_parent = self.extensions_dir / name0 / name1
-        schema = json.loads(
-            await (
-                anyio.Path(schemas_parent) / "schemas" / name0 / name1 / f"{name2}.json"
-            ).read_text()
-        )
-        key = f"{name1}:{name2}"
-        id_ = f"@jupyterlab/{key}"
+            # flat: e.g. nbdime-jupyterlab
+            ext_dir = anyio.Path(self.extensions_dir) / extension_name
+            package = json.loads(await (ext_dir / "package.json").read_text())
+            schema = json.loads(
+                await (ext_dir / "schemas" / extension_name / f"{setting_name}.json").read_text()
+            )
+            key = f"{extension_name}:{setting_name}"
+        id_ = f"{extension_name}:{setting_name}"
         setting = {
             "id": id_,
             "schema": schema,
@@ -187,9 +197,7 @@ class _Lab(Lab):
         self._task_group.start_soon(exit_app)
 
     async def get_settings(self, user: User):
-        overrides_path = (
-            anyio.Path(sys.prefix) / "share" / "jupyter" / "lab" / "settings" / "overrides.json"
-        )
+        overrides_path = anyio.Path(self.jlab_dir) / "settings" / "overrides.json"
         if await overrides_path.is_file():
             overrides = json.loads(await overrides_path.read_text())
         else:
