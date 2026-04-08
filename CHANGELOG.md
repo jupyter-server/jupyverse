@@ -1,5 +1,12 @@
 # Version history
 
+## 0.14.8
+
+- Fix contents API to default to 1 when getting contents.
+- Support flat extension settings.
+- Fix README for `pip` installation.
+- Fix some dependencies.
+
 ## 0.14.7
 
 - Support symlinked labextensions in federated extension discovery.

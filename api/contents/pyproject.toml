@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse-contents"
-version = "0.1.1"
+version = "0.1.2"
 description = "The API for Jupyverse's contents"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "jupyverse"
-version = "0.14.7"
+version = "0.14.8"
 description = "A set of FPS plugins implementing a Jupyter server"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -23,13 +23,13 @@ classifiers = [
 ]
 dependencies = [
   "fps[click,fastapi,anycorn] >=0.6.3,<0.7.0",
-  "fps-contents >=0.11.0,<0.12.0",
+  "fps-contents >=0.11.2,<0.12.0",
   "fps-file-watcher >=0.2.0,<0.3.0",
   "fps-kernel-subprocess >=0.2.2,<0.3.0",
   "fps-kernels >=0.11.3,<0.12.0",
   "fps-terminals >=0.10.0,<0.11.0",
   "fps-nbconvert >=0.10.0,<0.11.0",
-  "fps-lab >=0.11.3,<0.12.0",
+  "fps-lab >=0.11.4,<0.12.0",
   "fps-frontend >=0.10.0,<0.11.0",
   "rich-click >=1.6.1,<2",
 ]
@@ -48,8 +48,8 @@ content-type = "text/markdown"
 Homepage = "https://jupyter.org"
 
 [project.optional-dependencies]
-jupyterlab = ["fps-jupyterlab >=0.11.1,<0.12.0"]
-notebook = ["fps-notebook>=0.10.2,<0.11.0"]
+jupyterlab = ["fps-jupyterlab >=0.11.3,<0.12.0"]
+notebook = ["fps-notebook>=0.10.4,<0.11.0"]
 collaboration = [
   "jupyter-collaboration-ui",
   "jupyter-docprovider",
@@ -66,8 +66,8 @@ file-watcher-poll = ["fps-file-watcher-poll >=0.2.0,<0.3.0"]
 kernel-web-worker = ["fps-kernel-web-worker >=0.2.0,<0.3.0"]
 resource-usage = ["fps-resource-usage >=0.10.0,<0.11.0"]
 webdav = ["fps-webdav >=0.10.0,<0.11.0"]
-jupyterlab-git = ["fps-jupyterlab-git >=0.2.0,<0.3.0"]
-jupyterlab-lsp = ["fps-jupyterlab-lsp >=0.2.0,<0.3.0"]
+jupyterlab-git = ["fps-jupyterlab-git >=0.2.2,<0.3.0"]
+jupyterlab-lsp = ["fps-jupyterlab-lsp >=0.2.2,<0.3.0"]
 
 [dependency-groups]
 test = [

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "fps_notebook"
-version = "0.10.3"
+version = "0.10.4"
 description = "An FPS plugin for the Notebook API"
 keywords = ["jupyter", "server", "fastapi", "plugins"]
 requires-python = ">=3.10"
@@ -28,7 +28,7 @@ dependencies = [
   "jupyverse-auth >=0.2.0,<0.3.0",
   "jupyverse-frontend >=0.1.0,<0.2.0",
   "jupyverse-jupyterlab >=0.1.0,<0.2.0",
-  "jupyverse-lab >=0.2.0,<0.3.0",
+  "jupyverse-lab >=0.3.0,<0.4.0",
   "jupyverse-notebook >=0.1.1,<0.2.0",
   "notebook-frontend >=7.4.2,<8.0.0",
   "structlog",
