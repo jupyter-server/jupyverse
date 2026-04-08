@@ -32,7 +32,7 @@ class _ResourceUsage(ResourceUsage):
 
         mem_limit = self.resource_usage_config.mem_limit
 
-        limits = {"memory": {"rss": mem_limit}}
+        limits: dict[str, dict[str, int | float | bool]] = {"memory": {"rss": mem_limit}}
         if (
             self.resource_usage_config.mem_limit
             and self.resource_usage_config.mem_warning_threshold
