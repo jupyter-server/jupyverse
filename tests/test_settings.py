@@ -1,4 +1,5 @@
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -60,6 +61,96 @@ CONFIG = {
         },
     }
 }
+
+
+@pytest.fixture
+def fake_scoped_extension():
+    ext_dir = Path(sys.prefix) / "share" / "jupyter" / "labextensions" / "@my-org" / "my-extension"
+    schema_dir = ext_dir / "schemas" / "@my-org" / "my-extension"
+    schema_dir.mkdir(parents=True, exist_ok=True)
+    (ext_dir / "package.json").write_text(
+        json.dumps({"name": "@my-org/my-extension", "version": "1.2.3"})
+    )
+    (schema_dir / "plugin.json").write_text(
+        json.dumps(
+            {
+                "title": "My Extension",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False,
+            }
+        )
+    )
+    yield ext_dir
+    shutil.rmtree(Path(sys.prefix) / "share" / "jupyter" / "labextensions" / "@my-org")
+
+
+@pytest.fixture
+def fake_flat_extension():
+    ext_dir = Path(sys.prefix) / "share" / "jupyter" / "labextensions" / "my-extension"
+    schema_dir = ext_dir / "schemas" / "my-extension"
+    schema_dir.mkdir(parents=True, exist_ok=True)
+    (ext_dir / "package.json").write_text(json.dumps({"name": "my-extension", "version": "2.0.0"}))
+    (schema_dir / "plugin.json").write_text(
+        json.dumps(
+            {
+                "title": "My Extension",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False,
+            }
+        )
+    )
+    yield ext_dir
+    shutil.rmtree(ext_dir)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+async def test_scoped_extension_setting(auth_mode, fake_scoped_extension, free_tcp_port):
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": free_tcp_port},
+                "modules": {"auth": {"config": {"mode": auth_mode}}},
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module, AsyncClient() as http:
+        response = await http.get(
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/@my-org/my-extension:plugin"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == "@my-org/my-extension:plugin"
+        assert data["version"] == "1.2.3"
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+async def test_flat_extension_setting(auth_mode, fake_flat_extension, free_tcp_port):
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": free_tcp_port},
+                "modules": {"auth": {"config": {"mode": auth_mode}}},
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module, AsyncClient() as http:
+        response = await http.get(
+            f"http://127.0.0.1:{free_tcp_port}/lab/api/settings/my-extension:plugin"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == "my-extension:plugin"
+        assert data["version"] == "2.0.0"
 
 
 @pytest.mark.anyio
