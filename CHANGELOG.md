@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.9
+
+- Fix resource usage config types.
+
 ## 0.14.8
 
 - Fix contents API to default to 1 when getting contents.
