@@ -77,7 +77,7 @@ class _Contents(Contents):
     async def get_root_content(
         self,
         content: int,
-        user: User | None,
+        user: User | None = None,
     ):
         return await self.read_content("", bool(content))
 
