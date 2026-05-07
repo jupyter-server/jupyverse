@@ -25,7 +25,7 @@ EXCLUDED_PATHS = [
 ]
 
 
-def check_excluded_path(path: str = ""):
+def check_excluded_path(path: str = "") -> str:
     if path:
         for pattern in EXCLUDED_PATHS:
             if fnmatch.fnmatchcase(path, pattern):
