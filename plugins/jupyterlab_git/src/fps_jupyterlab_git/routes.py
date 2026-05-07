@@ -57,7 +57,7 @@ class GitRouter(Router):
         @router.post("/git/init")
         @router.post("/git/{path:path}/init")
         async def git_init(path: str = "", checked_path: str = Depends(check_excluded_path)):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.init(path)
             if result["code"] == 0:
                 result = await self.git._empty_commit(path)
@@ -74,7 +74,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             clone_url = body.get("clone_url")
             if not clone_url:
@@ -104,7 +104,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.show_top_level(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -118,7 +118,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             name = body.get("name", DEFAULT_REMOTE_NAME)
             url = body.get("url")
@@ -138,7 +138,7 @@ class GitRouter(Router):
         async def git_remote_details_show(
             path: str = "", checked_path: str = Depends(check_excluded_path)
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.remote_show(path, verbose=True)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -152,7 +152,7 @@ class GitRouter(Router):
             name: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.remote_remove(path, name)
             if result.get("code", 0) == 0:
                 return JSONResponse(
@@ -172,7 +172,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             add_all = body.get("add_all")
             if add_all is None:
@@ -200,7 +200,7 @@ class GitRouter(Router):
         async def git_add_all_unstaged(
             path: str = "", checked_path: str = Depends(check_excluded_path)
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.add_all_unstaged(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -212,7 +212,7 @@ class GitRouter(Router):
         async def git_add_all_untracked(
             path: str = "", checked_path: str = Depends(check_excluded_path)
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.add_all_untracked(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -226,7 +226,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             history_count = body.get("history_count", 25)
             follow_path = body.get("follow_path")
@@ -243,7 +243,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             selected_hash = body.get("selected_hash")
             if not selected_hash:
@@ -260,7 +260,7 @@ class GitRouter(Router):
         @router.get("/git/submodules")
         @router.get("/git/{path:path}/submodules")
         async def git_submodules(path: str = "", checked_path: str = Depends(check_excluded_path)):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.submodule(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -295,7 +295,7 @@ class GitRouter(Router):
             body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             options = body.get("options", {})
             filtered_options = {k: v for k, v in options.items() if k in ALLOWED_OPTIONS}
             result = await self.git.config(path, **filtered_options)
@@ -314,7 +314,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.branch(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -328,7 +328,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             branch_name = body.get("branch")
             if not branch_name:
@@ -353,7 +353,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.tags(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -366,7 +366,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             cm = ContentsManagerAdapter(self.contents)
             result = await self.git.show_prefix(path, cm)
             return JSONResponse(
@@ -381,7 +381,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             result = await self.git.changed_files(path, **body)
             return JSONResponse(
@@ -395,7 +395,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.status(path)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -409,7 +409,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             filename = body["filename"]
             reference = body["reference"]
@@ -427,7 +427,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             if body:
                 result = await self.git.diff(
@@ -449,7 +449,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             auth = body.get("auth", None)
             result = await self.git.fetch(path, auth)
@@ -464,7 +464,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.remote_show(path, verbose=True)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -477,7 +477,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             current_branch = await self.git.get_current_branch(path)
             result = await self.git.get_upstream_branch(path, current_branch)
             return JSONResponse(
@@ -491,7 +491,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = await self.git.check_notebooks_with_outputs(path)
             return JSONResponse(
                 status_code=200,
@@ -505,7 +505,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             notebooks = body.get("notebooks", [])
             try:
@@ -556,7 +556,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             commit_msg = body["commit_msg"]
             amend = body.get("amend", False)
@@ -574,7 +574,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             branch = body.get("branch")
             action = body.get("action", "")
@@ -597,7 +597,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             tag = body.get("tag_id")
             commit = body.get("commit_id")
@@ -619,7 +619,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             tag = body.get("tag_id")
             if not tag:
@@ -636,7 +636,7 @@ class GitRouter(Router):
             path: str = "",
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             result = self.git.read_file(f"{path}/.gitignore")
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -650,7 +650,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             file_path = body.get("file_path")
             content = body.get("content")
@@ -673,7 +673,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             if body.get("reset_all"):
                 result = await self.git.reset_all(path)
@@ -697,7 +697,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             commit_id = body.get("commit_id")
             if not commit_id:
@@ -718,7 +718,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             commit_id = body.get("commit_id")
             if not commit_id:
@@ -739,7 +739,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             if body.get("checkout_branch"):
                 result = await self.git.checkout_branch_safe(
@@ -770,7 +770,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             branch = body.get("branch")
             if not branch:
@@ -791,7 +791,7 @@ class GitRouter(Router):
             raw_body: str = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             stash_msg = body.get("stashMsg", "")
             result = await self.git.stash(path, stash_msg)
@@ -813,7 +813,7 @@ class GitRouter(Router):
             stash_index: int | None = Query(None),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             if stash_index is None:
                 result = await self.git.drop_stash(path)
             else:
@@ -836,7 +836,7 @@ class GitRouter(Router):
             index: int | None = Query(None),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             if index is None:
                 result = await self.git.stash_list(path)
             else:
@@ -853,7 +853,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             index = body.get("index")
             result = await self.git.pop_stash(path, index)
@@ -869,7 +869,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             index = body.get("index")
             result = await self.git.apply_stash(path, index)
@@ -885,7 +885,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             auth = body.get("auth")
             cancel_on_conflict = body.get("cancel_on_conflict")
@@ -902,7 +902,7 @@ class GitRouter(Router):
             raw_body: str = Body(default="{}"),
             checked_path: str = Depends(check_excluded_path),
         ):
-            path = checked_path or "."
+            path = checked_path
             body = json.loads(raw_body)
             known_remote = body.get("remote")
             force = body.get("force", False)

@@ -15,7 +15,7 @@ def test_check_excluded_path_allowed():
 
 
 def test_check_excluded_path_empty():
-    assert check_excluded_path("") == ""
+    assert check_excluded_path("") == "."
 
 
 def test_check_excluded_path_git_raises():
