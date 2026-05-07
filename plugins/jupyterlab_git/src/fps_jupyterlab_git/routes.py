@@ -1,5 +1,4 @@
 import fnmatch
-import json
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -71,11 +70,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/clone")
         async def git_clone(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             clone_url = body.get("clone_url")
             if not clone_url:
                 return JSONResponse(
@@ -115,11 +113,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/remote/add")
         async def git_remote_add(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             name = body.get("name", DEFAULT_REMOTE_NAME)
             url = body.get("url")
             if not url:
@@ -169,11 +166,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/add")
         async def git_add(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             add_all = body.get("add_all")
             if add_all is None:
                 return JSONResponse(
@@ -223,11 +219,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/log")
         async def git_log(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             history_count = body.get("history_count", 25)
             follow_path = body.get("follow_path")
             result = await self.git.log(path, history_count, follow_path)
@@ -240,11 +235,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/detailed_log")
         async def git_detailed_log(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             selected_hash = body.get("selected_hash")
             if not selected_hash:
                 return JSONResponse(
@@ -325,11 +319,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/branch/delete")
         async def git_branch_delete(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             branch_name = body.get("branch")
             if not branch_name:
                 return JSONResponse(
@@ -378,11 +371,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/changed_files")
         async def git_changed_files(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             result = await self.git.changed_files(path, **body)
             return JSONResponse(
                 status_code=200 if result["code"] == 0 else 500,
@@ -406,11 +398,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/content")
         async def git_content(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             filename = body["filename"]
             reference = body["reference"]
             cm = ContentsManagerAdapter(self.contents)
@@ -424,11 +415,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/diff")
         async def git_diff(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             if body:
                 result = await self.git.diff(
                     path,
@@ -446,11 +436,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/remote/fetch")
         async def git_remote_fetch(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             auth = body.get("auth", None)
             result = await self.git.fetch(path, auth)
             return JSONResponse(
@@ -502,11 +491,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/strip_notebooks")
         async def strip_notebooks(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             notebooks = body.get("notebooks", [])
             try:
                 await self.git.strip_notebook_outputs(notebooks, path)
@@ -525,9 +513,8 @@ class GitRouter(Router):
 
         @router.post("/git/diffnotebook")
         async def diff_notebook(
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
         ):
-            body = json.loads(raw_body)
             try:
                 prev_content = body["previousContent"]
                 curr_content = body["currentContent"]
@@ -553,11 +540,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/commit")
         async def git_commit(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             commit_msg = body["commit_msg"]
             amend = body.get("amend", False)
             author = body.get("author")
@@ -571,11 +557,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/rebase")
         async def git_rebase(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             branch = body.get("branch")
             action = body.get("action", "")
             if branch is not None:
@@ -594,11 +579,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/tag")
         async def git_new_tag(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             tag = body.get("tag_id")
             commit = body.get("commit_id")
             if not tag or not commit:
@@ -616,11 +600,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/tag_checkout")
         async def git_tag_checkout(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             tag = body.get("tag_id")
             if not tag:
                 return JSONResponse(status_code=400, content={"message": "tag_id is required"})
@@ -647,11 +630,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/ignore")
         async def git_update_gitignore(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             file_path = body.get("file_path")
             content = body.get("content")
             use_extension = body.get("use_extension", False)
@@ -670,11 +652,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/reset")
         async def git_reset(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             if body.get("reset_all"):
                 result = await self.git.reset_all(path)
             else:
@@ -694,11 +675,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/delete_commit")
         async def git_delete_commit(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             commit_id = body.get("commit_id")
             if not commit_id:
                 return JSONResponse(
@@ -715,11 +695,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/reset_to_commit")
         async def git_reset_to_commit(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             commit_id = body.get("commit_id")
             if not commit_id:
                 return JSONResponse(
@@ -736,11 +715,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/checkout")
         async def git_checkout(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             if body.get("checkout_branch"):
                 result = await self.git.checkout_branch_safe(
                     body.get("branchname"),
@@ -767,11 +745,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/merge")
         async def git_merge(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             branch = body.get("branch")
             if not branch:
                 return JSONResponse(
@@ -788,11 +765,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/stash")
         async def git_stash(
             path: str = "",
-            raw_body: str = Body(...),
+            body: dict = Body(...),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             stash_msg = body.get("stashMsg", "")
             result = await self.git.stash(path, stash_msg)
             if result["code"] == 0:
@@ -850,11 +826,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/stash_pop")
         async def git_stash_pop(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             index = body.get("index")
             result = await self.git.pop_stash(path, index)
             return JSONResponse(
@@ -866,11 +841,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/stash_apply")
         async def git_stash_apply(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             index = body.get("index")
             result = await self.git.apply_stash(path, index)
             return JSONResponse(
@@ -882,11 +856,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/pull")
         async def git_pull(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             auth = body.get("auth")
             cancel_on_conflict = body.get("cancel_on_conflict")
             result = await self.git.pull(path, auth, cancel_on_conflict)
@@ -899,11 +872,10 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/push")
         async def git_push(
             path: str = "",
-            raw_body: str = Body(default="{}"),
+            body: dict = Body(default={}),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
-            body = json.loads(raw_body)
             known_remote = body.get("remote")
             force = body.get("force", False)
             auth = body.get("auth")
@@ -933,9 +905,8 @@ class GitRouter(Router):
 
             @router.post("/git/known_hosts")
             async def ssh_known_hosts_post(
-                raw_body: str = Body(...),
+                body: dict = Body(...),
             ):
-                body = json.loads(raw_body)
                 hostname = body["hostname"]
                 ssh = SSH()
                 ssh.add_host(hostname)

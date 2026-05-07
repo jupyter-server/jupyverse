@@ -1,4 +1,3 @@
-import json
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -105,7 +104,7 @@ async def test_git_init_excluded_path(git_client):
 async def test_git_clone_missing_clone_url(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/clone", content=json.dumps({}))
+    response = await client.post("/git/clone", json={})
 
     assert response.status_code == 400
     assert "clone_url" in response.json()["message"]
@@ -119,7 +118,7 @@ async def test_git_clone_success(git_client):
     mock_git.clone.return_value = {"code": 0}
     response = await client.post(
         "/git/clone",
-        content=json.dumps({"clone_url": "https://example.com/repo.git"}),
+        json={"clone_url": "https://example.com/repo.git"},
     )
 
     assert response.status_code == 200
@@ -133,7 +132,7 @@ async def test_git_clone_failure(git_client):
     mock_git.clone.return_value = {"code": 1, "message": "auth failed"}
     response = await client.post(
         "/git/clone",
-        content=json.dumps({"clone_url": "https://example.com/repo.git"}),
+        json={"clone_url": "https://example.com/repo.git"},
     )
 
     assert response.status_code == 500
@@ -177,7 +176,7 @@ async def test_git_status_failure(git_client):
 @pytest.mark.anyio
 async def test_git_add_missing_add_all_key(git_client):
     client = git_client["client"]
-    response = await client.post("/git/add", content=json.dumps({}))
+    response = await client.post("/git/add", json={})
 
     assert response.status_code == 400
     assert "add_all" in response.json()["message"]
@@ -188,7 +187,7 @@ async def test_git_add_all_true(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.add_all.return_value = {"code": 0}
-    response = await client.post("/git/add", content=json.dumps({"add_all": True}))
+    response = await client.post("/git/add", json={"add_all": True})
 
     assert response.status_code == 200
     mock_git.add_all.assert_called_once_with(".")
@@ -199,7 +198,7 @@ async def test_git_add_all_true(git_client):
 async def test_git_add_all_false_missing_filename(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/add", content=json.dumps({"add_all": False}))
+    response = await client.post("/git/add", json={"add_all": False})
 
     assert response.status_code == 400
     assert "filename" in response.json()["message"]
@@ -212,7 +211,7 @@ async def test_git_add_file_success(git_client):
     mock_git = git_client["git"]
     mock_git.add.return_value = {"code": 0}
     response = await client.post(
-        "/git/add", content=json.dumps({"add_all": False, "filename": "foo.py"})
+        "/git/add", json={"add_all": False, "filename": "foo.py"}
     )
 
     assert response.status_code == 200
@@ -229,7 +228,7 @@ async def test_git_log_success(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.log.return_value = {"code": 0, "commits": []}
-    response = await client.post("/git/log", content=json.dumps({}))
+    response = await client.post("/git/log", json={})
 
     assert response.status_code == 200
     mock_git.log.assert_called_once_with(".", 25, None)
@@ -243,7 +242,7 @@ async def test_git_log_with_options(git_client):
 
     await client.post(
         "/git/log",
-        content=json.dumps({"history_count": 10, "follow_path": "src/"}),
+        json={"history_count": 10, "follow_path": "src/"},
     )
 
     mock_git.log.assert_called_once_with(".", 10, "src/")
@@ -259,7 +258,7 @@ async def test_git_diff_no_body(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.diff.return_value = {"code": 0, "result": ""}
-    response = await client.post("/git/diff", content="{}")
+    response = await client.post("/git/diff", json={})
 
     assert response.status_code == 200
     mock_git.diff.assert_called_once_with(".")
@@ -272,7 +271,7 @@ async def test_git_diff_with_refs(git_client):
     mock_git.diff.return_value = {"code": 0, "result": "diff output"}
     response = await client.post(
         "/git/diff",
-        content=json.dumps({"previous": "HEAD~1", "current": "HEAD"}),
+        json={"previous": "HEAD~1", "current": "HEAD"},
     )
 
     assert response.status_code == 200
@@ -302,7 +301,7 @@ async def test_git_branch_success(git_client):
 async def test_git_branch_delete_missing_branch(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/branch/delete", content=json.dumps({}))
+    response = await client.post("/git/branch/delete", json={})
 
     assert response.status_code == 400
     assert "branch" in response.json()["message"]
@@ -315,7 +314,7 @@ async def test_git_branch_delete_success(git_client):
     mock_git = git_client["git"]
     mock_git.branch_delete.return_value = {"code": 0}
     response = await client.post(
-        "/git/branch/delete", content=json.dumps({"branch": "feature/foo"})
+        "/git/branch/delete", json={"branch": "feature/foo"}
     )
 
     assert response.status_code == 200
@@ -329,7 +328,7 @@ async def test_git_branch_delete_failure(git_client):
     mock_git = git_client["git"]
     mock_git.branch_delete.return_value = {"code": 1, "message": "branch not found"}
     response = await client.post(
-        "/git/branch/delete", content=json.dumps({"branch": "nonexistent"})
+        "/git/branch/delete", json={"branch": "nonexistent"}
     )
 
     assert response.status_code == 500
@@ -346,7 +345,7 @@ async def test_git_commit_success(git_client):
     mock_git = git_client["git"]
     mock_git.commit.return_value = {"code": 0}
     response = await client.post(
-        "/git/commit", content=json.dumps({"commit_msg": "feat: add feature"})
+        "/git/commit", json={"commit_msg": "feat: add feature"}
     )
 
     assert response.status_code == 200
@@ -361,7 +360,7 @@ async def test_git_commit_amend(git_client):
 
     await client.post(
         "/git/commit",
-        content=json.dumps({"commit_msg": "fix: typo", "amend": True}),
+        json={"commit_msg": "fix: typo", "amend": True},
     )
 
     mock_git.commit.assert_called_once_with("fix: typo", True, ".", None)
@@ -437,7 +436,7 @@ async def test_git_reset_all(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.reset_all.return_value = {"code": 0}
-    response = await client.post("/git/reset", content=json.dumps({"reset_all": True}))
+    response = await client.post("/git/reset", json={"reset_all": True})
 
     assert response.status_code == 200
     mock_git.reset_all.assert_called_once_with(".")
@@ -448,7 +447,7 @@ async def test_git_reset_all(git_client):
 async def test_git_reset_file_missing_filename(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/reset", content=json.dumps({"reset_all": False}))
+    response = await client.post("/git/reset", json={"reset_all": False})
 
     assert response.status_code == 400
     assert "filename" in response.json()["message"]
@@ -462,7 +461,7 @@ async def test_git_reset_file_success(git_client):
     mock_git.reset.return_value = {"code": 0}
     response = await client.post(
         "/git/reset",
-        content=json.dumps({"reset_all": False, "filename": "foo.py"}),
+        json={"reset_all": False, "filename": "foo.py"},
     )
 
     assert response.status_code == 200
@@ -478,7 +477,7 @@ async def test_git_reset_file_success(git_client):
 async def test_git_remote_add_missing_url(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/remote/add", content=json.dumps({"name": "origin"}))
+    response = await client.post("/git/remote/add", json={"name": "origin"})
 
     assert response.status_code == 400
     assert "url" in response.json()["message"]
@@ -492,7 +491,7 @@ async def test_git_remote_add_success(git_client):
     mock_git.remote_add.return_value = {"code": 0}
     response = await client.post(
         "/git/remote/add",
-        content=json.dumps({"url": "https://example.com/repo.git", "name": "origin"}),
+        json={"url": "https://example.com/repo.git", "name": "origin"},
     )
 
     assert response.status_code == 200
@@ -509,7 +508,7 @@ async def test_git_stash_create_success(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.stash.return_value = {"code": 0}
-    response = await client.post("/git/stash", content=json.dumps({"stashMsg": "WIP: my changes"}))
+    response = await client.post("/git/stash", json={"stashMsg": "WIP: my changes"})
 
     assert response.status_code == 200
     assert response.json()["status"] == "created"
@@ -521,7 +520,7 @@ async def test_git_stash_create_failure(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.stash.return_value = {"code": 1, "message": "nothing to stash"}
-    response = await client.post("/git/stash", content=json.dumps({"stashMsg": ""}))
+    response = await client.post("/git/stash", json={"stashMsg": ""})
 
     assert response.status_code == 500
 
@@ -580,7 +579,7 @@ async def test_git_stash_drop_by_index(git_client):
 async def test_diff_notebook_missing_keys(git_client):
     client = git_client["client"]
     response = await client.post(
-        "/git/diffnotebook", content=json.dumps({"previousContent": "nb1"})
+        "/git/diffnotebook", json={"previousContent": "nb1"}
     )
 
     assert response.status_code == 400
@@ -594,7 +593,7 @@ async def test_diff_notebook_success(git_client):
     mock_git.get_nbdiff.return_value = {"base": [], "diff": []}
     response = await client.post(
         "/git/diffnotebook",
-        content=json.dumps({"previousContent": "{}", "currentContent": "{}"}),
+        json={"previousContent": "{}", "currentContent": "{}"},
     )
 
     assert response.status_code == 200
@@ -608,7 +607,7 @@ async def test_diff_notebook_error(git_client):
     mock_git.get_nbdiff.side_effect = RuntimeError("nbdiff failed")
     response = await client.post(
         "/git/diffnotebook",
-        content=json.dumps({"previousContent": "{}", "currentContent": "{}"}),
+        json={"previousContent": "{}", "currentContent": "{}"},
     )
 
     assert response.status_code == 500
@@ -624,7 +623,7 @@ async def test_diff_notebook_error(git_client):
 async def test_git_new_tag_missing_params(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/tag", content=json.dumps({"tag_id": "v1.0"}))
+    response = await client.post("/git/tag", json={"tag_id": "v1.0"})
 
     assert response.status_code == 400
     assert "required" in response.json()["message"]
@@ -638,7 +637,7 @@ async def test_git_new_tag_success(git_client):
     mock_git.set_tag.return_value = {"code": 0}
     response = await client.post(
         "/git/tag",
-        content=json.dumps({"tag_id": "v1.0", "commit_id": "abc123"}),
+        json={"tag_id": "v1.0", "commit_id": "abc123"},
     )
 
     assert response.status_code == 200
@@ -654,7 +653,7 @@ async def test_git_new_tag_success(git_client):
 async def test_git_merge_missing_branch(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/merge", content=json.dumps({}))
+    response = await client.post("/git/merge", json={})
 
     assert response.status_code == 400
     assert "branch" in response.json()["message"]
@@ -666,7 +665,7 @@ async def test_git_merge_success(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.merge.return_value = {"code": 0}
-    response = await client.post("/git/merge", content=json.dumps({"branch": "main"}))
+    response = await client.post("/git/merge", json={"branch": "main"})
 
     assert response.status_code == 200
     mock_git.merge.assert_called_once_with("main", ".")
@@ -681,7 +680,7 @@ async def test_git_merge_success(git_client):
 async def test_git_delete_commit_missing_id(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
-    response = await client.post("/git/delete_commit", content=json.dumps({}))
+    response = await client.post("/git/delete_commit", json={})
 
     assert response.status_code == 400
     mock_git.delete_commit.assert_not_called()
@@ -692,7 +691,7 @@ async def test_git_delete_commit_success(git_client):
     client = git_client["client"]
     mock_git = git_client["git"]
     mock_git.delete_commit.return_value = {"code": 0}
-    response = await client.post("/git/delete_commit", content=json.dumps({"commit_id": "abc123"}))
+    response = await client.post("/git/delete_commit", json={"commit_id": "abc123"})
 
     assert response.status_code == 200
     mock_git.delete_commit.assert_called_once_with("abc123", ".")
@@ -704,7 +703,7 @@ async def test_git_reset_to_commit_success(git_client):
     mock_git = git_client["git"]
     mock_git.reset_to_commit.return_value = {"code": 0}
     response = await client.post(
-        "/git/reset_to_commit", content=json.dumps({"commit_id": "abc123"})
+        "/git/reset_to_commit", json={"commit_id": "abc123"}
     )
 
     assert response.status_code == 200
@@ -719,5 +718,9 @@ async def test_git_reset_to_commit_success(git_client):
 @pytest.mark.anyio
 async def test_invalid_json_body(git_client):
     client = git_client["client"]
-    with pytest.raises(Exception):
-        await client.post("/git/clone", content="not-json")
+    response = await client.post(
+        "/git/clone",
+        content="not-json",
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 422
