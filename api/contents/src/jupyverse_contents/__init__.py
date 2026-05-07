@@ -121,7 +121,7 @@ class Contents(Router, ABC):
     async def get_root_content(
         self,
         content: int,
-        user: User | None,
+        user: User | None = None,
     ) -> Content:
         return await self.get_root_content(content, user)
 
