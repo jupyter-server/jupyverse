@@ -137,7 +137,7 @@ class Contents(Router, ABC):
         self,
         path: str,
         content: int,
-        user: User | None,
+        user: User | None = None,
     ) -> Content: ...
 
     @abstractmethod
