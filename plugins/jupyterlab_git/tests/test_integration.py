@@ -11,6 +11,30 @@ def anyio_backend():
 
 
 @pytest.mark.anyio
+async def test_initial_content_visible_in_log(git_repo_client):
+    """The pre-existing initial commit should be visible without any extra operations."""
+    client = git_repo_client["client"]
+
+    response = await client.post("/git/log", json={})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["commits"][0]["commit_msg"] == "Initial commit"
+
+
+@pytest.mark.anyio
+async def test_initial_content_clean_status(git_repo_client):
+    """After the initial commit, the working tree should be clean."""
+    client = git_repo_client["client"]
+
+    response = await client.post("/git/status")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["files"] == []
+
+
+@pytest.mark.anyio
 async def test_git_status_untracked(git_repo_client):
     client = git_repo_client["client"]
     path = git_repo_client["path"]
