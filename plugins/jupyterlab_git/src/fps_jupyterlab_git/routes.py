@@ -1,6 +1,7 @@
 import fnmatch
+import json
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from jupyterlab_git_core import __version__ as git_server_version  # type: ignore[import-untyped]
 from jupyterlab_git_core.git import (  # type: ignore[import-untyped]
@@ -22,6 +23,32 @@ EXCLUDED_PATHS = [
     "*.ipynb_checkpoints",
     ".git",
 ]
+
+
+# The @jupyterlab/git frontend sends POST bodies with Content-Type: text/plain,
+# so FastAPI cannot parse them as JSON automatically. These dependencies read the
+# raw body bytes and parse JSON regardless of Content-Type, mirroring the
+# behaviour of Tornado's get_json_body().
+async def _required_body(request: Request) -> dict:
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=422, detail="Request body is required")
+    try:
+        data = json.loads(body)
+        return json.loads(data) if isinstance(data, str) else data
+    except (json.JSONDecodeError, TypeError):
+        raise HTTPException(status_code=422, detail="Invalid JSON in request body")
+
+
+async def _optional_body(request: Request) -> dict:
+    body = await request.body()
+    if not body:
+        return {}
+    try:
+        data = json.loads(body)
+        return json.loads(data) if isinstance(data, str) else data
+    except (json.JSONDecodeError, TypeError):
+        raise HTTPException(status_code=422, detail="Invalid JSON in request body")
 
 
 def check_excluded_path(path: str = "") -> str:
@@ -70,7 +97,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/clone")
         async def git_clone(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -113,7 +140,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/remote/add")
         async def git_remote_add(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -166,7 +193,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/add")
         async def git_add(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -219,7 +246,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/log")
         async def git_log(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -235,7 +262,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/detailed_log")
         async def git_detailed_log(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -286,7 +313,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/config")
         async def git_config(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -319,7 +346,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/branch/delete")
         async def git_branch_delete(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -371,7 +398,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/changed_files")
         async def git_changed_files(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -398,7 +425,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/content")
         async def git_content(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -415,7 +442,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/diff")
         async def git_diff(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -436,7 +463,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/remote/fetch")
         async def git_remote_fetch(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -491,7 +518,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/strip_notebooks")
         async def strip_notebooks(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -513,7 +540,7 @@ class GitRouter(Router):
 
         @router.post("/git/diffnotebook")
         async def diff_notebook(
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
         ):
             try:
                 prev_content = body["previousContent"]
@@ -540,7 +567,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/commit")
         async def git_commit(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -557,7 +584,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/rebase")
         async def git_rebase(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -579,7 +606,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/tag")
         async def git_new_tag(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -600,7 +627,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/tag_checkout")
         async def git_tag_checkout(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -630,7 +657,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/ignore")
         async def git_update_gitignore(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -652,7 +679,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/reset")
         async def git_reset(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -675,7 +702,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/delete_commit")
         async def git_delete_commit(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -695,7 +722,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/reset_to_commit")
         async def git_reset_to_commit(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -715,7 +742,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/checkout")
         async def git_checkout(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -745,7 +772,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/merge")
         async def git_merge(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -765,7 +792,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/stash")
         async def git_stash(
             path: str = "",
-            body: dict = Body(...),
+            body: dict = Depends(_required_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -826,7 +853,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/stash_pop")
         async def git_stash_pop(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -841,7 +868,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/stash_apply")
         async def git_stash_apply(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -856,7 +883,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/pull")
         async def git_pull(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -872,7 +899,7 @@ class GitRouter(Router):
         @router.post("/git/{path:path}/push")
         async def git_push(
             path: str = "",
-            body: dict = Body(default={}),
+            body: dict = Depends(_optional_body),
             checked_path: str = Depends(check_excluded_path),
         ):
             path = checked_path
@@ -905,7 +932,7 @@ class GitRouter(Router):
 
             @router.post("/git/known_hosts")
             async def ssh_known_hosts_post(
-                body: dict = Body(...),
+                body: dict = Depends(_required_body),
             ):
                 hostname = body["hostname"]
                 ssh = SSH()
