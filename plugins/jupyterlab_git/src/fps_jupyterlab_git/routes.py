@@ -30,7 +30,7 @@ def check_excluded_path(path: str = "") -> str:
         for pattern in EXCLUDED_PATHS:
             if fnmatch.fnmatchcase(path, pattern):
                 raise HTTPException(status_code=404)
-    return path
+    return path or "."
 
 
 class ContentsManagerAdapter:
