@@ -8,11 +8,6 @@ from jupyverse_api import App
 
 
 @pytest.fixture
-def anyio_backend():
-    return "asyncio"
-
-
-@pytest.fixture
 async def git_client():
     """Fixture providing an async HTTP client and a mocked Git instance."""
     fastapi_app = FastAPI()
