@@ -17,7 +17,7 @@ async def git_client():
 
     with patch("fps_jupyterlab_git.routes.Git") as MockGit:
         MockGit.return_value = mock_git
-        GitRouter(app, contents)
+        GitRouter(app, contents)  # type: ignore[arg-type]
 
     async with AsyncClient(
         transport=ASGITransport(app=fastapi_app), base_url="http://test"

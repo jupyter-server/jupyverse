@@ -90,9 +90,6 @@ docs = [
   "mkdocs-material",
 ]
 
-[tool.mypy]
-exclude = ["conftest\\.py$"]
-
 [tool.ruff.lint]
 select = [
   # pycodestyle
