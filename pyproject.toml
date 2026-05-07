@@ -91,7 +91,7 @@ docs = [
 ]
 
 [tool.mypy]
-explicit_package_bases = true
+exclude = ["conftest\\.py$"]
 
 [tool.ruff.lint]
 select = [
