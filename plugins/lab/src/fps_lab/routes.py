@@ -131,12 +131,10 @@ class _Lab(Lab):
         if "/" in extension_name:
             # scoped: e.g. @jupyterlab/notebook-extension
             org, name = extension_name.split("/", 1)
-            if (
-                org in ["@jupyterlab", "@notebook"]
-                and await (
-                    anyio.Path(self.jlab_dir) / "schemas" / org / name / f"{setting_name}.json"
-                ).exists()
-            ):
+            schema_path = (
+                anyio.Path(self.jlab_dir) / "schemas" / org / name / f"{setting_name}.json"
+            )
+            if org in ["@jupyterlab", "@notebook"] and await schema_path.exists():
                 schemas_parent = self.jlab_dir
                 package = json.loads(
                     await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
