@@ -97,7 +97,7 @@ class _Contents(Contents):
         self,
         path: str,
         content: int,
-        user: User | None,
+        user: User | None = None,
     ):
         return await self.read_content(path, bool(content))
 
