@@ -90,8 +90,6 @@ docs = [
   "mkdocs-material",
 ]
 
-[tool.mypy]
-
 [tool.ruff.lint]
 select = [
   # pycodestyle
