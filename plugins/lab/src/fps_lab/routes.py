@@ -10,7 +10,7 @@ import json5  # type: ignore
 from anyio import sleep
 from anyio.abc import TaskGroup
 from babel import Locale
-from fastapi import Response, status
+from fastapi import HTTPException, Response, status
 from fastapi.responses import FileResponse, RedirectResponse
 from jupyverse_api import App
 from jupyverse_auth import Auth, User
@@ -141,11 +141,12 @@ class _Lab(Lab):
                 package = json.loads(
                     await (anyio.Path(schemas_parent) / "package.json").read_text()
                 )
-            schema = json.loads(
-                await (
-                    anyio.Path(schemas_parent) / "schemas" / org / name / f"{setting_name}.json"
-                ).read_text()
+            schema_path = (
+                anyio.Path(schemas_parent) / "schemas" / org / name / f"{setting_name}.json"
             )
+            if not await schema_path.exists():
+                raise HTTPException(status_code=404, detail=f"Schema not found: {schema_path}")
+            schema = json.loads(await schema_path.read_text())
             key = f"{name}:{setting_name}"
         else:
             # flat: e.g. nbdime-jupyterlab

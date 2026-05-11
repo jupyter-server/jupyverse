@@ -1,8 +1,13 @@
 from fps import Module
-from fps_jupyter_server import JupyterServer
+from jupyverse_api import App
+from jupyverse_contents import Contents
+
+from .routes import GitRouter
 
 
 class JupyterLabGitModule(Module):
     async def prepare(self) -> None:
-        jupyter_server = await self.get(JupyterServer)
-        jupyter_server.proxy("/git")
+        app = await self.get(App)
+        contents = await self.get(Contents)  # type: ignore[type-abstract]
+        git_router = GitRouter(app, contents)
+        self.put(git_router)
