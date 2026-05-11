@@ -1,4 +1,5 @@
 import subprocess
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -6,6 +7,7 @@ from fastapi import FastAPI
 from fps_jupyterlab_git.routes import GitRouter
 from httpx import ASGITransport, AsyncClient
 from jupyverse_api import App
+from jupyverse_contents import Contents
 
 
 @pytest.fixture
@@ -13,12 +15,12 @@ async def git_client():
     """Fixture providing an async HTTP client and a mocked Git instance."""
     fastapi_app = FastAPI()
     app = App(fastapi_app)
-    contents = AsyncMock()
+    contents = cast(Contents, AsyncMock())
     mock_git = AsyncMock()
 
     with patch("fps_jupyterlab_git.routes.Git") as MockGit:
         MockGit.return_value = mock_git
-        GitRouter(app, contents)  # type: ignore[arg-type]
+        GitRouter(app, contents)
 
     async with AsyncClient(
         transport=ASGITransport(app=fastapi_app), base_url="http://test"
@@ -46,8 +48,8 @@ async def git_repo_client(tmp_path, monkeypatch):
 
     fastapi_app = FastAPI()
     app = App(fastapi_app)
-    contents = AsyncMock()
-    GitRouter(app, contents)  # type: ignore[arg-type]
+    contents = cast(Contents, AsyncMock())
+    GitRouter(app, contents)
 
     async with AsyncClient(
         transport=ASGITransport(app=fastapi_app), base_url="http://test"
