@@ -1,5 +1,17 @@
 # Version history
 
+## 0.14.10
+
+This `jupyverse` release also releases:
+- `jupyverse-contents` v0.1.3
+- `fps-contents` v0.11.3
+- `fps-lab` v0.11.5
+- `fps-jupyterlab-git` v0.3.0
+
+It is basically about having `fps-jupyterlab-git` not depend on
+[jupyter-server](https://github.com/jupyter-server/jupyter_server) anymore, and instead use the
+Tornado-free API of [jupyterlab-git](https://github.com/jupyterlab/jupyterlab-git).
+
 ## 0.14.9
 
 - Fix resource usage config types.
