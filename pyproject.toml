@@ -91,7 +91,6 @@ docs = [
 ]
 
 [tool.mypy]
-exclude = ["conftest\\.py$"]
 
 [tool.ruff.lint]
 select = [
