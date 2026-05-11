@@ -1,13 +1,16 @@
 """Integration tests exercising the full stack: HTTP → GitRouter → real git subprocess."""
 
+import jupyterlab_git_core.git as _git_module
 import pytest
 
 
-# jupyterlab_git_core uses a module-level anyio.Lock created on first async call,
-# which binds it to the first event loop backend. Force asyncio to avoid conflicts.
-@pytest.fixture
-def anyio_backend():
-    return "asyncio"
+@pytest.fixture(autouse=True)
+def reset_git_execution_lock():
+    # jupyterlab_git_core lazily creates a module-level anyio.Lock on first use,
+    # binding it to the active event loop backend. Reset it after each test so
+    # the next test (possibly on a different backend) gets a fresh lock.
+    yield
+    _git_module._execution_lock = None
 
 
 @pytest.mark.anyio
