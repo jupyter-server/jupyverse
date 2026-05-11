@@ -1,6 +1,6 @@
 # Version history
 
-## 0.14.10
+## 0.14.11
 
 This `jupyverse` release also releases:
 - `jupyverse-contents` v0.1.3
