@@ -1,6 +1,6 @@
 """Integration tests exercising the full stack: HTTP → GitRouter → real git subprocess."""
 
-import jupyterlab_git_core.git as _git_module
+import jupyterlab_git_core.git as _git_module  # type: ignore[import-untyped]
 import pytest
 
 
