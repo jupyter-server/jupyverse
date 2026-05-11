@@ -1,5 +1,9 @@
 # Version history
 
+## 0.14.12
+
+- Require `fps-jupyterlab-git >=0.3.0,<0.4.0`.
+
 ## 0.14.11
 
 This `jupyverse` release also releases:
