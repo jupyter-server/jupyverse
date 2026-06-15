@@ -287,6 +287,80 @@ async def test_patch_session_change_kernel(auth_mode):
             assert sessions[0]["kernel"]["id"] == new_kernel_id
 
 
+@pytest.mark.anyio
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+async def test_patch_session_change_kernel_by_id(auth_mode):
+    kernel_name = "python3"
+    kernelspec_path = (
+        Path(sys.prefix) / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
+    )
+    assert kernelspec_path.exists()
+
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "modules": {
+                    "auth": {"config": {"mode": auth_mode}},
+                }
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as root_module:
+        app = root_module.app
+        transport = ASGIWebSocketTransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            # create a first session with its own kernel
+            response = await client.post(
+                "/api/sessions",
+                json={
+                    "kernel": {"name": kernel_name},
+                    "name": "test1",
+                    "path": "test1.ipynb",
+                    "type": "notebook",
+                },
+            )
+            assert response.status_code == 201
+            session1 = response.json()
+            session1_id = session1["id"]
+            kernel1_id = session1["kernel"]["id"]
+
+            # create a second session, with another kernel to reattach to
+            response = await client.post(
+                "/api/sessions",
+                json={
+                    "kernel": {"name": kernel_name},
+                    "name": "test2",
+                    "path": "test2.ipynb",
+                    "type": "notebook",
+                },
+            )
+            assert response.status_code == 201
+            session2 = response.json()
+            kernel2_id = session2["kernel"]["id"]
+            assert kernel2_id != kernel1_id
+            assert kernel2_id in kernels
+
+            # reattach the first session to the existing kernel by id: kernel.id
+            # must take precedence over kernel.name (no new kernel is started)
+            response = await client.patch(
+                f"/api/sessions/{session1_id}",
+                json={
+                    "id": session1_id,
+                    "kernel": {"id": kernel2_id, "name": kernel_name},
+                },
+            )
+            assert response.status_code == 200
+            patched = response.json()
+            assert patched["kernel"]["id"] == kernel2_id
+            # the previous kernel of the first session must have been stopped
+            assert kernel1_id not in kernels
+            # the reused kernel is still around (shared with the second session)
+            assert kernel2_id in kernels
+
+
 class KernelFactory:
     def __call__(self, *args, **kwargs) -> Kernel:
         return FakeKernel()
