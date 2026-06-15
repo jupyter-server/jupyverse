@@ -212,7 +212,18 @@ class _Kernels(Kernels):
             setattr(session, key, value)
         if kernel_change is not None:
             old_kernel_id = session.kernel.id
-            started = await self._start_kernel(KernelInfo(**kernel_change), session.path)
+            try:
+                started = await self._start_kernel(KernelInfo(**kernel_change), session.path)
+            except HTTPException:
+                # propagate explicit HTTP errors (e.g. unknown kernel id) as-is
+                raise
+            except Exception as e:
+                # mirror jupyter_server: report a kernel start failure as a 501
+                kernel_name = kernel_change.get("name")
+                raise HTTPException(
+                    status_code=501,
+                    detail=f"The '{kernel_name}' kernel could not be started: {e!r}",
+                )
             if started is not None:
                 kernel_id, kernel_name, kernel_server = started
                 session.kernel = Kernel(
@@ -251,7 +262,25 @@ class _Kernels(Kernels):
     ) -> tuple[str, str, KernelServer] | None:
         kernel_id = kernel_info.id
         kernel_name = kernel_info.name
-        if kernel_name is not None:
+        # a kernel id takes precedence over a kernel name: if both are provided,
+        # reuse the existing kernel rather than starting a new one (this matches
+        # jupyter_server's behavior)
+        if kernel_id is not None:
+            # external or already running kernel
+            if kernel_id not in kernels:
+                raise HTTPException(status_code=404, detail=f"Kernel ID not found: {kernel_id}")
+            kernel_name = kernels[kernel_id]["name"]
+            if kernels[kernel_id]["server"] is None:
+                kernel_server = KernelServer(
+                    connection_file=self.kernel_id_to_connection_file[kernel_id],
+                    write_connection_file=False,
+                    default_kernel_factory=self.default_kernel_factory,
+                )
+                kernels[kernel_id]["server"] = kernel_server
+                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
+            else:
+                kernel_server = kernels[kernel_id]["server"]
+        elif kernel_name is not None:
             # launch a new ("internal") kernel
             kernel_cwd = Path(path).parent
             while True:
@@ -277,21 +306,6 @@ class _Kernels(Kernels):
             logger.info("Starting kernel", kernel_id=kernel_id, kernel_name=kernel_name)
             kernel_factory = self.kernel_factories.get(kernel_name)
             await self.task_group.start(partial(kernel_server.start, kernel_factory=kernel_factory))
-        elif kernel_id is not None:
-            # external or already running kernel
-            if kernel_id not in kernels:
-                raise HTTPException(status_code=404, detail=f"Kernel ID not found: {kernel_id}")
-            kernel_name = kernels[kernel_id]["name"]
-            if kernels[kernel_id]["server"] is None:
-                kernel_server = KernelServer(
-                    connection_file=self.kernel_id_to_connection_file[kernel_id],
-                    write_connection_file=False,
-                    default_kernel_factory=self.default_kernel_factory,
-                )
-                kernels[kernel_id]["server"] = kernel_server
-                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
-            else:
-                kernel_server = kernels[kernel_id]["server"]
         else:
             return None
         return kernel_id, kernel_name, kernel_server
