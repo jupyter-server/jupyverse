@@ -223,6 +223,70 @@ async def test_wait_for_kernelspec(tmp_path, caplog):
                 assert any(kernel_name in record.message for record in caplog.records)
 
 
+@pytest.mark.anyio
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+async def test_patch_session_change_kernel(auth_mode):
+    kernel_name = "python3"
+    kernelspec_path = (
+        Path(sys.prefix) / "share" / "jupyter" / "kernels" / kernel_name / "kernel.json"
+    )
+    assert kernelspec_path.exists()
+
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "modules": {
+                    "auth": {"config": {"mode": auth_mode}},
+                }
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as root_module:
+        app = root_module.app
+        transport = ASGIWebSocketTransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            # create a session with an initial kernel
+            response = await client.post(
+                "/api/sessions",
+                json={
+                    "kernel": {"name": kernel_name},
+                    "name": "test",
+                    "path": "test.ipynb",
+                    "type": "notebook",
+                },
+            )
+            assert response.status_code == 201
+            session = response.json()
+            session_id = session["id"]
+            old_kernel_id = session["kernel"]["id"]
+            assert old_kernel_id in kernels
+
+            # change the kernel of the session through PATCH
+            response = await client.patch(
+                f"/api/sessions/{session_id}",
+                json={"id": session_id, "kernel": {"name": kernel_name}},
+            )
+            assert response.status_code == 200
+            patched = response.json()
+            new_kernel_id = patched["kernel"]["id"]
+            # the response must carry a proper, different kernel id
+            assert new_kernel_id
+            assert new_kernel_id != old_kernel_id
+            assert new_kernel_id in kernels
+            # the old kernel must have been stopped and removed
+            assert old_kernel_id not in kernels
+
+            # the next GET must not crash and reflect the new kernel
+            response = await client.get("/api/sessions")
+            assert response.status_code == 200
+            sessions = response.json()
+            assert len(sessions) == 1
+            assert sessions[0]["kernel"]["id"] == new_kernel_id
+
+
 class KernelFactory:
     def __call__(self, *args, **kwargs) -> Kernel:
         return FakeKernel()
