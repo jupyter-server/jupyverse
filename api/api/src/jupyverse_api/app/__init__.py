@@ -47,7 +47,12 @@ class App:
     def _include_router(self, router, _type, **kwargs) -> None:
         new_paths = []
         for route in router.routes:
-            path = kwargs.get("prefix", "") + route.path
+            # FastAPI >= 0.137 may expose nested includes as `_IncludedRouter`
+            # objects that carry no `path`; only plain routes are checked here.
+            route_path = getattr(route, "path", None)
+            if route_path is None:
+                continue
+            path = kwargs.get("prefix", "") + route_path
             for _router, _paths in self._router_paths.items():
                 if path in _paths:
                     raise RuntimeError(
