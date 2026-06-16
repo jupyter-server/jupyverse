@@ -1,5 +1,7 @@
 from collections import defaultdict
+from collections.abc import Iterator
 from datetime import datetime, timezone
+from typing import Any
 
 import structlog
 from fastapi import FastAPI, Request
@@ -7,6 +9,28 @@ from fastapi import FastAPI, Request
 from ..exceptions import RedirectException, _redirect_exception_handler
 
 logger = structlog.get_logger()
+
+
+def _iter_router_paths(router: Any, prefix: str = "") -> Iterator[str]:
+    """Yield the effective paths a router registers, including nested includes.
+
+    Plain routes expose their `path` directly. FastAPI >= 0.137 no longer
+    merges `include_router` calls eagerly: nested includes appear as opaque
+    placeholder routes (without a `path`) that reference the included router
+    via `original_router` and the include options via `include_context`. Those
+    are recursed into so nested paths are still detected. On FastAPI < 0.137,
+    where nested routes are flattened ahead of time, only the first branch runs.
+    """
+    for route in router.routes:
+        route_path = getattr(route, "path", None)
+        if route_path is not None:
+            yield prefix + route_path
+            continue
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None:
+            include_context = getattr(route, "include_context", None)
+            nested_prefix = getattr(include_context, "prefix", "") or ""
+            yield from _iter_router_paths(original_router, prefix + nested_prefix)
 
 
 class App:
@@ -46,13 +70,7 @@ class App:
 
     def _include_router(self, router, _type, **kwargs) -> None:
         new_paths = []
-        for route in router.routes:
-            # FastAPI >= 0.137 may expose nested includes as `_IncludedRouter`
-            # objects that carry no `path`; only plain routes are checked here.
-            route_path = getattr(route, "path", None)
-            if route_path is None:
-                continue
-            path = kwargs.get("prefix", "") + route_path
+        for path in _iter_router_paths(router, kwargs.get("prefix", "")):
             for _router, _paths in self._router_paths.items():
                 if path in _paths:
                     raise RuntimeError(

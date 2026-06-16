@@ -47,3 +47,44 @@ async def test_mount_path(mount_path, free_tcp_port):
 
         response = await http.get(f"http://127.0.0.1:{free_tcp_port}/foo")
         expected = 404 if mount_path is None else 200
+
+
+@pytest.mark.anyio
+async def test_nested_router_path_conflict(free_tcp_port):
+    """Paths added through a nested `include_router` must be conflict-checked.
+
+    FastAPI >= 0.137 defers nested includes instead of flattening them, so the
+    conflicting path is only reachable by recursing into the nested router.
+    """
+    config = {
+        "jupyverse": {
+            "type": "jupyverse",
+            "config": {"port": free_tcp_port},
+            "modules": {"app": {"type": "app"}},
+        }
+    }
+
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module as jupyverse_module:
+        app = await jupyverse_module.get(App)
+
+        nested = APIRouter()
+
+        @nested.get("/me")
+        async def get_me():
+            pass
+
+        router = APIRouter()
+        router.include_router(nested, prefix="/auth/user")
+        Router(app).include_router(router)
+
+        # A second router reusing the nested path must be rejected.
+        clashing = APIRouter()
+
+        @clashing.get("/auth/user/me")
+        async def get_me_again():
+            pass
+
+        with pytest.raises(RuntimeError, match="/auth/user/me"):
+            Router(app).include_router(clashing)
