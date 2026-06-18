@@ -17,7 +17,14 @@ from jupyverse_file_watcher import Change, FileWatcher
 from jupyverse_frontend import FrontendConfig
 from jupyverse_kernel import DefaultKernelFactory, KernelFactory
 from jupyverse_kernels import Kernels, KernelsConfig
-from jupyverse_kernels.models import CreateSession, Execution, Kernel, Notebook, Session
+from jupyverse_kernels.models import (
+    CreateSession,
+    Execution,
+    Kernel,
+    KernelInfo,
+    Notebook,
+    Session,
+)
 from jupyverse_yjs import Yjs
 from starlette.requests import Request
 
@@ -195,11 +202,46 @@ class _Kernels(Kernels):
         request: Request,
         user: User,
     ):
-        rename_session = await request.json()
-        session_id = rename_session.pop("id")
-        for key, value in rename_session.items():
-            setattr(self.sessions[session_id], key, value)
-        return self.sessions[session_id]
+        body = await request.json()
+        session_id = body.pop("id")
+        session = self.sessions[session_id]
+        # a kernel change must be handled separately: it requires starting a new
+        # kernel (and stopping the old one), not a brute `setattr` of the raw dict
+        kernel_change = body.pop("kernel", None)
+        for key, value in body.items():
+            setattr(session, key, value)
+        if kernel_change is not None:
+            old_kernel_id = session.kernel.id
+            try:
+                started = await self._start_kernel(KernelInfo(**kernel_change), session.path)
+            except HTTPException:
+                # propagate explicit HTTP errors (e.g. unknown kernel id) as-is
+                raise
+            except Exception as e:
+                # mirror jupyter_server: report a kernel start failure as a 501
+                kernel_name = kernel_change.get("name")
+                raise HTTPException(
+                    status_code=501,
+                    detail=f"The '{kernel_name}' kernel could not be started: {e!r}",
+                )
+            if started is not None:
+                kernel_id, kernel_name, kernel_server = started
+                session.kernel = Kernel(
+                    id=kernel_id,
+                    name=kernel_name,
+                    connections=kernel_server.connections,
+                    last_activity=kernel_server.last_activity["date"],
+                    execution_state=kernel_server.last_activity["execution_state"],
+                )
+                # stop the old kernel if no other session is still using it
+                if old_kernel_id != kernel_id and old_kernel_id in kernels:
+                    still_used = any(s.kernel.id == old_kernel_id for s in self.sessions.values())
+                    if not still_used:
+                        await kernels[old_kernel_id]["server"].stop()
+                        del kernels[old_kernel_id]
+                        if old_kernel_id in self.kernel_id_to_connection_file:
+                            del self.kernel_id_to_connection_file[old_kernel_id]
+        return session
 
     async def get_sessions(
         self,
@@ -213,17 +255,34 @@ class _Kernels(Kernels):
                 session.kernel.execution_state = kernel_server.last_activity["execution_state"]
         return list(self.sessions.values())
 
-    async def create_session(
+    async def _start_kernel(
         self,
-        request: Request,
-        user: User,
-    ):
-        create_session = CreateSession(**(await request.json()))
-        kernel_id = create_session.kernel.id
-        kernel_name = create_session.kernel.name
-        if kernel_name is not None:
+        kernel_info: KernelInfo,
+        path: str,
+    ) -> tuple[str, str, KernelServer] | None:
+        kernel_id = kernel_info.id
+        kernel_name = kernel_info.name
+        # a kernel id takes precedence over a kernel name: if both are provided,
+        # reuse the existing kernel rather than starting a new one (this matches
+        # jupyter_server's behavior)
+        if kernel_id is not None:
+            # external or already running kernel
+            if kernel_id not in kernels:
+                raise HTTPException(status_code=404, detail=f"Kernel ID not found: {kernel_id}")
+            kernel_name = kernels[kernel_id]["name"]
+            if kernels[kernel_id]["server"] is None:
+                kernel_server = KernelServer(
+                    connection_file=self.kernel_id_to_connection_file[kernel_id],
+                    write_connection_file=False,
+                    default_kernel_factory=self.default_kernel_factory,
+                )
+                kernels[kernel_id]["server"] = kernel_server
+                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
+            else:
+                kernel_server = kernels[kernel_id]["server"]
+        elif kernel_name is not None:
             # launch a new ("internal") kernel
-            kernel_cwd = Path(create_session.path).parent
+            kernel_cwd = Path(path).parent
             while True:
                 if kernel_cwd.is_dir():
                     break
@@ -247,23 +306,20 @@ class _Kernels(Kernels):
             logger.info("Starting kernel", kernel_id=kernel_id, kernel_name=kernel_name)
             kernel_factory = self.kernel_factories.get(kernel_name)
             await self.task_group.start(partial(kernel_server.start, kernel_factory=kernel_factory))
-        elif kernel_id is not None:
-            # external or already running kernel
-            if kernel_id not in kernels:
-                raise HTTPException(status_code=404, detail=f"Kernel ID not found: {kernel_id}")
-            kernel_name = kernels[kernel_id]["name"]
-            if kernels[kernel_id]["server"] is None:
-                kernel_server = KernelServer(
-                    connection_file=self.kernel_id_to_connection_file[kernel_id],
-                    write_connection_file=False,
-                    default_kernel_factory=self.default_kernel_factory,
-                )
-                kernels[kernel_id]["server"] = kernel_server
-                await self.task_group.start(partial(kernel_server.start, launch_kernel=False))
-            else:
-                kernel_server = kernels[kernel_id]["server"]
         else:
+            return None
+        return kernel_id, kernel_name, kernel_server
+
+    async def create_session(
+        self,
+        request: Request,
+        user: User,
+    ):
+        create_session = CreateSession(**(await request.json()))
+        started = await self._start_kernel(create_session.kernel, create_session.path)
+        if started is None:
             return
+        kernel_id, kernel_name, kernel_server = started
 
         session_id = str(uuid.uuid4())
         session = Session(
