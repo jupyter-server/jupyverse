@@ -1,5 +1,14 @@
 # Version history
 
+## 0.14.13
+
+- Handle FastAPI v0.137.
+- Fix kernel change in `rename_session`.
+
+This `jupyverse` release also releases:
+- `jupyverse-api` v0.15.2
+- `fps-kernels` v0.11.4
+
 ## 0.14.12
 
 - Require `fps-jupyterlab-git >=0.3.0,<0.4.0`.
