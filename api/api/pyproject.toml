@@ -27,9 +27,10 @@ authors = [
 ]
 dependencies = [
   "anyio >=4.12.1,<5",
-  "fastapi >=0.95.0,<1",
+  "fastapi >=0.95.0,<1,!=0.137.0,!=0.137.1",
   "fps >=0.6.3,<0.7.0",
   "structlog",
+  "packaging >=26.2,<27",
   "pydantic >=2,<3",
 ]
 license = "BSD-3-Clause"

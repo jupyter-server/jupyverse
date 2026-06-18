@@ -1,10 +1,16 @@
 from collections import defaultdict
 from datetime import datetime, timezone
+from importlib.metadata import version
 
 import structlog
 from fastapi import FastAPI, Request
+from packaging.version import Version
 
 from ..exceptions import RedirectException, _redirect_exception_handler
+
+fastapi_version = Version(version("fastapi"))
+if fastapi_version >= Version("0.137.2"):
+    from fastapi.routing import iter_route_contexts
 
 logger = structlog.get_logger()
 
@@ -46,7 +52,11 @@ class App:
 
     def _include_router(self, router, _type, **kwargs) -> None:
         new_paths = []
-        for route in router.routes:
+        if fastapi_version < Version("0.137.0"):
+            route_iter = router.routes
+        else:
+            route_iter = iter_route_contexts(router.routes)
+        for route in route_iter:
             path = kwargs.get("prefix", "") + route.path
             for _router, _paths in self._router_paths.items():
                 if path in _paths:
