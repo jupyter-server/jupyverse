@@ -8,19 +8,27 @@ from fastapi import FastAPI, Request
 
 from ..exceptions import RedirectException, _redirect_exception_handler
 
+try:
+    from fastapi.routing import iter_route_contexts  # public API since 0.137.2
+except ImportError:
+    iter_route_contexts = None
+
 logger = structlog.get_logger()
 
 
 def _iter_router_paths(router: Any, prefix: str = "") -> Iterator[str]:
     """Yield the effective paths a router registers, including nested includes.
 
-    Plain routes expose their `path` directly. FastAPI >= 0.137 no longer
-    merges `include_router` calls eagerly: nested includes appear as opaque
-    placeholder routes (without a `path`) that reference the included router
-    via `original_router` and the include options via `include_context`. Those
-    are recursed into so nested paths are still detected. On FastAPI < 0.137,
-    where nested routes are flattened ahead of time, only the first branch runs.
+    Uses the public `iter_route_contexts` when available (FastAPI >= 0.137.2).
+    Older versions are handled by walking the routes: plain routes expose
+    `path`, while FastAPI 0.137.0/0.137.1 nested includes appear as placeholder
+    routes referencing `original_router` / `include_context` and are recursed
+    into.
     """
+    if iter_route_contexts is not None:
+        for context in iter_route_contexts(router.routes):
+            yield prefix + context.path
+        return
     for route in router.routes:
         route_path = getattr(route, "path", None)
         if route_path is not None:
