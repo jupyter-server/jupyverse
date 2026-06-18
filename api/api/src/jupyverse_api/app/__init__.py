@@ -1,42 +1,18 @@
 from collections import defaultdict
-from collections.abc import Iterator
 from datetime import datetime, timezone
-from typing import Any
+from importlib.metadata import version
 
 import structlog
-from fastapi import FastAPI, Request, routing
+from fastapi import FastAPI, Request
+from packaging.version import Version
 
 from ..exceptions import RedirectException, _redirect_exception_handler
 
-# public API since FastAPI 0.137.2; None on older versions
-iter_route_contexts = getattr(routing, "iter_route_contexts", None)
+fastapi_version = Version(version("fastapi"))
+if fastapi_version >= Version("0.137.2"):
+    from fastapi.routing import iter_route_contexts
 
 logger = structlog.get_logger()
-
-
-def _iter_router_paths(router: Any, prefix: str = "") -> Iterator[str]:
-    """Yield the effective paths a router registers, including nested includes.
-
-    Uses the public `iter_route_contexts` when available (FastAPI >= 0.137.2).
-    Older versions are handled by walking the routes: plain routes expose
-    `path`, while FastAPI 0.137.0/0.137.1 nested includes appear as placeholder
-    routes referencing `original_router` / `include_context` and are recursed
-    into.
-    """
-    if iter_route_contexts is not None:
-        for context in iter_route_contexts(router.routes):
-            yield prefix + (context.path or "")
-        return
-    for route in router.routes:
-        route_path = getattr(route, "path", None)
-        if route_path is not None:
-            yield prefix + route_path
-            continue
-        original_router = getattr(route, "original_router", None)
-        if original_router is not None:
-            include_context = getattr(route, "include_context", None)
-            nested_prefix = getattr(include_context, "prefix", "") or ""
-            yield from _iter_router_paths(original_router, prefix + nested_prefix)
 
 
 class App:
@@ -76,7 +52,12 @@ class App:
 
     def _include_router(self, router, _type, **kwargs) -> None:
         new_paths = []
-        for path in _iter_router_paths(router, kwargs.get("prefix", "")):
+        if fastapi_version < Version("0.137.0"):
+            route_iter = router.routes
+        else:
+            route_iter = iter_route_contexts(router.routes)
+        for route in route_iter:
+            path = kwargs.get("prefix", "") + route.path
             for _router, _paths in self._router_paths.items():
                 if path in _paths:
                     raise RuntimeError(
