@@ -4,14 +4,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, routing
 
 from ..exceptions import RedirectException, _redirect_exception_handler
 
-try:
-    from fastapi.routing import iter_route_contexts  # public API since 0.137.2
-except ImportError:
-    iter_route_contexts = None
+# public API since FastAPI 0.137.2; None on older versions
+iter_route_contexts = getattr(routing, "iter_route_contexts", None)
 
 logger = structlog.get_logger()
 
@@ -27,7 +25,7 @@ def _iter_router_paths(router: Any, prefix: str = "") -> Iterator[str]:
     """
     if iter_route_contexts is not None:
         for context in iter_route_contexts(router.routes):
-            yield prefix + context.path
+            yield prefix + (context.path or "")
         return
     for route in router.routes:
         route_path = getattr(route, "path", None)
