@@ -1,5 +1,14 @@
 # Version history
 
+## 0.14.14
+
+- Upgrade `sqlite-anyio` v0.3.0.
+
+This `jupyverse` release also releases:
+- `fps-file-id` v0.4.3
+- `fps-yrooms` v0.2.3
+- `fps-ystore-sqlite` v0.2.2
+
 ## 0.14.13
 
 - Handle FastAPI v0.137.
