@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from anyio import create_task_group, sleep, sleep_forever
+from anyio import create_task_group, fail_after, sleep, sleep_forever
 from fps import get_root_module, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
 from httpx import AsyncClient
@@ -183,8 +183,7 @@ async def test_wait_for_kernelspec(tmp_path, caplog):
             transport = ASGIWebSocketTransport(app=app)
             kernelspec_dir.mkdir(parents=True)
 
-            async def create_kernelspec_later():
-                await sleep(0.5)
+            async def create_kernelspec():
                 kernel_spec = {
                     "argv": ["python", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
                     "display_name": "Python 3",
@@ -192,35 +191,47 @@ async def test_wait_for_kernelspec(tmp_path, caplog):
                 }
                 kernelspec_json.write_text(json.dumps(kernel_spec))
 
-            async with create_task_group() as tg:
-                tg.start_soon(create_kernelspec_later)
-                async with AsyncClient(
+            async def make_request():
+                response = await client.post(
+                    "/api/sessions",
+                    json={
+                        "kernel": {"name": kernel_name},
+                        "name": "test",
+                        "path": "test.ipynb",
+                        "type": "notebook",
+                    },
+                )
+                assert response.status_code == 201
+
+            async with (
+                AsyncClient(
                     transport=transport,
                     base_url="http://testserver",
-                ) as client:
-                    response = await client.post(
-                        "/api/sessions",
-                        json={
-                            "kernel": {"name": kernel_name},
-                            "name": "test",
-                            "path": "test.ipynb",
-                            "type": "notebook",
-                        },
-                    )
-
-            assert response.status_code == 201
-            with caplog.at_level(logging.INFO):
-                assert (
-                    len(
-                        [
-                            record
-                            for record in caplog.records
-                            if "Waiting for kernelspec" in record.message
-                        ]
-                    )
-                    >= 1
-                )
-                assert any(kernel_name in record.message for record in caplog.records)
+                ) as client,
+                create_task_group() as tg,
+            ):
+                with caplog.at_level(logging.INFO):
+                    tg.start_soon(make_request)
+                    with fail_after(5):
+                        while True:
+                            await sleep(0.1)
+                            if (
+                                len(
+                                    [
+                                        record
+                                        for record in caplog.records
+                                        if "Waiting for kernelspec" in record.message
+                                    ]
+                                )
+                                >= 1
+                            ):
+                                break
+                    tg.start_soon(create_kernelspec)
+                    with fail_after(5):
+                        while True:
+                            await sleep(0.1)
+                            if any(kernel_name in record.message for record in caplog.records):
+                                break
 
 
 @pytest.mark.anyio
