@@ -184,7 +184,7 @@ async def test_wait_for_kernelspec(tmp_path, caplog):
             kernelspec_dir.mkdir(parents=True)
 
             async def create_kernelspec_later():
-                await sleep(0.2)
+                await sleep(0.5)
                 kernel_spec = {
                     "argv": ["python", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
                     "display_name": "Python 3",
