@@ -2,10 +2,10 @@ import sys
 from contextlib import AsyncExitStack
 from types import TracebackType
 
+import httpx2
 from anyio import create_task_group, get_cancelled_exc_class, sleep_forever
 from anyio.abc import TaskStatus
-from httpx import Cookies
-from httpx_ws import AsyncWebSocketSession, aconnect_ws
+from httpx2.websockets import AsyncWebSocketSession
 from pycrdt import (
     Doc,
     YMessageType,
@@ -89,7 +89,7 @@ class AsyncWebSocketClient:
         doc: Doc | None = None,
         *,
         url: str,
-        cookies: Cookies | None = None,
+        cookies: httpx2.Cookies | None = None,
     ) -> None:
         self._id = id
         self._doc = doc
@@ -99,11 +99,14 @@ class AsyncWebSocketClient:
     async def _aconnect_ws(self, *, task_status: TaskStatus[None]) -> None:
         try:
             ws: AsyncWebSocketSession
-            async with aconnect_ws(
-                f"{self._url}/{self._id}",
-                keepalive_ping_interval_seconds=None,
-                cookies=self._cookies,
-            ) as ws:
+            async with (
+                httpx2.AsyncClient() as client,
+                client.websocket(
+                    f"{self._url}/{self._id}",
+                    keepalive_ping_interval_seconds=None,
+                    cookies=self._cookies,
+                ) as ws,
+            ):
                 self._channel = AsyncWebSocket(ws, self._id)
                 task_status.started()
                 await sleep_forever()

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from fps import get_root_module, merge_config
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 from utils import clear_content_values, create_content, sort_content_by_name
 
 CONFIG = {

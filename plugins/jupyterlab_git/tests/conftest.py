@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import FastAPI
 from fps_jupyterlab_git.routes import GitRouter
-from httpx import ASGITransport, AsyncClient
+from httpx2 import ASGITransport, AsyncClient
 from jupyverse_api import App
 from jupyverse_contents import Contents
 

@@ -9,7 +9,7 @@ from anyio import TASK_STATUS_IGNORED, Lock, create_task_group, sleep
 from anyio.abc import TaskStatus
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, WebSocket, status
 from fastapi.responses import RedirectResponse
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 from jupyterhub.services.auth import HubOAuth  # type: ignore[import-untyped]
 from jupyterhub.utils import isoformat  # type: ignore[import-untyped]
 from jupyverse_api import App, Router

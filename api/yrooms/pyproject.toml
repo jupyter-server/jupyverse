@@ -23,8 +23,7 @@ classifiers = [
 dependencies = [
   "anyio",
   "anyioutils",
-  "httpx",
-  "httpx-ws",
+  "httpx2 >=2.9.1,<3.0.0",
   "pycrdt",
 ]
 license = "BSD-3-Clause"
