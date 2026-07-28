@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from fps import get_root_module, merge_config
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 
 test_theme = {"raw": '{// jupyverse test\n"theme": "JupyterLab Dark"}'}
 

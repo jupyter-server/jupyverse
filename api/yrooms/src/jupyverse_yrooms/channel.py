@@ -63,7 +63,7 @@ class _AsyncWebSocket(Protocol):
 
 class AsyncWebSocket(AsyncChannel):
     """Typically a `starlette.websockets.WebSocket` (server side) or an
-    `httpx_ws.AsyncWebSocketSession` (client side).
+    `httpx2.websockets.AsyncWebSocketSession` (client side).
     """
 
     def __init__(self, websocket: _AsyncWebSocket, id: str) -> None:

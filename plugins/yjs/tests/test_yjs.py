@@ -3,9 +3,8 @@ import os
 import pytest
 from anyio import create_task_group
 from fps import get_root_module
-from httpx import AsyncClient
-from httpx_ws import aconnect_ws
-from httpx_ws.transport import ASGIWebSocketTransport
+from httpx2 import AsyncClient
+from httpx2.websockets import ASGIWebSocketTransport
 from jupyverse_yjs.models import CreateDocumentSession
 from structlog.testing import capture_logs
 
@@ -72,9 +71,8 @@ async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
                 file_id = data["fileId"]
 
                 async def connect_ws():
-                    async with aconnect_ws(
+                    async with client.websocket(
                         f"http://testserver/api/collaboration/room/text:file:{file_id}",
-                        client,
                     ):
                         pass
 

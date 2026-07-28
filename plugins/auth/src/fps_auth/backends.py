@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Generic, cast
 
-import httpx
+import httpx2
 from fastapi import Depends, HTTPException, Response, WebSocket, status
 from fastapi_users import (
     BaseUserManager,
@@ -112,7 +112,7 @@ def get_backend(auth_config: _AuthConfig, frontend_config: FrontendConfig, db) -
         async def on_after_register(self, user: User, request: Request | None = None):
             for oauth_account in await user.awaitable_attrs.oauth_accounts:
                 if oauth_account.oauth_name == "github":
-                    async with httpx.AsyncClient() as client:
+                    async with httpx2.AsyncClient() as client:
                         r = (
                             await client.get(
                                 f"https://api.github.com/user/{oauth_account.account_id}"

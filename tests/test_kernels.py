@@ -9,9 +9,8 @@ import pytest
 from anyio import create_task_group, fail_after, sleep, sleep_forever
 from fps import get_root_module, merge_config
 from fps_kernels.kernel_server.server import KernelServer, kernels
-from httpx import AsyncClient
-from httpx_ws import aconnect_ws
-from httpx_ws.transport import ASGIWebSocketTransport
+from httpx2 import AsyncClient
+from httpx2.websockets import ASGIWebSocketTransport
 from jupyverse_kernel import Kernel
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
@@ -112,9 +111,8 @@ async def test_kernel_messages(auth_mode, capfd):
 
                 # block msg_type_0
                 kernel_server.block_messages("msg_type_0")
-                async with aconnect_ws(
+                async with client.websocket(
                     f"http://testserver/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-                    client,
                 ) as websocket:
                     await websocket.send_json(msg)
                 await sleep(0.1)
@@ -123,9 +121,8 @@ async def test_kernel_messages(auth_mode, capfd):
 
                 # allow only msg_type_0
                 kernel_server.allow_messages("msg_type_0")
-                async with aconnect_ws(
+                async with client.websocket(
                     f"http://testserver/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-                    client,
                 ) as websocket:
                     await websocket.send_json(msg)
                     await sleep(0.1)
@@ -134,9 +131,8 @@ async def test_kernel_messages(auth_mode, capfd):
 
                 # block all messages
                 kernel_server.allow_messages([])
-                async with aconnect_ws(
+                async with client.websocket(
                     f"http://testserver/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-                    client,
                 ) as websocket:
                     await websocket.send_json(msg)
                 await sleep(0.1)
@@ -145,9 +141,8 @@ async def test_kernel_messages(auth_mode, capfd):
 
                 # allow all messages
                 kernel_server.allow_messages()
-                async with aconnect_ws(
+                async with client.websocket(
                     f"http://testserver/api/kernels/{kernel_id}/channels?session_id=session_id_0",
-                    client,
                 ) as websocket:
                     await websocket.send_json(msg)
                 await sleep(0.1)

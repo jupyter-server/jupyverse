@@ -1,7 +1,7 @@
 import pytest
 from fps import get_root_module, merge_config
-from httpx import AsyncClient
-from httpx_ws import WebSocketUpgradeError, aconnect_ws
+from httpx2 import AsyncClient
+from httpx2.websockets import WebSocketUpgradeError
 from jupyverse_auth import AuthConfig
 from utils import authenticate_client
 
@@ -64,9 +64,9 @@ async def test_kernel_channels_unauthenticated(free_tcp_port):
     config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
-    async with root_module:
+    async with root_module, AsyncClient() as http:
         with pytest.raises(WebSocketUpgradeError):
-            async with aconnect_ws(
+            async with http.websocket(
                 f"http://127.0.0.1:{free_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
             ):
                 pass
@@ -79,9 +79,8 @@ async def test_kernel_channels_authenticated(free_tcp_port):
     root_module._global_start_timeout = 10
     async with root_module, AsyncClient() as http:
         await authenticate_client(http, free_tcp_port)
-        async with aconnect_ws(
+        async with http.websocket(
             f"http://127.0.0.1:{free_tcp_port}/api/kernels/kernel_id_0/channels?session_id=session_id_0",
-            http,
         ):
             pass
 
