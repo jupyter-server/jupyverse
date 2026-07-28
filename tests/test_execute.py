@@ -5,7 +5,7 @@ from pathlib import Path
 import anyio
 import pytest
 from fps import get_root_module, merge_config
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 from jupyter_ydoc import ydocs
 from jupyverse_yrooms import AsyncWebSocketClient
 from pycrdt import Doc, Map, Text

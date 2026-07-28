@@ -2,7 +2,7 @@ import json
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-import httpx
+import httpx2
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import RedirectResponse
 from fief_client import FiefAccessTokenInfo
@@ -38,7 +38,7 @@ def auth_factory(
                 tokens, user_info = await backend.fief.auth_callback(code, redirect_uri)
 
                 user_id = user_info["sub"]
-                async with httpx.AsyncClient() as client:
+                async with httpx2.AsyncClient() as client:
                     headers = {"Authorization": f"Bearer {auth_fief_config.admin_api_key}"}
                     r = await client.get(
                         f"{auth_fief_config.base_url}/admin/api/oauth-providers/{auth_fief_config.oauth_provider_id}/access-token/{user_id}",
@@ -47,7 +47,7 @@ def auth_factory(
 
                 # FIXME: this is hard-coded for GitHub authentication
                 access_token = r.json()["access_token"]
-                async with httpx.AsyncClient() as client:
+                async with httpx2.AsyncClient() as client:
                     headers = {
                         "Authorization": f"Bearer {access_token}",
                         "Accept": "application/vnd.github+json",
@@ -66,7 +66,7 @@ def auth_factory(
                 await backend.fief.update_profile(tokens["access_token"], {"fields": data})
 
                 # set permissions
-                async with httpx.AsyncClient() as client:
+                async with httpx2.AsyncClient() as client:
                     headers = {
                         "Authorization": f"Bearer {auth_fief_config.admin_api_key}",
                         "accept": "application/json",

@@ -1,7 +1,7 @@
 import pytest
 from fastapi import APIRouter
 from fps import get_root_module
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 from jupyverse_api import App, Router
 
 

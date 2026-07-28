@@ -54,7 +54,7 @@ Homepage = "https://jupyter.org"
 
 [dependency-groups]
 test = [
-  "httpx",
+  "httpx2 >=2.9.1,<3.0.0",
 ]
 
 [project.entry-points]

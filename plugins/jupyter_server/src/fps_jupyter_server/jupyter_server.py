@@ -18,8 +18,8 @@ from anyio import (
 from anyio.abc import TaskStatus
 from anyio.streams.text import TextReceiveStream
 from fastapi import APIRouter, Depends, Request, WebSocket
-from httpx import AsyncClient, ConnectError, Cookies, Response
-from httpx_ws import AsyncWebSocketSession, aconnect_ws
+from httpx2 import AsyncClient, ConnectError, Cookies, Response
+from httpx2.websockets import AsyncWebSocketSession
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 from structlog import get_logger
@@ -176,9 +176,8 @@ class _AsyncClient:
         return response
 
     def ws(self, url: str) -> AbstractAsyncContextManager[AsyncWebSocketSession]:
-        return aconnect_ws(
+        return self._client.websocket(
             url,
-            self._client,
             cookies=self._cookies,
             headers=self._headers,
         )
