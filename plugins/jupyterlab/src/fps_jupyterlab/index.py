@@ -2,8 +2,7 @@ INDEX_HTML = """\
 <!doctype html><html lang="en"><head><meta charset="utf-8"><title>JupyterLab</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script id="jupyter-config-data" type="application/json">PAGE_CONFIG</script>
-VENDORS_NODE_MODULES
-<script defer="defer" src="FULL_STATIC_URL/main.MAIN_ID.js?v=MAIN_ID"></script>
+STATIC_SCRIPTS
 </head><body><script>/* Remove token from URL. */
   (function () {
     var location = window.location;

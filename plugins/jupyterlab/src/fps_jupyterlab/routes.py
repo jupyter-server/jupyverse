@@ -1,6 +1,9 @@
 import json
+from html import escape
+from html.parser import HTMLParser
 from http import HTTPStatus
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import unquote, urlsplit
 
 from fastapi import Response
 from fastapi.responses import HTMLResponse
@@ -15,6 +18,69 @@ from starlette.requests import Request
 from .index import INDEX_HTML
 
 CWD = Path.cwd()
+
+
+class _ScriptParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.scripts: list[list[tuple[str, str | None]]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "script" and any(name == "src" for name, _ in attrs):
+            self.scripts.append(attrs)
+
+
+def _render_static_scripts(static_lab_dir: Path, full_static_url: str) -> str:
+    index_path = static_lab_dir / "index.html"
+    if not index_path.is_file():
+        raise FileNotFoundError(f"JupyterLab static index does not exist: {index_path}")
+
+    parser = _ScriptParser()
+    parser.feed(index_path.read_text(encoding="utf-8"))
+    rendered_scripts = []
+    has_main = False
+
+    for attrs in parser.scripts:
+        source = next(value for name, value in attrs if name == "src")
+        if source is None:
+            raise ValueError(f"JupyterLab static index has an empty script source: {index_path}")
+
+        parsed_source = urlsplit(source)
+        decoded_path = unquote(parsed_source.path)
+        source_path = PurePosixPath(decoded_path)
+        if (
+            parsed_source.scheme
+            or parsed_source.netloc
+            or "\\" in decoded_path
+            or ".." in source_path.parts
+        ):
+            raise ValueError(f"JupyterLab static index has a non-local script source: {source}")
+
+        asset_name = source_path.name
+        asset_path = static_lab_dir / asset_name
+        if not asset_name or not asset_path.is_file():
+            raise FileNotFoundError(
+                f"JupyterLab static index references a missing script: {asset_path}"
+            )
+
+        if asset_name.startswith("main.") and asset_name.endswith(".js"):
+            has_main = True
+
+        query = f"?{parsed_source.query}" if parsed_source.query else ""
+        fragment = f"#{parsed_source.fragment}" if parsed_source.fragment else ""
+        local_source = f"{full_static_url.rstrip('/')}/{asset_name}{query}{fragment}"
+        rendered_attrs = []
+        for name, value in attrs:
+            value = local_source if name == "src" else value
+            rendered_attrs.append(
+                name if value is None else f'{name}="{escape(value, quote=True)}"'
+            )
+        rendered_scripts.append(f"<script {' '.join(rendered_attrs)}></script>")
+
+    if not has_main:
+        raise RuntimeError(f"JupyterLab static index has no main entry point: {index_path}")
+
+    return "\n".join(rendered_scripts)
 
 
 class _JupyterLab(JupyterLab):
@@ -131,14 +197,6 @@ class _JupyterLab(JupyterLab):
         tree_path=None,
         mode="lab",
     ):
-        for path in self.static_lab_dir.glob("main.*.js"):
-            main_id = path.name.split(".")[1]
-            break
-        vendor_id = None
-        for path in (self.static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
-            vendor_id = path.name.split(".")[1]
-            break
-
         self.page_config.set(
             appName="JupyterLab",
             appNamespace="lab",
@@ -189,17 +247,11 @@ class _JupyterLab(JupyterLab):
             wsUrl="",
         )
         _page_config = await self.page_config.get()
-        index = (
-            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(_page_config))
-            .replace("FULL_STATIC_URL", _page_config["fullStaticUrl"])
-            .replace("MAIN_ID", main_id)
+        static_scripts = _render_static_scripts(
+            self.static_lab_dir,
+            _page_config["fullStaticUrl"],
         )
-        if vendor_id:
-            index = index.replace(
-                "VENDORS_NODE_MODULES",
-                '<script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.'
-                f'{vendor_id}.js"></script>',
-            )
-        else:
-            index = index.replace("VENDORS_NODE_MODULES", "")
+        index = INDEX_HTML.replace("PAGE_CONFIG", json.dumps(_page_config)).replace(
+            "STATIC_SCRIPTS", static_scripts
+        )
         return index
