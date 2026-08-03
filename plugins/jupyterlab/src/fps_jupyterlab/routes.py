@@ -2,7 +2,6 @@ import json
 from http import HTTPStatus
 from pathlib import Path
 
-import jupyterlab_js
 from fastapi import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -46,7 +45,10 @@ class _JupyterLab(JupyterLab):
             jupyterlab_dir = Path(jupyterlab_module.__file__).parents[1]
             self.static_lab_dir = jupyterlab_dir / "dev_mode" / "static"
         else:
+            import jupyterlab_js as jupyterlab_module  # type: ignore
+
             self.static_lab_dir = lab.prefix_dir / "share" / "jupyter" / "lab" / "static"
+        self._jupyterlab_module = jupyterlab_module
 
         self.mount(
             "/static/lab",
@@ -141,7 +143,7 @@ class _JupyterLab(JupyterLab):
             appName="JupyterLab",
             appNamespace="lab",
             appUrl="/lab",
-            appVersion=jupyterlab_js.__version__,
+            appVersion=self._jupyterlab_module.__version__,
             baseUrl=base_url,
             cacheFiles=False,
             collaborative=collaborative,
