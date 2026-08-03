@@ -1,5 +1,7 @@
 import json
-from pathlib import Path
+from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
+from urllib.parse import unquote, urlsplit
 
 import notebook_frontend
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +12,50 @@ from jupyverse_lab import Lab, PageConfig
 from jupyverse_notebook import Notebook
 
 CWD = Path.cwd()
+
+
+class _ScriptParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.sources: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "script":
+            self.sources.extend(
+                value for name, value in attrs if name == "src" and value is not None
+            )
+
+
+def _get_main_id(notebook_dir: Path, notebook_page: str) -> str:
+    template_path = notebook_dir / "templates" / f"{notebook_page}.html"
+    if not template_path.is_file():
+        raise FileNotFoundError(f"Notebook template does not exist: {template_path}")
+
+    parser = _ScriptParser()
+    parser.feed(template_path.read_text(encoding="utf-8"))
+
+    for source in parser.sources:
+        parsed_source = urlsplit(source)
+        decoded_path = unquote(parsed_source.path)
+        source_path = PurePosixPath(decoded_path)
+        if (
+            parsed_source.scheme
+            or parsed_source.netloc
+            or "\\" in decoded_path
+            or ".." in source_path.parts
+        ):
+            raise ValueError(f"Notebook template has a non-local script source: {source}")
+
+        asset_name = source_path.name
+        if asset_name.startswith("main.") and asset_name.endswith(".js"):
+            asset_path = notebook_dir / "static" / asset_name
+            if not asset_path.is_file():
+                raise FileNotFoundError(
+                    f"Notebook template references a missing script: {asset_path}"
+                )
+            return asset_name.removeprefix("main.").removesuffix(".js")
+
+    raise RuntimeError(f"Notebook template has no main entry point: {template_path}")
 
 
 class _Notebook(Notebook):
@@ -129,9 +175,7 @@ class _Notebook(Notebook):
         collaborative,
         base_url="/",
     ):
-        for path in (notebook_dir / "static").glob("main.*.js"):
-            main_id = path.name.split(".")[1]
-            break
+        main_id = _get_main_id(notebook_dir, notebook_page)
         self.page_config.set(
             appName="Notebook",
             appNamespace="notebook",
