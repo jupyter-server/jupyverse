@@ -11,6 +11,7 @@ pytestmark = pytest.mark.anyio
 def build_jupyterlab(static_lab_dir, prefix_dir):
     jupyterlab = object.__new__(_JupyterLab)
     jupyterlab.static_lab_dir = static_lab_dir
+    jupyterlab._jupyterlab_module = SimpleNamespace(__version__="test")
     jupyterlab.page_config = PageConfig()
     jupyterlab.lab = SimpleNamespace(prefix_dir=prefix_dir)
     jupyterlab.disabled_extensions = []
