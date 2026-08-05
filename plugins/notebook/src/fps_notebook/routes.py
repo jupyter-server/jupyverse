@@ -6,10 +6,28 @@ from fastapi.staticfiles import StaticFiles
 from jupyverse_api import App
 from jupyverse_auth import Auth, User
 from jupyverse_frontend import FrontendConfig
-from jupyverse_lab import Lab, PageConfig
+from jupyverse_lab import Lab, PageConfig, parse_static_scripts
 from jupyverse_notebook import Notebook
 
 CWD = Path.cwd()
+
+
+def _get_main_id(notebook_dir: Path, notebook_page: str) -> str:
+    template_path = notebook_dir / "templates" / f"{notebook_page}.html"
+    if not template_path.is_file():
+        raise FileNotFoundError(f"Notebook template does not exist: {template_path}")
+
+    for script in parse_static_scripts(template_path.read_text(encoding="utf-8")):
+        asset_name = script.path.name
+        if asset_name.startswith("main.") and asset_name.endswith(".js"):
+            asset_path = notebook_dir / "static" / asset_name
+            if not asset_path.is_file():
+                raise FileNotFoundError(
+                    f"Notebook template references a missing script: {asset_path}"
+                )
+            return asset_name.removeprefix("main.").removesuffix(".js")
+
+    raise RuntimeError(f"Notebook template has no main entry point: {template_path}")
 
 
 class _Notebook(Notebook):
@@ -129,9 +147,7 @@ class _Notebook(Notebook):
         collaborative,
         base_url="/",
     ):
-        for path in (notebook_dir / "static").glob("main.*.js"):
-            main_id = path.name.split(".")[1]
-            break
+        main_id = _get_main_id(notebook_dir, notebook_page)
         self.page_config.set(
             appName="Notebook",
             appNamespace="notebook",

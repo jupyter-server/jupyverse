@@ -1,4 +1,5 @@
 import json
+from html import escape
 from http import HTTPStatus
 from pathlib import Path
 
@@ -9,12 +10,48 @@ from jupyverse_api import App
 from jupyverse_auth import Auth, User
 from jupyverse_frontend import FrontendConfig
 from jupyverse_jupyterlab import JupyterLab, JupyterLabConfig
-from jupyverse_lab import Lab, PageConfig
+from jupyverse_lab import Lab, PageConfig, parse_static_scripts
 from starlette.requests import Request
 
 from .index import INDEX_HTML
 
 CWD = Path.cwd()
+
+
+def _render_static_scripts(static_lab_dir: Path, full_static_url: str) -> str:
+    index_path = static_lab_dir / "index.html"
+    if not index_path.is_file():
+        raise FileNotFoundError(f"JupyterLab static index does not exist: {index_path}")
+
+    rendered_scripts = []
+    has_main = False
+
+    for script in parse_static_scripts(index_path.read_text(encoding="utf-8")):
+        asset_name = script.path.name
+        asset_path = static_lab_dir / asset_name
+        if not asset_name or not asset_path.is_file():
+            raise FileNotFoundError(
+                f"JupyterLab static index references a missing script: {asset_path}"
+            )
+
+        if asset_name.startswith("main.") and asset_name.endswith(".js"):
+            has_main = True
+
+        query = f"?{script.query}" if script.query else ""
+        fragment = f"#{script.fragment}" if script.fragment else ""
+        local_source = f"{full_static_url.rstrip('/')}/{asset_name}{query}{fragment}"
+        rendered_attrs = []
+        for name, value in script.attributes:
+            value = local_source if name == "src" else value
+            rendered_attrs.append(
+                name if value is None else f'{name}="{escape(value, quote=True)}"'
+            )
+        rendered_scripts.append(f"<script {' '.join(rendered_attrs)}></script>")
+
+    if not has_main:
+        raise RuntimeError(f"JupyterLab static index has no main entry point: {index_path}")
+
+    return "\n".join(rendered_scripts)
 
 
 class _JupyterLab(JupyterLab):
@@ -131,14 +168,6 @@ class _JupyterLab(JupyterLab):
         tree_path=None,
         mode="lab",
     ):
-        for path in self.static_lab_dir.glob("main.*.js"):
-            main_id = path.name.split(".")[1]
-            break
-        vendor_id = None
-        for path in (self.static_lab_dir).glob("vendors-node_modules_whatwg-fetch_fetch_js.*.js"):
-            vendor_id = path.name.split(".")[1]
-            break
-
         self.page_config.set(
             appName="JupyterLab",
             appNamespace="lab",
@@ -189,17 +218,11 @@ class _JupyterLab(JupyterLab):
             wsUrl="",
         )
         _page_config = await self.page_config.get()
-        index = (
-            INDEX_HTML.replace("PAGE_CONFIG", json.dumps(_page_config))
-            .replace("FULL_STATIC_URL", _page_config["fullStaticUrl"])
-            .replace("MAIN_ID", main_id)
+        static_scripts = _render_static_scripts(
+            self.static_lab_dir,
+            _page_config["fullStaticUrl"],
         )
-        if vendor_id:
-            index = index.replace(
-                "VENDORS_NODE_MODULES",
-                '<script defer src="/static/lab/vendors-node_modules_whatwg-fetch_fetch_js.'
-                f'{vendor_id}.js"></script>',
-            )
-        else:
-            index = index.replace("VENDORS_NODE_MODULES", "")
+        index = INDEX_HTML.replace("PAGE_CONFIG", json.dumps(_page_config)).replace(
+            "STATIC_SCRIPTS", static_scripts
+        )
         return index
