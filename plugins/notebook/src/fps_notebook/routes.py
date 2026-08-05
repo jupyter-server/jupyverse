@@ -1,29 +1,15 @@
 import json
-from html.parser import HTMLParser
-from pathlib import Path, PurePosixPath
-from urllib.parse import unquote, urlsplit
+from pathlib import Path
 
 import notebook_frontend
 from fastapi.staticfiles import StaticFiles
 from jupyverse_api import App
 from jupyverse_auth import Auth, User
 from jupyverse_frontend import FrontendConfig
-from jupyverse_lab import Lab, PageConfig
+from jupyverse_lab import Lab, PageConfig, parse_static_scripts
 from jupyverse_notebook import Notebook
 
 CWD = Path.cwd()
-
-
-class _ScriptParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.sources: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag == "script":
-            self.sources.extend(
-                value for name, value in attrs if name == "src" and value is not None
-            )
 
 
 def _get_main_id(notebook_dir: Path, notebook_page: str) -> str:
@@ -31,22 +17,8 @@ def _get_main_id(notebook_dir: Path, notebook_page: str) -> str:
     if not template_path.is_file():
         raise FileNotFoundError(f"Notebook template does not exist: {template_path}")
 
-    parser = _ScriptParser()
-    parser.feed(template_path.read_text(encoding="utf-8"))
-
-    for source in parser.sources:
-        parsed_source = urlsplit(source)
-        decoded_path = unquote(parsed_source.path)
-        source_path = PurePosixPath(decoded_path)
-        if (
-            parsed_source.scheme
-            or parsed_source.netloc
-            or "\\" in decoded_path
-            or ".." in source_path.parts
-        ):
-            raise ValueError(f"Notebook template has a non-local script source: {source}")
-
-        asset_name = source_path.name
+    for script in parse_static_scripts(template_path.read_text(encoding="utf-8")):
+        asset_name = script.path.name
         if asset_name.startswith("main.") and asset_name.endswith(".js"):
             asset_path = notebook_dir / "static" / asset_name
             if not asset_path.is_file():

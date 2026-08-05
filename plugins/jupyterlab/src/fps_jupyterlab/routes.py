@@ -1,9 +1,7 @@
 import json
 from html import escape
-from html.parser import HTMLParser
 from http import HTTPStatus
-from pathlib import Path, PurePosixPath
-from urllib.parse import unquote, urlsplit
+from pathlib import Path
 
 from fastapi import Response
 from fastapi.responses import HTMLResponse
@@ -12,7 +10,7 @@ from jupyverse_api import App
 from jupyverse_auth import Auth, User
 from jupyverse_frontend import FrontendConfig
 from jupyverse_jupyterlab import JupyterLab, JupyterLabConfig
-from jupyverse_lab import Lab, PageConfig
+from jupyverse_lab import Lab, PageConfig, parse_static_scripts
 from starlette.requests import Request
 
 from .index import INDEX_HTML
@@ -20,43 +18,16 @@ from .index import INDEX_HTML
 CWD = Path.cwd()
 
 
-class _ScriptParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.scripts: list[list[tuple[str, str | None]]] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag == "script" and any(name == "src" for name, _ in attrs):
-            self.scripts.append(attrs)
-
-
 def _render_static_scripts(static_lab_dir: Path, full_static_url: str) -> str:
     index_path = static_lab_dir / "index.html"
     if not index_path.is_file():
         raise FileNotFoundError(f"JupyterLab static index does not exist: {index_path}")
 
-    parser = _ScriptParser()
-    parser.feed(index_path.read_text(encoding="utf-8"))
     rendered_scripts = []
     has_main = False
 
-    for attrs in parser.scripts:
-        source = next(value for name, value in attrs if name == "src")
-        if source is None:
-            raise ValueError(f"JupyterLab static index has an empty script source: {index_path}")
-
-        parsed_source = urlsplit(source)
-        decoded_path = unquote(parsed_source.path)
-        source_path = PurePosixPath(decoded_path)
-        if (
-            parsed_source.scheme
-            or parsed_source.netloc
-            or "\\" in decoded_path
-            or ".." in source_path.parts
-        ):
-            raise ValueError(f"JupyterLab static index has a non-local script source: {source}")
-
-        asset_name = source_path.name
+    for script in parse_static_scripts(index_path.read_text(encoding="utf-8")):
+        asset_name = script.path.name
         asset_path = static_lab_dir / asset_name
         if not asset_name or not asset_path.is_file():
             raise FileNotFoundError(
@@ -66,11 +37,11 @@ def _render_static_scripts(static_lab_dir: Path, full_static_url: str) -> str:
         if asset_name.startswith("main.") and asset_name.endswith(".js"):
             has_main = True
 
-        query = f"?{parsed_source.query}" if parsed_source.query else ""
-        fragment = f"#{parsed_source.fragment}" if parsed_source.fragment else ""
+        query = f"?{script.query}" if script.query else ""
+        fragment = f"#{script.fragment}" if script.fragment else ""
         local_source = f"{full_static_url.rstrip('/')}/{asset_name}{query}{fragment}"
         rendered_attrs = []
-        for name, value in attrs:
+        for name, value in script.attributes:
             value = local_source if name == "src" else value
             rendered_attrs.append(
                 name if value is None else f'{name}="{escape(value, quote=True)}"'
