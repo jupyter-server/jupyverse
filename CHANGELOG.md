@@ -1,5 +1,60 @@
 # Version history
 
+## 0.14.15
+
+- Add `uv_build` bounds.
+- Remove license from classifiers.
+- Replace `httpx` and `httpx-ws` with `httpx2`.
+- Fix JupyterLab development mode.
+- Use JupyterLab's static index as the source of truth for initial script bundles.
+
+
+This `jupyverse` release also releases:
+- `jupyverse-api` v0.15.3
+- `jupyverse-auth` v0.2.2
+- `jupyverse-contents` v0.1.4
+- `jupyverse-file-id` v0.1.2
+- `jupyverse-file-watcher` v0.1.2
+- `jupyverse-frontend` v0.1.2
+- `jupyverse-jupyterlab` v0.1.2
+- `jupyverse-kernel` v0.1.2
+- `jupyverse-kernels` v0.1.2
+- `jupyverse-lab` v0.3.1
+- `jupyverse-login` v0.1.2
+- `jupyverse-nbconvert` v0.1.2
+- `jupyverse-notebook` v0.1.3
+- `jupyverse-resource-usage` v0.1.3
+- `jupyverse-terminals` v0.1.2
+- `jupyverse-yjs` v0.1.3
+- `jupyverse-yrooms` v0.1.3
+- `jupyverse-ystore` v0.1.2
+- `fps-auth` v0.10.2
+- `fps-auth-fief` v0.10.2
+- `fps-auth-jupyterhub` v0.10.2
+- `fps-contents` v0.11.4
+- `fps-file-id` v0.4.4
+- `fps-file-watcher` v0.2.2
+- `fps-file-watcher-poll` v0.2.2
+- `fps-frontend` v0.10.2
+- `fps-jupyter-server` v0.2.2
+- `fps-jupyterlab` v0.11.4
+- `fps-jupyterlab-git` v0.3.1
+- `fps-jupyterlab-lsp` v0.2.3
+- `fps-kernel-subprocess` v0.2.3
+- `fps-kernel-web-worker` v0.2.2
+- `fps-kernels` v0.11.5
+- `fps-lab` v0.11.6
+- `fps-login` v0.10.2
+- `fps-nbconvert` v0.10.2
+- `fps-noauth` v0.10.2
+- `fps-notebook` v0.10.5
+- `fps-resource-usage` v0.10.3
+- `fps-terminals` v0.10.2
+- `fps-webdav` v0.10.2
+- `fps-yjs` v0.14.3
+- `fps-yrooms` v0.2.4
+- `fps-ystore-sqlite` v0.2.3
+
 ## 0.14.14
 
 - Upgrade `sqlite-anyio` v0.3.0.
