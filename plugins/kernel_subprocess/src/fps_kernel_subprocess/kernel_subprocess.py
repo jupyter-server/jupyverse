@@ -80,10 +80,11 @@ class KernelSubprocess(Kernel):
             launch_kernel_cmd = [
                 s.format(connection_file=self.connection_file) for s in kernelspec["argv"]
             ]
-            # Apply the kernelspec `env` on top of the inherited environment, like
-            # jupyter_client does. Kernels such as xeus-r rely on it (R_HOME,
-            # LD_LIBRARY_PATH); without it they exit immediately at startup.
-            kernel_env = {**os.environ, **kernelspec.get("env", {})}
+            # Merge the kernelspec `env` over the inherited one, expanding
+            # variable references (e.g. "$PATH") like a shell would.
+            kernel_env = dict(os.environ)
+            for key, value in kernelspec.get("env", {}).items():
+                kernel_env[key] = os.path.expandvars(value) if isinstance(value, str) else value
             if self.capture_output:
                 stdout = subprocess.DEVNULL
                 stderr = subprocess.STDOUT

@@ -8,10 +8,16 @@ pytestmark = pytest.mark.anyio
 
 
 async def test_kernelspec_env_is_passed_to_kernel(tmp_path, monkeypatch):
-    # The kernel writes an env var (declared in the kernelspec `env`) to a file,
-    # so we can assert the kernelspec environment actually reached the process.
+    # The kernel writes its env vars to a file so we can assert they reached the
+    # process and that references were expanded. POSIX path: backslashes from a
+    # Windows path would break the embedded string literal.
     out = tmp_path / "env_seen.txt"
-    script = f"import os; open('{out}', 'w').write(os.environ.get('FPS_ENV_TEST', 'MISSING'))"
+    script = (
+        "import os; "
+        f"open('{out.as_posix()}', 'w').write("
+        "os.environ.get('FPS_ENV_TEST', 'MISSING') + '|' + "
+        "os.environ.get('FPS_ENV_EXPANDED', 'MISSING'))"
+    )
     kernelspec = tmp_path / "kernel.json"
     kernelspec.write_text(
         json.dumps(
@@ -19,12 +25,17 @@ async def test_kernelspec_env_is_passed_to_kernel(tmp_path, monkeypatch):
                 "argv": ["python", "-c", script, "{connection_file}"],
                 "display_name": "env-test",
                 "language": "python",
-                "env": {"FPS_ENV_TEST": "from-kernelspec"},
+                "env": {
+                    "FPS_ENV_TEST": "from-kernelspec",
+                    "FPS_ENV_EXPANDED": "prefix:${FPS_ENV_BASE}",
+                },
             }
         )
     )
-    # The value must come from the kernelspec, not be inherited from the parent.
+    # FPS_ENV_TEST must come from the kernelspec, not be inherited from the parent.
     monkeypatch.delenv("FPS_ENV_TEST", raising=False)
+    # FPS_ENV_BASE is referenced by the kernelspec `env` and must be expanded.
+    monkeypatch.setenv("FPS_ENV_BASE", "base-value")
 
     async with create_task_group() as tg:
         kernel = KernelSubprocess(
@@ -42,4 +53,4 @@ async def test_kernelspec_env_is_passed_to_kernel(tmp_path, monkeypatch):
         finally:
             await kernel.stop()
 
-    assert out.read_text() == "from-kernelspec"
+    assert out.read_text() == "from-kernelspec|prefix:base-value"
