@@ -1,5 +1,12 @@
 # Version history
 
+## 0.14.16
+
+- Fix kernelspec environment.
+
+This `jupyverse` release also releases:
+- `fps-kernel-subprocess` v0.2.4
+
 ## 0.14.15
 
 - Add `uv_build` bounds.
