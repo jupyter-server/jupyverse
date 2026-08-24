@@ -11,7 +11,7 @@ async def test_kernelspec_env_is_passed_to_kernel(tmp_path, monkeypatch):
     # The kernel writes an env var (declared in the kernelspec `env`) to a file,
     # so we can assert the kernelspec environment actually reached the process.
     out = tmp_path / "env_seen.txt"
-    script = f"import os; open({str(out)!r}, 'w').write(os.environ.get('FPS_ENV_TEST', 'MISSING'))"
+    script = f"import os; open('{out}', 'w').write(os.environ.get('FPS_ENV_TEST', 'MISSING'))"
     kernelspec = tmp_path / "kernel.json"
     kernelspec.write_text(
         json.dumps(
