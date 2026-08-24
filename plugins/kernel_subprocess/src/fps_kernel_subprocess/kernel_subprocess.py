@@ -80,6 +80,11 @@ class KernelSubprocess(Kernel):
             launch_kernel_cmd = [
                 s.format(connection_file=self.connection_file) for s in kernelspec["argv"]
             ]
+            # Merge the kernelspec `env` over the inherited one, expanding
+            # variable references (e.g. "$PATH") like a shell would.
+            kernel_env = dict(os.environ)
+            for key, value in kernelspec.get("env", {}).items():
+                kernel_env[key] = os.path.expandvars(value) if isinstance(value, str) else value
             if self.capture_output:
                 stdout = subprocess.DEVNULL
                 stderr = subprocess.STDOUT
@@ -105,7 +110,7 @@ class KernelSubprocess(Kernel):
                         + " ".join(launch_kernel_cmd)
                         + "' & echo $!"
                     )
-                    process = await open_process(cmd)
+                    process = await open_process(cmd, env=kernel_env)
                     assert process.stdout is not None
                     async for text in TextReceiveStream(process.stdout):
                         self._pid = int(text)
@@ -118,7 +123,11 @@ class KernelSubprocess(Kernel):
                 }:
                     launch_kernel_cmd[0] = sys.executable
                 self._process = await open_process(
-                    launch_kernel_cmd, stdout=stdout, stderr=stderr, cwd=kernel_cwd
+                    launch_kernel_cmd,
+                    stdout=stdout,
+                    stderr=stderr,
+                    cwd=kernel_cwd,
+                    env=kernel_env,
                 )
 
             assert self.connection_cfg is not None
