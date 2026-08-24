@@ -36,7 +36,7 @@ async def test_kernelspec_env_is_passed_to_kernel(tmp_path, monkeypatch):
         )
         await tg.start(kernel.start)
         try:
-            with fail_after(30):
+            with fail_after(10):
                 while not out.exists():
                     await sleep(0.1)
         finally:
