@@ -80,6 +80,10 @@ class KernelSubprocess(Kernel):
             launch_kernel_cmd = [
                 s.format(connection_file=self.connection_file) for s in kernelspec["argv"]
             ]
+            # Apply the kernelspec `env` on top of the inherited environment, like
+            # jupyter_client does. Kernels such as xeus-r rely on it (R_HOME,
+            # LD_LIBRARY_PATH); without it they exit immediately at startup.
+            kernel_env = {**os.environ, **kernelspec.get("env", {})}
             if self.capture_output:
                 stdout = subprocess.DEVNULL
                 stderr = subprocess.STDOUT
@@ -105,7 +109,7 @@ class KernelSubprocess(Kernel):
                         + " ".join(launch_kernel_cmd)
                         + "' & echo $!"
                     )
-                    process = await open_process(cmd)
+                    process = await open_process(cmd, env=kernel_env)
                     assert process.stdout is not None
                     async for text in TextReceiveStream(process.stdout):
                         self._pid = int(text)
@@ -118,7 +122,11 @@ class KernelSubprocess(Kernel):
                 }:
                     launch_kernel_cmd[0] = sys.executable
                 self._process = await open_process(
-                    launch_kernel_cmd, stdout=stdout, stderr=stderr, cwd=kernel_cwd
+                    launch_kernel_cmd,
+                    stdout=stdout,
+                    stderr=stderr,
+                    cwd=kernel_cwd,
+                    env=kernel_env,
                 )
 
             assert self.connection_cfg is not None
