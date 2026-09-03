@@ -186,32 +186,32 @@ class KernelSubprocess(Kernel):
 
     async def forward_messages_to_shell(self) -> None:
         async for msg in self._to_shell_receive_stream:
-            await self.shell_channel.asend_multipart(msg, copy=True).wait()
+            await self.shell_channel.asend_multipart(msg, copy=True)
 
     async def forward_messages_from_shell(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.shell_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.shell_channel.arecv_multipart(copy=True))
             await self._from_shell_send_stream.send(msg)
 
     async def forward_messages_to_control(self) -> None:
         async for msg in self._to_control_receive_stream:
-            await self.control_channel.asend_multipart(msg, copy=True).wait()
+            await self.control_channel.asend_multipart(msg, copy=True)
 
     async def forward_messages_from_control(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.control_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.control_channel.arecv_multipart(copy=True))
             await self._from_control_send_stream.send(msg)
 
     async def forward_messages_to_stdin(self) -> None:
         async for msg in self._to_stdin_receive_stream:
-            await self.stdin_channel.asend_multipart(msg, copy=True).wait()
+            await self.stdin_channel.asend_multipart(msg, copy=True)
 
     async def forward_messages_from_stdin(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.stdin_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.stdin_channel.arecv_multipart(copy=True))
             await self._from_stdin_send_stream.send(msg)
 
     async def forward_messages_from_iopub(self) -> None:
         while True:
-            msg = cast(list[bytes], await self.iopub_channel.arecv_multipart(copy=True).wait())
+            msg = cast(list[bytes], await self.iopub_channel.arecv_multipart(copy=True))
             await self._from_iopub_send_stream.send(msg)
