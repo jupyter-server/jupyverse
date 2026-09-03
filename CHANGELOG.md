@@ -1,5 +1,12 @@
 # Version history
 
+## 0.14.17
+
+- Bump `zmq-anyio` v0.4.1.
+
+This `jupyverse` release also releases:
+- `fps-kernel-subprocess` v0.2.5
+
 ## 0.14.16
 
 - Fix kernelspec environment.
