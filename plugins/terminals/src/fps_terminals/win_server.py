@@ -7,7 +7,9 @@ from jupyverse_terminals import TerminalServer
 from winpty import PTY  # type: ignore
 
 
-def open_terminal(command="C:\\Windows\\System32\\cmd.exe", columns=80, lines=24):
+def open_terminal(command=None, columns=80, lines=24):
+    if command is None:
+        command = os.environ.get("COMSPEC") or "cmd.exe"
     env = "\0".join([f"{k}={v}" for k, v in os.environ.items()]) + "\0"
     process = PTY(columns, lines)
     process.spawn(command, env=env)
