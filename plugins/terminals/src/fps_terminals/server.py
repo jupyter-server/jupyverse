@@ -1,7 +1,6 @@
 import fcntl
 import os
 import pty
-import shlex
 import struct
 import termios
 from functools import partial
@@ -20,13 +19,13 @@ from jupyverse_terminals import TerminalServer
 class _TerminalServer(TerminalServer):
     def __init__(self):
         # FIXME: pass in config
-        command = "bash"
+        command = os.environ.get("SHELL") or "/bin/sh"
         columns = 80
         lines = 24
 
         pid, fd = pty.fork()
         if pid == 0:
-            argv = shlex.split(command)
+            argv = [command]
             env = os.environ.copy()
             env.update(TERM="linux", COLUMNS=str(columns), LINES=str(lines))
             os.execvpe(argv[0], argv, env)
