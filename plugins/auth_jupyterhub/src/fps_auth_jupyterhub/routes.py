@@ -81,13 +81,11 @@ def auth_factory(
                     dict(request.query_params).get("permissions", "{}").replace("'", '"')
                 )
                 if permissions:
-                    user_permissions: dict[str, list[str]] = {}
+                    # current_user() has already checked that the user has the Hub's access
+                    # scopes for this server. Like JupyterHubAuthorizer in jupyterhub-singleuser,
+                    # nothing finer-grained is checked, so every requested action is allowed.
                     for resource, actions in permissions.items():
-                        user_resource_permissions = user_permissions.get(resource, [])
-                        allowed = checked_permissions[resource] = []
-                        for action in actions:
-                            if action in user_resource_permissions:
-                                allowed.append(action)
+                        checked_permissions[resource] = list(actions)
 
                 keys = ["username", "name", "display_name", "initials", "avatar_url", "color"]
                 identity = {k: getattr(user, k) for k in keys}
