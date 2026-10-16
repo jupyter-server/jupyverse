@@ -29,6 +29,7 @@ ACCESS_SCOPE = "access:servers!server=alice/"
 HUB_USERS = {
     "alice-token": {"name": "alice", "scopes": [ACCESS_SCOPE]},
     "bob-token": {"name": "bob", "scopes": []},
+    "charlie-token": {"name": "charlie", "scopes": ["access:servers!server=charlie/"]},
 }
 
 
@@ -90,11 +91,12 @@ async def test_api_me_no_permissions(hub, params):
             assert response.json()["permissions"] == {}
 
 
-async def test_api_me_requires_access_scope(hub):
+@pytest.mark.parametrize("code", ["bob", "charlie"], ids=["no-scopes", "other-server"])
+async def test_api_me_requires_access_scope(hub, code):
     async with get_root_module(CONFIG) as root_module:
         transport = ASGITransport(app=root_module.app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            await log_in(client, "bob")
+            await log_in(client, code)
             response = await client.get(
                 "/api/me", params={"permissions": json.dumps({"contents": ["read"]})}
             )
