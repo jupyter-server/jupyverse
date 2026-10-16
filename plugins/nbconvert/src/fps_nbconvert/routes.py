@@ -37,7 +37,8 @@ class _Nbconvert(Nbconvert):
         tmp_dir = Path(tempfile.mkdtemp())
         tmp_path = tmp_dir / (Path(path).stem + exporter().file_extension)
         data = exporter().from_filename(path)[0]
-        mode = "wt" if isinstance(data, str) else "wb"
-        with open(tmp_path, mode) as f:
-            f.write(data)
+        if isinstance(data, str):
+            tmp_path.write_text(data, encoding="utf-8")
+        else:
+            tmp_path.write_bytes(data)
         return FileResponse(tmp_path, media_type=media_type, filename=tmp_path.name)

@@ -147,7 +147,7 @@ class Lab(Router, ABC):
             self.prefix_dir / "etc" / "jupyter" / "labconfig" / "page_config.json"
         )
         if await page_config_path.is_file():
-            page_config = json.loads(await page_config_path.read_text())
+            page_config = json.loads(await page_config_path.read_text(encoding="utf-8"))
             config.update(page_config)
 
     @abstractmethod
