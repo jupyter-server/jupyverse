@@ -51,7 +51,8 @@ class _Contents(Contents):
         if create_content.type == "notebook":
             available_path = await get_available_path(content_path / "Untitled.ipynb")
             await available_path.write_text(
-                json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5})
+                json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}),
+                encoding="utf-8",
             )
             src_path = available_path
             dst_path = Path(".ipynb_checkpoints") / f"{src_path.stem}-checkpoint{src_path.suffix}"
@@ -70,7 +71,7 @@ class _Contents(Contents):
             available_path = await get_available_path(
                 content_path / ("untitled" + create_content.ext)
             )
-            await available_path.write_text("")
+            await available_path.write_text("", encoding="utf-8")
 
         return await self.read_content(available_path, False)
 
@@ -252,10 +253,10 @@ class _Contents(Contents):
                                 exc_info=exception,
                             )
                         else:
-                            await Path(content.path).write_text(str_content)
+                            await Path(content.path).write_text(str_content, encoding="utf-8")
                     else:
                         content.content = cast(str, content.content)
-                        await Path(content.path).write_text(content.content)
+                        await Path(content.path).write_text(content.content, encoding="utf-8")
 
 
 async def get_available_path(path: Path, sep: str = "") -> Path:

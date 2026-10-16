@@ -127,7 +127,7 @@ class _Kernels(Kernels):
                 async for p1 in p0.iterdir():
                     path = p1 / "kernel.json"
                     if await p1.is_dir() and await path.is_file():
-                        async with await open_file(path) as f:
+                        async with await open_file(path, encoding="utf-8") as f:
                             data = await f.read()
                         spec = json.loads(data)
                         resources = {
@@ -509,7 +509,7 @@ class _Kernels(Kernels):
                         del kernels[kernel_id]
                 elif change == Change.added:
                     try:
-                        data = json.loads(Path(path).read_text())
+                        data = json.loads(Path(path).read_text(encoding="utf-8"))
                     except Exception:
                         continue
                     if "kernel_name" not in data or "key" not in data:

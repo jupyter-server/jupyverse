@@ -74,7 +74,7 @@ class KernelSubprocess(Kernel):
             self._from_iopub_send_stream,
             self._from_iopub_receive_stream,
         ):
-            async with await open_file(self.kernelspec_path) as f:
+            async with await open_file(self.kernelspec_path, encoding="utf-8") as f:
                 contents = await f.read()
             kernelspec = json.loads(contents)
             launch_kernel_cmd = [
@@ -96,7 +96,7 @@ class KernelSubprocess(Kernel):
             if self.kernelenv_path:
                 path = anyio.Path(self.kernelenv_path)
                 if await path.is_file():
-                    kernelenv = await path.read_text()
+                    kernelenv = await path.read_text(encoding="utf-8")
             if kernelenv:
                 import yaml  # type: ignore[import-untyped]
 

@@ -41,7 +41,7 @@ def write_connection_file(
     if not fname:
         fd, fname = tempfile.mkstemp(suffix=".json")
         os.close(fd)
-    f = open(fname, "w")
+    f = open(fname, "w", encoding="utf-8")
 
     channels = ["shell", "iopub", "stdin", "control", "hb"]
 
@@ -60,7 +60,7 @@ def write_connection_file(
 
 
 def read_connection_file(fname: str) -> cfg_t:
-    with open(fname) as f:
+    with open(fname, encoding="utf-8") as f:
         cfg: cfg_t = json.load(f)
 
     return cfg
