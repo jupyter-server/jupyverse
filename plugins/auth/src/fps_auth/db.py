@@ -72,9 +72,9 @@ def get_db(auth_config: _AuthConfig) -> Res:
             secret_path.unlink()
 
     if not secret_path.is_file():
-        secret_path.write_text(secrets.token_hex(32))
+        secret_path.write_text(secrets.token_hex(32), encoding="utf-8")
 
-    secret = secret_path.read_text()
+    secret = secret_path.read_text(encoding="utf-8")
 
     database_url = f"sqlite+aiosqlite:///{userdb_path}"
 

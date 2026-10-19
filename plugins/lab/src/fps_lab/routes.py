@@ -113,7 +113,7 @@ class _Lab(Lab):
         for path in (Path(package.__file__).parent / "locale" / language / "LC_MESSAGES").glob(
             "*.json"
         ):
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 data.update({path.stem: json.load(f)})
         return {"data": data, "message": ""}
 
@@ -125,7 +125,7 @@ class _Lab(Lab):
     ):
         overrides_path = anyio.Path(self.jlab_dir) / "settings" / "overrides.json"
         if await overrides_path.is_file():
-            overrides = json.loads(await overrides_path.read_text())
+            overrides = json.loads(await overrides_path.read_text(encoding="utf-8"))
         else:
             overrides = {}
         if "/" in extension_name:
@@ -134,26 +134,30 @@ class _Lab(Lab):
             if org in ["@jupyterlab", "@notebook"]:
                 schemas_parent = self.jlab_dir
                 package = json.loads(
-                    await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text()
+                    await (anyio.Path(self.jlab_dir) / "static" / "package.json").read_text(
+                        encoding="utf-8"
+                    )
                 )
             else:
                 schemas_parent = self.extensions_dir / org / name
                 package = json.loads(
-                    await (anyio.Path(schemas_parent) / "package.json").read_text()
+                    await (anyio.Path(schemas_parent) / "package.json").read_text(encoding="utf-8")
                 )
             schema_path = (
                 anyio.Path(schemas_parent) / "schemas" / org / name / f"{setting_name}.json"
             )
             if not await schema_path.exists():
                 raise HTTPException(status_code=404, detail=f"Schema not found: {schema_path}")
-            schema = json.loads(await schema_path.read_text())
+            schema = json.loads(await schema_path.read_text(encoding="utf-8"))
             key = f"{name}:{setting_name}"
         else:
             # flat: e.g. nbdime-jupyterlab
             ext_dir = anyio.Path(self.extensions_dir) / extension_name
-            package = json.loads(await (ext_dir / "package.json").read_text())
+            package = json.loads(await (ext_dir / "package.json").read_text(encoding="utf-8"))
             schema = json.loads(
-                await (ext_dir / "schemas" / extension_name / f"{setting_name}.json").read_text()
+                await (ext_dir / "schemas" / extension_name / f"{setting_name}.json").read_text(
+                    encoding="utf-8"
+                )
             )
             key = f"{extension_name}:{setting_name}"
         id_ = f"{extension_name}:{setting_name}"
@@ -200,7 +204,7 @@ class _Lab(Lab):
     async def get_settings(self, user: User):
         overrides_path = anyio.Path(self.jlab_dir) / "settings" / "overrides.json"
         if await overrides_path.is_file():
-            overrides = json.loads(await overrides_path.read_text())
+            overrides = json.loads(await overrides_path.read_text(encoding="utf-8"))
         else:
             overrides = {}
         if user:
@@ -221,9 +225,9 @@ class _Lab(Lab):
                 for d2 in d1.iterdir():
                     if not d2.is_dir():
                         continue
-                    package = json.loads((d2 / "package.json.orig").read_text())
+                    package = json.loads((d2 / "package.json.orig").read_text(encoding="utf-8"))
                     for path in [p for p in d2.iterdir() if p.suffix == ".json"]:
-                        schema = json.loads(path.read_text())
+                        schema = json.loads(path.read_text(encoding="utf-8"))
                         key = f"{path.parent.name}:{path.stem}"
                         id_ = f"{d1.name}/{key}"
                         setting = {
@@ -252,7 +256,7 @@ class _Lab(Lab):
 
         pattern = str(extensions_dir / "**" / "package.json")
         for path in glob.glob(pattern, recursive=True):
-            package = json.loads(Path(path).read_text())
+            package = json.loads(Path(path).read_text(encoding="utf-8"))
             if "jupyterlab" not in package:
                 continue
             extension = package["jupyterlab"]["_build"]
