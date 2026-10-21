@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import Any
 
 import structlog
-from anyio import Event
+from anyio import Event, create_task_group
 from fastapi import Response
 from jupyverse_api import App
 from jupyverse_auth import Auth, User
@@ -21,11 +21,16 @@ class _Terminals(Terminals):
         self.stop_event = Event()
 
     async def start(self):
-        await self.stop_event.wait()
+        # Terminal shells live in this task group, not in a websocket's.
+        async with create_task_group() as self.task_group:
+            await self.stop_event.wait()
 
     async def stop(self):
-        for terminal in TERMINALS.values():
+        # A copy: the Windows quit() unlists the terminal at once.
+        for terminal in list(TERMINALS.values()):
             terminal["server"].quit()
+        # The POSIX quit() closes the server, so on_exit will not unlist it.
+        TERMINALS.clear()
         self.stop_event.set()
 
     async def get_terminals(
@@ -49,7 +54,11 @@ class _Terminals(Terminals):
             name=name,
             last_activity=datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
         )
-        server = self.TerminalServer()
+
+        def on_exit() -> None:
+            self._on_exit(name, server)
+
+        server: TerminalServer = self.TerminalServer(self.task_group, on_exit)
         TERMINALS[name] = {"info": terminal, "server": server}
         log.info("Terminal created", name=name)
         return terminal
@@ -60,10 +69,9 @@ class _Terminals(Terminals):
         user: User,
     ):
         log.info("Deleting terminal", name=name)
-        if name in TERMINALS:
-            for websocket in TERMINALS[name]["server"].websockets:
-                TERMINALS[name]["server"].quit(websocket)
-            del TERMINALS[name]
+        terminal = TERMINALS.pop(name, None)
+        if terminal is not None:
+            terminal["server"].quit()
         return Response(status_code=HTTPStatus.NO_CONTENT.value)
 
     async def terminal_websocket(
@@ -79,8 +87,9 @@ class _Terminals(Terminals):
             return
 
         await TERMINALS[name]["server"].serve(websocket, permissions)
-        if name in TERMINALS:
-            TERMINALS[name]["server"].quit(websocket)
-            if not TERMINALS[name]["server"].websockets:
-                del TERMINALS[name]
+
+    def _on_exit(self, name: str, server: TerminalServer) -> None:
+        # The name may already belong to a newer terminal.
+        if name in TERMINALS and TERMINALS[name]["server"] is server:
+            del TERMINALS[name]
         log.info("Terminal exited", name=name)
