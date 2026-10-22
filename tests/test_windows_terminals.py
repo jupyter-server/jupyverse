@@ -115,9 +115,9 @@ async def wait_for(predicate):
 @pytest.mark.anyio
 async def test_windows_terminal_reconnects_and_shares_output(windows_server):
     server, processes, kills = windows_server
-    exits = []
     async with create_task_group() as tasks:
-        terminal = server(tasks, lambda: exits.append(True))
+        terminal = server()
+        await tasks.start(terminal.run)
         process = processes[0]
         first, second = WebSocket(), WebSocket()
         tasks.start_soon(terminal.serve, first, None)
@@ -134,7 +134,7 @@ async def test_windows_terminal_reconnects_and_shares_output(windows_server):
         await first.send_stream.send(None)
         await wait_for(lambda: not terminal.websockets)
         assert not terminal.closed and process.alive
-        assert exits == [] and kills == []
+        assert kills == []
         previous_reads = process.reads
         process.output.put("output while disconnected")
         await wait_for(lambda: process.reads > previous_reads and process.output.empty())
@@ -148,16 +148,15 @@ async def test_windows_terminal_reconnects_and_shares_output(windows_server):
         terminal.quit()
         await wait_for(lambda: terminal.process is None and reconnected.closed)
         assert kills == [process.pid]
-        assert exits == [True]
 
 
 @pytest.mark.anyio
 @pytest.mark.parametrize("ending", ["exit", "delete", "cancel"])
 async def test_windows_terminal_cleanup_without_clients(windows_server, ending):
     server, processes, kills = windows_server
-    exits = []
     async with create_task_group() as tasks:
-        terminal = server(tasks, lambda: exits.append(True))
+        terminal = server()
+        await tasks.start(terminal.run)
         process = processes[0]
         await wait_for(lambda: process.reads > 0)
         if ending == "exit":
@@ -173,7 +172,6 @@ async def test_windows_terminal_cleanup_without_clients(windows_server, ending):
     assert process.io_cancelled
     assert terminal.closed and terminal.process is None
     assert not process.alive
-    assert exits == [True]
     assert kills == ([] if ending == "exit" else [process.pid])
 
 
@@ -181,7 +179,8 @@ async def test_windows_terminal_cleanup_without_clients(windows_server, ending):
 async def test_windows_terminal_send_failure_only_detaches_client(windows_server):
     server, processes, _ = windows_server
     async with create_task_group() as tasks:
-        terminal = server(tasks, lambda: None)
+        terminal = server()
+        await tasks.start(terminal.run)
         failed, healthy = WebSocket(), WebSocket()
         tasks.start_soon(terminal.serve, failed, None)
         tasks.start_soon(terminal.serve, healthy, None)

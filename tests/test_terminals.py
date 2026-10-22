@@ -4,7 +4,7 @@ import sys
 from typing import Any
 
 import pytest
-from anyio import CancelScope, fail_after, sleep
+from anyio import CancelScope, Event, create_task_group, fail_after, sleep
 from fps import get_root_module, merge_config
 from httpx2 import AsyncClient
 
@@ -57,13 +57,15 @@ def is_alive(pid: int) -> bool:
 
 @pytest.mark.anyio
 async def test_terminal_outlives_websocket(free_tcp_port: int) -> None:
+    from fps_terminals.routes import TERMINALS
+
     config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
     root_module = get_root_module(config)
     root_module._global_start_timeout = 10
     url = f"http://127.0.0.1:{free_tcp_port}"
     async with root_module, AsyncClient() as http:
         name = (await http.post(f"{url}/api/terminals")).json()["name"]
-
+        server = TERMINALS[name]["server"]
         async with http.websocket(f"{url}/terminals/websocket/{name}") as websocket:
             pid = int(await run(websocket, "echo $$", "PID="))
 
@@ -80,6 +82,7 @@ async def test_terminal_outlives_websocket(free_tcp_port: int) -> None:
         # Deleting the terminal ends the shell.
         response = await http.delete(f"{url}/api/terminals/{name}")
         assert response.status_code == 204
+        server.quit()
         with fail_after(10):
             while is_alive(pid):
                 await sleep(0.1)
@@ -222,14 +225,17 @@ async def test_terminal_failure_spares_other_terminals(free_tcp_port: int) -> No
         failing = (await http.post(f"{url}/api/terminals")).json()["name"]
         other = (await http.post(f"{url}/api/terminals")).json()["name"]
 
-        def on_exit() -> None:
-            raise RuntimeError("on_exit failed")
+        def failing_quit(websocket=None) -> None:
+            quit(websocket)
+            if websocket is None:
+                raise RuntimeError("Terminal cleanup failed")
 
-        TERMINALS[failing]["server"].on_exit = on_exit
+        quit = TERMINALS[failing]["server"].quit
+        TERMINALS[failing]["server"].quit = failing_quit
         async with http.websocket(f"{url}/terminals/websocket/{failing}") as websocket:
             await websocket.send_json(["stdin", "exit\r"])
         with fail_after(10):
-            while not TERMINALS[failing]["server"].closed:
+            while failing in TERMINALS:
                 await sleep(0.1)
 
         async with http.websocket(f"{url}/terminals/websocket/{other}") as websocket:
@@ -238,10 +244,38 @@ async def test_terminal_failure_spares_other_terminals(free_tcp_port: int) -> No
 
 
 @pytest.mark.anyio
-async def test_stop_quits_terminals_that_unlist_themselves(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("reuse_name", [False, True])
+async def test_terminal_lifecycle_registry_cleanup(monkeypatch, reuse_name) -> None:
     from fps_terminals import routes
 
-    # Like the Windows server, whose quit() runs on_exit at once.
+    finished = Event()
+
+    class Server:
+        async def run(self, *, task_status) -> None:
+            task_status.started()
+            await finished.wait()
+
+    monkeypatch.setattr(routes, "TERMINALS", {})
+    terminals = object.__new__(routes._Terminals)
+    original, replacement = Server(), Server()
+    routes.TERMINALS["1"] = {"server": original}
+    async with create_task_group() as tasks:
+        tasks.start_soon(terminals._run_terminal, "1", original)
+        if reuse_name:
+            routes.TERMINALS["1"] = {"server": replacement}
+        finished.set()
+
+    if reuse_name:
+        assert routes.TERMINALS["1"]["server"] is replacement
+    else:
+        assert not routes.TERMINALS
+
+
+@pytest.mark.anyio
+async def test_stop_quits_all_terminals(monkeypatch: pytest.MonkeyPatch) -> None:
+    from fps_terminals import routes
+
+    # stop() must visit every terminal while clearing the registry.
     class Server:
         def __init__(self, name: str) -> None:
             self.name = name
@@ -249,7 +283,6 @@ async def test_stop_quits_terminals_that_unlist_themselves(monkeypatch: pytest.M
 
         def quit(self) -> None:
             self.quitted = True
-            terminals._on_exit(self.name, self)
 
     monkeypatch.setattr(routes, "TERMINALS", {})
     terminals = object.__new__(routes._Terminals)

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from importlib.metadata import version
 
-from anyio.abc import TaskGroup
+from anyio import TASK_STATUS_IGNORED
+from anyio.abc import TaskStatus
 from fastapi import APIRouter, Depends, WebSocket
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
@@ -77,8 +77,8 @@ class Terminals(Router, ABC):
 
 class TerminalServer(ABC):
     @abstractmethod
-    def __init__(self, task_group: TaskGroup, on_exit: Callable[[], None]) -> None:
-        """Start the shell; its tasks run in `task_group`, `on_exit` is called if it exits."""
+    async def run(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        """Signal readiness, read shell output until exit, and finish cleanup."""
 
     @abstractmethod
     async def serve(self, websocket, permissions): ...

@@ -8,8 +8,8 @@ import termios
 from collections.abc import Awaitable, Callable
 
 import structlog
-from anyio import CancelScope, sleep, wait_readable
-from anyio.abc import TaskGroup
+from anyio import TASK_STATUS_IGNORED, CancelScope, create_task_group, sleep, wait_readable
+from anyio.abc import TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
 
@@ -19,7 +19,7 @@ log = structlog.get_logger()
 class _TerminalServer(TerminalServer):
     """A shell in a PTY, which outlives the websockets attached to it."""
 
-    def __init__(self, task_group: TaskGroup, on_exit: Callable[[], None]) -> None:
+    def __init__(self) -> None:
         # FIXME: pass in config
         command = os.environ.get("SHELL") or "/bin/sh"
         columns = 80
@@ -36,11 +36,8 @@ class _TerminalServer(TerminalServer):
         self.p_out = os.fdopen(self.fd, "w+b", 0)
         self.websockets: list[WebSocket] = []
         self.sizes: dict[WebSocket, tuple[int, int]] = {}
-        self.task_group = task_group
-        self.on_exit = on_exit
         self.closed = False
         self.read_scope = CancelScope()
-        self._start_soon(self.backend_to_frontend)
 
     async def serve(self, websocket: WebSocket, permissions) -> None:
         if self.closed:
@@ -85,7 +82,12 @@ class _TerminalServer(TerminalServer):
         except Exception:
             log.exception("Terminal task failed", pid=self.pid)
 
-    async def backend_to_frontend(self) -> None:
+    async def run(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        async with create_task_group() as self.task_group:
+            task_status.started()
+            await self._run()
+
+    async def _run(self) -> None:
         decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         try:
             with self.read_scope:
@@ -96,12 +98,7 @@ class _TerminalServer(TerminalServer):
                 self.p_out.close()
             except Exception:
                 pass
-            if not self.closed:
-                try:
-                    self.quit()
-                finally:
-                    # Otherwise the dead terminal stays listed.
-                    self.on_exit()
+            self.quit()
 
     async def _read(self, decoder: codecs.IncrementalDecoder) -> None:
         while True:
@@ -146,11 +143,13 @@ class _TerminalServer(TerminalServer):
         self.closed = True
         self.read_scope.cancel()
         try:
-            os.kill(self.pid, signal.SIGHUP)
-        except ProcessLookupError:
-            pass
-        self._start_soon(self._close_websockets)
-        self._start_soon(self._reap)
+            try:
+                os.kill(self.pid, signal.SIGHUP)
+            except ProcessLookupError:
+                pass
+        finally:
+            self._start_soon(self._close_websockets)
+            self._start_soon(self._reap)
 
     async def _reap(self) -> None:
         # Avoid a zombie; SIGKILL a shell that ignores SIGHUP.

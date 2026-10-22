@@ -3,7 +3,8 @@ from http import HTTPStatus
 from typing import Any
 
 import structlog
-from anyio import Event, create_task_group
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group
+from anyio.abc import TaskStatus
 from fastapi import Response
 from jupyverse_api import App
 from jupyverse_auth import Auth, User
@@ -26,10 +27,9 @@ class _Terminals(Terminals):
             await self.stop_event.wait()
 
     async def stop(self):
-        # A copy: the Windows quit() unlists the terminal at once.
+        # Stop shells before waking start() to drain the task group.
         for terminal in list(TERMINALS.values()):
             terminal["server"].quit()
-        # The POSIX quit() closes the server, so on_exit will not unlist it.
         TERMINALS.clear()
         self.stop_event.set()
 
@@ -55,11 +55,9 @@ class _Terminals(Terminals):
             last_activity=datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
         )
 
-        def on_exit() -> None:
-            self._on_exit(name, server)
-
-        server: TerminalServer = self.TerminalServer(self.task_group, on_exit)
+        server = self.TerminalServer()
         TERMINALS[name] = {"info": terminal, "server": server}
+        await self.task_group.start(self._run_terminal, name, server)
         log.info("Terminal created", name=name)
         return terminal
 
@@ -88,8 +86,20 @@ class _Terminals(Terminals):
 
         await TERMINALS[name]["server"].serve(websocket, permissions)
 
-    def _on_exit(self, name: str, server: TerminalServer) -> None:
-        # The name may already belong to a newer terminal.
-        if name in TERMINALS and TERMINALS[name]["server"] is server:
-            del TERMINALS[name]
-        log.info("Terminal exited", name=name)
+    async def _run_terminal(
+        self,
+        name: str,
+        server: TerminalServer,
+        *,
+        task_status: TaskStatus[None] = TASK_STATUS_IGNORED,
+    ) -> None:
+        try:
+            await server.run(task_status=task_status)
+        except Exception:
+            # A terminal failure must not cancel the shared task group.
+            log.exception("Terminal task failed", name=name)
+        finally:
+            # The name may already belong to a newer terminal.
+            if name in TERMINALS and TERMINALS[name]["server"] is server:
+                del TERMINALS[name]
+            log.info("Terminal exited", name=name)

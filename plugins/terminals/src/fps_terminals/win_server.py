@@ -4,8 +4,8 @@ from collections.abc import Awaitable, Callable
 from functools import partial
 
 import structlog
-from anyio import CancelScope, to_thread
-from anyio.abc import TaskGroup
+from anyio import TASK_STATUS_IGNORED, CancelScope, create_task_group, to_thread
+from anyio.abc import TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
 from winpty import PTY, WinptyError  # type: ignore
@@ -25,15 +25,12 @@ def open_terminal(command=None, columns=80, lines=24):
 class _TerminalServer(TerminalServer):
     """A Windows shell which outlives the websockets attached to it."""
 
-    def __init__(self, task_group: TaskGroup, on_exit: Callable[[], None]) -> None:
+    def __init__(self) -> None:
         self.process = open_terminal()
         self.websockets: list[WebSocket] = []
         self.sizes: dict[WebSocket, tuple[int, int]] = {}
-        self.on_exit = on_exit
-        self.task_group = task_group
         self.closed = False
         self.read_scope = CancelScope()
-        self._start_soon(self.backend_to_frontend)
 
     async def serve(self, websocket: WebSocket, permissions) -> None:
         if self.closed:
@@ -66,7 +63,12 @@ class _TerminalServer(TerminalServer):
         except Exception:
             log.exception("Terminal task failed")
 
-    async def backend_to_frontend(self) -> None:
+    async def run(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        async with create_task_group() as self.task_group:
+            task_status.started()
+            await self._run()
+
+    async def _run(self) -> None:
         try:
             with self.read_scope:
                 while not self.closed:
@@ -138,4 +140,3 @@ class _TerminalServer(TerminalServer):
                 self.process.cancel_io()
             finally:
                 self._start_soon(self._close_websockets)
-                self.on_exit()
