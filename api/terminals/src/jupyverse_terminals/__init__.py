@@ -1,16 +1,13 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, Depends
+from anyio.abc import TaskGroup
+from fastapi import APIRouter, Depends, WebSocket
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 
 from .models import Terminal
-
-if TYPE_CHECKING:
-    from anyio.abc import TaskGroup
 
 __version__ = version(__package__)
 
@@ -80,12 +77,12 @@ class Terminals(Router, ABC):
 
 class TerminalServer(ABC):
     @abstractmethod
-    def __init__(self, task_group: "TaskGroup", on_exit: Callable[[], None]) -> None:
+    def __init__(self, task_group: TaskGroup, on_exit: Callable[[], None]) -> None:
         """Start the shell; its tasks run in `task_group`, `on_exit` is called if it exits."""
 
     @abstractmethod
     async def serve(self, websocket, permissions): ...
 
     @abstractmethod
-    def quit(self, websocket: Any = None) -> None:
+    def quit(self, websocket: WebSocket | None = None) -> None:
         """Detach `websocket`, or end the shell if it is None."""

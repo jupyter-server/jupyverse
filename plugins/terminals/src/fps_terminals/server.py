@@ -6,12 +6,11 @@ import signal
 import struct
 import termios
 from collections.abc import Awaitable, Callable
-from typing import Any
 
 import structlog
 from anyio import CancelScope, sleep, wait_readable
 from anyio.abc import TaskGroup
-from fastapi import WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
 
 log = structlog.get_logger()
@@ -35,14 +34,15 @@ class _TerminalServer(TerminalServer):
         self.pid = pid
         self.fd = fd
         self.p_out = os.fdopen(self.fd, "w+b", 0)
-        self.websockets: list[Any] = []
+        self.websockets: list[WebSocket] = []
+        self.sizes: dict[WebSocket, tuple[int, int]] = {}
         self.task_group = task_group
         self.on_exit = on_exit
         self.closed = False
         self.read_scope = CancelScope()
         self._start_soon(self.backend_to_frontend)
 
-    async def serve(self, websocket, permissions) -> None:
+    async def serve(self, websocket: WebSocket, permissions) -> None:
         if self.closed:
             return
         self.websockets.append(websocket)
@@ -56,8 +56,10 @@ class _TerminalServer(TerminalServer):
                     if msg[0] == "stdin":
                         self.p_out.write(msg[1].encode())
                     elif msg[0] == "set_size":
-                        winsize = struct.pack("HH", msg[1], msg[2])
-                        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
+                        rows, columns = msg[1:3]
+                        if 0 < rows <= 65535 and 0 < columns <= 65535:
+                            self.sizes[websocket] = (rows, columns)
+                            self._resize()
         except (WebSocketDisconnect, OSError):
             pass
         finally:
@@ -65,6 +67,16 @@ class _TerminalServer(TerminalServer):
 
     def _start_soon(self, func: Callable[[], Awaitable[None]]) -> None:
         self.task_group.start_soon(self._isolated, func)
+
+    def _resize(self) -> None:
+        # Clients that have not reported a size do not constrain the PTY.
+        # Keep the last size when no clients remain.
+        if self.closed or not self.sizes:
+            return
+        rows = min(size[0] for size in self.sizes.values())
+        columns = min(size[1] for size in self.sizes.values())
+        winsize = struct.pack("HH", rows, columns)
+        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
 
     async def _isolated(self, func: Callable[[], Awaitable[None]]) -> None:
         # The task group is shared by all terminals: a failure stays in this one.
@@ -116,11 +128,18 @@ class _TerminalServer(TerminalServer):
             except Exception:
                 pass
         self.websockets.clear()
+        self.sizes.clear()
 
-    def quit(self, websocket: Any = None) -> None:
+    def quit(self, websocket: WebSocket | None = None) -> None:
         if websocket is not None:
             if websocket in self.websockets:
                 self.websockets.remove(websocket)
+            if self.sizes.pop(websocket, None) is not None:
+                try:
+                    self._resize()
+                except OSError:
+                    # The shell may have exited while the client disconnected.
+                    pass
             return
         if self.closed:
             return
@@ -146,10 +165,11 @@ class _TerminalServer(TerminalServer):
                     os.kill(self.pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
-        # Bounded: a process stuck in uninterruptible I/O must not keep this
-        # task running.
-        if not exited and not await self._wait_exit(5):
-            log.warning("Terminal shell did not exit", pid=self.pid)
+                # Reap even during shutdown cancellation. Keep the wait bounded
+                # for a process stuck in uninterruptible I/O.
+                with CancelScope(shield=True):
+                    if not await self._wait_exit(5):
+                        log.warning("Terminal shell did not exit", pid=self.pid)
 
     async def _wait_exit(self, timeout: float) -> bool:
         for _ in range(int(timeout * 10)):

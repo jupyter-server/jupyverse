@@ -1,13 +1,16 @@
 import os
-from collections.abc import Callable
+import signal
+from collections.abc import Awaitable, Callable
 from functools import partial
-from typing import Any
 
-from anyio import create_task_group, to_thread
+import structlog
+from anyio import CancelScope, to_thread
 from anyio.abc import TaskGroup
-from fastapi import WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
-from winpty import PTY  # type: ignore
+from winpty import PTY, WinptyError  # type: ignore
+
+log = structlog.get_logger()
 
 
 def open_terminal(command=None, columns=80, lines=24):
@@ -20,68 +23,119 @@ def open_terminal(command=None, columns=80, lines=24):
 
 
 class _TerminalServer(TerminalServer):
-    # Unlike the POSIX server, the shell ends with its last websocket.
+    """A Windows shell which outlives the websockets attached to it."""
+
     def __init__(self, task_group: TaskGroup, on_exit: Callable[[], None]) -> None:
         self.process = open_terminal()
-        self.websockets: list[Any] = []
+        self.websockets: list[WebSocket] = []
+        self.sizes: dict[WebSocket, tuple[int, int]] = {}
         self.on_exit = on_exit
-        # The serving websocket's, not the shared one passed in.
-        self.task_group: TaskGroup | None = None
+        self.task_group = task_group
         self.closed = False
+        self.read_scope = CancelScope()
+        self._start_soon(self.backend_to_frontend)
 
-    async def serve(self, websocket, permissions) -> None:
+    async def serve(self, websocket: WebSocket, permissions) -> None:
         if self.closed:
             return
-        self.websocket = websocket
-        self.permissions = permissions
         self.websockets.append(websocket)
-
-        await websocket.send_json(["setup", {}])
-
-        async with create_task_group() as tg:
-            self.task_group = tg
-            tg.start_soon(self.send_data)
-            tg.start_soon(self.recv_data)
-
-    async def stop(self) -> None:
-        if self.task_group is not None:
-            self.task_group.cancel_scope.cancel()
-
-    async def send_data(self):
-        while True:
-            try:
-                data = await to_thread.run_sync(partial(self.process.read, blocking=True))
-            except Exception:
-                await self.websocket.send_json(["disconnect", 1])
-                self.quit()
-                return
-            else:
-                for websocket in self.websockets:
-                    await websocket.send_json(["stdout", data])
-
-    async def recv_data(self):
-        can_execute = self.permissions is None or "execute" in self.permissions.get("terminals", [])
+        can_execute = permissions is None or "execute" in permissions.get("terminals", [])
         try:
+            await websocket.send_json(["setup", {}])
             while True:
-                msg = await self.websocket.receive_json()
-                if can_execute:
+                msg = await websocket.receive_json()
+                if can_execute and not self.closed:
                     if msg[0] == "stdin":
                         self.process.write(msg[1])
                     elif msg[0] == "set_size":
-                        self.process.set_size(msg[2], msg[1])
-        except WebSocketDisconnect:
-            self.quit(self.websocket)
-            self.task_group.cancel_scope.cancel()
+                        rows, columns = msg[1:3]
+                        if 0 < rows <= 65535 and 0 < columns <= 65535:
+                            self.sizes[websocket] = (rows, columns)
+                            self._resize()
+        except (WebSocketDisconnect, WinptyError):
+            pass
+        finally:
+            self.quit(websocket)
 
-    def quit(self, websocket: Any = None) -> None:
-        if websocket is None:
-            self.websockets.clear()
-        elif websocket in self.websockets:
-            self.websockets.remove(websocket)
-        if self.websockets or self.closed:
+    def _start_soon(self, func: Callable[[], Awaitable[None]]) -> None:
+        self.task_group.start_soon(self._isolated, func)
+
+    async def _isolated(self, func: Callable[[], Awaitable[None]]) -> None:
+        try:
+            await func()
+        except Exception:
+            log.exception("Terminal task failed")
+
+    async def backend_to_frontend(self) -> None:
+        try:
+            with self.read_scope:
+                while not self.closed:
+                    try:
+                        data = await to_thread.run_sync(
+                            partial(self.process.read, blocking=True),
+                            abandon_on_cancel=True,
+                        )
+                    except WinptyError:
+                        if self.closed or not self.process.isalive():
+                            break
+                        raise
+                    if not data:
+                        break
+                    for websocket in list(self.websockets):
+                        try:
+                            await websocket.send_json(["stdout", data])
+                        except Exception:
+                            self.quit(websocket)
+        finally:
+            try:
+                self.quit()
+            finally:
+                # A cancelled worker retains its bound PTY until read() returns.
+                self.process = None
+
+    def _resize(self) -> None:
+        if self.closed or not self.sizes:
+            return
+        rows = min(size[0] for size in self.sizes.values())
+        columns = min(size[1] for size in self.sizes.values())
+        self.process.set_size(columns, rows)
+
+    async def _close_websockets(self) -> None:
+        for websocket in list(self.websockets):
+            try:
+                await websocket.send_json(["disconnect", 1])
+                await websocket.close()
+            except Exception:
+                pass
+        self.websockets.clear()
+        self.sizes.clear()
+
+    def quit(self, websocket: WebSocket | None = None) -> None:
+        if websocket is not None:
+            if websocket in self.websockets:
+                self.websockets.remove(websocket)
+            if self.sizes.pop(websocket, None) is not None:
+                try:
+                    self._resize()
+                except WinptyError:
+                    pass
+            return
+        if self.closed:
             return
         self.closed = True
-        if self.task_group is not None:
-            self.task_group.cancel_scope.cancel()
-        del self.process
-        self.on_exit()
+        self.read_scope.cancel()
+        try:
+            if self.process.isalive() and self.process.pid is not None:
+                # On Windows SIGTERM uses TerminateProcess, not a catchable signal.
+                try:
+                    os.kill(self.process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+        finally:
+            try:
+                # Wake a blocking read even if terminating the shell did not
+                # close its output pipe. Also used after task cancellation.
+                self.process.cancel_io()
+            finally:
+                self._start_soon(self._close_websockets)
+                self.on_exit()

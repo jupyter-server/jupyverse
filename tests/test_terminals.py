@@ -4,7 +4,7 @@ import sys
 from typing import Any
 
 import pytest
-from anyio import fail_after, sleep
+from anyio import CancelScope, fail_after, sleep
 from fps import get_root_module, merge_config
 from httpx2 import AsyncClient
 
@@ -87,6 +87,49 @@ async def test_terminal_outlives_websocket(free_tcp_port: int) -> None:
 
 
 @pytest.mark.anyio
+async def test_terminal_uses_smallest_connected_dimensions(free_tcp_port: int) -> None:
+    from fps_terminals.routes import TERMINALS
+
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    async with root_module, AsyncClient() as http:
+        name = (await http.post(f"{url}/api/terminals")).json()["name"]
+        path = f"{url}/terminals/websocket/{name}"
+        async with http.websocket(path) as first:
+            await first.send_json(["set_size", 40, 120])
+            assert await run(first, "stty size", "SIZE0=") == "40 120"
+
+            async with http.websocket(path) as second:
+                # Unreported sizes do not impose an arbitrary default.
+                assert await run(first, "stty size", "SIZE1=") == "40 120"
+                await second.send_json(["set_size", 30, 150])
+                assert await run(second, "stty size", "SIZE2=") == "30 120"
+                # Each dimension is minimized independently, regardless of who resized last.
+                await first.send_json(["set_size", 50, 100])
+                assert await run(first, "stty size", "SIZE3=") == "30 100"
+                await second.send_json(["set_size", 60, 90])
+                assert await run(second, "stty size", "SIZE4=") == "50 90"
+                # A hidden or zero-sized client must not shrink the PTY to zero.
+                await second.send_json(["set_size", 0, 0])
+                assert await run(second, "stty size", "SIZE5=") == "50 90"
+
+            with fail_after(10):
+                while len(TERMINALS[name]["server"].sizes) != 1:
+                    await sleep(0.01)
+            assert await run(first, "stty size", "SIZE6=") == "50 100"
+
+        with fail_after(10):
+            while TERMINALS[name]["server"].sizes:
+                await sleep(0.01)
+        async with http.websocket(path) as reconnected:
+            assert await run(reconnected, "stty size", "SIZE7=") == "50 100"
+            await reconnected.send_json(["set_size", 45, 130])
+            assert await run(reconnected, "stty size", "SIZE8=") == "45 130"
+
+
+@pytest.mark.anyio
 async def test_terminal_removed_when_shell_exits(free_tcp_port: int) -> None:
     config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
     root_module = get_root_module(config)
@@ -146,6 +189,28 @@ async def test_reap_does_not_block_on_unkillable_shell(monkeypatch: pytest.Monke
 
 
 @pytest.mark.anyio
+async def test_cancelled_reap_collects_child() -> None:
+    from fps_terminals import server
+
+    # Use a real child: checking whether it is alive would also accept a zombie.
+    child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(300)"])
+    terminal = object.__new__(server._TerminalServer)
+    terminal.pid = child.pid
+    try:
+        with CancelScope() as scope:
+            scope.cancel()
+            await terminal._reap()
+
+        # ECHILD proves _reap() collected it, rather than just sending SIGKILL.
+        with pytest.raises(ChildProcessError):
+            os.waitpid(child.pid, os.WNOHANG)
+    finally:
+        if child.poll() is None:
+            child.kill()
+        child.wait()
+
+
+@pytest.mark.anyio
 async def test_terminal_failure_spares_other_terminals(free_tcp_port: int) -> None:
     from fps_terminals.routes import TERMINALS
 
@@ -170,43 +235,6 @@ async def test_terminal_failure_spares_other_terminals(free_tcp_port: int) -> No
         async with http.websocket(f"{url}/terminals/websocket/{other}") as websocket:
             assert await run(websocket, "echo ok", "OUT=") == "ok"
         assert (await http.post(f"{url}/api/terminals")).status_code == 200
-
-
-def test_windows_terminal_quit(monkeypatch: pytest.MonkeyPatch) -> None:
-    # winpty is Windows-only: fake it to check the server's bookkeeping.
-    class PTY:
-        def __init__(self, columns, lines):
-            pass
-
-        def spawn(self, command, env):
-            pass
-
-    monkeypatch.setitem(sys.modules, "winpty", type(sys)("winpty"))
-    monkeypatch.setattr(sys.modules["winpty"], "PTY", PTY, raising=False)
-    monkeypatch.delitem(sys.modules, "fps_terminals.win_server", raising=False)
-    import fps_terminals
-    from fps_terminals import win_server
-
-    # Unload the fake-backed module afterwards.
-    monkeypatch.setitem(sys.modules, "fps_terminals.win_server", win_server)
-    monkeypatch.setattr(fps_terminals, "win_server", win_server, raising=False)
-
-    exits = []
-    terminal = win_server._TerminalServer(None, lambda: exits.append(1))
-    websocket = object()
-    terminal.websockets.append(websocket)
-
-    # Ends with its last websocket, then DELETE and shutdown are no-ops.
-    terminal.quit(websocket)
-    terminal.quit()
-    terminal.quit()
-    assert exits == [1]
-    assert not hasattr(terminal, "process")
-
-    # A terminal deleted before any websocket.
-    terminal = win_server._TerminalServer(None, lambda: exits.append(2))
-    terminal.quit()
-    assert exits == [1, 2]
 
 
 @pytest.mark.anyio
