@@ -138,5 +138,10 @@ class _TerminalServer(TerminalServer):
                 # Wake a blocking read even if terminating the shell did not
                 # close its output pipe. Also used after task cancellation.
                 self.process.cancel_io()
+            except WinptyError:
+                # A naturally exited shell may have no pending I/O to cancel.
+                # Let the disconnect notification run instead of cancelling it.
+                if self.process.isalive():
+                    raise
             finally:
                 self._start_soon(self._close_websockets)

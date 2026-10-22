@@ -176,6 +176,29 @@ async def test_windows_terminal_cleanup_without_clients(windows_server, ending):
 
 
 @pytest.mark.anyio
+async def test_windows_shell_exit_without_pending_io(windows_server, monkeypatch):
+    server, processes, _ = windows_server
+    async with create_task_group() as tasks:
+        terminal = server()
+        await tasks.start(terminal.run)
+        websocket = WebSocket()
+        tasks.start_soon(terminal.serve, websocket, None)
+        await wait_for(lambda: bool(terminal.websockets))
+
+        def cancel_io():
+            # WinptyError when the completed read left no I/O to cancel.
+            raise RuntimeError("Element not found.")
+
+        process = processes[0]
+        monkeypatch.setattr(process, "cancel_io", cancel_io)
+        process.alive = False
+        process.output.put("")
+        await wait_for(lambda: websocket.closed)
+        assert ["disconnect", 1] in websocket.messages
+        assert terminal.closed and terminal.process is None
+
+
+@pytest.mark.anyio
 async def test_windows_terminal_send_failure_only_detaches_client(windows_server):
     server, processes, _ = windows_server
     async with create_task_group() as tasks:
