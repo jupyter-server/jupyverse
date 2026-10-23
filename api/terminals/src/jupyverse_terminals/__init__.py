@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from importlib.metadata import version
 
-from fastapi import APIRouter, Depends
+from anyio import TASK_STATUS_IGNORED
+from anyio.abc import TaskStatus
+from fastapi import APIRouter, Depends, WebSocket
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 
@@ -75,7 +77,12 @@ class Terminals(Router, ABC):
 
 class TerminalServer(ABC):
     @abstractmethod
+    async def run(self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED) -> None:
+        """Signal readiness, read shell output until exit, and finish cleanup."""
+
+    @abstractmethod
     async def serve(self, websocket, permissions): ...
 
     @abstractmethod
-    def quit(self, websocket): ...
+    def quit(self, websocket: WebSocket | None = None) -> None:
+        """Detach `websocket`, or end the shell if it is None."""

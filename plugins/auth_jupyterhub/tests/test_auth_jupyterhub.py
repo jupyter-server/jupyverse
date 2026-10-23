@@ -34,6 +34,13 @@ HUB_USERS = {
 
 
 @pytest.fixture
+def root_module():
+    module = get_root_module(CONFIG)
+    module._global_start_timeout = 10
+    return module
+
+
+@pytest.fixture
 def anyio_backend():
     # SQLAlchemy's async engine only supports asyncio
     return "asyncio"
@@ -67,9 +74,9 @@ async def log_in(client, code):
     assert "jupyverse_jupyterhub_token" in client.cookies
 
 
-async def test_api_me_permissions(hub):
+async def test_api_me_permissions(hub, root_module):
     permissions = {"contents": ["read", "write"], "kernels": ["execute"]}
-    async with get_root_module(CONFIG) as root_module:
+    async with root_module:
         transport = ASGITransport(app=root_module.app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             await log_in(client, "alice")
@@ -81,8 +88,8 @@ async def test_api_me_permissions(hub):
 
 
 @pytest.mark.parametrize("params", ({}, {"permissions": "null"}))
-async def test_api_me_no_permissions(hub, params):
-    async with get_root_module(CONFIG) as root_module:
+async def test_api_me_no_permissions(hub, params, root_module):
+    async with root_module:
         transport = ASGITransport(app=root_module.app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             await log_in(client, "alice")
@@ -92,8 +99,8 @@ async def test_api_me_no_permissions(hub, params):
 
 
 @pytest.mark.parametrize("code", ["bob", "charlie"], ids=["no-scopes", "other-server"])
-async def test_api_me_requires_access_scope(hub, code):
-    async with get_root_module(CONFIG) as root_module:
+async def test_api_me_requires_access_scope(hub, code, root_module):
+    async with root_module:
         transport = ASGITransport(app=root_module.app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             await log_in(client, code)

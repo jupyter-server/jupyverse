@@ -3,6 +3,7 @@ import json
 import httpx2
 import pytest
 from fps import get_root_module
+from fps_kernels.kernel_server.server import kernels
 
 
 @pytest.mark.anyio
@@ -57,3 +58,5 @@ async def test_kernel_launcher():
             }
             r = await client.post("/api/sessions", content=json.dumps(data))
             assert r.status_code == 201
+
+    assert not kernels
