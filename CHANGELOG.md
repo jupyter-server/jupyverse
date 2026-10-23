@@ -1,5 +1,28 @@
 # Version history
 
+## 0.14.18
+
+- Keep terminal shells alive across WebSocket disconnects on POSIX and Windows.
+- Size shared terminals to the smallest connected client dimensions.
+- Use the user's default shell for terminals.
+- Add `TerminalServer.run()` to manage terminal lifetime and cleanup. Custom terminal servers must implement this new abstract method.
+- Fix kernel registry cleanup when shutdown is cancelled.
+- Fix `/api/me` permissions with JupyterHub authentication.
+- Use UTF-8 explicitly for text file I/O, including contents, settings, kernel configuration, and notebook exports.
+
+This `jupyverse` release also releases:
+- `jupyverse-lab` v0.3.2
+- `jupyverse-terminals` v0.2.0
+- `fps-auth` v0.10.3
+- `fps-auth-jupyterhub` v0.10.3
+- `fps-contents` v0.11.5
+- `fps-kernel-subprocess` v0.2.6
+- `fps-kernels` v0.11.6
+- `fps-lab` v0.11.7
+- `fps-nbconvert` v0.10.3
+- `fps-terminals` v0.11.0
+- `fps-yjs` v0.14.4
+
 ## 0.14.17
 
 - Bump `zmq-anyio` v0.4.1.
