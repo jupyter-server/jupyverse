@@ -93,6 +93,7 @@ class _Kernels(Kernels):
                     tg.start_soon(kernel["server"].stop)
                     if kernel["driver"] is not None:
                         tg.start_soon(kernel["driver"].stop)
+            self.kernels.clear()
             self.stop_event.set()
             self.task_group.cancel_scope.cancel()
 
