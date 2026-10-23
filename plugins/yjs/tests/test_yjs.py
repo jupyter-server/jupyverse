@@ -58,7 +58,7 @@ async def test_concurrent_disconnect(tmp_path, anyio_backend_name):
         root_module._global_start_timeout = 10
         async with root_module as root_module:
             app = root_module.app
-            transport = ASGIWebSocketTransport(app=app)
+            transport = ASGIWebSocketTransport(app=app, initial_receive_timeout=10)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
                 data = CreateDocumentSession(format="text", type="file")
                 p = tmp_path / "hello.txt"
