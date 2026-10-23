@@ -8,7 +8,16 @@ import termios
 from collections.abc import Awaitable, Callable
 
 import structlog
-from anyio import TASK_STATUS_IGNORED, CancelScope, create_task_group, sleep, wait_readable
+from anyio import (
+    TASK_STATUS_IGNORED,
+    CancelScope,
+    CapacityLimiter,
+    Event,
+    create_task_group,
+    move_on_after,
+    to_thread,
+    wait_readable,
+)
 from anyio.abc import TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
@@ -152,31 +161,48 @@ class _TerminalServer(TerminalServer):
             self._start_soon(self._reap)
 
     async def _reap(self) -> None:
-        # Avoid a zombie; SIGKILL a shell that ignores SIGHUP.
-        exited = False
-        try:
-            exited = await self._wait_exit(5)
-        finally:
-            # Also when cancelled: at server shutdown, fps cancels the task
-            # group well before the 5 seconds are up.
-            if not exited:
-                try:
-                    os.kill(self.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                # Reap even during shutdown cancellation. Keep the wait bounded
-                # for a process stuck in uninterruptible I/O.
-                with CancelScope(shield=True):
-                    if not await self._wait_exit(5):
-                        log.warning("Terminal shell did not exit", pid=self.pid)
-
-    async def _wait_exit(self, timeout: float) -> bool:
-        for _ in range(int(timeout * 10)):
+        exited = Event()
+        async with create_task_group() as tasks:
+            # Start exactly one waiter, even if shutdown has already cancelled us.
+            with CancelScope(shield=True):
+                waiter_scope = await tasks.start(self._wait_for_child, exited)
             try:
-                pid, _ = os.waitpid(self.pid, os.WNOHANG)
-            except ChildProcessError:
-                return True
-            if pid:
-                return True
-            await sleep(0.1)
-        return False
+                try:
+                    await self._wait_exit(exited, 5)
+                finally:
+                    if not exited.is_set():
+                        try:
+                            os.kill(self.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+                        # Collect the child even during shutdown cancellation.
+                        with CancelScope(shield=True):
+                            if not await self._wait_exit(exited, 5):
+                                log.warning("Terminal shell did not exit", pid=self.pid)
+            finally:
+                # If the child is stuck, stop awaiting the worker. Its single
+                # blocking waitpid() still reaps the child if it eventually exits.
+                waiter_scope.cancel()
+
+    async def _wait_for_child(
+        self, exited: Event, *, task_status: TaskStatus[CancelScope] = TASK_STATUS_IGNORED
+    ) -> None:
+        with CancelScope(shield=True) as scope:
+            task_status.started(scope)
+            # A separate limiter keeps unrelated blocked worker calls from
+            # preventing this terminal's reaper from starting.
+            await to_thread.run_sync(
+                self._waitpid, abandon_on_cancel=True, limiter=CapacityLimiter(1)
+            )
+            exited.set()
+
+    def _waitpid(self) -> None:
+        try:
+            os.waitpid(self.pid, 0)
+        except ChildProcessError:
+            pass
+
+    async def _wait_exit(self, exited: Event, timeout: float) -> bool:
+        with move_on_after(timeout):
+            await exited.wait()
+        return exited.is_set()

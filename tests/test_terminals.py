@@ -1,10 +1,11 @@
 import os
 import subprocess
 import sys
+from threading import Event as ThreadEvent
 from typing import Any
 
 import pytest
-from anyio import CancelScope, Event, create_task_group, fail_after, sleep
+from anyio import CancelScope, Event, create_task_group, fail_after, sleep, to_thread
 from fps import get_root_module, merge_config
 from httpx2 import AsyncClient
 
@@ -173,22 +174,40 @@ async def test_terminals_unlisted_on_stop(free_tcp_port: int) -> None:
 async def test_reap_does_not_block_on_unkillable_shell(monkeypatch: pytest.MonkeyPatch) -> None:
     from fps_terminals import server
 
-    # A shell stuck in uninterruptible I/O: never reaped, even after SIGKILL.
+    # Simulate a child whose blocking waitpid never returns, even after SIGKILL.
+    release = ThreadEvent()
+    finished = ThreadEvent()
     signals = []
     waitpid_flags = []
+
+    def waitpid(pid, flags):
+        waitpid_flags.append(flags)
+        try:
+            release.wait()
+            return pid, 0
+        finally:
+            finished.set()
+
     monkeypatch.setattr(server.os, "kill", lambda pid, sig: signals.append(sig))
-    monkeypatch.setattr(
-        server.os, "waitpid", lambda pid, flags: waitpid_flags.append(flags) or (0, 0)
-    )
-    monkeypatch.setattr(server, "sleep", lambda delay: sleep(0))
+    monkeypatch.setattr(server.os, "waitpid", waitpid)
     terminal = object.__new__(server._TerminalServer)
     terminal.pid = 12345
+    wait_exit = terminal._wait_exit
 
-    with fail_after(5):
-        await terminal._reap()
+    async def short_wait(exited, timeout):
+        return await wait_exit(exited, 0.05)
 
-    assert signals == [server.signal.SIGKILL]
-    assert waitpid_flags and all(flags == os.WNOHANG for flags in waitpid_flags)
+    monkeypatch.setattr(terminal, "_wait_exit", short_wait)
+    try:
+        with fail_after(5):
+            await terminal._reap()
+        assert signals == [server.signal.SIGKILL]
+        assert waitpid_flags == [0]
+        assert not finished.is_set()
+    finally:
+        # The abandoned waiter still collects the child if it eventually exits.
+        release.set()
+        assert await to_thread.run_sync(finished.wait, 5)
 
 
 @pytest.mark.anyio
