@@ -1,11 +1,20 @@
 import os
+import re
 import subprocess
 import sys
 from threading import Event as ThreadEvent
 from typing import Any
 
 import pytest
-from anyio import CancelScope, Event, create_task_group, fail_after, sleep, to_thread
+from anyio import (
+    CancelScope,
+    Event,
+    create_task_group,
+    fail_after,
+    move_on_after,
+    sleep,
+    to_thread,
+)
 from fps import get_root_module, merge_config
 from httpx2 import AsyncClient
 
@@ -50,6 +59,21 @@ async def run(websocket: Any, command: str, marker: str) -> str:
                         return line[len(marker) :].strip()
 
 
+async def receive_replay(websocket: Any) -> str:
+    """Return the replay sent to a new websocket of an idle shell."""
+    replay = ""
+    with fail_after(10):
+        msg = await websocket.receive_json()
+        replay += msg[1]
+    # The shell prints nothing more: the replay is over once nothing comes.
+    while True:
+        with move_on_after(0.5) as scope:
+            msg = await websocket.receive_json()
+            replay += msg[1]
+        if scope.cancelled_caught:
+            return replay
+
+
 def is_alive(pid: int) -> bool:
     # ps rather than /proc, which macOS lacks; a zombie is not alive.
     stat = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True)
@@ -76,9 +100,10 @@ async def test_terminal_outlives_websocket(free_tcp_port: int) -> None:
         terminals = (await http.get(f"{url}/api/terminals")).json()
         assert name in [terminal["name"] for terminal in terminals]
 
-        # A new websocket reaches the same shell.
+        # A new websocket reaches the same shell. Another marker, as the replay
+        # holds the first one.
         async with http.websocket(f"{url}/terminals/websocket/{name}") as websocket:
-            assert int(await run(websocket, "echo $$", "PID=")) == pid
+            assert int(await run(websocket, "echo $$", "PID2=")) == pid
 
         # Deleting the terminal ends the shell.
         response = await http.delete(f"{url}/api/terminals/{name}")
@@ -88,6 +113,153 @@ async def test_terminal_outlives_websocket(free_tcp_port: int) -> None:
             while is_alive(pid):
                 await sleep(0.1)
         assert (await http.get(f"{url}/api/terminals")).json() == []
+
+
+@pytest.mark.anyio
+async def test_reconnected_websocket_gets_recent_output(free_tcp_port: int) -> None:
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    async with root_module, AsyncClient() as http:
+        name = (await http.post(f"{url}/api/terminals")).json()["name"]
+        path = f"{url}/terminals/websocket/{name}"
+        async with http.websocket(path) as websocket:
+            assert await run(websocket, "echo before", "OLD=") == "before"
+
+        # Without any input, the new websocket shows what was printed before.
+        async with http.websocket(path) as websocket:
+            assert await websocket.receive_json() == ["setup", {}]
+            with fail_after(10):
+                msg = await websocket.receive_json()
+            assert msg[0] == "stdout"
+            assert "OLD=before" in msg[1].splitlines()
+        await http.delete(f"{url}/api/terminals/{name}")
+
+
+@pytest.mark.anyio
+async def test_replay_precedes_live_output(free_tcp_port: int) -> None:
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    async with root_module, AsyncClient() as http:
+        name = (await http.post(f"{url}/api/terminals")).json()["name"]
+        path = f"{url}/terminals/websocket/{name}"
+        async with http.websocket(path) as websocket:
+            await websocket.send_json(
+                ["stdin", "for i in $(seq 1 200); do echo N$i; sleep 0.01; done\r"]
+            )
+            # Disconnect once the loop has started printing.
+            output = ""
+            with fail_after(10):
+                while "N5" not in output.split():
+                    msg = await websocket.receive_json()
+                    if msg[0] == "stdout":
+                        output += msg[1]
+
+        # Reconnect while the loop still prints: the replay, then the live
+        # output, with no line repeated, lost or reordered in between.
+        messages = []
+        async with http.websocket(path) as websocket:
+            assert await websocket.receive_json() == ["setup", {}]
+            with fail_after(10):
+                while not messages or "N200" not in messages[-1].split():
+                    msg = await websocket.receive_json()
+                    if msg[0] == "stdout":
+                        messages.append(msg[1])
+        assert "N200" not in messages[0].split()
+        lines = "".join(messages).split()
+        numbers = [int(line[1:]) for line in lines if re.fullmatch(r"N\d+", line)]
+        assert numbers == list(range(numbers[0], 201))
+        await http.delete(f"{url}/api/terminals/{name}")
+
+
+@pytest.mark.anyio
+async def test_replay_keeps_only_recent_output(free_tcp_port: int) -> None:
+    from fps_terminals.server import CLEAR_SCREEN, HISTORY_SIZE
+
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    async with root_module, AsyncClient() as http:
+        name = (await http.post(f"{url}/api/terminals")).json()["name"]
+        path = f"{url}/terminals/websocket/{name}"
+        async with http.websocket(path) as websocket:
+            # 20001 lines of 8 characters: more than the history keeps.
+            assert await run(websocket, "seq 100000 120000 >/dev/tty; echo done", "SEQ=") == "done"
+
+        # In pieces, within the client's 64 KiB message size default.
+        async with http.websocket(path) as websocket:
+            assert await websocket.receive_json() == ["setup", {}]
+            replay = await receive_replay(websocket)
+            assert replay.startswith(CLEAR_SCREEN)
+            replay = replay[len(CLEAR_SCREEN) :]
+            assert len(replay) <= HISTORY_SIZE
+            lines = replay.splitlines()
+            # Cut on a line boundary, so the first line is a whole number.
+            assert re.fullmatch(r"1\d{5}", lines[0])
+            assert int(lines[0]) > 100000
+            assert "120000" in lines
+        await http.delete(f"{url}/api/terminals/{name}")
+
+
+@pytest.mark.anyio
+async def test_replay_survives_prompt_redraws(free_tcp_port: int) -> None:
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    async with root_module, AsyncClient() as http:
+        name = (await http.post(f"{url}/api/terminals")).json()["name"]
+        path = f"{url}/terminals/websocket/{name}"
+        async with http.websocket(path) as websocket:
+            assert await run(websocket, "echo before", "OLD=") == "before"
+
+        # Each client resizes the PTY, and the shell redraws its prompt.
+        for i in range(15):
+            async with http.websocket(path) as websocket:
+                assert await websocket.receive_json() == ["setup", {}]
+                await websocket.send_json(["set_size", 24, 80 + i % 2])
+                await sleep(0.1)
+
+        async with http.websocket(path) as websocket:
+            assert await websocket.receive_json() == ["setup", {}]
+            with fail_after(10):
+                msg = await websocket.receive_json()
+            assert "OLD=before" in msg[1].splitlines()
+        await http.delete(f"{url}/api/terminals/{name}")
+
+
+@pytest.mark.anyio
+async def test_websocket_waiting_for_a_closing_terminal_is_told() -> None:
+    from fps_terminals import server
+
+    class FakeWebSocket:
+        def __init__(self) -> None:
+            self.sent: list[Any] = []
+
+        async def send_json(self, msg: Any) -> None:
+            self.sent.append(msg)
+
+    terminal = object.__new__(server._TerminalServer)
+    terminal.websockets = []
+    terminal.sizes = {}
+    terminal.closed = False
+    terminal.history = "old output"
+    terminal.output_lock = server.Lock()
+    websocket = FakeWebSocket()
+    with fail_after(5):
+        async with create_task_group() as tg:
+            async with terminal.output_lock:
+                tg.start_soon(terminal.serve, websocket, None)
+                # serve() waits for the lock, held while the terminal closes.
+                while not websocket.sent:
+                    await sleep(0.01)
+                terminal.closed = True
+    assert websocket.sent == [["setup", {}], ["disconnect", 1]]
+    assert terminal.websockets == []
 
 
 @pytest.mark.anyio

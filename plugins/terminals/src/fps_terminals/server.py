@@ -13,6 +13,7 @@ from anyio import (
     CancelScope,
     CapacityLimiter,
     Event,
+    Lock,
     create_task_group,
     move_on_after,
     to_thread,
@@ -23,6 +24,15 @@ from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
 
 log = structlog.get_logger()
+
+# Recent output replayed to a new websocket, in characters.
+HISTORY_SIZE = 65536
+# Home, clear the screen and the scrollback: the replay replaces what the
+# client shows, as JupyterLab keeps it when it reconnects on its own.
+CLEAR_SCREEN = "\x1b[H\x1b[2J\x1b[3J"
+# Sent in pieces, as JSON escapes can make the whole replay too big for a
+# client's message size limit.
+REPLAY_CHUNK = 8192
 
 
 class _TerminalServer(TerminalServer):
@@ -47,14 +57,28 @@ class _TerminalServer(TerminalServer):
         self.sizes: dict[WebSocket, tuple[int, int]] = {}
         self.closed = False
         self.read_scope = CancelScope()
+        # Replayed to a new websocket so it does not start blank.
+        self.history = ""
+        # Keeps the replay ahead of the live output on a new websocket.
+        self.output_lock = Lock()
 
     async def serve(self, websocket: WebSocket, permissions) -> None:
         if self.closed:
             return
-        self.websockets.append(websocket)
         can_execute = permissions is None or "execute" in permissions.get("terminals", [])
         try:
             await websocket.send_json(["setup", {}])
+            async with self.output_lock:
+                # The terminal may have closed while waiting for the lock.
+                if self.closed:
+                    await websocket.send_json(["disconnect", 1])
+                    return
+                self.websockets.append(websocket)
+                if self.history:
+                    replay = CLEAR_SCREEN + self.history
+                    for start in range(0, len(replay), REPLAY_CHUNK):
+                        chunk = replay[start : start + REPLAY_CHUNK]
+                        await websocket.send_json(["stdout", chunk])
             while True:
                 msg = await websocket.receive_json()
                 # Once closed, self.fd may already be reused by another file.
@@ -120,11 +144,26 @@ class _TerminalServer(TerminalServer):
             if not data:
                 return
             text = decoder.decode(data)
-            for websocket in list(self.websockets):
-                try:
-                    await websocket.send_json(["stdout", text])
-                except Exception:
-                    self.quit(websocket)
+            async with self.output_lock:
+                if text:
+                    self._record(text)
+                for websocket in list(self.websockets):
+                    try:
+                        await websocket.send_json(["stdout", text])
+                    except Exception:
+                        self.quit(websocket)
+
+    def _record(self, text: str) -> None:
+        # Bounded in characters, not reads: a prompt redrawn on each resize
+        # must not push the older output out.
+        history = self.history + text
+        if len(history) > HISTORY_SIZE:
+            history = history[-HISTORY_SIZE:]
+            # Start on a line, not in the middle of one or of an escape sequence.
+            newline = history.find("\n")
+            if newline != -1:
+                history = history[newline + 1 :]
+        self.history = history
 
     async def _close_websockets(self) -> None:
         for websocket in list(self.websockets):
