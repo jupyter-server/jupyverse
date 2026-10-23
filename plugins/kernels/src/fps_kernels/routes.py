@@ -87,15 +87,17 @@ class _Kernels(Kernels):
             if self.stop_event.is_set():
                 return
 
-            async with create_task_group() as tg:
-                for kernel_id, kernel in self.kernels.items():
-                    logger.info("Stopping kernel", kernel_id=kernel_id)
-                    tg.start_soon(kernel["server"].stop)
-                    if kernel["driver"] is not None:
-                        tg.start_soon(kernel["driver"].stop)
-            self.kernels.clear()
-            self.stop_event.set()
-            self.task_group.cancel_scope.cancel()
+            try:
+                async with create_task_group() as tg:
+                    for kernel_id, kernel in self.kernels.items():
+                        logger.info("Stopping kernel", kernel_id=kernel_id)
+                        tg.start_soon(kernel["server"].stop)
+                        if kernel["driver"] is not None:
+                            tg.start_soon(kernel["driver"].stop)
+            finally:
+                self.kernels.clear()
+                self.stop_event.set()
+                self.task_group.cancel_scope.cancel()
 
     async def on_shutdown(self):
         await self.lifespan.shutdown_request.wait()
