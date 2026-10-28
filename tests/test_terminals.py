@@ -121,6 +121,9 @@ async def test_terminal_uses_smallest_connected_dimensions(free_tcp_port: int) -
                 # A hidden or zero-sized client must not shrink the PTY to zero.
                 await second.send_json(["set_size", 0, 0])
                 assert await run(second, "stty size", "SIZE5=") == "50 90"
+                # Reject excessive dimensions before changing the PTY or emulator.
+                await second.send_json(["set_size", 65535, 65535])
+                assert await run(second, "stty size", "SIZE_LIMIT=") == "50 90"
 
             with fail_after(10):
                 while len(TERMINALS[name]["server"].sizes) != 1:

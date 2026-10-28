@@ -9,7 +9,7 @@ from anyio.abc import TaskStatus
 from fastapi import WebSocket, WebSocketDisconnect
 from jupyverse_terminals import TerminalServer
 
-from .output import TerminalOutput
+from .output import TerminalOutput, valid_size
 
 log = structlog.get_logger()
 
@@ -29,31 +29,34 @@ class BaseTerminalServer(TerminalServer):
         if self.closed:
             return
         can_execute = permissions is None or "execute" in permissions.get("terminals", [])
-        try:
-            await self.output.setup(websocket)
-            while True:
-                msg = await self.output.receive(websocket)
-                async with self.output.lock:
-                    # Once closed, the PTY may already be released or reused.
-                    if self.closed:
-                        return
-                    if msg[0] == "set_size":
-                        rows, columns = msg[1:3]
-                        if 0 < rows <= 65535 and 0 < columns <= 65535:
-                            if can_execute:
-                                self.sizes[websocket] = (rows, columns)
-                                self._resize()
+        async with create_task_group() as tasks:
+            try:
+                await self.output.setup(websocket)
+                await tasks.start(self.output.send, websocket, tasks.cancel_scope)
+                while True:
+                    msg = await self.output.receive(websocket)
+                    async with self.output.lock:
+                        # Once closed, the PTY may already be released or reused.
+                        if self.closed:
+                            return
+                        if msg[0] == "set_size":
+                            rows, columns = msg[1:3]
+                            if valid_size(columns, rows):
+                                if can_execute:
+                                    self.sizes[websocket] = (rows, columns)
+                                    self._resize()
+                                await self.output.restore(websocket)
+                        elif msg[0] == "stdin" and can_execute:
+                            # Non-JupyterLab clients may send input without a size.
                             await self.output.restore(websocket)
-                    elif msg[0] == "stdin" and can_execute:
-                        # Non-JupyterLab clients may send input without a size.
-                        await self.output.restore(websocket)
-                        self._write(msg[1])
-        except WebSocketDisconnect:
-            pass
-        except self._pty_errors:
-            pass
-        finally:
-            self.quit(websocket)
+                            self._write(msg[1])
+            except WebSocketDisconnect:
+                pass
+            except self._pty_errors:
+                pass
+            finally:
+                self.quit(websocket)
+                tasks.cancel_scope.cancel()
 
     def _resize(self) -> None:
         # Unreported sizes do not constrain the PTY. Keep the last size when
@@ -84,6 +87,7 @@ class BaseTerminalServer(TerminalServer):
 
     async def _close_websockets(self) -> None:
         for websocket in list(self.websockets):
+            self.output.detach(websocket)
             try:
                 await websocket.send_json(["disconnect", 1])
                 await websocket.close()
