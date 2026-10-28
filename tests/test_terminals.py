@@ -4,6 +4,7 @@ import sys
 from threading import Event as ThreadEvent
 from typing import Any
 
+import ghostty
 import pytest
 from anyio import CancelScope, Event, create_task_group, fail_after, sleep, to_thread
 from fps import get_root_module, merge_config
@@ -367,3 +368,57 @@ async def test_terminal_unlisted_when_quit_fails(free_tcp_port: int) -> None:
         with fail_after(10):
             while (await http.get(f"{url}/api/terminals")).json():
                 await sleep(0.1)
+
+
+@pytest.mark.anyio
+async def test_terminal_restores_disconnected_output(free_tcp_port, monkeypatch):
+    from fps_terminals.routes import TERMINALS
+
+    monkeypatch.setenv("SHELL", "/bin/sh")
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": free_tcp_port},
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    async with root_module, AsyncClient() as http:
+        name = (await http.post(f"{url}/api/terminals")).json()["name"]
+        server = TERMINALS[name]["server"]
+        path = f"{url}/terminals/websocket/{name}"
+        async with http.websocket(path) as websocket:
+            await websocket.send_json(["set_size", 5, 40])
+            pid = await run(websocket, "echo $$", "INITIAL_PID=")
+        with fail_after(10):
+            while server.websockets:
+                await sleep(0.01)
+        # The PTY keeps producing output with no clients attached.
+        server.p_out.write(
+            b"printf 'HISTORY_RESTORED\\n'; i=0; "
+            b'while [ "$i" -lt 15 ]; do printf \'line %s\\n\' "$i"; i=$((i+1)); done; '
+            b"printf '\\033[31mOFFLINE_RED\\033[0m\\n'\r"
+        )
+        with fail_after(10):
+            while "OFFLINE_RED\n" not in server.output.emulator.text():
+                await sleep(0.01)
+        async with http.websocket(path) as websocket:
+            assert await websocket.receive_json() == ["setup", {}]
+            await websocket.send_json(["set_size", 5, 40])
+            snapshot = await websocket.receive_json()
+            assert snapshot[0] == "stdout"
+            with ghostty.Terminal(40, 5) as restored:
+                restored.feed(snapshot[1])
+                assert "HISTORY_RESTORED" in restored.contents()
+                assert "OFFLINE_RED" in restored.text()
+                assert any(
+                    restored.style(x, y)["fg"] == ("palette", 1)
+                    for y in range(5)
+                    for x in range(40)
+                )
+            assert await run(websocket, "echo $$", "RECONNECTED_PID=") == pid
+        assert (await http.delete(f"{url}/api/terminals/{name}")).status_code == 204
+    assert server.output.closed
