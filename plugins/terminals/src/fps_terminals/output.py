@@ -8,6 +8,7 @@ import structlog
 from anyio import (
     TASK_STATUS_IGNORED,
     CancelScope,
+    Event,
     Lock,
     WouldBlock,
     create_memory_object_stream,
@@ -50,6 +51,8 @@ class _Client:
     scope: CancelScope = field(default_factory=CancelScope)
     failed: bool = False
     snapshot: str | None = None
+    shutting_down: bool = False
+    stopped: Event = field(default_factory=Event)
 
 
 class TerminalOutput:
@@ -62,6 +65,7 @@ class TerminalOutput:
         self._pending: dict[WebSocket, float] = {}
         self._detach = detach
         self.closed = False
+        self._closing: list[Event] = []
 
     async def setup(self, websocket: WebSocket) -> None:
         async with self.lock:
@@ -122,6 +126,7 @@ class TerminalOutput:
         client = self._clients.get(websocket)
         task_status.started()
         if client is None:
+            connection_scope.cancel()
             return
         try:
             with client.scope:
@@ -144,14 +149,19 @@ class TerminalOutput:
             client.failed = True
         finally:
             self._detach(websocket)
-            if client.failed:
-                # Cancellation on overflow must not prevent closing the socket.
-                with CancelScope(shield=True):
-                    with move_on_after(SEND_TIMEOUT):
-                        try:
+            # Only this task writes to or closes the WebSocket. Keep it alive
+            # until the terminal's disconnect notification has been sent.
+            with CancelScope(shield=True):
+                with move_on_after(SEND_TIMEOUT):
+                    try:
+                        if client.shutting_down:
+                            await websocket.send_json(["disconnect", 1])
+                            await websocket.close()
+                        elif client.failed:
                             await websocket.close(code=1013)
-                        except Exception:
-                            pass
+                    except Exception:
+                        pass
+            client.stopped.set()
             connection_scope.cancel()
 
     async def restore(self, websocket: WebSocket) -> None:
@@ -215,7 +225,14 @@ class TerminalOutput:
         self.closed = True
         self.emulator.close()
         for client in self._clients.values():
+            client.shutting_down = True
+            self._closing.append(client.stopped)
             client.send.close()
             client.scope.cancel()
         self._ready.clear()
         self._pending.clear()
+
+    async def wait_closed(self) -> None:
+        for stopped in self._closing:
+            await stopped.wait()
+        self._closing.clear()

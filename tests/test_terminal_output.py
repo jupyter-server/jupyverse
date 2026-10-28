@@ -394,3 +394,48 @@ async def test_snapshot_larger_than_live_queue(monkeypatch, make_output):
             assert restored.contents() == output.emulator.contents()
     finally:
         output.close()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("blocked", [False, True])
+async def test_sender_notifies_shutdown_before_cleanup_task(make_output, blocked):
+    entered = Event()
+
+    class ClosingWebSocket(WebSocket):
+        sending = False
+        closed = False
+
+        async def send_json(self, message):
+            assert not self.sending
+            self.sending = True
+            try:
+                if blocked and message[0] == "stdout":
+                    entered.set()
+                    await sleep_forever()
+                await super().send_json(message)
+            finally:
+                self.sending = False
+
+        async def close(self):
+            assert not self.sending
+            self.closed = True
+
+    output = make_output()
+    websocket = ClosingWebSocket()
+    try:
+        await output.setup(websocket)
+        output._ready.add(websocket)
+        await output.feed("last output")
+        if blocked:
+            await entered.wait()
+        else:
+            await wait_for(lambda: websocket.messages[-1] == ["stdout", "last output"])
+        output.close()
+        # Force the sender to exit before the terminal's cleanup task runs.
+        await wait_for(lambda: websocket.closed)
+        with fail_after(1):
+            await output.wait_closed()
+        assert websocket.messages[-1] == ["disconnect", 1]
+        assert websocket not in output.websockets
+    finally:
+        output.close()

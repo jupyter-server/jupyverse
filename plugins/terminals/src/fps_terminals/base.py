@@ -86,14 +86,8 @@ class BaseTerminalServer(TerminalServer):
                 self.output.close()
 
     async def _close_websockets(self) -> None:
-        for websocket in list(self.websockets):
-            self.output.detach(websocket)
-            try:
-                await websocket.send_json(["disconnect", 1])
-                await websocket.close()
-            except Exception:
-                pass
-        self.websockets.clear()
+        self.output.close()
+        await self.output.wait_closed()
         self.sizes.clear()
 
     def quit(self, websocket: WebSocket | None = None) -> None:
