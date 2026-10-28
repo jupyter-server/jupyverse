@@ -4,7 +4,10 @@ import os
 import pty
 import signal
 import struct
+import subprocess
+import sys
 import termios
+from pathlib import Path
 
 import structlog
 from anyio import (
@@ -34,16 +37,31 @@ class _TerminalServer(BaseTerminalServer):
         columns = 80
         lines = 24
 
-        pid, fd = pty.fork()
-        if pid == 0:
-            argv = [command]
-            env = os.environ.copy()
-            env.update(TERM="linux", COLUMNS=str(columns), LINES=str(lines))
-            os.execvpe(argv[0], argv, env)
-        self.pid = pid
+        env = os.environ.copy()
+        env.update(TERM="linux", COLUMNS=str(columns), LINES=str(lines))
+        fd, slave_fd = pty.openpty()
+        try:
+            fcntl.ioctl(slave_fd, termios.TIOCSWINSZ, struct.pack("HH", lines, columns))
+            # No preexec_fn: subprocess handles the fork/exec boundary in C.
+            # The fresh interpreter acquires the controlling PTY before exec.
+            self.process = subprocess.Popen(
+                [sys.executable, "-I", "-S", str(Path(__file__).with_name("_pty.py")), command],
+                stdin=slave_fd,
+                stdout=slave_fd,
+                stderr=slave_fd,
+                start_new_session=True,
+                env=env,
+            )
+        except BaseException:
+            os.close(fd)
+            self.output.close()
+            raise
+        finally:
+            os.close(slave_fd)
+        self.pid = self.process.pid
         self.fd = fd
         self.p_out = os.fdopen(self.fd, "w+b", 0)
-        self.log = log.bind(pid=pid)
+        self.log = log.bind(pid=self.pid)
 
     def _write(self, text: str) -> None:
         self.p_out.write(text.encode())
@@ -124,10 +142,7 @@ class _TerminalServer(BaseTerminalServer):
             exited.set()
 
     def _waitpid(self) -> None:
-        try:
-            os.waitpid(self.pid, 0)
-        except ChildProcessError:
-            pass
+        self.process.wait()
 
     async def _wait_exit(self, exited: Event, timeout: float) -> bool:
         with move_on_after(timeout):

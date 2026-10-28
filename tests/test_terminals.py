@@ -38,7 +38,9 @@ CONFIG = {
 
 async def run(websocket: Any, command: str, marker: str) -> str:
     """Run a command in the shell and return what it printed after the marker."""
-    await websocket.send_json(["stdin", f"echo {marker}$({command})\r"])
+    # A snapshot can end with cursor/style escapes, without a newline. Frame
+    # the result explicitly so parsing does not depend on shell command echo.
+    await websocket.send_json(["stdin", f"printf '\\n%s\\n' \"{marker}$({command})\"\r"])
     output = ""
     with fail_after(10):
         while True:
@@ -46,8 +48,8 @@ async def run(websocket: Any, command: str, marker: str) -> str:
             if msg[0] == "stdout":
                 output += msg[1]
                 # The echoed command line contains "marker$(", the result does not.
-                for line in output.splitlines():
-                    if line.startswith(marker) and "$(" not in line:
+                for line in output.splitlines(keepends=True):
+                    if line.endswith(("\n", "\r")) and line.startswith(marker) and "$(" not in line:
                         return line[len(marker) :].strip()
 
 
@@ -193,6 +195,12 @@ async def test_reap_does_not_block_on_unkillable_shell(monkeypatch: pytest.Monke
     monkeypatch.setattr(server.os, "waitpid", waitpid)
     terminal = object.__new__(server._TerminalServer)
     terminal.pid = 12345
+
+    class Process:
+        def wait(self):
+            return os.waitpid(terminal.pid, 0)
+
+    terminal.process = Process()
     wait_exit = terminal._wait_exit
 
     async def short_wait(exited, timeout):
@@ -219,6 +227,7 @@ async def test_cancelled_reap_collects_child() -> None:
     child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(300)"])
     terminal = object.__new__(server._TerminalServer)
     terminal.pid = child.pid
+    terminal.process = child
     try:
         with CancelScope() as scope:
             scope.cancel()
@@ -371,7 +380,8 @@ async def test_terminal_unlisted_when_quit_fails(free_tcp_port: int) -> None:
 
 
 @pytest.mark.anyio
-async def test_terminal_restores_disconnected_output(free_tcp_port, monkeypatch):
+@pytest.mark.parametrize("echo", [True, False])
+async def test_terminal_restores_disconnected_output(free_tcp_port, monkeypatch, echo):
     from fps_terminals.routes import TERMINALS
 
     monkeypatch.setenv("SHELL", "/bin/sh")
@@ -389,6 +399,12 @@ async def test_terminal_restores_disconnected_output(free_tcp_port, monkeypatch)
     async with root_module, AsyncClient() as http:
         name = (await http.post(f"{url}/api/terminals")).json()["name"]
         server = TERMINALS[name]["server"]
+        if not echo:
+            import termios
+
+            attributes = termios.tcgetattr(server.fd)
+            attributes[3] &= ~termios.ECHO
+            termios.tcsetattr(server.fd, termios.TCSANOW, attributes)
         path = f"{url}/terminals/websocket/{name}"
         async with http.websocket(path) as websocket:
             await websocket.send_json(["set_size", 5, 40])
@@ -422,3 +438,45 @@ async def test_terminal_restores_disconnected_output(free_tcp_port, monkeypatch)
             assert await run(websocket, "echo $$", "RECONNECTED_PID=") == pid
         assert (await http.delete(f"{url}/api/terminals/{name}")).status_code == 204
     assert server.output.closed
+
+
+@pytest.mark.anyio
+@pytest.mark.filterwarnings("error:.*multi-threaded.*:DeprecationWarning")
+async def test_terminal_has_controlling_tty_without_fork_warning(free_tcp_port, monkeypatch):
+    from fps_terminals.routes import TERMINALS
+
+    monkeypatch.setenv("SHELL", "/bin/sh")
+    config = merge_config(CONFIG, {"jupyverse": {"config": {"port": free_tcp_port}}})
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    url = f"http://127.0.0.1:{free_tcp_port}"
+    # Ensure the server really is multithreaded when the terminal is created.
+    release, started = ThreadEvent(), ThreadEvent()
+
+    def worker():
+        started.set()
+        release.wait()
+
+    async with create_task_group() as tasks:
+        tasks.start_soon(to_thread.run_sync, worker)
+        try:
+            with fail_after(10):
+                while not started.is_set():
+                    await sleep(0.01)
+            async with root_module, AsyncClient() as http:
+                name = (await http.post(f"{url}/api/terminals")).json()["name"]
+                server = TERMINALS[name]["server"]
+                async with http.websocket(f"{url}/terminals/websocket/{name}") as websocket:
+                    assert (
+                        await run(
+                            websocket,
+                            "test -t 0 && test -t 2 && : </dev/tty && echo yes",
+                            "TTY=",
+                        )
+                        == "yes"
+                    )
+                    assert os.getsid(server.pid) == server.pid
+                    assert os.getpgid(server.pid) == server.pid
+                    assert os.tcgetpgrp(server.fd) == server.pid
+        finally:
+            release.set()
