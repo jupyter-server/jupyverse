@@ -194,7 +194,7 @@ class TerminalOutput:
 
     def resize(self, columns: int, rows: int) -> None:
         if not valid_size(columns, rows):
-            raise ValueError("Terminal dimensions must be positive integers within supported limits")
+            raise ValueError("Terminal dimensions must be positive integers within limits")
         if not self.closed and self.emulator.size != (columns, rows):
             self.emulator.resize(columns, rows)
 
