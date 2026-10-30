@@ -6,6 +6,7 @@ from threading import Event
 from types import ModuleType
 from typing import Any
 
+import ghostty
 import pytest
 from anyio import create_memory_object_stream, create_task_group, fail_after, sleep
 from fastapi import WebSocketDisconnect
@@ -83,7 +84,7 @@ def windows_server(monkeypatch):
     dependency.WinptyError = RuntimeError
     monkeypatch.setitem(sys.modules, "winpty", dependency)
     path = Path(fps_terminals.__file__).with_name("win_server.py")
-    spec = importlib.util.spec_from_file_location("test_win_server", path)
+    spec = importlib.util.spec_from_file_location("fps_terminals.test_win_server", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     kills = []
@@ -208,6 +209,9 @@ async def test_windows_terminal_send_failure_only_detaches_client(windows_server
         tasks.start_soon(terminal.serve, failed, None)
         tasks.start_soon(terminal.serve, healthy, None)
         await wait_for(lambda: len(terminal.websockets) == 2)
+        await failed.send_stream.send(["set_size", 24, 80])
+        await healthy.send_stream.send(["set_size", 24, 80])
+        await wait_for(lambda: len(failed.messages) == len(healthy.messages) == 2)
         failed.fail_send = True
         processes[0].output.put("output")
         await wait_for(lambda: ["stdout", "output"] in healthy.messages)
@@ -276,3 +280,101 @@ async def test_native_windows_terminal_persistence(free_tcp_port, monkeypatch, e
             await wait_for(lambda: not process.isalive())
     assert terminal.closed and name not in TERMINALS
     await wait_for(lambda: not process.isalive())
+
+
+@pytest.mark.anyio
+async def test_windows_terminal_restores_alternate_screen(windows_server):
+    server, processes, _ = windows_server
+    async with create_task_group() as tasks:
+        terminal = server()
+        await tasks.start(terminal.run)
+        process = processes[0]
+        process.output.put("primary\x1b[?1049h\x1b[H\x1b[31mALT")
+        await wait_for(lambda: "ALT" in terminal.output.emulator.text())
+        websocket = WebSocket()
+        tasks.start_soon(terminal.serve, websocket, None)
+        await wait_for(lambda: bool(websocket.messages))
+        assert websocket.messages == [["setup", {}]]
+        await websocket.send_stream.send(["set_size", 5, 20])
+        await wait_for(lambda: len(websocket.messages) == 2)
+        with ghostty.Terminal(20, 5) as restored:
+            restored.feed(websocket.messages[1][1])
+            assert restored.text() == "ALT"
+            assert restored.style(0, 0)["fg"] == ("palette", 1)
+            process.output.put("\x1b[?1049lafter")
+            await wait_for(lambda: len(websocket.messages) == 3)
+            restored.feed(websocket.messages[2][1])
+            assert restored.contents() == terminal.output.emulator.contents() == "primaryafter"
+        terminal.quit()
+    assert terminal.output.closed
+
+
+@pytest.mark.anyio
+async def test_terminal_socket_reconnect_without_size(windows_server):
+    server, processes, _ = windows_server
+    async with create_task_group() as tasks:
+        terminal = server()
+        await tasks.start(terminal.run)
+        processes[0].output.put("output before reconnect")
+        await wait_for(lambda: "output before reconnect" in terminal.output.emulator.text())
+        websocket = WebSocket()
+        tasks.start_soon(terminal.serve, websocket, {"terminals": ["read"]})
+        # A retained JupyterLab widget need not resend its size on socket retry.
+        await wait_for(lambda: len(websocket.messages) == 2)
+        with ghostty.Terminal() as restored:
+            restored.feed(websocket.messages[1][1])
+            assert restored.contents() == "output before reconnect"
+        assert not terminal.sizes
+        assert not processes[0].writes
+        terminal.quit()
+
+
+@pytest.mark.anyio
+async def test_terminal_read_only_client_cannot_write_or_resize(windows_server):
+    server, processes, _ = windows_server
+    async with create_task_group() as tasks:
+        terminal = server()
+        await tasks.start(terminal.run)
+        websocket = WebSocket()
+        tasks.start_soon(terminal.serve, websocket, {"terminals": ["read"]})
+        await websocket.send_stream.send(["stdin", "forbidden"])
+        await websocket.send_stream.send(["set_size", 30, 100])
+        await wait_for(lambda: len(websocket.messages) == 2)
+        assert not processes[0].writes
+        assert processes[0].size == (80, 24)
+        assert not terminal.sizes
+        processes[0].output.put("visible")
+        await wait_for(lambda: ["stdout", "visible"] in websocket.messages)
+        terminal.quit()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("operation", ["write", "set_size"])
+async def test_terminal_pty_error_detaches_only_client(windows_server, monkeypatch, operation):
+    server, processes, _ = windows_server
+    async with create_task_group() as tasks:
+        terminal = server()
+        await tasks.start(terminal.run)
+        failed = WebSocket()
+        tasks.start_soon(terminal.serve, failed, None)
+        await failed.send_stream.send(["set_size", 24, 80])
+        await wait_for(lambda: len(failed.messages) == 2)
+        process = processes[0]
+        original = getattr(process, operation)
+
+        def fail(*args):
+            # RuntimeError is this fixture's WinptyError.
+            raise RuntimeError("PTY operation failed")
+
+        monkeypatch.setattr(process, operation, fail)
+        message = ["stdin", "failed"] if operation == "write" else ["set_size", 30, 100]
+        await failed.send_stream.send(message)
+        await wait_for(lambda: failed not in terminal.websockets)
+        assert not terminal.closed and process.alive
+        assert not terminal.sizes
+        monkeypatch.setattr(process, operation, original)
+        healthy = WebSocket()
+        tasks.start_soon(terminal.serve, healthy, None)
+        await healthy.send_stream.send(["stdin", "healthy"])
+        await wait_for(lambda: process.writes == ["healthy"])
+        terminal.quit()
