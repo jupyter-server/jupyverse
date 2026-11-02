@@ -1,5 +1,14 @@
 # Version history
 
+## 0.14.19
+
+- Add a backend terminal emulator to restore terminal state when clients reconnect.
+- Isolate terminal output for each client so slow clients do not block other clients.
+- Depend on `libghostty-py` v0.2.0.
+
+This `jupyverse` release also releases:
+- `fps-terminals` v0.11.1
+
 ## 0.14.18
 
 - Keep terminal shells alive across WebSocket disconnects on POSIX and Windows.
