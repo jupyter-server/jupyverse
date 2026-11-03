@@ -1,3 +1,5 @@
+from importlib.metadata import entry_points
+
 import structlog
 from anyio import create_task_group
 from fps import Module
@@ -19,6 +21,11 @@ class KernelsModule(Module):
     def __init__(self, name: str, **kwargs):
         super().__init__(name)
         self.config = KernelsConfig(**kwargs)
+        if self.config.require_yjs and not entry_points(group="jupyverse.modules", name="yjs"):
+            raise RuntimeError(
+                "kernels.require_yjs is true, but the fps-yjs plugin is not installed. Install it "
+                'with the other collaboration plugins: pip install "jupyverse[collaboration]"'
+            )
 
     async def prepare(self) -> None:
         self.put(self.config, KernelsConfig)

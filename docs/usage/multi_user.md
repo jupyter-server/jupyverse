@@ -2,9 +2,13 @@ Jupyverse supports multiple users working collaboratively. Depending on the chos
 
 ## Collaborative editing
 
-The first thing to do is to install the Jupyter collaboration package:
+The first thing to do is to install the collaboration plugins:
 ```bash
-pip install jupyter-collaboration
+pip install "jupyverse[collaboration]"
+```
+Or with `micromamba`:
+```bash
+micromamba install -c conda-forge fps-yjs fps-yrooms fps-file-id fps-ystore-sqlite jupyter-collaboration-ui jupyter-docprovider
 ```
 Jupyverse must then be launched in collaborative mode:
 ```bash
