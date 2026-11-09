@@ -1,5 +1,12 @@
 # Version history
 
+## 0.14.20
+
+- Depend on `libghostty-py` v0.3.0.
+
+This `jupyverse` release also releases:
+- `fps-terminals` v0.11.2
+
 ## 0.14.19
 
 - Add a backend terminal emulator to restore terminal state when clients reconnect.
