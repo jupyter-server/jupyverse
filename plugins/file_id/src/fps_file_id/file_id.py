@@ -1,6 +1,6 @@
-import sys
 from contextlib import AsyncExitStack
 from types import TracebackType
+from typing import Self
 from uuid import uuid4
 
 import structlog
@@ -8,11 +8,6 @@ from anyio import Event, Path, create_task_group
 from jupyverse_file_id import FileId
 from jupyverse_file_watcher import Change, FileWatcher
 from sqlite_anyio import connect
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 logger = structlog.get_logger()
 
