@@ -2,7 +2,7 @@ import base64
 import json
 import os
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import cast
 
@@ -280,7 +280,7 @@ async def get_available_path(path: Path, sep: str = "") -> Path:
 async def get_file_modification_time(path: Path):
     if await path.exists():
         return (
-            datetime.fromtimestamp((await path.stat()).st_mtime, tz=timezone.utc)
+            datetime.fromtimestamp((await path.stat()).st_mtime, tz=UTC)
             .isoformat()
             .replace("+00:00", "Z")
         )
@@ -289,7 +289,7 @@ async def get_file_modification_time(path: Path):
 async def get_file_creation_time(path: Path):
     if await path.exists():
         return (
-            datetime.fromtimestamp((await path.stat()).st_ctime, tz=timezone.utc)
+            datetime.fromtimestamp((await path.stat()).st_ctime, tz=UTC)
             .isoformat()
             .replace("+00:00", "Z")
         )

@@ -1,9 +1,8 @@
-import sys
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from anyio import (
     AsyncContextManagerMixin,
@@ -22,11 +21,6 @@ from .channel import AsyncChannel
 
 if TYPE_CHECKING:
     from jupyter_ydoc.ybasedoc import YBaseDoc
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 
 class YRoom(ABC, AsyncContextManagerMixin):

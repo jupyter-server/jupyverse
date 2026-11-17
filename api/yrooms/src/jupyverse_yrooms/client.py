@@ -1,6 +1,6 @@
-import sys
 from contextlib import AsyncExitStack
 from types import TracebackType
+from typing import Self
 
 import httpx2
 from anyio import create_task_group, get_cancelled_exc_class, sleep_forever
@@ -16,11 +16,6 @@ from pycrdt import (
 )
 
 from .channel import AsyncChannel, AsyncWebSocket
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 
 class AsyncClient:

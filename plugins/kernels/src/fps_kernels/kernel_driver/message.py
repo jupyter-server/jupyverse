@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import uuid4
 
@@ -31,7 +31,7 @@ def date_to_str(obj: dict[str, Any]):
 
 
 def utcnow() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(tz=UTC)
 
 
 def create_message_header(msg_type: str, session_id: str, msg_id: str) -> dict[str, Any]:

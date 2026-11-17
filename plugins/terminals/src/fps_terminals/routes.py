@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -52,7 +52,7 @@ class _Terminals(Terminals):
         log.info("Creating terminal", name=name)
         terminal = Terminal(
             name=name,
-            last_activity=datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            last_activity=datetime.now(tz=UTC).isoformat().replace("+00:00", "Z"),
         )
 
         server = self.TerminalServer()

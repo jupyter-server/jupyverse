@@ -1,14 +1,9 @@
-import sys
 from collections.abc import AsyncIterator
 from time import time
+from typing import Self
 
 from jupyverse_ystore import YDocNotFound, YStore
 from sqlite_anyio import Connection
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 
 class SQLiteYStore(YStore):

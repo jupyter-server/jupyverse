@@ -7,16 +7,16 @@ name = "fps_jupyter_server"
 version = "0.2.2"
 description = "An FPS plugin for proxying a Jupyter server"
 keywords = [ "jupyter", "server", "fastapi", "plugins" ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -29,7 +29,6 @@ dependencies = [
   "jupyverse-auth >=0.2.0,<0.3.0",
   "jupyter-server >=2.17.0,<3.0.0",
   "structlog",
-  "typing_extensions >=4.15.0,<5.0.0; python_version<'3.11'",
 ]
 license = "BSD-3-Clause"
 license-files = ["COPYING.md"]

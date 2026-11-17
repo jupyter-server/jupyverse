@@ -1,6 +1,6 @@
 import json
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from anyio import TASK_STATUS_IGNORED, Event, create_task_group, move_on_after
 from anyio.abc import TaskStatus
@@ -105,7 +105,7 @@ class KernelServer:
 
         async with create_task_group() as self.task_group0:
             self.last_activity = {
-                "date": datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+                "date": datetime.now(tz=UTC).isoformat().replace("+00:00", "Z"),
                 "execution_state": "starting",
             }
             if launch_kernel:

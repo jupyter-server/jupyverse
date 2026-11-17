@@ -1,8 +1,7 @@
-import sys
 from collections.abc import AsyncGenerator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from socket import socket
-from typing import Any
+from typing import Any, Self
 from urllib.parse import parse_qs
 from uuid import uuid4
 
@@ -23,11 +22,6 @@ from httpx2.websockets import AsyncWebSocketSession
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 from structlog import get_logger
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 logger = get_logger()
 
