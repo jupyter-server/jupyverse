@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from importlib.metadata import version
 
 import structlog
@@ -30,12 +30,12 @@ class App:
             self._app = subapi
         app.add_exception_handler(RedirectException, _redirect_exception_handler)
         self._router_paths = defaultdict(list)
-        self._started_time = datetime.now(timezone.utc)
+        self._started_time = datetime.now(UTC)
         self._last_activity = self._started_time
 
         @app.middleware("http")
         async def get_last_activity(request: Request, call_next):
-            self._last_activity = datetime.now(timezone.utc)
+            self._last_activity = datetime.now(UTC)
             return await call_next(request)
 
     @property
