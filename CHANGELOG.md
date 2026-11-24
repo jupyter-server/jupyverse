@@ -1,5 +1,15 @@
 # Version history
 
+## 0.14.21
+
+- Drop Python 3.11 and add Python 3.15.
+- Honor the `format` query parameter when getting contents. Custom `Contents` implementations can accept a keyword-only `format` argument to honor encoding requests.
+
+This `jupyverse` release also releases:
+- `jupyverse-contents` v0.1.5
+- `fps-contents` v0.11.6
+- `fps-yrooms` v0.2.5
+
 ## 0.14.20
 
 - Depend on `libghostty-py` v0.3.0.
