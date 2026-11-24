@@ -117,7 +117,7 @@ async def test_get_file_format(auth_mode, tmp_path, free_tcp_port):
     os.chdir(tmp_path)
     png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"
     Path("image.png").write_bytes(png)
-    Path("data.csv").write_text("a,b\n1,2\n")
+    Path("data.csv").write_bytes(b"a,b\n1,2\n")
     config = merge_config(
         CONFIG,
         {
