@@ -1,5 +1,6 @@
 import base64
 import json
+import mimetypes
 import os
 import shutil
 from datetime import UTC, datetime
@@ -99,8 +100,9 @@ class _Contents(Contents):
         path: str,
         content: int,
         user: User | None = None,
+        format: str | None = None,
     ):
-        return await self.read_content(path, bool(content))
+        return await self.read_content(path, bool(content), format)
 
     async def save_content(
         self,
@@ -164,7 +166,15 @@ class _Contents(Contents):
                         elif file_format == "json":
                             content = json.loads(content_bytes)
                         else:
-                            content = content_bytes.decode()
+                            try:
+                                content = content_bytes.decode()
+                                file_format = file_format or "text"
+                            except UnicodeDecodeError:
+                                if file_format is not None:
+                                    raise
+                                # like jupyter_server, fall back to base64 if no format was given
+                                content = base64.b64encode(content_bytes).decode("ascii")
+                                file_format = "base64"
                     except Exception:
                         raise HTTPException(status_code=404, detail="Item not found")
             format: str | None = None
@@ -204,8 +214,10 @@ class _Contents(Contents):
                     mimetype = "application/json"
                 else:
                     type = "file"
-                    format = None
-                    mimetype = "text/plain"
+                    format = None if content is None else file_format
+                    mimetype = mimetypes.guess_type(path.name)[0] or (
+                        "application/octet-stream" if format == "base64" else "text/plain"
+                    )
             else:
                 raise HTTPException(status_code=404, detail="Item not found")
 

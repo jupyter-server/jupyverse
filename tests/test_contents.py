@@ -1,3 +1,4 @@
+import base64
 import os
 from pathlib import Path
 
@@ -107,3 +108,54 @@ async def test_tree(auth_mode, tmp_path, free_tcp_port):
         sort_content_by_name(expected)
         assert actual == expected
         os.chdir(prev_dir)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("auth_mode", ("noauth",))
+async def test_get_file_format(auth_mode, tmp_path, free_tcp_port):
+    prev_dir = os.getcwd()
+    os.chdir(tmp_path)
+    png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"
+    Path("image.png").write_bytes(png)
+    Path("data.csv").write_text("a,b\n1,2\n")
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "config": {"port": free_tcp_port},
+                "modules": {
+                    "auth": {
+                        "config": {
+                            "mode": auth_mode,
+                        }
+                    }
+                },
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    async with root_module, AsyncClient() as http:
+        url = f"http://127.0.0.1:{free_tcp_port}/api/contents"
+        # what JupyterLab requests to open an image
+        response = await http.get(
+            f"{url}/image.png", params={"type": "file", "format": "base64", "content": 1}
+        )
+        assert response.status_code == 200
+        model = response.json()
+        assert model["format"] == "base64"
+        assert model["mimetype"] == "image/png"
+        assert base64.b64decode(model["content"]) == png
+        response = await http.get(
+            f"{url}/data.csv", params={"type": "file", "format": "text", "content": 1}
+        )
+        model = response.json()
+        assert model["format"] == "text"
+        assert model["mimetype"] == "text/csv"
+        assert model["content"] == "a,b\n1,2\n"
+        # without a format, a file that is not UTF-8 is returned as base64
+        response = await http.get(f"{url}/image.png", params={"content": 1})
+        model = response.json()
+        assert model["format"] == "base64"
+        assert base64.b64decode(model["content"]) == png
+    os.chdir(prev_dir)

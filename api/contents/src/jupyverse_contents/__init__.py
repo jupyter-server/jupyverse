@@ -57,9 +57,10 @@ class Contents(Router, ABC):
         async def get_content(
             path: str,
             content: int = 1,
+            format: str | None = None,
             user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ) -> Content:
-            return await self.get_content(path, content, user)
+            return await self.get_content(path, content, user, format)
 
         @router.put("/api/contents/{path:path}")
         async def save_content(
@@ -138,6 +139,7 @@ class Contents(Router, ABC):
         path: str,
         content: int,
         user: User | None = None,
+        format: str | None = None,
     ) -> Content: ...
 
     @abstractmethod
