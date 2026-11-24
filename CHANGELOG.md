@@ -1,5 +1,16 @@
 # Version history
 
+## 0.14.21
+
+- Require Python 3.11 or later and add Python 3.15 to the supported versions. Upgrade Python before installing this release on Python 3.10.
+- Fix opening images and PDFs in JupyterLab. The contents endpoint honors `format=text` and `format=base64`, returns base64 for binary files when no format is specified, and reports MIME types based on file names, including in directory listings.
+- The contents endpoint returns HTTP 400 for unsupported formats. Custom `Contents` implementations can accept a keyword-only `format` argument to honor encoding requests. Existing implementations keep their previous call signature.
+
+This `jupyverse` release also releases:
+- `jupyverse-contents` v0.1.5
+- `fps-contents` v0.11.6
+- `fps-yrooms` v0.2.5
+
 ## 0.14.20
 
 - Depend on `libghostty-py` v0.3.0.
