@@ -367,6 +367,28 @@ async def test_patch_session_change_kernel_by_id(auth_mode):
             assert kernel2_id in kernels
 
 
+@pytest.mark.anyio
+async def test_require_yjs_without_yjs_plugin():
+    config = merge_config(
+        CONFIG,
+        {
+            "jupyverse": {
+                "modules": {
+                    "auth": {"config": {"mode": "noauth"}},
+                    "kernels": {"config": {"require_yjs": True}},
+                }
+            }
+        },
+    )
+    root_module = get_root_module(config)
+    root_module._global_start_timeout = 10
+    # no yjs plugin installed
+    with patch("fps_kernels.main.entry_points", return_value=()):
+        with pytest.raises(RuntimeError, match="fps-yjs plugin is not installed"):
+            async with root_module:
+                pass
+
+
 class KernelFactory:
     def __call__(self, *args, **kwargs) -> Kernel:
         return FakeKernel()
