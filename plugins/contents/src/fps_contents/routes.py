@@ -100,6 +100,7 @@ class _Contents(Contents):
         path: str,
         content: int,
         user: User | None = None,
+        *,
         format: str | None = None,
     ):
         return await self.read_content(path, bool(content), format)
@@ -149,6 +150,9 @@ class _Contents(Contents):
         untrust: bool = True,
     ) -> Content:
         path = Path(path)
+        if path.suffix == ".ipynb" and file_format != "json":
+            # like jupyter_server, the requested format only applies to file models
+            file_format = None
         async with self.file_lock(str(path)):
             content: str | dict | list[dict] | None = None
             if get_content:
@@ -168,7 +172,7 @@ class _Contents(Contents):
                         else:
                             try:
                                 content = content_bytes.decode()
-                                file_format = file_format or "text"
+                                file_format = "text"
                             except UnicodeDecodeError:
                                 if file_format is not None:
                                     raise
@@ -210,7 +214,7 @@ class _Contents(Contents):
                             content = json.dumps(nb)
                 elif path.suffix == ".json":
                     type = "json"
-                    format = "text"
+                    format = "base64" if file_format == "base64" else "text"
                     mimetype = "application/json"
                 else:
                     type = "file"

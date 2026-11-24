@@ -1,9 +1,10 @@
+import inspect
 from abc import ABC, abstractmethod
 from importlib.metadata import version
 
 from anyio import Path
 from anyioutils import ResourceLock
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from jupyverse_api import App, Router
 from jupyverse_auth import Auth, User
 
@@ -18,6 +19,8 @@ class Contents(Router, ABC):
     def __init__(self, app: App, auth: Auth):
         super().__init__(app=app)
         self.file_lock = ResourceLock()
+        # implementations written before get_content took a format do not receive it
+        get_content_takes_format = "format" in inspect.signature(self.get_content).parameters
         router = APIRouter()
 
         @router.post(
@@ -60,7 +63,12 @@ class Contents(Router, ABC):
             format: str | None = None,
             user: User = Depends(auth.current_user(permissions={"contents": ["read"]})),
         ) -> Content:
-            return await self.get_content(path, content, user, format)
+            # same validation as jupyter_server
+            if format not in (None, "text", "base64"):
+                raise HTTPException(status_code=400, detail=f"Format {format!r} is invalid")
+            if get_content_takes_format:
+                return await self.get_content(path, content, user, format=format)
+            return await self.get_content(path, content, user)
 
         @router.put("/api/contents/{path:path}")
         async def save_content(
@@ -139,6 +147,7 @@ class Contents(Router, ABC):
         path: str,
         content: int,
         user: User | None = None,
+        *,
         format: str | None = None,
     ) -> Content: ...
 
